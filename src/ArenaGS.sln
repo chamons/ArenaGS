@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Views", "ArenaGS.Views\ArenaGS.Views.csproj", "{BF534EBF-C56F-4BBC-832A-DA1432F9E7D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Windows", "ArenaGS.Windows\ArenaGS.Windows.csproj", "{6F043C5D-8211-4E55-ACB3-60ED052EA423}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS", "ArenaGS\ArenaGS.csproj", "{D683818C-03A6-4699-B550-28BB18970776}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF534EBF-C56F-4BBC-832A-DA1432F9E7D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF534EBF-C56F-4BBC-832A-DA1432F9E7D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF534EBF-C56F-4BBC-832A-DA1432F9E7D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF534EBF-C56F-4BBC-832A-DA1432F9E7D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F043C5D-8211-4E55-ACB3-60ED052EA423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F043C5D-8211-4E55-ACB3-60ED052EA423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F043C5D-8211-4E55-ACB3-60ED052EA423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F043C5D-8211-4E55-ACB3-60ED052EA423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D683818C-03A6-4699-B550-28BB18970776}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D683818C-03A6-4699-B550-28BB18970776}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D683818C-03A6-4699-B550-28BB18970776}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D683818C-03A6-4699-B550-28BB18970776}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
