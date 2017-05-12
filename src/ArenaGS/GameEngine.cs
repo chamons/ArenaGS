@@ -17,6 +17,12 @@ namespace ArenaGS
 			GameView.OnPaint += OnPaint;
 			GameView.OnMouseDown += OnMouseDown;
 			GameView.OnMouseUp += OnMouseUp;
+			GameView.OnKeyDown += OnKeyDown;
+		}
+
+		void OnKeyDown (object sender, KeyEventArgs e)
+		{
+			System.Diagnostics.Debug.WriteLine ($"Down: {e.Character}");
 		}
 
 		void OnMouseUp (object sender, ClickEventArgs e)

@@ -8,6 +8,23 @@ using SkiaSharp.Views.Mac;
 using CoreGraphics;
 
 namespace ArenaGS.Mac {
+	public class CanvasView : SKCanvasView
+	{
+		public CanvasView (IntPtr p) : base (p)
+		{
+		}
+
+		public CanvasView (CGRect r) : base (r)
+		{
+		}
+
+		public override bool AcceptsFirstResponder ()
+		{
+			return true;
+		}
+	}
+
+
 	public partial class ViewController : NSViewController, IGameView {
 		public ViewController (IntPtr handle) : base (handle)
 		{
@@ -16,10 +33,12 @@ namespace ArenaGS.Mac {
 		GameEngine Engine;
 		PaintEventArgs PaintArgs = new PaintEventArgs ();
 		ClickEventArgs ClickArgs = new ClickEventArgs ();
+		KeyEventArgs KeyArgs = new KeyEventArgs ();
 
 		public event EventHandler<PaintEventArgs> OnPaint;
 		public event EventHandler<ClickEventArgs> OnMouseDown;
 		public event EventHandler<ClickEventArgs> OnMouseUp;
+		public event EventHandler<KeyEventArgs> OnKeyDown;
 
 		SKCanvasView Canvas;
 		public override void ViewDidLoad ()
@@ -28,7 +47,7 @@ namespace ArenaGS.Mac {
 
 			Engine = new GameEngine (this);
 
-			Canvas = new SKCanvasView (View.Frame);
+			Canvas = new CanvasView (View.Frame);
 			Canvas.PaintSurface += OnPlatformPaint;
 
 			View.AddSubview (Canvas);
@@ -36,6 +55,13 @@ namespace ArenaGS.Mac {
 			Canvas.AutoresizingMask = NSViewResizingMask.MinXMargin | NSViewResizingMask.MinYMargin | 
 				NSViewResizingMask.MaxXMargin | NSViewResizingMask.MaxYMargin | NSViewResizingMask.HeightSizable |
 				NSViewResizingMask.WidthSizable;
+		}
+
+		public override void KeyDown (NSEvent theEvent)
+		{
+			base.KeyDown (theEvent);
+			KeyArgs.Character = theEvent.Characters[0];
+			OnKeyDown?.Invoke (this, KeyArgs);
 		}
 
 		public override void MouseDown (NSEvent theEvent)
