@@ -19,7 +19,7 @@ namespace ArenaGS.Views
 
 	public class KeyEventArgs : EventArgs
 	{
-		public char Character { get; set; }
+		public string Character { get; set; }
 	}
 
 	public interface IGameView

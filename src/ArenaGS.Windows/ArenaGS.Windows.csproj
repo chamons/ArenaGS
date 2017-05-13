@@ -112,11 +112,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Views\ArenaGS.Views.csproj">
-      <Project>{bf534ebf-c56f-4bbc-832a-da1432f9e7d3}</Project>
+      <Project>{344ce426-b013-4a56-914c-1d2bd00d109c}</Project>
       <Name>ArenaGS.Views</Name>
     </ProjectReference>
     <ProjectReference Include="..\ArenaGS\ArenaGS.csproj">
-      <Project>{d683818c-03a6-4699-b550-28bb18970776}</Project>
+      <Project>{206941d1-9a48-42d7-bd22-8c1d75107b03}</Project>
       <Name>ArenaGS</Name>
     </ProjectReference>
   </ItemGroup>

@@ -60,7 +60,7 @@ namespace ArenaGS.Mac {
 		public override void KeyDown (NSEvent theEvent)
 		{
 			base.KeyDown (theEvent);
-			KeyArgs.Character = theEvent.Characters[0];
+			KeyArgs.Character = theEvent.Characters;
 			OnKeyDown?.Invoke (this, KeyArgs);
 		}
 
