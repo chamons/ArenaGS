@@ -5,9 +5,9 @@ using SkiaSharp;
 
 namespace ArenaGS.Windows
 {
-	public partial class MainWindow : Window, IGameView
+	public partial class MainWindow : Window, IGameWindow
 	{
-		GameEngine Engine;
+		GameController Engine;
 		PaintEventArgs PaintArgs = new PaintEventArgs ();
 		ClickEventArgs ClickArgs = new ClickEventArgs ();
 		KeyEventArgs KeyArgs = new KeyEventArgs ();
@@ -23,10 +23,16 @@ namespace ArenaGS.Windows
 			Loaded += OnLoaded;
 			KeyDown += OnPlatformKeyDown;
 		}
+
+		public void Invalidate ()
+		{
+			SkiaView.InvalidateVisual ();
+		}
 			
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{
-			Engine = new GameEngine (this);
+			Engine = new GameController (this);
+			Engine.Startup ();
 			SkiaView.InvalidateVisual ();
 		}
 
