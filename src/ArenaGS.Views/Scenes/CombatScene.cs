@@ -38,7 +38,7 @@ namespace ArenaGS.Views.Scenes
 		public void HandlePaint (SKSurface surface)
 		{
 			surface.Canvas.Clear (SKColors.Black);
-			CombatView.Draw (surface.Canvas, Engine.CurrentState);
+			surface.Canvas.DrawSurface (CombatView.Draw (Engine.CurrentState), 0, 0);
 		}
 	}
 }

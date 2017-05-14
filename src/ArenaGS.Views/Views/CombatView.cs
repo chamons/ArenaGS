@@ -11,7 +11,7 @@ namespace ArenaGS.Views.Views
 	class CombatView : View
 	{
 		readonly Point MapOffset = new Point (10, 10);
-		readonly Size MapSize = new Size (400, 400);
+		readonly Size MapSize = new Size (600, 540);
 		MapView Map;
 
 		public CombatView (Point position, Size size) : base (position, size)
@@ -20,10 +20,11 @@ namespace ArenaGS.Views.Views
 			Map = new MapView (position, MapSize);
 		}
 
-		public override void Draw (SKCanvas canvas, GameState state)
+		public override SKSurface Draw (GameState state)
 		{
-			canvas.DrawRect (VisualRect, new SKPaint () { Color = SKColors.Blue });
-			Map.Draw (canvas, state);
+			Canvas.Clear (SKColors.Black);
+			Canvas.DrawSurface (Map.Draw (state), 0, 0);
+			return Surface;
 		}
 	}
 }

@@ -9,12 +9,17 @@ namespace ArenaGS.Views.Views
 		public Size Size { get; protected set; }
 		public SKRect VisualRect => new SKRect (Position.X, Position.Y, Position.X + Size.Width, Position.Y + Size.Height);
 
+
 		protected View (Point position, Size size)
 		{
 			Position = position;
 			Size = size;
+			Surface = SKSurface.Create (Size.Width, Size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 		}
 
-		public abstract void Draw (SKCanvas canvas, GameState state);	
+		protected SKSurface Surface { get; private set; }
+		protected SKCanvas Canvas => Surface.Canvas;
+
+		public abstract SKSurface Draw (GameState state);	
 	}
 }
