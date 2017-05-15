@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -27,21 +27,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Commands.cs" />
+    <Compile Include="Dependencies.cs" />
+    <Compile Include="Engine\Physics.cs" />
     <Compile Include="GameEngine.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.57.1\lib\portable-net45+win8+wpa81+wp8\SkiaSharp.dll</HintPath>
-    </Reference>
+    <Compile Include="GameState.cs" />
+    <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Map.cs" />
+    <Compile Include="Model\MapGenerator.cs" />
+    <Compile Include="Model\MapTile.cs" />
+    <Compile Include="Model\NumberExtensions.cs" />
+    <Compile Include="Utilities\Point.cs" />
+    <Compile Include="Model\WorldGenerator.cs" />
+    <Compile Include="Utilities\PointExtensions.cs" />
+    <Compile Include="Utilities\Size.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ArenaGS.Views\ArenaGS.Views.csproj">
-      <Project>{344CE426-B013-4A56-914C-1D2BD00D109C}</Project>
-      <Name>ArenaGS.Views</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

@@ -22,8 +22,10 @@ namespace ArenaGS.Views
 		public string Character { get; set; }
 	}
 
-	public interface IGameView
-    {
+	public interface IGameWindow
+	{
+		void Invalidate ();
+
 		event EventHandler<PaintEventArgs> OnPaint;
 		event EventHandler<ClickEventArgs> OnMouseDown;
 		event EventHandler<ClickEventArgs> OnMouseUp;
