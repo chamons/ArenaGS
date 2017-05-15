@@ -1,4 +1,6 @@
-﻿using ArenaGS.Model;
+﻿using System.IO;
+using System.Reflection;
+using ArenaGS.Model;
 using ArenaGS.Utilities;
 using SkiaSharp;
 
@@ -6,15 +8,20 @@ namespace ArenaGS.Views.Views
 {
 	class MapView : View
 	{
+		SKBitmap WallBitmap;
+		SKBitmap FloorBitmap;
+
 		public MapView (Point position, Size size) : base (position, size)
 		{
-
+			WallBitmap = Resources.Get ("mud3.png");
+			FloorBitmap = Resources.Get ("stone_gray1.png");
 		}
 
 		public override SKSurface Draw (GameState state)
 		{
+			BlankCanvas ();
+
 			CurrentMap = state.Map;
-			Canvas.DrawRect (VisualRect, new SKPaint () { Color = SKColors.Red });
 
 			for (int i = 0; i < MapSizeX; ++i)
 			{
@@ -22,30 +29,32 @@ namespace ArenaGS.Views.Views
 				{
 					Point currentUIPosition = new Point (i, j);
 					if (IsOnMap (currentUIPosition))
-					{
-						var currentTile = CurrentMap[TranslateUIToModelPosition (currentUIPosition)];
-						// This is wrong. We should not be offsetting like this
-						int left = Position.X + 2 + i * (MapTileSize + 2);
-						int top = Position.Y + 2 + j * (MapTileSize + 2);
-						var drawPosition = new SKRect (left, top, left + MapTileSize, top + MapTileSize);
-
-						System.Diagnostics.Debug.WriteLine ($"Drawing ({drawPosition})");
-
-						Canvas.DrawRect (drawPosition, currentTile.Terrain == TerrainType.Floor ? EmptyTile : WallTile);
-					}
+						DrawTile (currentUIPosition);
 				}
 			}
 			return Surface;
 		}
 
+		void DrawTile (Point currentUIPosition)
+		{
+			var currentTile = CurrentMap[TranslateUIToModelPosition (currentUIPosition)];
+			int left = Position.X + (currentUIPosition.X * MapTileSize);
+			int top = Position.Y + (currentUIPosition.Y * MapTileSize);
+			var drawPosition = new SKRect (left, top, left + MapTileSize, top + MapTileSize);
+			var border = new SKRect (drawPosition.Left, drawPosition.Top, drawPosition.Right - 1, drawPosition.Bottom - 1);
+
+			if (currentTile.Terrain == TerrainType.Floor)
+				Canvas.DrawBitmap (WallBitmap, drawPosition);
+			else
+				Canvas.DrawBitmap (FloorBitmap, drawPosition);
+		}
+
 		Map CurrentMap;
 		Point CenterPosition => new Point (15, 15);
-		SKPaint EmptyTile = new SKPaint () { Color = SKColors.Gray };
-		SKPaint WallTile = new SKPaint () { Color = SKColors.Yellow };
 
 		public const int MapTileSize = 32;
-		public const int MapSizeX = 23;
-		public const int MapSizeY = 17;
+		public const int MapSizeX = 17;
+		public const int MapSizeY = 15;
 		public const int MapCenterX = (int)(((MapSizeX - 1) / 2));
 		public const int MapCenterY = (int)(((MapSizeY - 1) / 2));
 

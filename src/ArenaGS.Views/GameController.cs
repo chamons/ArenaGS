@@ -21,6 +21,8 @@ namespace ArenaGS
 
 		public void Startup ()
 		{
+			Resources.LoadResouces ();
+
 			GameEngine = new GameEngine ();
 
 			// TODO - This will someday need to be calculated based on current GameState

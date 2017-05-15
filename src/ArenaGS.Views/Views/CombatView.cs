@@ -22,7 +22,7 @@ namespace ArenaGS.Views.Views
 
 		public override SKSurface Draw (GameState state)
 		{
-			Canvas.Clear (SKColors.Black);
+			BlankCanvas ();
 			Canvas.DrawSurface (Map.Draw (state), 0, 0);
 			return Surface;
 		}

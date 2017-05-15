@@ -43,11 +43,16 @@
   <ItemGroup>
     <Compile Include="GameController.cs" />
     <Compile Include="IGameWindow.cs" />
+    <Compile Include="Resources.cs" />
     <Compile Include="Scenes\CombatScene.cs" />
     <Compile Include="Scenes\IScene.cs" />
     <Compile Include="Views\CombatView.cs" />
-    <Compile Include="Views\IView.cs" />
+    <Compile Include="Views\View.cs" />
     <Compile Include="Views\MapView.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\mud3.png" />
+    <EmbeddedResource Include="Resources\stone_gray1.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>
