@@ -5,7 +5,7 @@ using ArenaGS.Views.Scenes;
 namespace ArenaGS
 {
 	public class GameController
-    {
+	{
 		IGameWindow GameWindow;
 		GameEngine GameEngine;
 		IScene CurrentScene;
