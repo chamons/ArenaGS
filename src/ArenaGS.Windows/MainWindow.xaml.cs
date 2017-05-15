@@ -7,7 +7,7 @@ namespace ArenaGS.Windows
 {
 	public partial class MainWindow : Window, IGameWindow
 	{
-		GameController Engine;
+		GameController Controller;
 		PaintEventArgs PaintArgs = new PaintEventArgs ();
 		ClickEventArgs ClickArgs = new ClickEventArgs ();
 		KeyEventArgs KeyArgs = new KeyEventArgs ();
@@ -31,8 +31,8 @@ namespace ArenaGS.Windows
 			
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{
-			Engine = new GameController (this);
-			Engine.Startup ();
+			Controller = new GameController (this);
+			Controller.Startup ();
 			SkiaView.InvalidateVisual ();
 		}
 

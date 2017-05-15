@@ -25,12 +25,12 @@ namespace ArenaGS.Mac {
 	}
 
 
-	public partial class ViewController : NSViewController, IGameView {
+	public partial class ViewController : NSViewController, IGameWindow {
 		public ViewController (IntPtr handle) : base (handle)
 		{
 		}
 
-		GameEngine Engine;
+		GameController Controller;
 		PaintEventArgs PaintArgs = new PaintEventArgs ();
 		ClickEventArgs ClickArgs = new ClickEventArgs ();
 		KeyEventArgs KeyArgs = new KeyEventArgs ();
@@ -45,7 +45,8 @@ namespace ArenaGS.Mac {
 		{
 			base.ViewDidLoad ();
 
-			Engine = new GameEngine (this);
+			Controller = new GameController (this);
+			Controller.Startup ();
 
 			Canvas = new CanvasView (View.Frame);
 			Canvas.PaintSurface += OnPlatformPaint;
@@ -60,8 +61,29 @@ namespace ArenaGS.Mac {
 		public override void KeyDown (NSEvent theEvent)
 		{
 			base.KeyDown (theEvent);
-			KeyArgs.Character = theEvent.Characters;
+			KeyArgs.Character = ConvertNSEventToKeyString(theEvent);
 			OnKeyDown?.Invoke (this, KeyArgs);
+		}
+
+		string ConvertNSEventToKeyString (NSEvent theEvent)
+		{
+			switch (theEvent.KeyCode)
+			{
+				case (ushort)NSKey.UpArrow:
+				case (ushort)NSKey.Keypad8:
+					return "Up";
+				case (ushort)NSKey.DownArrow:
+				case (ushort)NSKey.Keypad2:
+					return "Down";
+				case (ushort)NSKey.LeftArrow:
+				case (ushort)NSKey.Keypad4:
+					return "Left";
+				case (ushort)NSKey.RightArrow:
+				case (ushort)NSKey.Keypad6:
+					return "Right";
+				default:
+					return theEvent.Characters;
+			}
 		}
 
 		public override void MouseDown (NSEvent theEvent)
@@ -76,6 +98,11 @@ namespace ArenaGS.Mac {
 			CGPoint p = theEvent.LocationInWindow;
 			ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
 			OnMouseUp?.Invoke (this, ClickArgs);
+		}
+
+		public void Invalidate ()
+		{
+			Canvas.NeedsDisplay = true;
 		}
 
 		void OnPlatformPaint (object sender, SKPaintSurfaceEventArgs e)
