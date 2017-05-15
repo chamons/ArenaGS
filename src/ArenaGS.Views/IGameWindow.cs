@@ -23,7 +23,7 @@ namespace ArenaGS.Views
 	}
 
 	public interface IGameWindow
-    {
+	{
 		void Invalidate ();
 
 		event EventHandler<PaintEventArgs> OnPaint;
