@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Reflection;
-using ArenaGS.Model;
+﻿using ArenaGS.Model;
 using ArenaGS.Utilities;
 using SkiaSharp;
 
@@ -10,18 +8,20 @@ namespace ArenaGS.Views.Views
 	{
 		SKBitmap WallBitmap;
 		SKBitmap FloorBitmap;
+		SKBitmap PlayerBitmap;
 
 		public MapView (Point position, Size size) : base (position, size)
 		{
-			WallBitmap = Resources.Get ("mud3.png");
-			FloorBitmap = Resources.Get ("stone_gray1.png");
+			WallBitmap = Resources.Get ("stone_gray1.png");
+			FloorBitmap = Resources.Get ("mud3.png");
+			PlayerBitmap = Resources.Get ("orc_knight.png");
 		}
 
 		public override SKSurface Draw (GameState state)
 		{
 			BlankCanvas ();
 
-			CurrentMap = state.Map;
+			GameState = state;
 
 			for (int i = 0; i < MapSizeX; ++i)
 			{
@@ -29,28 +29,30 @@ namespace ArenaGS.Views.Views
 				{
 					Point currentUIPosition = new Point (i, j);
 					if (IsOnMap (currentUIPosition))
-						DrawTile (currentUIPosition);
+					{
+						var currentTile = CurrentMap[TranslateUIToModelPosition (currentUIPosition)];
+						DrawTile (currentUIPosition, currentTile.Terrain == TerrainType.Floor ? FloorBitmap : WallBitmap);
+					}
 				}
 			}
+			DrawTile (new Point (MapCenterX, MapCenterY), PlayerBitmap);
+
 			return Surface;
 		}
 
-		void DrawTile (Point currentUIPosition)
+		void DrawTile (Point currentUIPosition, SKBitmap image)
 		{
-			var currentTile = CurrentMap[TranslateUIToModelPosition (currentUIPosition)];
 			int left = Position.X + (currentUIPosition.X * MapTileSize);
 			int top = Position.Y + (currentUIPosition.Y * MapTileSize);
 			var drawPosition = new SKRect (left, top, left + MapTileSize, top + MapTileSize);
-			var border = new SKRect (drawPosition.Left, drawPosition.Top, drawPosition.Right - 1, drawPosition.Bottom - 1);
 
-			if (currentTile.Terrain == TerrainType.Floor)
-				Canvas.DrawBitmap (WallBitmap, drawPosition);
-			else
-				Canvas.DrawBitmap (FloorBitmap, drawPosition);
+			Canvas.DrawBitmap (image, drawPosition);
 		}
 
-		Map CurrentMap;
-		Point CenterPosition => new Point (15, 15);
+		GameState GameState;
+		Map CurrentMap => GameState.Map;
+		Character Player => GameState.Player;
+		Point CenterPosition => Player.Position;
 
 		public const int MapTileSize = 32;
 		public const int MapSizeX = 17;

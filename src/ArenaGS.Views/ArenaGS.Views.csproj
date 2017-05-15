@@ -54,5 +54,8 @@
     <EmbeddedResource Include="Resources\mud3.png" />
     <EmbeddedResource Include="Resources\stone_gray1.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\orc_knight.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

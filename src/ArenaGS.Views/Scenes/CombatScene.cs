@@ -25,6 +25,25 @@ namespace ArenaGS.Views.Scenes
 
 		public void HandleKeyDown (string character)
 		{
+			switch (character)
+			{
+				case "Up":
+				case "NumPad8":
+					Engine.AcceptCommand (Command.PlayerMove, Direction.North);
+					return;
+				case "Down":
+				case "NumPad2":
+					Engine.AcceptCommand (Command.PlayerMove, Direction.South);
+					return;
+				case "Left":
+				case "NumPad4":
+					Engine.AcceptCommand (Command.PlayerMove, Direction.West);
+					return;
+				case "Right":
+				case "NumPad6":
+					Engine.AcceptCommand (Command.PlayerMove, Direction.East);
+					return;
+			}
 		}
 
 		public void HandleMouseDown (SKPointI point)
@@ -40,5 +59,7 @@ namespace ArenaGS.Views.Scenes
 			surface.Canvas.Clear (SKColors.Black);
 			surface.Canvas.DrawSurface (CombatView.Draw (Engine.CurrentState), 0, 0);
 		}
+
+
 	}
 }

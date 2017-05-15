@@ -11,10 +11,12 @@ namespace ArenaGS.Model
 	{
 		public Map Generate ()
 		{
-			Map map = new Map (40, 40);
-			for (int i = 0; i < 40; ++i)
-				for (int j = 0; j < 40; ++j)
-					map.Set (new Point (i, j), i % 2 == 0 ? TerrainType.Floor : TerrainType.Wall);
+			int width = 15;
+			int height = 10;
+			Map map = new Map (width, height);
+			for (int i = 1; i < width - 1; ++i)
+				for (int j = 1; j < height - 1; ++j)
+					map.Set (new Point (i, j), TerrainType.Floor);
 			return map;
 		}
 	}
