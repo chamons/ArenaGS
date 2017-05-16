@@ -40,5 +40,14 @@ namespace ArenaGS.Tests
 			GameState newState = Physics.Move (state.Player, Direction.None, state);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk none should not move");
 		}
+
+		[Test]
+		public void SimpleMovementOffMap_DoesNotMoveOffMap ()
+		{
+			GameState state = SetupTestState ();
+			GameState firstState = Physics.Move (state.Player, Direction.North, state);
+			GameState secondState = Physics.Move (firstState.Player, Direction.North, firstState);
+			Assert.AreEqual (secondState.Player.Position, new Point (1, 0), "Walk north should walk to edge of map but no farther");
+		}
 	}
 }
