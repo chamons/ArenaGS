@@ -11,16 +11,14 @@ namespace ArenaGS.Model
 			Position = position;
 		}
 
-		internal Character WithNewPosition (Point position)
+		internal Character (Character original)
 		{
-			Character newCharacter = Clone ();
-			newCharacter.Position = position;
-			return newCharacter;
+			Position = original.Position;
 		}
 
-		Character Clone ()
+		internal Character WithNewPosition (Point position)
 		{
-			return new Character (this.Position);
+			return new Character (this) { Position = position };
 		}
 	}
 }

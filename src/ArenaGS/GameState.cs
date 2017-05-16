@@ -13,16 +13,15 @@ namespace ArenaGS
 			Player = player;
 		}
 
-		internal GameState WithNewPlayer (Character player)
+		public GameState (GameState original)
 		{
-			GameState newState = Clone ();
-			newState.Player = player;
-			return newState;
+			Map = original.Map;
+			Player = original.Player;
 		}
 
-		GameState Clone ()
+		internal GameState WithNewPlayer (Character player)
 		{
-			return new GameState (this.Map, this.Player);
+			return new GameState (this) { Player = player };
 		}
 	}
 }
