@@ -40,8 +40,6 @@ namespace ArenaGS.Utilities
 	[ComVisible (true)]
 	public struct Size
 	{
-		private int width, height;
-
 		public static readonly Size Empty;
 
 		public static Size operator + (Size sz1, Size sz2)
@@ -75,47 +73,26 @@ namespace ArenaGS.Utilities
 
 		public Size (Point pt)
 		{
-			width = pt.X;
-			height = pt.Y;
+			Width = pt.X;
+			Height = pt.Y;
 		}
 
 		public Size (int width, int height)
 		{
-			this.width = width;
-			this.height = height;
+			Width = width;
+			Height = height;
 		}
 
 		public bool IsEmpty
 		{
 			get
 			{
-				return ((width == 0) && (height == 0));
+				return ((Width == 0) && (Height == 0));
 			}
 		}
 
-		public int Width
-		{
-			get
-			{
-				return width;
-			}
-			set
-			{
-				width = value;
-			}
-		}
-
-		public int Height
-		{
-			get
-			{
-				return height;
-			}
-			set
-			{
-				height = value;
-			}
-		}
+		public int Width { get; private set; }
+		public int Height { get; private set; }
 
 		public override bool Equals (object obj)
 		{
@@ -127,12 +104,12 @@ namespace ArenaGS.Utilities
 
 		public override int GetHashCode ()
 		{
-			return width ^ height;
+			return Width ^ Height;
 		}
 
 		public override string ToString ()
 		{
-			return String.Format ("{{Width={0}, Height={1}}}", width, height);
+			return String.Format ("{{Width={0}, Height={1}}}", Width, Height);
 		}
 
 		public static Size Add (Size sz1, Size sz2)

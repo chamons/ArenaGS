@@ -40,8 +40,6 @@ namespace ArenaGS.Utilities
 	[ComVisible (true)]
 	public struct Point
 	{
-		private int x, y;
-
 		public static readonly Point Empty;
 
 		public static Point operator + (Point pt, Size sz)
@@ -71,47 +69,26 @@ namespace ArenaGS.Utilities
 
 		public Point (Size sz)
 		{
-			x = sz.Width;
-			y = sz.Height;
+			X = sz.Width;
+			Y = sz.Height;
 		}
 
 		public Point (int x, int y)
 		{
-			this.x = x;
-			this.y = y;
+			X = x;
+			Y = y;
 		}
 
 		public bool IsEmpty
 		{
 			get
 			{
-				return ((x == 0) && (y == 0));
+				return ((X == 0) && (Y == 0));
 			}
 		}
 
-		public int X
-		{
-			get
-			{
-				return x;
-			}
-			set
-			{
-				x = value;
-			}
-		}
-
-		public int Y
-		{
-			get
-			{
-				return y;
-			}
-			set
-			{
-				y = value;
-			}
-		}
+		public int X { get; private set; }
+		public int Y { get; private set; }
 
 		public override bool Equals (object obj)
 		{
@@ -123,28 +100,27 @@ namespace ArenaGS.Utilities
 
 		public override int GetHashCode ()
 		{
-			return x ^ y;
+			return X ^ Y;
 		}
 
-		public void Offset (int dx, int dy)
+		public Point Offset (int dx, int dy)
 		{
-			x += dx;
-			y += dy;
+			return new Point (X + dx, Y + dy);
+		}
+
+		public Point Offset (Point p)
+		{
+			return Offset (p.X, p.Y);
 		}
 
 		public override string ToString ()
 		{
-			return string.Format ("{{X={0}, Y={1}}}", x.ToString (CultureInfo.InvariantCulture),
-				y.ToString (CultureInfo.InvariantCulture));
+			return $"({X},{Y})";
 		}
+
 		public static Point Add (Point pt, Size sz)
 		{
 			return new Point (pt.X + sz.Width, pt.Y + sz.Height);
-		}
-
-		public void Offset (Point p)
-		{
-			Offset (p.X, p.Y);
 		}
 
 		public static Point Subtract (Point pt, Size sz)
