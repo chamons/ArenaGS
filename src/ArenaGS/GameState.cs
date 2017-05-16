@@ -13,7 +13,7 @@ namespace ArenaGS
 			Player = player;
 		}
 
-		public GameState (GameState original)
+		GameState (GameState original)
 		{
 			Map = original.Map;
 			Player = original.Player;

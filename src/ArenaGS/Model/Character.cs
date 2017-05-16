@@ -11,7 +11,7 @@ namespace ArenaGS.Model
 			Position = position;
 		}
 
-		internal Character (Character original)
+		Character (Character original)
 		{
 			Position = original.Position;
 		}
