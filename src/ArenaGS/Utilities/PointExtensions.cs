@@ -8,6 +8,8 @@ namespace ArenaGS.Utilities
 		{
 			switch (direction)
 			{
+				case Direction.None:
+					return self;
 				case Direction.North:
 					return new Point (self.X, self.Y - 1);
 				case Direction.South:

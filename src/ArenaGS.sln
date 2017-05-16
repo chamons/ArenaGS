@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS", "ArenaGS\ArenaGS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Views", "ArenaGS.Views\ArenaGS.Views.csproj", "{344CE426-B013-4A56-914C-1D2BD00D109C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C58803BD-1251-4A2F-BA80-6EAAE5A72631}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Tests", "ArenaGS.Tests\ArenaGS.Tests.csproj", "{6DE13233-1ACC-4607-837E-19BDF026F5EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,8 +37,15 @@ Global
 		{344CE426-B013-4A56-914C-1D2BD00D109C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{344CE426-B013-4A56-914C-1D2BD00D109C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{344CE426-B013-4A56-914C-1D2BD00D109C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DE13233-1ACC-4607-837E-19BDF026F5EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DE13233-1ACC-4607-837E-19BDF026F5EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DE13233-1ACC-4607-837E-19BDF026F5EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DE13233-1ACC-4607-837E-19BDF026F5EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6DE13233-1ACC-4607-837E-19BDF026F5EE} = {C58803BD-1251-4A2F-BA80-6EAAE5A72631}
 	EndGlobalSection
 EndGlobal
