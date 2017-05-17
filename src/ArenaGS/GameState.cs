@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using System.Collections.Immutable;
+using ArenaGS.Model;
 using ProtoBuf;
 
 namespace ArenaGS
@@ -12,20 +13,25 @@ namespace ArenaGS
 		[ProtoMember (2)]
 		public Character Player { get; private set; }
 
+		[ProtoMember (3)]
+		public ImmutableList<Character> Enemies { get; private set; }
+
 		public GameState ()
 		{
 		}
 
-		public GameState (Map map, Character player)
+		public GameState (Map map, Character player, ImmutableList<Character> enemies)
 		{
 			Map = map;
 			Player = player;
+			Enemies = enemies;
 		}
 
 		GameState (GameState original)
 		{
 			Map = original.Map;
 			Player = original.Player;
+			Enemies = original.Enemies;
 		}
 
 		internal GameState WithNewPlayer (Character player)

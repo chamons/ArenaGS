@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using System.Collections.Immutable;
+using ArenaGS.Model;
 using ArenaGS.Utilities;
 
 namespace ArenaGS.Tests.Utilities
@@ -9,7 +10,8 @@ namespace ArenaGS.Tests.Utilities
 		{
 			var character = new Character (new Point (1, 1));
 			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0);
-			return new GameState (map, character);
+			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (2, 2)) });
+			return new GameState (map, character, enemies);
 		}
 	}
 }

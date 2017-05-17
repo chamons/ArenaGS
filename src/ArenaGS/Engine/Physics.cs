@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using System.Linq;
+using ArenaGS.Model;
 using ArenaGS.Utilities;
 
 namespace ArenaGS.Engine
@@ -8,9 +9,14 @@ namespace ArenaGS.Engine
 		internal static GameState Move (Character actor, Direction direction, GameState state)
 		{
 			Map map = state.Map;
-
 			Point newPosition = actor.Position.InDirection (direction);
-			if (map.IsOnMap (newPosition) && map[newPosition].Terrain == TerrainType.Floor)
+
+			if (!map.IsOnMap (newPosition))
+				return state;
+
+			bool isWalkableLocation = map[newPosition].Terrain == TerrainType.Floor;
+			bool isLocationEmpty = state.Enemies.All (x => x.Position != newPosition);
+			if (isWalkableLocation && isLocationEmpty)
 				return state.WithNewPlayer (actor.WithNewPosition (newPosition));
 			return state;
 		}

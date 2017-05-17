@@ -9,12 +9,14 @@ namespace ArenaGS.Views.Views
 		SKBitmap WallBitmap;
 		SKBitmap FloorBitmap;
 		SKBitmap PlayerBitmap;
+		SKBitmap EnemyBitmap;
 
 		public MapView (Point position, Size size) : base (position, size)
 		{
 			WallBitmap = Resources.Get ("stone_gray1.png");
 			FloorBitmap = Resources.Get ("mud3.png");
 			PlayerBitmap = Resources.Get ("orc_knight.png");
+			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -35,6 +37,9 @@ namespace ArenaGS.Views.Views
 					}
 				}
 			}
+			foreach (var enemy in GameState.Enemies)
+				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
+
 			DrawTile (new Point (MapCenterX, MapCenterY), PlayerBitmap);
 
 			return Surface;
