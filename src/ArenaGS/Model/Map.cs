@@ -24,7 +24,7 @@ namespace ArenaGS.Model
 		public Map (int width, int height, string mapType, int hash)
 		{
 			Width = width;
-			Height = height;			
+			Height = height;
 			Tiles = new MapTile[width, height];
 			MapType = mapType;
 			Hash = hash;
