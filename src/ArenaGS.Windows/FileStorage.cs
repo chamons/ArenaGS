@@ -35,5 +35,9 @@ namespace ArenaGS.Windows
 			return File.Exists (filename);
 		}
 
+		public void DeleteFile (string filename)
+		{
+			File.Delete (filename);
+		}
 	}
 }

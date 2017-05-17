@@ -16,12 +16,19 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SaveLoad_SmokeTest ()
 		{
+			Assert.IsFalse (Serialization.SaveGameExists);
+
 			GameState state = TestScenes.CreateTinyRoomState ();
+
 			Serialization.Save (state);
+			Assert.IsTrue(Serialization.SaveGameExists);
+
 			GameState newState = Serialization.Load ();
 			Assert.AreEqual (state.Player.Position, newState.Player.Position);
 			Assert.AreEqual (state.Map.Width, newState.Map.Width);
 			Assert.AreEqual (state.Map.Height, newState.Map.Height);
+
+			Assert.IsFalse (Serialization.SaveGameExists);
 		}
 	}
 }

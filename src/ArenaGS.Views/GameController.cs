@@ -18,8 +18,8 @@ namespace ArenaGS
 			GameWindow.OnMouseDown += OnMouseDown;
 			GameWindow.OnMouseUp += OnMouseUp;
 			GameWindow.OnKeyDown += OnKeyDown;
+			GameWindow.OnQuit += OnQuit;
 		}
-
 		public void Startup (IFileStorage storage)
 		{
 			Resources.LoadResouces ();
@@ -37,6 +37,11 @@ namespace ArenaGS
 		{
 			// This is lazy and will need to be changed, specially when we have animations
 			GameWindow.Invalidate ();
+		}
+
+		private void OnQuit (object sender, EventArgs e)
+		{
+			GameEngine.SaveGame ();
 		}
 
 		void OnKeyDown (object sender, KeyEventArgs e)

@@ -13,5 +13,6 @@ namespace ArenaGS.Platform
 		bool FileExists (string filename);
 		void SaveFile (string filename, byte[] contents);
 		byte[] LoadFile (string filename);
+		void DeleteFile (string filename);
 	}
 }

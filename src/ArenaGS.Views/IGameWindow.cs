@@ -30,5 +30,6 @@ namespace ArenaGS.Views
 		event EventHandler<ClickEventArgs> OnMouseDown;
 		event EventHandler<ClickEventArgs> OnMouseUp;
 		event EventHandler<KeyEventArgs> OnKeyDown;
+		event EventHandler<EventArgs> OnQuit;
 	}
 }

@@ -1,4 +1,5 @@
-﻿using ArenaGS.Platform;
+﻿using System;
+using ArenaGS.Platform;
 using NUnit.Framework;
 
 namespace ArenaGS.Tests.Utilities
@@ -8,7 +9,7 @@ namespace ArenaGS.Tests.Utilities
 		public string SaveLocation => "IN_MEMORY";
 		byte[] LastSave;
 
-		public bool FileExists (string filename) => filename == SaveLocation;
+		public bool FileExists (string filename) => filename == SaveLocation && LastSave != null;
 
 		public byte[] LoadFile (string filename)
 		{
@@ -19,6 +20,12 @@ namespace ArenaGS.Tests.Utilities
 		{
 			Assert.AreEqual (SaveLocation, filename);
 			LastSave = contents;
+		}
+
+		public void DeleteFile (string filename)
+		{
+			Assert.AreEqual (SaveLocation, filename);
+			LastSave = null;
 		}
 	}
 }

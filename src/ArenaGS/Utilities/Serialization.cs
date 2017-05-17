@@ -53,6 +53,7 @@ namespace ArenaGS.Utilities
 		internal static GameState Load ()
 		{
 			byte [] compressedData = Storage.LoadFile (SaveFilePath);
+			Storage.DeleteFile (SaveFilePath);
 			using (MemoryStream os = new MemoryStream (compressedData))
 			{
 				SaveContainer container = Serializer.Deserialize<SaveContainer> (os);

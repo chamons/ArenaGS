@@ -19,7 +19,10 @@ namespace ArenaGS
 		public void Load ()
 		{
 			SetupDefaultDependencies ();
-			CurrentState = CreateNewGameState ();
+			if (Serialization.SaveGameExists)
+				CurrentState = Serialization.Load ();
+			else
+				CurrentState = CreateNewGameState ();
 		}
 
 		public void SaveGame ()
