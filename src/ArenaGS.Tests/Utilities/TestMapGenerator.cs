@@ -23,8 +23,13 @@ namespace ArenaGS.Tests.Utilities
 		public Map Generate (int hash)
 		{
 			var map = new Map (3, 3, "TinyTest", hash);
-			map.Set (new Point (1, 0), TerrainType.Floor);
+
+			for (int i = 0; i < 3; ++i)
+				for (int j = 0; j < 3; ++j)
+					map.Set (new Point (i, j), TerrainType.Floor);
+
 			map.Set (new Point (1, 2), TerrainType.Wall);
+
 			return map;
 		}
 

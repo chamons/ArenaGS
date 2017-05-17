@@ -4,6 +4,7 @@ using ArenaGS.Utilities;
 using ArenaGS.Engine;
 using ArenaGS.Platform;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 
 namespace ArenaGS
 {
@@ -48,7 +49,8 @@ namespace ArenaGS
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
 			Map map = mapGenerator.Generate (0);
 			Character player = new Character (new Point (5, 5));
-			return new GameState (map, player);
+			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (1, 1)), new Character (new Point (8,7)) });
+			return new GameState (map, player, enemies);
 		}
 
 		public void AcceptCommand (Command c, object data)

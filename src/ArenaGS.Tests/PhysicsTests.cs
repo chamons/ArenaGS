@@ -47,5 +47,13 @@ namespace ArenaGS.Tests
 			GameState secondState = Physics.Move (firstState.Player, Direction.North, firstState);
 			Assert.AreEqual (secondState.Player.Position, new Point (1, 0), "Walk north should walk to edge of map but no farther");
 		}
+
+		[Test]
+		public void MovementIntoEnemy_DoesNotMove ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState newState = Physics.Move (state.Player, Direction.Southeast, state);
+			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk into enemy should not move us");		
+		}
 	}
 }
