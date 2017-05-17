@@ -8,7 +8,8 @@ namespace ArenaGS.Views.Views
 	{
 		public Point Position { get; protected set; }
 		public Size Size { get; protected set; }
-		public SKRect VisualRect => new SKRect (Position.X, Position.Y, Position.X + Size.Width, Position.Y + Size.Height);
+		public SKRect VisualRect => new SKRect (0, 0, Size.Width, Size.Height);
+		public SKRect ScreenRect => new SKRect (Position.X, Position.Y, Position.X + Size.Width, Position.Y + Size.Height);
 
 		protected View (Point position, Size size)
 		{
