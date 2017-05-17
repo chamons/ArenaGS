@@ -2,17 +2,34 @@
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 using ArenaGS.Engine;
+using ArenaGS.Platform;
+using System.Threading.Tasks;
 
 namespace ArenaGS
 {
 	public class GameEngine
 	{
+		public GameEngine (IFileStorage storage)
+		{	
+			Dependencies.Register<IFileStorage> (storage);
+		}
+
 		public GameState CurrentState { get; private set; }
 
-		public void LoadGame ()
+		public void Load ()
 		{
 			SetupDefaultDependencies ();
 			CurrentState = CreateNewGameState ();
+		}
+
+		public void SaveGame ()
+		{
+			Serialization.Save (CurrentState);
+		}
+
+		public void LoadGame ()
+		{
+			SetNewState (Serialization.Load ());
 		}
 
 		public event EventHandler StateChanged;
@@ -25,8 +42,8 @@ namespace ArenaGS
 
 		GameState CreateNewGameState ()
 		{
-			IMapGenerator mapGenerator = Dependencies.Get<WorldGenerator> ().GetMapGenerator ("Simple");
-			Map map = mapGenerator.Generate ();
+			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
+			Map map = mapGenerator.Generate (0);
 			Character player = new Character (new Point (5, 5));
 			return new GameState (map, player);
 		}
@@ -48,7 +65,7 @@ namespace ArenaGS
 
 		void SetupDefaultDependencies ()
 		{
-			Dependencies.Register<WorldGenerator> (new WorldGenerator ());
+			Dependencies.Register<IWorldGenerator> (new WorldGenerator ());
 		}
 	}
 }

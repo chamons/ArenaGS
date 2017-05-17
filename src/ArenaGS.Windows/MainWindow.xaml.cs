@@ -32,7 +32,7 @@ namespace ArenaGS.Windows
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{
 			Controller = new GameController (this);
-			Controller.Startup ();
+			Controller.Startup (new FileStorage ());
 			SkiaView.InvalidateVisual ();
 		}
 

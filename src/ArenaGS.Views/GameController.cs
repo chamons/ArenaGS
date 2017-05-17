@@ -1,4 +1,5 @@
 ﻿using System;
+using ArenaGS.Platform;
 using ArenaGS.Views;
 using ArenaGS.Views.Scenes;
 
@@ -19,17 +20,17 @@ namespace ArenaGS
 			GameWindow.OnKeyDown += OnKeyDown;
 		}
 
-		public void Startup ()
+		public void Startup (IFileStorage storage)
 		{
 			Resources.LoadResouces ();
 
-			GameEngine = new GameEngine ();
+			GameEngine = new GameEngine (storage);
 
 			// TODO - This will someday need to be calculated based on current GameState
 			CurrentScene = new CombatScene (GameEngine);
 
 			GameEngine.StateChanged += OnGameEngineStateChanged;
-			GameEngine.LoadGame ();
+			GameEngine.Load ();
 		}
 
 		private void OnGameEngineStateChanged (object sender, EventArgs e)

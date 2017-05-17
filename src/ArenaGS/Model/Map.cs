@@ -1,20 +1,33 @@
 ﻿using System.Text;
 using ArenaGS.Utilities;
+using ProtoBuf;
 
 namespace ArenaGS.Model
 {
+	[ProtoContract]
 	public class Map
 	{
+		[ProtoMember (1)] // Unless we add destructable terrain, the RNG hash and map name should be sufficient
+		public int Hash { get; private set; }
+		[ProtoMember (2)]
+		public string MapType { get; private set; }
+
 		public int Width { get; private set; }
 		public int Height { get; private set; }
 
+		public Map ()
+		{
+		}
+
 		MapTile[,] Tiles;
 
-		public Map (int width, int height)
+		public Map (int width, int height, string mapType, int hash)
 		{
 			Width = width;
-			Height = height;
+			Height = height;			
 			Tiles = new MapTile[width, height];
+			MapType = mapType;
+			Hash = hash;
 		}
 
 		public MapTile this [int x, int y] => Tiles[x, y];
