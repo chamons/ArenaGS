@@ -1,10 +1,17 @@
 ﻿using ArenaGS.Utilities;
+using ProtoBuf;
 
 namespace ArenaGS.Model
 {
+	[ProtoContract]
 	public class Character
 	{
+		[ProtoMember (1)]
 		public Point Position { get; private set; }
+
+		public Character ()
+		{			
+		}
 
 		public Character (Point position)
 		{

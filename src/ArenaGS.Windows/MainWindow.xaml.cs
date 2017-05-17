@@ -16,12 +16,14 @@ namespace ArenaGS.Windows
 		public new event EventHandler<ClickEventArgs> OnMouseDown;
 		public new event EventHandler<ClickEventArgs> OnMouseUp;
 		public new event EventHandler<KeyEventArgs> OnKeyDown;
+		public event EventHandler<EventArgs> OnQuit;
 
 		public MainWindow ()
 		{
 			InitializeComponent ();
 			Loaded += OnLoaded;
 			KeyDown += OnPlatformKeyDown;
+			Closed += OnPlatformClose;
 		}
 
 		public void Invalidate ()
@@ -32,7 +34,7 @@ namespace ArenaGS.Windows
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{
 			Controller = new GameController (this);
-			Controller.Startup ();
+			Controller.Startup (new FileStorage ());
 			SkiaView.InvalidateVisual ();
 		}
 
@@ -60,6 +62,11 @@ namespace ArenaGS.Windows
 		{
 			KeyArgs.Character = e.Key.ToString ();
 			OnKeyDown?.Invoke (this, KeyArgs);
+		}
+
+		private void OnPlatformClose (object sender, EventArgs e)
+		{
+			OnQuit?.Invoke (this, e);
 		}
 	}
 }

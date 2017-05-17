@@ -45,6 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PhysicsTests.cs" />
+    <Compile Include="SaveLoadTests.cs" />
+    <Compile Include="Utilities\TestDependencies.cs" />
+    <Compile Include="Utilities\TestFileStorage.cs" />
+    <Compile Include="Utilities\TestMapGenerator.cs" />
+    <Compile Include="Utilities\TestScenes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -53,6 +58,10 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
+      <Project>{f8c39422-841b-48d9-acfc-5d44c7a889db}</Project>
+      <Name>ArenaGS.Platform</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ArenaGS\ArenaGS.csproj">
       <Project>{206941d1-9a48-42d7-bd22-8c1d75107b03}</Project>
       <Name>ArenaGS</Name>

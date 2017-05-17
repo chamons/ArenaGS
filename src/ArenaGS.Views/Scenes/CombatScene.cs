@@ -27,6 +27,12 @@ namespace ArenaGS.Views.Scenes
 		{
 			switch (character)
 			{
+				case "S":
+					Engine.SaveGame ();
+					return;
+				case "L":
+					Engine.LoadGame ();
+					return;
 				case "Up":
 				case "NumPad8":
 					Engine.AcceptCommand (Command.PlayerMove, Direction.North);

@@ -1,5 +1,6 @@
 ﻿using ArenaGS.Engine;
 using ArenaGS.Model;
+using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
 using NUnit.Framework;
 
@@ -8,19 +9,16 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	public class PhysicsTests
 	{
-		private static GameState SetupTestState ()
+		[SetUp]
+		public void Setup ()
 		{
-			var c = new Character (new Point (1, 1));
-			var map = new Map (3, 3);
-			map.Set (new Point (1, 0), TerrainType.Floor);
-			map.Set (new Point (1, 2), TerrainType.Wall);
-			return new GameState (map, c);
+			TestDependencies.SetupTestDependencies ();
 		}
 
 		[Test]
 		public void SimpleMovementOntoFloor_MovesPlayer ()
 		{
-			GameState state = SetupTestState ();
+			GameState state = TestScenes.CreateTinyRoomState ();
 			GameState newState = Physics.Move (state.Player, Direction.North, state);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 0), "Walk north to floor works");
 		}
@@ -28,7 +26,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementIntoWall_DoesNotMove ()
 		{
-			GameState state = SetupTestState ();
+			GameState state = TestScenes.CreateTinyRoomState ();
 			GameState newState = Physics.Move (state.Player, Direction.South, state);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk south into wall fails");
 		}
@@ -36,7 +34,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementNone_DoesNotMove ()
 		{
-			GameState state = SetupTestState ();
+			GameState state = TestScenes.CreateTinyRoomState ();
 			GameState newState = Physics.Move (state.Player, Direction.None, state);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk none should not move");
 		}
@@ -44,7 +42,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementOffMap_DoesNotMoveOffMap ()
 		{
-			GameState state = SetupTestState ();
+			GameState state = TestScenes.CreateTinyRoomState ();
 			GameState firstState = Physics.Move (state.Player, Direction.North, state);
 			GameState secondState = Physics.Move (firstState.Player, Direction.North, firstState);
 			Assert.AreEqual (secondState.Player.Position, new Point (1, 0), "Walk north should walk to edge of map but no farther");

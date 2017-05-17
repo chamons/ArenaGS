@@ -33,10 +33,12 @@
 
 using System.Globalization;
 using System.Runtime.InteropServices;
+using ProtoBuf;
 
 // Stolen with love and modified from https://github.com/mono/mono/tree/master/mcs/class/System.Drawing/System.Drawing
 namespace ArenaGS.Utilities
 {
+	[ProtoContract]
 	[ComVisible (true)]
 	public struct Point
 	{
@@ -87,7 +89,10 @@ namespace ArenaGS.Utilities
 			}
 		}
 
+		[ProtoMember (1)]
 		public int X { get; private set; }
+
+		[ProtoMember (2)]
 		public int Y { get; private set; }
 
 		public override bool Equals (object obj)

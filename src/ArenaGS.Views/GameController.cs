@@ -1,4 +1,5 @@
 ﻿using System;
+using ArenaGS.Platform;
 using ArenaGS.Views;
 using ArenaGS.Views.Scenes;
 
@@ -17,25 +18,30 @@ namespace ArenaGS
 			GameWindow.OnMouseDown += OnMouseDown;
 			GameWindow.OnMouseUp += OnMouseUp;
 			GameWindow.OnKeyDown += OnKeyDown;
+			GameWindow.OnQuit += OnQuit;
 		}
-
-		public void Startup ()
+		public void Startup (IFileStorage storage)
 		{
 			Resources.LoadResouces ();
 
-			GameEngine = new GameEngine ();
+			GameEngine = new GameEngine (storage);
 
 			// TODO - This will someday need to be calculated based on current GameState
 			CurrentScene = new CombatScene (GameEngine);
 
 			GameEngine.StateChanged += OnGameEngineStateChanged;
-			GameEngine.LoadGame ();
+			GameEngine.Load ();
 		}
 
 		private void OnGameEngineStateChanged (object sender, EventArgs e)
 		{
 			// This is lazy and will need to be changed, specially when we have animations
 			GameWindow.Invalidate ();
+		}
+
+		private void OnQuit (object sender, EventArgs e)
+		{
+			GameEngine.SaveGame ();
 		}
 
 		void OnKeyDown (object sender, KeyEventArgs e)

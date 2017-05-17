@@ -77,6 +77,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FileStorage.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -111,6 +112,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
+      <Project>{f8c39422-841b-48d9-acfc-5d44c7a889db}</Project>
+      <Name>ArenaGS.Platform</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ArenaGS.Views\ArenaGS.Views.csproj">
       <Project>{344ce426-b013-4a56-914c-1d2bd00d109c}</Project>
       <Name>ArenaGS.Views</Name>
