@@ -1,11 +1,13 @@
 ﻿using System;
 
 using AppKit;
-using Foundation;
-using SkiaSharp;
-using ArenaGS.Views;
-using SkiaSharp.Views.Mac;
 using CoreGraphics;
+using Foundation;
+
+using ArenaGS.Utilities;
+using ArenaGS.Views;
+using SkiaSharp;
+using SkiaSharp.Views.Mac;
 
 namespace ArenaGS.Mac {
 	public class CanvasView : SKCanvasView
@@ -25,7 +27,7 @@ namespace ArenaGS.Mac {
 	}
 
 
-	public partial class ViewController : NSViewController, IGameWindow {
+	public partial class ViewController : NSViewController, INSWindowDelegate, IGameWindow {
 		public ViewController (IntPtr handle) : base (handle)
 		{
 		}
@@ -39,6 +41,7 @@ namespace ArenaGS.Mac {
 		public event EventHandler<ClickEventArgs> OnMouseDown;
 		public event EventHandler<ClickEventArgs> OnMouseUp;
 		public event EventHandler<KeyEventArgs> OnKeyDown;
+		public event EventHandler<EventArgs> OnQuit;
 
 		SKCanvasView Canvas;
 		public override void ViewDidLoad ()
@@ -46,7 +49,7 @@ namespace ArenaGS.Mac {
 			base.ViewDidLoad ();
 
 			Controller = new GameController (this);
-			Controller.Startup ();
+			Controller.Startup (new FileStorage ());
 
 			Canvas = new CanvasView (View.Frame);
 			Canvas.PaintSurface += OnPlatformPaint;
@@ -56,6 +59,19 @@ namespace ArenaGS.Mac {
 			Canvas.AutoresizingMask = NSViewResizingMask.MinXMargin | NSViewResizingMask.MinYMargin | 
 				NSViewResizingMask.MaxXMargin | NSViewResizingMask.MaxYMargin | NSViewResizingMask.HeightSizable |
 				NSViewResizingMask.WidthSizable;
+		}
+
+		public override void ViewDidAppear ()
+		{
+			base.ViewDidAppear ();
+			View.Window.Delegate = this;
+		}
+
+		[Export ("windowShouldClose:")]
+		public bool WindowShouldClose (NSObject sender)
+		{
+			OnQuit?.Invoke (this, EventArgs.Empty);
+			return true;
 		}
 
 		public override void KeyDown (NSEvent theEvent)
