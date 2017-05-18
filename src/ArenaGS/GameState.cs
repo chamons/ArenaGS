@@ -5,7 +5,7 @@ using ProtoBuf;
 namespace ArenaGS
 {
 	[ProtoContract]
-	public class GameState
+	public sealed class GameState
 	{
 		[ProtoMember (1)]
 		public Map Map { get; private set; }

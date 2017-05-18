@@ -4,8 +4,9 @@ using ProtoBuf;
 
 namespace ArenaGS.Model
 {
+	// Technically not immutable, given Set, but promiced to be never called outside of MapGen
 	[ProtoContract]
-	public class Map
+	public sealed class Map
 	{
 		[ProtoMember (1)] // Unless we add destructable terrain, the RNG hash and map name should be sufficient
 		public int Hash { get; private set; }

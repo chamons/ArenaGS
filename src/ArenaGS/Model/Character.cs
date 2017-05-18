@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace ArenaGS.Model
 {
 	[ProtoContract]
-	public class Character
+	public sealed class Character
 	{
 		[ProtoMember (1)]
 		public Point Position { get; private set; }
@@ -23,7 +23,7 @@ namespace ArenaGS.Model
 			Position = original.Position;
 		}
 
-		internal Character WithNewPosition (Point position)
+		internal Character WithPosition (Point position)
 		{
 			return new Character (this) { Position = position };
 		}
