@@ -49,6 +49,16 @@ namespace ArenaGS
 			return new GameState (this) { Map = map };
 		}
 
+		internal GameState WithEnemies (ImmutableList<Character> enemies)
+		{
+			return new GameState (this) { Enemies = enemies };
+		}
+
+		internal GameState WithLog (ImmutableList<string> logEntries)
+		{
+			return new GameState (this) { LogEntries = logEntries };
+		}
+
 		internal GameState WithNewLogLine (string line)
 		{
 			var logBuilder = LogEntries.ToBuilder ();

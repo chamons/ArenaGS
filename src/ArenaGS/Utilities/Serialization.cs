@@ -2,6 +2,7 @@
 using ArenaGS.Platform;
 using ProtoBuf;
 using ArenaGS.Model;
+using System.Collections.Immutable;
 
 namespace ArenaGS.Utilities
 {
@@ -63,7 +64,17 @@ namespace ArenaGS.Utilities
 				Map savedStubMap = container.State.Map;
 				var worldGenerator = Dependencies.Get<IWorldGenerator> ();
 				Map map = worldGenerator.GetMapGenerator (savedStubMap.MapType).Regenerate (savedStubMap.Hash);
-				return container.State.WithMap (map);
+				GameState state = container.State.WithMap (map);
+
+				// Protobuffer serializes empty lists as null
+				// For each list in state, we must instead give an empty list
+				// Else NRE will occur on use
+				if (state.Enemies == null)
+					state = state.WithEnemies (ImmutableList<Character>.Empty);
+				if (state.LogEntries == null)
+					state = state.WithLog (ImmutableList<string>.Empty);
+
+				return state;
 			}
 		}
 	}
