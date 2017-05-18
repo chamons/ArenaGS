@@ -1,4 +1,6 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using ArenaGS.Model;
 using ProtoBuf;
 
@@ -18,6 +20,16 @@ namespace ArenaGS
 
 		[ProtoMember (4)]
 		public ImmutableList<string> LogEntries { get; private set; }
+
+		public IEnumerable<Character> AllActors
+		{
+			get
+			{
+				yield return Player;
+				foreach (var enemy in Enemies)
+					yield return enemy;
+			}
+		}
 
 		public GameState ()
 		{
@@ -66,6 +78,12 @@ namespace ArenaGS
 				logBuilder.RemoveAt (0);
 			logBuilder.Add (line);
 			return new GameState (this) { LogEntries = logBuilder.ToImmutable() };
+		}
+
+		internal GameState WithReplaceEnemy (Character newEnemy)
+		{
+			Character oldEnemy = Enemies.Single (x => x.ID == newEnemy.ID);
+			return new GameState (this) { Enemies = Enemies.Replace (oldEnemy, newEnemy) };
 		}
 	}
 }
