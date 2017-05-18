@@ -11,7 +11,7 @@ namespace ArenaGS.Tests.Utilities
 			var character = new Character (new Point (1, 1));
 			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0);
 			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (2, 2)) });
-			return new GameState (map, character, enemies);
+			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
 		}
 	}
 }

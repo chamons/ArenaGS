@@ -50,7 +50,7 @@ namespace ArenaGS
 			Map map = mapGenerator.Generate (0);
 			Character player = new Character (new Point (5, 5));
 			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (1, 1)), new Character (new Point (8,7)) });
-			return new GameState (map, player, enemies);
+			return new GameState (map, player, enemies, ImmutableList<string>.Empty);
 		}
 
 		public void AcceptCommand (Command c, object data)
