@@ -62,7 +62,7 @@ namespace ArenaGS
 				{
 					Direction direction = (Direction)data;
 					SetNewState (Physics.MovePlayer (CurrentState, direction));
-					// TODO - SetNewState (Time.ProcessUntilPlayerReady) ?
+					SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
 					return;
 				}
 				default:
