@@ -27,7 +27,8 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (state.Player.Position, newState.Player.Position);
 			Assert.AreEqual (state.Map.Width, newState.Map.Width);
 			Assert.AreEqual (state.Map.Height, newState.Map.Height);
-			Assert.AreEqual (state.Enemies.Count, state.Enemies.Count);
+			Assert.AreEqual (state.Enemies.Count, newState.Enemies.Count);
+			Assert.AreEqual (state.LogEntries.Count, newState.LogEntries.Count);
 
 			Assert.IsFalse (Serialization.SaveGameExists);
 		}
