@@ -17,7 +17,7 @@ namespace ArenaGS.Engine
 			bool isWalkableLocation = map[newPosition].Terrain == TerrainType.Floor;
 			bool isLocationEmpty = state.Enemies.All (x => x.Position != newPosition);
 			if (isWalkableLocation && isLocationEmpty)
-				return state.WithNewPlayer (actor.WithNewPosition (newPosition));
+				return state.WithPlayer (actor.WithNewPosition (newPosition));
 			return state;
 		}
 	}

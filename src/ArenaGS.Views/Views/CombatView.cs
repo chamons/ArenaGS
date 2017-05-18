@@ -9,7 +9,7 @@ namespace ArenaGS.Views.Views
 		readonly Size MapSize = new Size (550, 485);
 
 		readonly Point LogOffset = new Point (2, 485 + 10);
-		readonly Size LogSize = new Size (550, 75);
+		readonly Size LogSize = new Size (550, 85);
 
 		MapView Map;
 		LogView Log;

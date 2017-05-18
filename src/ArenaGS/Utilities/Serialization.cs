@@ -63,7 +63,7 @@ namespace ArenaGS.Utilities
 				Map savedStubMap = container.State.Map;
 				var worldGenerator = Dependencies.Get<IWorldGenerator> ();
 				Map map = worldGenerator.GetMapGenerator (savedStubMap.MapType).Regenerate (savedStubMap.Hash);
-				return container.State.WithNewMap (map);
+				return container.State.WithMap (map);
 			}
 		}
 	}

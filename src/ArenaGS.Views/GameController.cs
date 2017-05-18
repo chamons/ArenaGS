@@ -41,7 +41,9 @@ namespace ArenaGS
 
 		private void OnQuit (object sender, EventArgs e)
 		{
+#if !DEBUG
 			GameEngine.SaveGame ();
+#endif
 		}
 
 		void OnKeyDown (object sender, KeyEventArgs e)

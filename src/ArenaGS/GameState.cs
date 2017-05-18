@@ -16,15 +16,19 @@ namespace ArenaGS
 		[ProtoMember (3)]
 		public ImmutableList<Character> Enemies { get; private set; }
 
+		[ProtoMember (4)]
+		public ImmutableList<string> LogEntries { get; private set; }
+
 		public GameState ()
 		{
 		}
 
-		public GameState (Map map, Character player, ImmutableList<Character> enemies)
+		public GameState (Map map, Character player, ImmutableList<Character> enemies, ImmutableList<string> logEntries)
 		{
 			Map = map;
 			Player = player;
 			Enemies = enemies;
+			LogEntries = logEntries;
 		}
 
 		GameState (GameState original)
@@ -32,16 +36,26 @@ namespace ArenaGS
 			Map = original.Map;
 			Player = original.Player;
 			Enemies = original.Enemies;
+			LogEntries = original.LogEntries;
 		}
 
-		internal GameState WithNewPlayer (Character player)
+		internal GameState WithPlayer (Character player)
 		{
 			return new GameState (this) { Player = player };
 		}
 
-		internal GameState WithNewMap (Map map)
+		internal GameState WithMap (Map map)
 		{
 			return new GameState (this) { Map = map };
+		}
+
+		internal GameState WithNewLogLine (string line)
+		{
+			var logBuilder = LogEntries.ToBuilder ();
+			if (logBuilder.Count == 5)
+				logBuilder.RemoveAt (0);
+			logBuilder.Add (line);
+			return new GameState (this) { LogEntries = logBuilder.ToImmutable() };
 		}
 	}
 }
