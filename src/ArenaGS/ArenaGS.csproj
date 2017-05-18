@@ -31,7 +31,9 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Dependencies.cs" />
+    <Compile Include="Engine\ActorBehavior.cs" />
     <Compile Include="Engine\Physics.cs" />
+    <Compile Include="Engine\Time.cs" />
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />

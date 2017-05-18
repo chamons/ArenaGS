@@ -13,6 +13,7 @@ namespace ArenaGS
 		public GameEngine (IFileStorage storage)
 		{	
 			Dependencies.Register<IFileStorage> (storage);
+			Dependencies.Register<IActorBehavior> (new DefaultActorBehavior ());
 		}
 
 		public GameState CurrentState { get; private set; }
@@ -48,8 +49,8 @@ namespace ArenaGS
 		{
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
 			Map map = mapGenerator.Generate (0);
-			Character player = new Character (new Point (5, 5));
-			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (1, 1)), new Character (new Point (8,7)) });
+			Character player = Character.CreatePlayer (new Point (5, 5));
+			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (1, 1)), Character.Create (new Point (8,7)) });
 			return new GameState (map, player, enemies, ImmutableList<string>.Empty);
 		}
 
@@ -60,7 +61,8 @@ namespace ArenaGS
 				case Command.PlayerMove:
 				{
 					Direction direction = (Direction)data;
-					SetNewState (Physics.Move (CurrentState.Player, direction, CurrentState));
+					SetNewState (Physics.MovePlayer (CurrentState, direction));
+					SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
 					return;
 				}
 				default:

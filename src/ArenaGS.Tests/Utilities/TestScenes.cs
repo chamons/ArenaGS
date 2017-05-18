@@ -8,9 +8,9 @@ namespace ArenaGS.Tests.Utilities
 	{
 		internal static GameState CreateTinyRoomState ()
 		{
-			var character = new Character (new Point (1, 1));
+			var character = Character.CreatePlayer (new Point (1, 1)).WithCT (100);
 			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0);
-			var enemies = ImmutableList.Create (new Character[] { new Character (new Point (2, 2)) });
+			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (2, 2)) });
 			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
 		}
 	}
