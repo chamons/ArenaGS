@@ -72,6 +72,9 @@
     <Compile Include="ViewController.designer.cs">
       <DependentUpon>ViewController.cs</DependentUpon>
     </Compile>
+    <Compile Include="..\ArenaGS.Windows\FileStorage.cs">
+      <Link>FileStorage.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Main.storyboard" />
@@ -84,6 +87,10 @@
     <ProjectReference Include="..\ArenaGS\ArenaGS.csproj">
       <Project>{206941D1-9A48-42D7-BD22-8C1D75107B03}</Project>
       <Name>ArenaGS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
+      <Project>{F8C39422-841B-48D9-ACFC-5D44C7A889DB}</Project>
+      <Name>ArenaGS.Platform</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />

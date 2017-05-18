@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ArenaGS.Platform;
 
-namespace ArenaGS.Windows
+namespace ArenaGS.Utilities
 {
 	class FileStorage : IFileStorage
 	{
@@ -14,7 +14,11 @@ namespace ArenaGS.Windows
 		{
 			get
 			{
+#if __MACOS__
+				string savedGamePath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library/Application Support/");
+#else
 				string savedGamePath = System.Environment.ExpandEnvironmentVariables ("%USERPROFILE%\\Saved Games");
+#endif
 				return Path.Combine (savedGamePath, "Arena Gunpowder and Sorcery", "ArenaGS.sav");
 			}
 		}
