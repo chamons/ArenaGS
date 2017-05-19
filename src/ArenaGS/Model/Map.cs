@@ -42,6 +42,11 @@ namespace ArenaGS.Model
 			Tiles [p.X, p.Y] = new MapTile (terrain);
 		}
 
+		public bool IsWalkable (Point p)
+		{
+			return this[p].Terrain == TerrainType.Floor;
+		}
+
 		public Point CoercePointOntoMap (Point p)
 		{
 			if (IsOnMap (p))
