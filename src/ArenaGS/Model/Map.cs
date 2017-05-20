@@ -44,7 +44,7 @@ namespace ArenaGS.Model
 
 		public bool IsWalkable (Point p)
 		{
-			return this[p].Terrain == TerrainType.Floor;
+			return IsOnMap (p) && this[p].Terrain == TerrainType.Floor;
 		}
 
 		public Point CoercePointOntoMap (Point p)

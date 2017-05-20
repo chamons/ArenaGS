@@ -12,21 +12,12 @@ namespace ArenaGS.Engine
 		static void AddNeighbors (Point current, Map map, Queue<KeyValuePair<Point, int>> unvisited, ref int[,] pathArray)
 		{
 			int newValue = pathArray[current.X, current.Y] + 1;
-			Point north = new Point (current.X, current.Y - 1);
-			if (map.IsOnMap (north) && map.IsWalkable (north) && pathArray[north.X, north.Y] == -1 && !unvisited.Any (x => x.Key == north))
-				unvisited.Enqueue (new KeyValuePair<Point, int> (north, newValue));
-
-			Point south = new Point (current.X, current.Y + 1);
-			if (map.IsOnMap (south) && map.IsWalkable (south) && pathArray[south.X, south.Y] == -1 && !unvisited.Any (x => x.Key == south))
-				unvisited.Enqueue (new KeyValuePair<Point, int> (south, newValue));
-
-			Point west = new Point (current.X - 1, current.Y);
-			if (map.IsOnMap (west) && map.IsWalkable (west) && pathArray[west.X, west.Y] == -1 && !unvisited.Any (x => x.Key == west))
-				unvisited.Enqueue (new KeyValuePair<Point, int> (west, newValue));
-
-			Point east = new Point (current.X + 1, current.Y);
-			if (map.IsOnMap (east) && map.IsWalkable (east) && pathArray[east.X, east.Y] == -1 && !unvisited.Any (x => x.Key == east))
-				unvisited.Enqueue (new KeyValuePair<Point, int> (east, newValue));
+			foreach (Direction direction in Directions.All)
+			{
+				Point p = current.InDirection (direction);
+				if (map.IsWalkable (p) && pathArray[p.X, p.Y] == -1 && !unvisited.Any (x => x.Key == p))
+					unvisited.Enqueue (new KeyValuePair<Point, int> (p, newValue));
+			}
 		}
 
 		

@@ -2,6 +2,9 @@
 using System.Windows;
 using ArenaGS.Views;
 using SkiaSharp;
+using ArenaGS.Utilities;
+
+using Point = System.Windows.Point;
 
 namespace ArenaGS.Windows
 {

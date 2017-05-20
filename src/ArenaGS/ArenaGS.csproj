@@ -37,6 +37,7 @@
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapGenerator.cs" />
     <Compile Include="Model\MapTile.cs" />
