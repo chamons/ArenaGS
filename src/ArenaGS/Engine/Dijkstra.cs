@@ -42,6 +42,30 @@ namespace ArenaGS.Engine
 			return pathArray;
 		}
 
+		public static List<Direction> NextStep (Map map, int[,] shortestPath, Point currentPoint)
+		{
+			int lowest = int.MaxValue;
+			foreach (Direction direction in Directions.All)
+			{
+				Point adjPoint = currentPoint.InDirection (direction);
+				if (map.IsOnMap (adjPoint))
+				{
+					int value = shortestPath[adjPoint.X, adjPoint.Y];
+					if (value != -1)
+						lowest = Math.Min (lowest, value);
+				}
+			}
+
+			List<Direction> nextSteps = new List<Direction> ();
+			foreach (Direction direction in Directions.All)
+			{
+				Point adjPoint = currentPoint.InDirection (direction);
+				if (map.IsOnMap (adjPoint) && shortestPath[adjPoint.X, adjPoint.Y] == lowest)
+					nextSteps.Add (direction);
+			}
+			return nextSteps;
+		}
+
 		public static string ToDebugString (this int [,] array)
 		{
 			int width = array.GetLength (0);

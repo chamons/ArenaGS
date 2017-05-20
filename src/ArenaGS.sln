@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Tests", "ArenaGS.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArenaGS.Platform", "ArenaGS.Platform\ArenaGS.Platform.csproj", "{F8C39422-841B-48D9-ACFC-5D44C7A889DB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{12447383-2F8E-497C-BD7B-3CDD8AB8217D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{6F043C5D-8211-4E55-ACB3-60ED052EA423} = {12447383-2F8E-497C-BD7B-3CDD8AB8217D}
+		{4EDFE2BA-DBFA-4A7E-981E-5D3C0231CC2B} = {12447383-2F8E-497C-BD7B-3CDD8AB8217D}
 		{6DE13233-1ACC-4607-837E-19BDF026F5EE} = {C58803BD-1251-4A2F-BA80-6EAAE5A72631}
 	EndGlobalSection
 EndGlobal

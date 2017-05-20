@@ -62,12 +62,17 @@ namespace ArenaGS
 				{
 					Direction direction = (Direction)data;
 					SetNewState (Physics.MovePlayer (CurrentState, direction));
-					SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
-					return;
+					break;
+				}
+				case Command.Wait:
+				{
+					SetNewState (Physics.WaitPlayer (CurrentState));
+					break;
 				}
 				default:
 					throw new NotImplementedException ($"Command {c} not implemented.");
 			}
+			SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
 		}
 
 		void SetupDefaultDependencies ()

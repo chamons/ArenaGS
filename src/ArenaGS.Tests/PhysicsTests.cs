@@ -86,5 +86,9 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (newState.Enemies[0].Position, new Point (2, 1), "Walk into empty should move enemy");
 			Assert.AreEqual (0, newState.Enemies[0].CT);
 		}
+
+		// WaitPlayer
+		// WaitEnemy
+
 	}
 }

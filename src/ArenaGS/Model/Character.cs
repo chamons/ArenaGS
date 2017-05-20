@@ -65,12 +65,12 @@ namespace ArenaGS.Model
 
 		internal static Character Create (Point position)
 		{
-			return new Character (GetNextID (), position, 0);
+			return new Character (GetNextID (), position, 100);
 		}
 
 		internal static Character CreatePlayer (Point position)
 		{
-			return new Character (PlayerID, position, 0);
+			return new Character (PlayerID, position, 100);
 
 		}
 	}

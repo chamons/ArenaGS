@@ -18,11 +18,9 @@ namespace ArenaGS.Engine
 			// For as long as it takes
 			while (true)
 			{
-				// Find the next actor to run
-				Character next = state.AllActors.OrderBy (x => x.CT).Reverse ().First ();
-
-				// If they have enough CT, act
-				if (next.CT >= CTNededForAction)
+				Character next = state.AllActors.FirstOrDefault (x => x.CT >= CTNededForAction);
+				
+				if (next != null)
 				{
 					// If it is the player, we're done
 					if (next == state.Player)
@@ -32,9 +30,9 @@ namespace ArenaGS.Engine
 				}
 				else // Else increment everyone's CT by the amount needed (int CTPerTick chunks) 
 				{
-					int ctNeeded = CTNededForAction - next.CT;
-					int ticksNeeded = ctNeeded % 10;
-					if ((ctNeeded / 10) > 0)
+					int ctNeeded = CTNededForAction - state.AllActors.OrderByDescending (x => x.CT).First ().CT;
+					int ticksNeeded = ctNeeded / 10;
+					if ((ctNeeded % 10) > 0)
 						ticksNeeded += 1;
 
 					state = state.WithPlayer (state.Player.WithAdditionalCT (ticksNeeded * CTPerTick));

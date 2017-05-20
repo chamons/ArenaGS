@@ -1,4 +1,8 @@
 ﻿namespace ArenaGS
 {
-	public enum Command { PlayerMove }; // Direction
+	public enum Command
+	{
+		PlayerMove,  // Direction
+		Wait, // Null
+	};
 }
