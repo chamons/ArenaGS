@@ -89,6 +89,5 @@ namespace ArenaGS.Tests
 
 		// WaitPlayer
 		// WaitEnemy
-
 	}
 }
