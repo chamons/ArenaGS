@@ -19,7 +19,6 @@ namespace ArenaGS.Engine
 					unvisited.Enqueue (new KeyValuePair<Point, int> (p, newValue));
 			}
 		}
-
 		
 		public static int [,] CalculateShortestPathArray (Map map, Point initialPoint)
 		{
