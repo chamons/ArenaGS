@@ -37,6 +37,7 @@
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapGenerator.cs" />
     <Compile Include="Model\MapTile.cs" />
@@ -46,6 +47,7 @@
     <Compile Include="Utilities\PointExtensions.cs" />
     <Compile Include="Utilities\Serialization.cs" />
     <Compile Include="Utilities\Size.cs" />
+    <Compile Include="Engine\Dijkstra.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">

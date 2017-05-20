@@ -55,6 +55,7 @@
     <Compile Include="Utilities\TestFileStorage.cs" />
     <Compile Include="Utilities\TestMapGenerator.cs" />
     <Compile Include="Utilities\TestScenes.cs" />
+    <Compile Include="DijkstraTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
