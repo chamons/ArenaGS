@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
@@ -9,37 +8,79 @@ namespace ArenaGS.Engine
 {
 	public static class Dijkstra
 	{
-		static void AddNeighbors (Point current, Map map, Queue<KeyValuePair<Point, int>> unvisited, ref int[,] pathArray)
+		struct MapNode
 		{
-			int newValue = pathArray[current.X, current.Y] + 1;
-			foreach (Direction direction in Directions.All)
+			public Point Position;
+			public int Value;
+
+			public MapNode (Point p, int value)
 			{
-				Point p = current.InDirection (direction);
-				if (map.IsWalkable (p) && pathArray[p.X, p.Y] == -1 && !unvisited.Any (x => x.Key == p))
-					unvisited.Enqueue (new KeyValuePair<Point, int> (p, newValue));
+				Position = p;
+				Value = value;
 			}
 		}
-		
+
+		static void AddNeighbors (MapNode current, Map map, Queue<MapNode> unvisited)
+		{
+			int newValue = current.Value + 1;
+			foreach (Direction direction in Directions.All)
+			{
+				Point p = current.Position.InDirection (direction);
+				if (map.IsWalkable (p))
+					unvisited.Enqueue (new MapNode (p, newValue));
+			}
+		}
+
 		public static int [,] CalculateShortestPathArray (Map map, Point initialPoint)
 		{
-			var unvisited = new Queue<KeyValuePair<Point, int>> ();
-
-			int[,] pathArray = new int[map.Width, map.Height];
+			int [,] pathArray = new int [map.Width, map.Height];
 			for (int i = 0; i < map.Width; ++i)
 				for (int j = 0; j < map.Height; ++j)
-					pathArray[i, j] = -1;
+					pathArray [i, j] = -1;
 
-			pathArray[initialPoint.X, initialPoint.Y] = 0;
-			AddNeighbors (initialPoint, map, unvisited, ref pathArray);
+			var unvisited = new Queue<MapNode> ();
+			unvisited.Enqueue (new MapNode (initialPoint, 0));
 
 			while (unvisited.Count > 0)
 			{
 				var current = unvisited.Dequeue ();
-				pathArray[current.Key.X, current.Key.Y] = current.Value;
-				AddNeighbors (current.Key, map, unvisited, ref pathArray);
+
+				int existingValue = pathArray [current.Position.X, current.Position.Y];
+				if (existingValue == -1)
+				{
+					pathArray [current.Position.X, current.Position.Y] = current.Value;
+					AddNeighbors (current, map, unvisited);
+				}
+				else
+				{
+					pathArray [current.Position.X, current.Position.Y] = Math.Min (existingValue, current.Value);
+				}
+			}
+			return pathArray;
+		}
+
+		public static List<Direction> NextStep (Map map, int [,] shortestPath, Point currentPoint)
+		{
+			int lowest = int.MaxValue;
+			foreach (Direction direction in Directions.All)
+			{
+				Point adjPoint = currentPoint.InDirection (direction);
+				if (map.IsOnMap (adjPoint))
+				{
+					int value = shortestPath [adjPoint.X, adjPoint.Y];
+					if (value != -1)
+						lowest = Math.Min (lowest, value);
+				}
 			}
 
-			return pathArray;
+			List<Direction> nextSteps = new List<Direction> ();
+			foreach (Direction direction in Directions.All)
+			{
+				Point adjPoint = currentPoint.InDirection (direction);
+				if (map.IsOnMap (adjPoint) && shortestPath [adjPoint.X, adjPoint.Y] == lowest)
+					nextSteps.Add (direction);
+			}
+			return nextSteps;
 		}
 
 		public static string ToDebugString (this int [,] array)
@@ -48,10 +89,12 @@ namespace ArenaGS.Engine
 			int height = array.GetLength (1);
 
 			StringBuilder output = new StringBuilder ();
-			for (int j = 0; j < height; ++j) {
+			for (int j = 0; j < height; ++j)
+			{
 				StringBuilder buffer = new StringBuilder (width);
-				for (int i = 0; i < width; ++i) {
-					int value = array[i, j];
+				for (int i = 0; i < width; ++i)
+				{
+					int value = array [i, j];
 					string symbol;
 					if (value == -1)
 						symbol = "*";

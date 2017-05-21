@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArenaGS.Model;
+using ArenaGS.Utilities;
+using Optional;
 
 namespace ArenaGS.Engine
 {
@@ -12,7 +16,25 @@ namespace ArenaGS.Engine
 	{
 		public GameState Act (GameState state, Character c)
 		{
-			return state.WithReplaceEnemy (Physics.Wait (c));
+			Option<GameState> walkState = WalkTowardsPlayerIfCan (state, c);
+
+			return walkState.ValueOr (Physics.WaitEnemy (state, c));
+		}
+
+		Option<GameState> WalkTowardsPlayerIfCan (GameState state, Character c)
+		{
+			int[,] shortestPath = state.ShortestPath;
+
+			List<Direction> nextStepsTowardPlayer = Dijkstra.NextStep (state.Map, shortestPath, c.Position);
+			if (nextStepsTowardPlayer.Count == 0)
+				return Option.None<GameState>();
+
+			foreach (var direction in nextStepsTowardPlayer)
+			{
+				if (Physics.CouldCharacterWalk (state, c, c.Position.InDirection (direction)))
+					return Physics.MoveEnemy (state, c, direction).Some ();
+			}
+			return Option.None<GameState> ();
 		}
 	}
 }

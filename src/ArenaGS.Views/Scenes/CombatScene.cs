@@ -27,6 +27,10 @@ namespace ArenaGS.Views.Scenes
 		{
 			switch (character)
 			{
+				case "OemPeriod":
+				case "Decimal":
+					Engine.AcceptCommand (Command.Wait, null);
+					return;
 				case "S":
 					Engine.SaveGame ();
 					return;

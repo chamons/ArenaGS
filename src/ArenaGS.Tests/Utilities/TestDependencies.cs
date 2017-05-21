@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using ArenaGS.Engine;
+using ArenaGS.Model;
 using ArenaGS.Platform;
 
 namespace ArenaGS.Tests.Utilities
@@ -9,6 +10,7 @@ namespace ArenaGS.Tests.Utilities
 		{
 			Dependencies.Register<IWorldGenerator> (new TestWorldGenerator ());
 			Dependencies.Register<IFileStorage> (new TestFileStorage ());
+			Dependencies.Register<IActorBehavior> (new DefaultActorBehavior ());
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using ArenaGS.Engine;
 using ArenaGS.Model;
 using ProtoBuf;
 
@@ -84,6 +85,19 @@ namespace ArenaGS
 		{
 			Character oldEnemy = Enemies.Single (x => x.ID == newEnemy.ID);
 			return new GameState (this) { Enemies = Enemies.Replace (oldEnemy, newEnemy) };
+		}
+
+		// TODO - This cache could be copied in GameState (GameState original) if we are 
+		// very careful about invalidation.
+		private int[,] shortestPath;
+		internal int[,] ShortestPath
+		{
+			get
+			{
+				if (shortestPath == null)
+					shortestPath = Dijkstra.CalculateShortestPathArray (Map, Player.Position);
+				return shortestPath;
+			}
 		}
 	}
 }
