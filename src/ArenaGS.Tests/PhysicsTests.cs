@@ -28,7 +28,10 @@ namespace ArenaGS.Tests
 		public void SimpleMovementIntoWall_DoesNotMove ()
 		{
 			GameState state = TestScenes.CreateTinyRoomState ();
+			Assert.IsFalse (Physics.CouldCharacterWalk (state, state.Player, state.Player.Position.InDirection (Direction.South)));
+
 			GameState newState = Physics.MovePlayer (state, Direction.South);
+
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk south into wall fails");
 			Assert.AreEqual (100, newState.Player.CT);
 		}
@@ -87,7 +90,20 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (0, newState.Enemies[0].CT);
 		}
 
-		// WaitPlayer
-		// WaitEnemy
+		[Test]
+		public void WaitCharacter_ReturnsCTAsExpected ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState ();
+			Assert.AreEqual (100, state.Player.CT);
+			Assert.AreEqual (100, state.Enemies[0].CT);
+
+			state = Physics.WaitPlayer (state);
+			Assert.AreEqual (0, state.Player.CT);
+			Assert.AreEqual (100, state.Enemies[0].CT);
+
+			state = Physics.WaitEnemy (state, state.Enemies[0]);
+			Assert.AreEqual (0, state.Player.CT);
+			Assert.AreEqual (0, state.Enemies[0].CT);
+		}
 	}
 }

@@ -14,6 +14,14 @@ namespace ArenaGS.Tests.Utilities
 			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
 		}
 
+		internal static GameState CreateBoxRoomState ()
+		{
+			var character = Character.CreatePlayer (new Point (1, 1)).WithCT (100);
+			var map = CreateBoxRoom (50, 50);
+			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (3, 3)), Character.Create (new Point (20, 20)), Character.Create (new Point (5, 40)), Character.Create (new Point (40, 20))});
+			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
+		}
+
 		internal static Map CreateBoxRoom (int width, int height)
 		{
 			Map map = new Map (width, height, "Box", 0);
