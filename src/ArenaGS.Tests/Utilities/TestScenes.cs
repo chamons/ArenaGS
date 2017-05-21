@@ -30,5 +30,13 @@ namespace ArenaGS.Tests.Utilities
 					map.Set (new Point (i, j), TerrainType.Floor);
 			return map;
 		}
+
+		internal static Map CreateTinyMaze ()
+		{
+			Map map = CreateBoxRoom (5, 5);
+			map.Set (new Point (2, 1), TerrainType.Wall);
+			map.Set (new Point (2, 2), TerrainType.Wall);
+			return map;
+		}
 	}
 }
