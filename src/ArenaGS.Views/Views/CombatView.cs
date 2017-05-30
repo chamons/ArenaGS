@@ -11,13 +11,18 @@ namespace ArenaGS.Views.Views
 		readonly Point LogOffset = new Point (2, 485 + 10);
 		readonly Size LogSize = new Size (550, 85);
 
+		readonly Point SkillBarOffset = new Point (2, 580);
+		readonly Size SkillBarSize = new Size (550, 40);
+
 		MapView Map;
 		LogView Log;
+		SkillBarView SkillBar;
 
 		public CombatView (Point position, Size size) : base (position, size)
 		{
 			Map = new MapView (MapOffset, MapSize);
 			Log = new LogView (LogOffset, LogSize);
+			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -26,6 +31,7 @@ namespace ArenaGS.Views.Views
 
 			Canvas.DrawSurface (Map.Draw (state), MapOffset.X, MapOffset.Y);
 			Canvas.DrawSurface (Log.Draw (state), LogOffset.X, LogOffset.Y);
+			Canvas.DrawSurface (SkillBar.Draw (state), SkillBarOffset.X, SkillBarOffset.Y);
 
 			return Surface;
 		}

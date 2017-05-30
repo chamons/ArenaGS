@@ -12,7 +12,7 @@ namespace ArenaGS.Views.Scenes
 	class CombatScene : IScene
 	{
 		readonly Point CombatOffset = new Point (0, 0);
-		readonly Size CombatSize = new Size (1000, 600);
+		readonly Size CombatSize = new Size (1000, 640);
 
 		CombatView CombatView;
 		GameEngine Engine;
