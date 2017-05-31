@@ -3,7 +3,6 @@ using ArenaGS.Model;
 using ArenaGS.Utilities;
 using ArenaGS.Engine;
 using ArenaGS.Platform;
-using System.Threading.Tasks;
 using System.Collections.Immutable;
 
 namespace ArenaGS
@@ -67,6 +66,12 @@ namespace ArenaGS
 				case Command.Wait:
 				{
 					SetNewState (Physics.WaitPlayer (CurrentState));
+					break;
+				}
+				case Command.Skill:
+				{
+					SkillTarget target = (SkillTarget)data;
+					SetNewState (Skills.Invoke (CurrentState, CurrentState.Player, CurrentState.Player.Skills[target.Index], target.Position));
 					break;
 				}
 				default:

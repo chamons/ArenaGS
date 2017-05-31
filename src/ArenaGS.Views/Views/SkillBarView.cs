@@ -1,5 +1,7 @@
-﻿using ArenaGS.Utilities;
+﻿using ArenaGS.Model;
+using ArenaGS.Utilities;
 using SkiaSharp;
+using System;
 
 namespace ArenaGS.Views.Views
 {
@@ -9,13 +11,25 @@ namespace ArenaGS.Views.Views
 		{
 		}
 
-		const int NumberOfSkills = 15;
+		const int MaxNumberOfSkills = 15;
 		const int Padding = 2;
 		const int CellSize = 32;
 		const bool ShowHotkey = true;
 
-		string [] CellLabels = new string [NumberOfSkills] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "[", "]", "\\" };
-		string [] CellImages = new string [NumberOfSkills] { "burning-dot.png", "burning-meteor.png", "wave-crest.png", "wind-hole.png", "snowing.png", "lightning-branches.png", "blunderbuss.png", "grenade.png", "firework-rocket.png", "materials-science.png", "missile-mech.png", "missile-swarm.png", "ray-gun.png", "sentry-gun.png", "armor-vest.png" };
+		string [] CellLabels = new string [MaxNumberOfSkills] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "[", "]", "\\" };
+
+		string ImageForSkill (Skill s)
+		{
+			switch (s.Name)
+			{
+				case "Fireball":
+					return "burning-meteor.png";
+				case "Grenade":
+					return "grenade.png";
+				default:
+					return "cog.png";
+			}			
+		}
 
 		SKPaint BlackPaint = new SKPaint () { Color = SKColors.Black };
 		SKPaint AntialiasPaint = new SKPaint () { IsAntialias = false };
@@ -24,7 +38,8 @@ namespace ArenaGS.Views.Views
 
 		public override SKSurface Draw (GameState state)
 		{
-			for (int i = 0; i < NumberOfSkills; ++i)
+			var skills = state.Player.Skills;
+			for (int i = 0; i < Math.Min (skills.Count, MaxNumberOfSkills); ++i)
 			{
 				int left = Padding + ((Padding + CellSize) * i);
 				int top = Padding;
@@ -33,7 +48,7 @@ namespace ArenaGS.Views.Views
 
 				Canvas.DrawRect (new SKRect (left, top, right, bottom), CellBorder);
 
-				Canvas.DrawBitmap (Resources.Get (CellImages[i]), new SKRect (left + Padding, top + Padding, right - Padding, bottom - Padding), AntialiasPaint);
+				Canvas.DrawBitmap (Resources.Get (ImageForSkill (skills[i])), new SKRect (left + Padding, top + Padding, right - Padding, bottom - Padding), AntialiasPaint);
 
 				if (ShowHotkey)
 				{

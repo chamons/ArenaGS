@@ -1,5 +1,6 @@
 ﻿using ArenaGS.Utilities;
 using ProtoBuf;
+using System.Collections.Immutable;
 
 namespace ArenaGS.Model
 {
@@ -25,15 +26,19 @@ namespace ArenaGS.Model
 		[ProtoMember (3)]
 		public int CT { get; private set; }
 
+		[ProtoMember (4)]
+		public ImmutableList<Skill> Skills { get; private set; }
+
 		public Character ()
 		{
 		}
 
-		public Character (int id, Point position, int ct)
+		public Character (int id, Point position, int ct, ImmutableList<Skill> skills)
 		{
 			ID = id;
 			Position = position;
 			CT = ct;
+			Skills = skills;
 		}
 
 		Character (Character original)
@@ -41,6 +46,7 @@ namespace ArenaGS.Model
 			ID = original.ID;
 			Position = original.Position;
 			CT = original.CT;
+			Skills = original.Skills;
 		}
 
 		internal Character WithPosition (Point position)
@@ -65,13 +71,15 @@ namespace ArenaGS.Model
 
 		internal static Character Create (Point position)
 		{
-			return new Character (GetNextID (), position, 100);
+			return new Character (GetNextID (), position, 100, ImmutableList<Skill>.Empty);
 		}
 
 		internal static Character CreatePlayer (Point position)
 		{
-			return new Character (PlayerID, position, 100);
-
+			return new Character (PlayerID, position, 100, new Skill [] {
+				new Skill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8)),
+				new Skill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3))
+			}.ToImmutableList ());
 		}
 	}
 }
