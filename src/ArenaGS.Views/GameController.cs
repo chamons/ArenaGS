@@ -27,7 +27,7 @@ namespace ArenaGS
 			GameEngine = new GameEngine (storage);
 
 			// TODO - This will someday need to be calculated based on current GameState
-			CurrentScene = new CombatScene (GameEngine);
+			CurrentScene = new CombatScene (this, GameEngine);
 
 			GameEngine.StateChanged += OnGameEngineStateChanged;
 			GameEngine.Load ();
@@ -36,6 +36,11 @@ namespace ArenaGS
 		private void OnGameEngineStateChanged (object sender, EventArgs e)
 		{
 			// This is lazy and will need to be changed, specially when we have animations
+			Invalidate ();
+		}
+
+		public void Invalidate ()
+		{
 			GameWindow.Invalidate ();
 		}
 

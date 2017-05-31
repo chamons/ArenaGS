@@ -26,6 +26,6 @@ namespace ArenaGS.Views.Views
 		protected SKSurface Surface { get; private set; }
 		protected SKCanvas Canvas => Surface.Canvas;
 
-		public abstract SKSurface Draw (GameState state);
+		public abstract SKSurface Draw (GameState state, object data = null);
 	}
 }

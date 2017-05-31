@@ -94,5 +94,10 @@ namespace ArenaGS.Utilities
 		{
 			return Math.Abs (point1.X - point2.X) + Math.Abs (point1.Y - point2.Y);
 		}
+
+		public static double NormalDistance (this Point point1, Point point2)
+		{
+			return Math.Sqrt (Math.Pow (point1.X - point2.X, 2) + Math.Pow (point1.Y - point2.Y, 2));
+		}
 	}
 }

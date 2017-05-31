@@ -35,7 +35,7 @@ namespace ArenaGS.Model
 		{
 		}
 
-		public TargettingInfo (TargettingStyle style, int range = 0, int area = 1)
+		public TargettingInfo (TargettingStyle style, int range = 0, int area = 0)
 		{
 			TargettingStyle = style;
 			Range = range;

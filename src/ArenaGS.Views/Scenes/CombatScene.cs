@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using System;
+using ArenaGS.Model;
 using ArenaGS.Utilities;
 using ArenaGS.Views.Views;
 using SkiaSharp;
@@ -10,13 +11,79 @@ namespace ArenaGS.Views.Scenes
 		readonly Point CombatOffset = new Point (0, 0);
 		readonly Size CombatSize = new Size (1000, 640);
 
+		GameController Controller;
 		CombatView CombatView;
 		GameEngine Engine;
 
-		public CombatScene (GameEngine engine)
+		CombatDefault DefaultOverlay;
+		IOverlay Overlay;
+
+		public CombatScene (GameController controller, GameEngine engine)
 		{
+			Controller = controller;
 			Engine = engine;
 			CombatView = new CombatView (CombatOffset, CombatSize);
+			DefaultOverlay = new CombatDefault (this, Engine);
+
+			SetDefaultOverlay ();
+		}
+
+		public void SetDefaultOverlay ()
+		{
+			SetOverlay (DefaultOverlay);
+		}
+
+		public void SetOverlay (IOverlay overlay)
+		{
+			Overlay?.DisableOverlay (CombatView);
+			Overlay = overlay;
+			Invalidate (); // Nothing happened in GameState but we need to redraw
+		}
+
+		public void Invalidate ()
+		{
+			Controller.Invalidate ();
+		}
+
+		public void HandleMouseDown (SKPointI point)
+		{
+			Overlay.HandleMouseDown (point);
+		}
+
+		public void HandleMouseUp (SKPointI point)
+		{
+			Overlay.HandleMouseUp (point);
+		}
+
+		public void HandleKeyDown (string character)
+		{
+			if (character == "Escape") // TODO MAC
+			{
+				SetDefaultOverlay ();
+				return;
+			}
+
+			Overlay.HandleKeyDown (character);
+		}
+
+		public void HandlePaint (SKSurface surface)
+		{		
+			surface.Canvas.Clear (SKColors.Black);
+
+			Overlay.ConfigureView (CombatView);
+			surface.Canvas.DrawSurface (CombatView.Draw (Engine.CurrentState), 0, 0);
+		}
+	}
+
+	class CombatDefault : IOverlay
+	{
+		GameEngine Engine;
+		CombatScene Parent;
+
+		public CombatDefault (CombatScene parent, GameEngine engine)
+		{
+			Parent = parent;
+			Engine = engine;		
 		}
 
 		public void HandleKeyDown (string character)
@@ -48,50 +115,50 @@ namespace ArenaGS.Views.Scenes
 				case "Right":
 				case "NumPad6":
 					Engine.AcceptCommand (Command.PlayerMove, Direction.East);
-					return;					
-				case "D1":
-					HandleSkill (0);
+					return;
+				case "D1": // TODO MAC D1- Oem5
+					RequestSkill (0);
 					return;
 				case "D2":
-					HandleSkill (1);
+					RequestSkill (1);
 					return;
 				case "D3":
-					HandleSkill (2);
+					RequestSkill (2);
 					return;
 				case "D4":
-					HandleSkill (3);
+					RequestSkill (3);
 					return;
 				case "D5":
-					HandleSkill (4);
+					RequestSkill (4);
 					return;
 				case "D6":
-					HandleSkill (5);
+					RequestSkill (5);
 					return;
 				case "D7":
-					HandleSkill (6);
+					RequestSkill (6);
 					return;
 				case "D8":
-					HandleSkill (7);
+					RequestSkill (7);
 					return;
 				case "D9":
-					HandleSkill (8);
+					RequestSkill (8);
 					return;
 				case "D0":
-					HandleSkill (19);
+					RequestSkill (9);
 					return;
 				case "OemMinus":
-					HandleSkill (10);
+					RequestSkill (10);
 					return;
 				case "OemPlus":
-					HandleSkill (11);
+					RequestSkill (11);
 					return;
 				case "Oem5":
-					HandleSkill (12);
+					RequestSkill (12);
 					return;
 			}
 		}
 
-		void HandleSkill (int index)
+		internal void RequestSkill (int index)
 		{
 			var skills = Engine.CurrentState.Player.Skills;
 			if (index < skills.Count)
@@ -100,8 +167,14 @@ namespace ArenaGS.Views.Scenes
 				switch (selectedSkill.TargetInfo.TargettingStyle)
 				{
 					case TargettingStyle.Point:
+						TargettingOverlay overlay = new TargettingOverlay (Parent, selectedSkill.TargetInfo, Engine.CurrentState.Player.Position, p =>
+						{
+							Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
+						});
+						Parent.SetOverlay (overlay);
+						return;
 					case TargettingStyle.None:
-						Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index } );
+						Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index });
 						return;
 				}
 			}
@@ -115,12 +188,12 @@ namespace ArenaGS.Views.Scenes
 		{
 		}
 
-		public void HandlePaint (SKSurface surface)
+		public void ConfigureView (CombatView combatView)
 		{
-			surface.Canvas.Clear (SKColors.Black);
-			surface.Canvas.DrawSurface (CombatView.Draw (Engine.CurrentState), 0, 0);
 		}
 
-
+		public void DisableOverlay (CombatView combatView)
+		{
+		}
 	}
 }

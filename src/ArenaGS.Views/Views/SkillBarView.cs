@@ -36,7 +36,7 @@ namespace ArenaGS.Views.Views
 		SKPaint CellText = new SKPaint () { Color = SKColors.White, TextSize = 10, TextAlign = SKTextAlign.Center };
 		SKPaint CellBorder = new SKPaint () { Color = SKColors.White, StrokeWidth = 2, IsStroke = true };
 
-		public override SKSurface Draw (GameState state)
+		public override SKSurface Draw (GameState state, object data)
 		{
 			var skills = state.Player.Skills;
 			for (int i = 0; i < Math.Min (skills.Count, MaxNumberOfSkills); ++i)

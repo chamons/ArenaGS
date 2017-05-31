@@ -14,7 +14,8 @@ namespace ArenaGS.Views.Views
 		const int LogBorder = 2;
 		const int LogLeftSideBorder = LogBorder + 5;
 		const int LogLineHeight = 15;
-		public override SKSurface Draw (GameState state)
+
+		public override SKSurface Draw (GameState state, object data)
 		{
 			BlankCanvas ();
 
