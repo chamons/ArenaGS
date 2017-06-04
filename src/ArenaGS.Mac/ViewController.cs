@@ -51,7 +51,7 @@ namespace ArenaGS.Mac {
 			Controller = new GameController (this);
 			Controller.Startup (new FileStorage ());
 
-			Canvas = new CanvasView (View.Frame);
+			Canvas = new CanvasView (View.Frame) { IgnorePixelScaling = true };
 			Canvas.PaintSurface += OnPlatformPaint;
 
 			View.AddSubview (Canvas);
