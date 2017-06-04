@@ -55,9 +55,10 @@ namespace ArenaGS.Views.Scenes
 			Overlay.HandleMouseUp (point);
 		}
 
+		string EscapeString = ((char)27).ToString (); // 27 is ESC ascii code. macOS returns this
 		public void HandleKeyDown (string character)
 		{
-			if (character == "Escape") // TODO MAC
+			if (character ==  EscapeString || character == "Escape")
 			{
 				SetDefaultOverlay ();
 				return;
@@ -116,42 +117,55 @@ namespace ArenaGS.Views.Scenes
 				case "NumPad6":
 					Engine.AcceptCommand (Command.PlayerMove, Direction.East);
 					return;
-				case "D1": // TODO MAC D1- Oem5
+				case "1":
+				case "D1":
 					RequestSkill (0);
 					return;
+				case "2":
 				case "D2":
 					RequestSkill (1);
 					return;
+				case "3":
 				case "D3":
 					RequestSkill (2);
 					return;
+				case "4":
 				case "D4":
 					RequestSkill (3);
 					return;
+				case "5":
 				case "D5":
 					RequestSkill (4);
 					return;
+				case "6":
 				case "D6":
 					RequestSkill (5);
 					return;
+				case "7":
 				case "D7":
 					RequestSkill (6);
 					return;
+				case "8":
 				case "D8":
 					RequestSkill (7);
 					return;
+				case "9":
 				case "D9":
 					RequestSkill (8);
 					return;
+				case "0":
 				case "D0":
 					RequestSkill (9);
 					return;
+				case "-":
 				case "OemMinus":
 					RequestSkill (10);
 					return;
+				case "+":
 				case "OemPlus":
 					RequestSkill (11);
 					return;
+				case "\\":
 				case "Oem5":
 					RequestSkill (12);
 					return;

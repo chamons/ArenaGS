@@ -118,7 +118,8 @@ namespace ArenaGS.Mac {
 
 		public void Invalidate ()
 		{
-			Canvas.NeedsDisplay = true;
+			if (Canvas != null)
+				Canvas.NeedsDisplay = true;
 		}
 
 		void OnPlatformPaint (object sender, SKPaintSurfaceEventArgs e)

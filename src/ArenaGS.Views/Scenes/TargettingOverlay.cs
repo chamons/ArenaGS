@@ -39,7 +39,8 @@ namespace ArenaGS.Views.Scenes
 		{
 			switch (character)
 			{
-				case "Return": // TODO MAC
+				case "\r":
+				case "Return":
 					if (CurrentPositionIsValidTarget)
 					{
 						Parent.SetDefaultOverlay ();
