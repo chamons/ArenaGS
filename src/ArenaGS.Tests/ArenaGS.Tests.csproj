@@ -52,7 +52,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActorBehaviorTests.cs" />
-    <Compile Include="SkillTests.cs" />
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
     <Compile Include="TimeTests.cs" />
