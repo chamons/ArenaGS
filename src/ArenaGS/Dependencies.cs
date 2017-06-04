@@ -35,5 +35,11 @@ namespace ArenaGS
 			if (Types.ContainsKey (typeof (T)))
 				Types.Remove (typeof (T));
 		}
+
+		internal static void Clear ()
+		{
+			Items.Clear ();
+			Types.Clear ();
+		}
 	}
 }

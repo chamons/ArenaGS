@@ -17,6 +17,9 @@ namespace ArenaGS
 		{	
 			Dependencies.RegisterInstance <IFileStorage> (storage);
 			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
+			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
+			Dependencies.Register<IPhysics> (typeof (Physics));
+			Dependencies.Register<ISkills> (typeof (Skills));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
@@ -24,7 +27,6 @@ namespace ArenaGS
 
 		public void Load ()
 		{
-			SetupDefaultDependencies ();
 			if (Serialization.SaveGameExists)
 				CurrentState = Serialization.Load ();
 			else
@@ -83,13 +85,6 @@ namespace ArenaGS
 					throw new NotImplementedException ($"Command {c} not implemented.");
 			}
 			SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
-		}
-
-		void SetupDefaultDependencies ()
-		{
-			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
-			Dependencies.Register<IPhysics> (typeof (Physics));
-			Dependencies.Register<ISkills> (typeof (Skills));
 		}
 	}
 }

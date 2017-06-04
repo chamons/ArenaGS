@@ -18,7 +18,7 @@ namespace ArenaGS.Tests
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
-			Dependencies.Register<IActorBehavior> (typeof (TimeTests));
+			Dependencies.RegisterInstance<IActorBehavior> (this);
 			CharactersThatActed = new List<Character> ();
 		}
 

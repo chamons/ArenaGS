@@ -71,7 +71,7 @@ namespace ArenaGS.Model
 		}
 
 		internal static int PlayerID = 42;
-		bool IsPlayer => ID == PlayerID;
+		public bool IsPlayer => ID == PlayerID;
 
 		// HACK
 		static int NextID = 100;

@@ -1,6 +1,8 @@
 ﻿using System;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ArenaGS.Engine
 {
@@ -31,7 +33,10 @@ namespace ArenaGS.Engine
 			switch (skill.Effect)
 			{
 				case Effect.Damage:
-					return Physics.Damage (state, invoker, 1);
+					HashSet<Point> areaAffected = new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area));					
+					foreach (var enemy in state.Enemies.Concat (state.Player.Yield ()).Where (x => areaAffected.Contains (x.Position)))
+						state = Physics.Damage (state, enemy, 1);
+					return state;
 				case Effect.None:
 					break;
 			}

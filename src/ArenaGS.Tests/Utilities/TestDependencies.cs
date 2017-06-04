@@ -8,6 +8,7 @@ namespace ArenaGS.Tests.Utilities
 	{
 		internal static void SetupTestDependencies ()
 		{
+			Dependencies.Clear ();
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
 			Dependencies.Register<IWorldGenerator> (typeof (TestWorldGenerator));

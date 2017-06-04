@@ -44,6 +44,7 @@
     <Compile Include="Model\MapGenerator.cs" />
     <Compile Include="Model\MapTile.cs" />
     <Compile Include="Model\NumberExtensions.cs" />
+    <Compile Include="Utilities\EnumerableExtensions.cs" />
     <Compile Include="Utilities\Point.cs" />
     <Compile Include="Model\WorldGenerator.cs" />
     <Compile Include="Utilities\PointExtensions.cs" />
