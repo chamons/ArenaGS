@@ -181,7 +181,7 @@ namespace ArenaGS.Views.Scenes
 				switch (selectedSkill.TargetInfo.TargettingStyle)
 				{
 					case TargettingStyle.Point:
-						TargettingOverlay overlay = new TargettingOverlay (Parent, selectedSkill.TargetInfo, Engine.CurrentState.Player.Position, p =>
+						TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, Engine.CurrentState, selectedSkill, Engine.CurrentState.Player.Position, p =>
 						{
 							Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
 						});

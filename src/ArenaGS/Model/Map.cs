@@ -4,7 +4,7 @@ using ProtoBuf;
 
 namespace ArenaGS.Model
 {
-	// Technically not immutable, given Set, but promiced to be never called outside of MapGen
+	// Technically not immutable, given Set, but promised to be never called outside of MapGen
 	[ProtoContract]
 	public sealed class Map
 	{

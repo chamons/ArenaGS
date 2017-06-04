@@ -51,6 +51,7 @@
     <Compile Include="Utilities\Serialization.cs" />
     <Compile Include="Utilities\Size.cs" />
     <Compile Include="Engine\Dijkstra.cs" />
+    <Compile Include="Model\IQueryGameState.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">

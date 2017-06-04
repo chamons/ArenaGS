@@ -37,18 +37,6 @@ namespace ArenaGS.Model
 			Range = range;
 			Area = area;
 		}
-
-		public bool IsValidTarget (Point sourceLocation, Point target)
-		{
-			switch (TargettingStyle)
-			{
-				case TargettingStyle.Point:
-					return target.NormalDistance (sourceLocation) <= Range;
-				case TargettingStyle.None:
-				default:
-					return true;
-			}			
-		}
 	}
 
 	[ProtoContract]

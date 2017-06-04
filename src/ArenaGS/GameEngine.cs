@@ -12,6 +12,7 @@ namespace ArenaGS
 		public GameState CurrentState { get; private set; }
 		IPhysics Physics;
 		ISkills Skills;
+		public QueryGameState QueryGameState { get; }
 
 		public GameEngine (IFileStorage storage)
 		{	
@@ -23,6 +24,7 @@ namespace ArenaGS
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
+			QueryGameState = new QueryGameState ();
 		}		
 
 		public void Load ()

@@ -1,6 +1,7 @@
 ﻿using System;
 using ArenaGS.Views.Views;
 using SkiaSharp;
+using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
@@ -9,17 +10,22 @@ namespace ArenaGS.Views.Scenes
 	class TargettingOverlay : IOverlay
 	{
 		CombatScene Parent;
-		TargettingInfo TargetInfo;
-		Point StartingPosition;
-		Point CurrentTargettedPosition;
+		IQueryGameState QueryGameState;
+		GameState State;
+		Skill Skill;
 		Action<Point> OnTargetSelected;
+		Point StartingPosition;
 
-		bool CurrentPositionIsValidTarget => TargetInfo.IsValidTarget (StartingPosition, CurrentTargettedPosition);
+		Point CurrentTargettedPosition;
 
-		public TargettingOverlay (CombatScene parent, TargettingInfo info, Point startingPosition, Action <Point> onTargetSelected)
+		bool CurrentPositionIsValidTarget => QueryGameState.IsValidTargetForSkill (State, Skill, CurrentTargettedPosition);
+
+		public TargettingOverlay (CombatScene parent, IQueryGameState queryGameState, GameState state, Skill skill, Point startingPosition, Action <Point> onTargetSelected)
 		{
 			Parent = parent;
-			TargetInfo = info;
+			QueryGameState = queryGameState;
+			State = state;
+			Skill = skill;
 			StartingPosition = startingPosition;
 			CurrentTargettedPosition = startingPosition;
 			OnTargetSelected = onTargetSelected;
@@ -27,7 +33,7 @@ namespace ArenaGS.Views.Scenes
 
 		public void ConfigureView (CombatView combatView)
 		{
-			combatView.SetTargetOverlay (CurrentTargettedPosition, TargetInfo.Area, CurrentPositionIsValidTarget);
+			combatView.SetTargetOverlay (CurrentTargettedPosition, Skill.TargetInfo.Area, CurrentPositionIsValidTarget);
 		}
 
 		public void DisableOverlay (CombatView combatView)

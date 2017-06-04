@@ -23,7 +23,7 @@ namespace ArenaGS.Views.Views
 			for (int i = 0; i < Math.Min (MaxLogShown, state.LogEntries.Count); ++i)
 			{
 				SKPoint lineCenter = new SKPoint (VisualRect.Left + LogLeftSideBorder, VisualRect.Top + (LogLineHeight * (i + 1)));
-				Canvas.DrawText (state.LogEntries[i], lineCenter.X, lineCenter.Y, new SKPaint () { Color = SKColors.White, TextAlign = SKTextAlign.Left });
+				Canvas.DrawText (state.LogEntries[i], lineCenter.X, lineCenter.Y, new SKPaint () { Color = SKColors.White, TextSize = 12, IsAntialias = true, TextAlign = SKTextAlign.Left });
 			}
 			return Surface;
 		}

@@ -9,6 +9,7 @@ namespace ArenaGS.Engine
 	public interface ISkills
 	{
 		GameState Invoke (GameState state, Character invoker, Skill skill, Point target);
+		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
 	}
 
 	public class Skills : ISkills
@@ -25,7 +26,7 @@ namespace ArenaGS.Engine
 			if (!invoker.Skills.Contains (skill))
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} but did not contain it.");
 
-			if (!skill.TargetInfo.IsValidTarget (invoker.Position, target))
+			if (!IsValidTarget (state, invoker, skill, target))
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} at {target} but was invalid.");
 
 			// Skill is in range of target
@@ -42,6 +43,22 @@ namespace ArenaGS.Engine
 			}
 
 			return Physics.WaitPlayer (state).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+		}
+
+
+		public bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target)
+		{
+			if (!state.Map.IsOnMap (target))
+				return false;
+			
+			var targetInfo = skill.TargetInfo;
+			switch (targetInfo.TargettingStyle) {
+			case TargettingStyle.Point:
+				return target.NormalDistance (invoker.Position) <= targetInfo.Range;
+			case TargettingStyle.None:
+			default:
+				return true;
+			}
 		}
 	}
 }

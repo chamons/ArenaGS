@@ -74,7 +74,10 @@ namespace ArenaGS.Engine
 
 		public GameState Damage (GameState state, Character target, int amount)
 		{
-			return state.WithNewLogLine ($"{target} damaged by {amount}.");
+			if (target.IsPlayer)
+				return state.WithNewLogLine ($"{target} damaged by {amount}.");
+			else
+				return state.WithEnemies (state.Enemies.Remove (target));
 		}
 	}
 }
