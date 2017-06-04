@@ -19,6 +19,12 @@ namespace ArenaGS.Engine
 
 	public class Physics : IPhysics
 	{
+		ITime Time;
+		public Physics ()
+		{
+			Time = Dependencies.Get<ITime> ();
+		}
+		
 		public GameState MovePlayer (GameState state, Direction direction)
 		{
 			return state.WithPlayer (MoveCharacter (state, state.Player, direction));
@@ -47,7 +53,7 @@ namespace ArenaGS.Engine
 				return false;
 
 			bool isWalkableLocation = map[newPosition].Terrain == TerrainType.Floor;
-			bool isLocationEmpty = state.AllActors.All (x => x.Position != newPosition);
+			bool isLocationEmpty = state.AllCharacters.All (x => x.Position != newPosition);
 			return isWalkableLocation && isLocationEmpty;
 		}
 
@@ -55,21 +61,14 @@ namespace ArenaGS.Engine
 		{
 			Point newPosition = actor.Position.InDirection (direction);
 			if (CouldCharacterWalk (state, actor, newPosition))
-				return actor.WithPosition (newPosition, ChargeTime (actor, Time.CTPerMovement));
+				return actor.WithPosition (newPosition, Time.ChargeTime (actor, TimeConstants.CTPerMovement));
 
 			return actor;
 		}
 
 		public Character Wait (Character c)
 		{
-			return c.WithCT (ChargeTime (c, Time.CTPerBasicAction));
-		}
-
-		public int ChargeTime (Character c, int amount)
-		{
-			if (c.CT < amount)
-				throw new InvalidOperationException ($"Character {c} tried to act requring {amount} but only had {c.CT}");
-			return c.CT - amount;
+			return c.WithCT (Time.ChargeTime (c, TimeConstants.CTPerBasicAction));
 		}
 
 		public GameState Damage (GameState state, Character target, int amount)

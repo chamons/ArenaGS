@@ -22,9 +22,12 @@ namespace ArenaGS
 		[ProtoMember (4)]
 		public ImmutableList<string> LogEntries { get; private set; }
 
-		public IEnumerable<Character> AllActors
+		[ProtoMember (5)]
+		public ImmutableList<MapScript> Scripts { get; private set; }
+
+		public IEnumerable<Character> AllCharacters 
 		{
-			get
+			get 
 			{
 				yield return Player;
 				foreach (var enemy in Enemies)
@@ -32,15 +35,29 @@ namespace ArenaGS
 			}
 		}
 
+		public IEnumerable<ITimedElement> AllActors
+		{
+			get
+			{
+				yield return Player;
+				foreach (var enemy in Enemies)
+					yield return enemy;
+
+				foreach (var script in Scripts)
+					yield return script;
+			}
+		}
+
 		public GameState ()
 		{
 		}
 
-		public GameState (Map map, Character player, ImmutableList<Character> enemies, ImmutableList<string> logEntries)
+		public GameState (Map map, Character player, ImmutableList<Character> enemies, ImmutableList<MapScript> scripts, ImmutableList<string> logEntries)
 		{
 			Map = map;
 			Player = player;
 			Enemies = enemies;
+			Scripts = scripts;
 			LogEntries = logEntries;
 		}
 
@@ -49,6 +66,7 @@ namespace ArenaGS
 			Map = original.Map;
 			Player = original.Player;
 			Enemies = original.Enemies;
+			Scripts = original.Scripts;
 			LogEntries = original.LogEntries;
 		}
 
@@ -65,6 +83,11 @@ namespace ArenaGS
 		internal GameState WithEnemies (ImmutableList<Character> enemies)
 		{
 			return new GameState (this) { Enemies = enemies };
+		}
+
+		internal GameState WithScripts (ImmutableList<MapScript> scripts)
+		{
+			return new GameState (this) { Scripts = scripts };
 		}
 
 		internal GameState WithLog (ImmutableList<string> logEntries)
@@ -85,6 +108,12 @@ namespace ArenaGS
 		{
 			Character oldEnemy = Enemies.Single (x => x.ID == newEnemy.ID);
 			return new GameState (this) { Enemies = Enemies.Replace (oldEnemy, newEnemy) };
+		}
+
+		internal GameState WithReplaceScript (MapScript newScript)
+		{
+			MapScript oldScript = Scripts.Single (x => x.ID == newScript.ID);
+			return new GameState (this) { Scripts = Scripts.Replace (oldScript, newScript) };
 		}
 
 		// TODO - This cache could be copied in GameState (GameState original) if we are 

@@ -12,12 +12,14 @@ namespace ArenaGS.Tests
 	class ActorBehaviorTests
 	{
 		IPhysics Physics;
+		ITime Time;
 
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
 			Physics = Dependencies.Get<IPhysics> ();
+			Time = Dependencies.Get<ITime> ();
 		}
 
 		[Test]
@@ -34,7 +36,7 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (closest.Position, new Point (2, 2));
 
 			// After getting CT, second move should not move closer
-			state = state.WithEnemies (state.Enemies.Select (x => x.WithAdditionalCT (Time.CTNededForAction)).ToImmutableList ());
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithAdditionalCT (TimeConstants.CTNededForAction)).ToImmutableList ());
 			closest = state.Enemies.First (x => x.ID == closest.ID);
 			state = behavior.Act (state, closest);
 			closest = state.Enemies.First (x => x.ID == closest.ID);
@@ -53,7 +55,7 @@ namespace ArenaGS.Tests
 			Character[] enemies = new Character[] { Character.Create (new Point (2, 1)), Character.Create (new Point (3,1)), Character.Create (new Point (1, 2)),
 				Character.Create (new Point (2,2)), Character.Create (new Point (2, 3)), Character.Create (new Point (1,3)), Character.Create (new Point (2, 3)),
 				Character.Create (new Point (3,3)) };
-			GameState state = new GameState (map, player, enemies.ToImmutableList (), ImmutableList<string>.Empty);
+			GameState state = new GameState (map, player, enemies.ToImmutableList (), ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 
 			Character blockedCharacter = enemies.First (x => x.Position == new Point (3, 3));
 			DefaultActorBehavior behavior = new DefaultActorBehavior ();

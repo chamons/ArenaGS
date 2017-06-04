@@ -37,7 +37,7 @@ namespace ArenaGS.Engine
 					HashSet<Point> areaAffected = new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area));					
 					foreach (var enemy in state.Enemies.Concat (state.Player.Yield ()).Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
-					return state;
+					break;
 				case Effect.None:
 					break;
 			}

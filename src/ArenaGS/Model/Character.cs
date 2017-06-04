@@ -1,11 +1,12 @@
 ﻿using ArenaGS.Utilities;
 using ProtoBuf;
 using System.Collections.Immutable;
+using ArenaGS.Engine;
 
 namespace ArenaGS.Model
 {
 	[ProtoContract]
-	public sealed class Character
+	public sealed class Character : ITimedElement
 	{
 		[ProtoMember (1)]
 		public int ID { get; private set; }
@@ -73,7 +74,7 @@ namespace ArenaGS.Model
 		internal static int PlayerID = 42;
 		public bool IsPlayer => ID == PlayerID;
 
-		// HACK
+		// HACKID
 		static int NextID = 100;
 		static int GetNextID ()
 		{

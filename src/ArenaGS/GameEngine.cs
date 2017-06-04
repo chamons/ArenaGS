@@ -12,18 +12,22 @@ namespace ArenaGS
 		public GameState CurrentState { get; private set; }
 		IPhysics Physics;
 		ISkills Skills;
+		ITime Time;
 		public QueryGameState QueryGameState { get; }
 
 		public GameEngine (IFileStorage storage)
 		{	
 			Dependencies.RegisterInstance <IFileStorage> (storage);
 			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
+			Dependencies.Register<IScriptBehavior> (typeof (ScriptBehavior));
 			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<ITime> (typeof (Time));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
+			Time = Dependencies.Get<ITime> ();
 			QueryGameState = new QueryGameState ();
 		}		
 
@@ -56,10 +60,10 @@ namespace ArenaGS
 		GameState CreateNewGameState ()
 		{
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
-			Map map = mapGenerator.Generate (0);
+			GeneratedMapData mapData = mapGenerator.Generate (0);
 			Character player = Character.CreatePlayer (new Point (5, 5));
 			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (1, 1)), Character.Create (new Point (8,7)) });
-			return new GameState (map, player, enemies, ImmutableList<string>.Empty);
+			return new GameState (mapData.Map, player, enemies, mapData.Scripts, ImmutableList<string>.Empty);
 		}
 
 		public void AcceptCommand (Command c, object data)

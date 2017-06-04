@@ -13,15 +13,19 @@ namespace ArenaGS.Tests
 	class TimeTests : IActorBehavior
 	{
 		List<Character> CharactersThatActed;
+		ITime Time;
 
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
 			Dependencies.RegisterInstance<IActorBehavior> (this);
+			Time = Dependencies.Get<ITime> ();
+
 			CharactersThatActed = new List<Character> ();
 		}
 
+		// Registered for IActorBehavior for all characters
 		public GameState Act (GameState state, Character c)
 		{
 			CharactersThatActed.Add (c);
@@ -33,7 +37,8 @@ namespace ArenaGS.Tests
 			Character player = Character.CreatePlayer (new Point (1, 1)).WithCT (playerCT);
 			Character firstEnemy = Character.Create (new Point (2, 2)).WithCT (firstCT);
 			Character secondEnemy = Character.Create (new Point (2, 2)).WithCT (secondCT);
-			return new GameState (null, player, (new Character[] { firstEnemy, secondEnemy }).ToImmutableList (), ImmutableList<string>.Empty);
+			return new GameState (null, player, (new Character[] { firstEnemy, secondEnemy }).ToImmutableList (),
+			                      ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		[Test]

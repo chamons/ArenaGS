@@ -52,6 +52,8 @@
     <Compile Include="Utilities\Size.cs" />
     <Compile Include="Engine\Dijkstra.cs" />
     <Compile Include="Model\IQueryGameState.cs" />
+    <Compile Include="Model\MapScript.cs" />
+    <Compile Include="Engine\ScriptBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
