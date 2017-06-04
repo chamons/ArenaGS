@@ -18,14 +18,14 @@ namespace ArenaGS.Tests
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
-			Dependencies.Register<IActorBehavior> (this);
+			Dependencies.Register<IActorBehavior> (typeof (TimeTests));
 			CharactersThatActed = new List<Character> ();
 		}
 
 		public GameState Act (GameState state, Character c)
 		{
 			CharactersThatActed.Add (c);
-			return state.WithReplaceEnemy (Physics.Wait (c));
+			return state.WithReplaceEnemy (c.WithCT (0));
 		}
 
 		static GameState CreateTestState (int playerCT, int firstCT, int secondCT)

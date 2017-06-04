@@ -8,9 +8,11 @@ namespace ArenaGS.Tests.Utilities
 	{
 		internal static void SetupTestDependencies ()
 		{
-			Dependencies.Register<IWorldGenerator> (new TestWorldGenerator ());
-			Dependencies.Register<IFileStorage> (new TestFileStorage ());
-			Dependencies.Register<IActorBehavior> (new DefaultActorBehavior ());
+			Dependencies.Register<IPhysics> (typeof (Physics));
+			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<IWorldGenerator> (typeof (TestWorldGenerator));
+			Dependencies.Register<IFileStorage> (typeof (TestFileStorage));
+			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
 		}
 	}
 }

@@ -11,10 +11,13 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	class ActorBehaviorTests
 	{
+		IPhysics Physics;
+
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
+			Physics = Dependencies.Get<IPhysics> ();
 		}
 
 		[Test]
@@ -22,14 +25,20 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateBoxRoomState ();
 			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			// Player is at 1,1. Enemy is at 3,3
 			Character closest = state.Enemies.First (x => x.Position == new Point (3, 3));
 
+			// First movement should move to 2,2
 			state = behavior.Act (state, closest);
 			closest = state.Enemies.First (x => x.ID == closest.ID);
-			Assert.AreEqual (state.Enemies.First (x => x.ID == closest.ID).Position, new Point (2, 2));
+			Assert.AreEqual (closest.Position, new Point (2, 2));
 
+			// After getting CT, second move should not move closer
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithAdditionalCT (Time.CTNededForAction)).ToImmutableList ());
+			closest = state.Enemies.First (x => x.ID == closest.ID);
 			state = behavior.Act (state, closest);
-			Assert.AreEqual (state.Enemies.First (x => x.ID == closest.ID).Position, new Point (2, 2));
+			closest = state.Enemies.First (x => x.ID == closest.ID);
+			Assert.AreEqual (closest.Position, new Point (2, 2));
 		}
 
 		[Test]

@@ -9,13 +9,18 @@ namespace ArenaGS
 {
 	public class GameEngine
 	{
+		public GameState CurrentState { get; private set; }
+		IPhysics Physics;
+		ISkills Skills;
+
 		public GameEngine (IFileStorage storage)
 		{	
-			Dependencies.Register<IFileStorage> (storage);
-			Dependencies.Register<IActorBehavior> (new DefaultActorBehavior ());
-		}
+			Dependencies.RegisterInstance <IFileStorage> (storage);
+			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
 
-		public GameState CurrentState { get; private set; }
+			Physics = Dependencies.Get<IPhysics> ();
+			Skills = Dependencies.Get<ISkills> ();
+		}		
 
 		public void Load ()
 		{
@@ -82,7 +87,9 @@ namespace ArenaGS
 
 		void SetupDefaultDependencies ()
 		{
-			Dependencies.Register<IWorldGenerator> (new WorldGenerator ());
+			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
+			Dependencies.Register<IPhysics> (typeof (Physics));
+			Dependencies.Register<ISkills> (typeof (Skills));
 		}
 	}
 }

@@ -1,9 +1,5 @@
-﻿using ProtoBuf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ArenaGS.Utilities;
+using ProtoBuf;
 
 namespace ArenaGS.Model
 {
@@ -40,6 +36,18 @@ namespace ArenaGS.Model
 			TargettingStyle = style;
 			Range = range;
 			Area = area;
+		}
+
+		public bool IsValidTarget (Point sourceLocation, Point target)
+		{
+			switch (TargettingStyle)
+			{
+				case TargettingStyle.Point:
+					return target.NormalDistance (sourceLocation) <= Range;
+				case TargettingStyle.None:
+				default:
+					return true;
+			}			
 		}
 	}
 

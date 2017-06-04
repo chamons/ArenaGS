@@ -13,7 +13,14 @@ namespace ArenaGS.Engine
 	}
 
 	public class DefaultActorBehavior : IActorBehavior
-	{
+	{		
+		IPhysics Physics;
+
+		public DefaultActorBehavior ()
+		{
+			Physics = Dependencies.Get<IPhysics> ();
+		}
+
 		public GameState Act (GameState state, Character c)
 		{
 			Option<GameState> walkState = WalkTowardsPlayerIfCan (state, c);

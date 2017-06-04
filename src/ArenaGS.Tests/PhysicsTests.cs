@@ -9,10 +9,13 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	public class PhysicsTests
 	{
+		IPhysics Physics;
+
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
+			Physics = Dependencies.Get<IPhysics> ();
 		}
 
 		[Test]

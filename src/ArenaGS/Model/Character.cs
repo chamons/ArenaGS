@@ -7,16 +7,6 @@ namespace ArenaGS.Model
 	[ProtoContract]
 	public sealed class Character
 	{
-		internal static int PlayerID = 42;
-
-		static int NextID = 100;
-		static int GetNextID ()
-		{
-			int next = NextID;
-			NextID++;
-			return next;
-		}
-
 		[ProtoMember (1)]
 		public int ID { get; private set; }
 
@@ -49,6 +39,12 @@ namespace ArenaGS.Model
 			Skills = original.Skills;
 		}
 
+		public override string ToString ()
+		{
+			string debugName = IsPlayer ? "Player" : $"Character : {ID}";
+			return $"{debugName} - {Position} {CT}";
+		}
+
 		internal Character WithPosition (Point position)
 		{
 			return new Character (this) { Position = position };
@@ -67,6 +63,23 @@ namespace ArenaGS.Model
 		internal Character WithCT (int ct)
 		{
 			return new Character (this) { CT = ct };
+		}
+
+		internal Character WithSkills (ImmutableList<Skill> skills)
+		{
+			return new Character (this) { Skills = skills };
+		}
+
+		internal static int PlayerID = 42;
+		bool IsPlayer => ID == PlayerID;
+
+		// HACK
+		static int NextID = 100;
+		static int GetNextID ()
+		{
+			int next = NextID;
+			NextID++;
+			return next;
 		}
 
 		internal static Character Create (Point position)

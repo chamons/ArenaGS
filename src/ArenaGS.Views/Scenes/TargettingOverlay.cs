@@ -14,8 +14,7 @@ namespace ArenaGS.Views.Scenes
 		Point CurrentTargettedPosition;
 		Action<Point> OnTargetSelected;
 
-		// TODO - This seems wrong
-		bool CurrentPositionIsValidTarget => CurrentTargettedPosition.NormalDistance (StartingPosition) <= TargetInfo.Range;
+		bool CurrentPositionIsValidTarget => TargetInfo.IsValidTarget (StartingPosition, CurrentTargettedPosition);
 
 		public TargettingOverlay (CombatScene parent, TargettingInfo info, Point startingPosition, Action <Point> onTargetSelected)
 		{
