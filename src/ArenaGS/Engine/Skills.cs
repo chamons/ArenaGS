@@ -52,7 +52,7 @@ namespace ArenaGS.Engine
 
 			TargettingInfo targetInfo = skill.TargetInfo;
 			Point source = invoker.Position;
-			return SkillInRnage (source, target, targetInfo) && SkillPathIsClear (state, source, target, targetInfo);
+			return SkillInRange (source, target, targetInfo) && SkillPathIsClear (state, source, target, targetInfo);
 		}
 
 		static bool SkillPathIsClear (GameState state, Point source, Point target, TargettingInfo targetInfo)
@@ -69,7 +69,7 @@ namespace ArenaGS.Engine
 			return true;
 		}
 
-		static bool SkillInRnage (Point source, Point target, TargettingInfo targetInfo)
+		static bool SkillInRange (Point source, Point target, TargettingInfo targetInfo)
 		{
 			switch (targetInfo.TargettingStyle)
 			{
