@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System.Collections.Immutable;
+using System.Linq;
+
 using ArenaGS.Engine;
+using ArenaGS.Engine.Behavior;
 using ArenaGS.Model;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
+
 using NUnit.Framework;
-using System.Collections.Immutable;
 
 namespace ArenaGS.Tests
 {

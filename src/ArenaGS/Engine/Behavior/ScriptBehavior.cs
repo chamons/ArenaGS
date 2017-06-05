@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using ArenaGS.Engine;
+﻿using System.Linq;
+
 using ArenaGS.Model;
 
-namespace ArenaGS
+namespace ArenaGS.Engine.Behavior
 {
 	public interface IScriptBehavior
 	{
@@ -26,6 +25,7 @@ namespace ArenaGS
 				{
 					if (spawnerScript.TimeToNextSpawn == 0) 
 					{
+						// TODO - This spawning should be done elsewhere. Script management is ok.
 						state = state.WithEnemies (state.Enemies.Add (Character.Create (script.Position)));
 						state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
 					}

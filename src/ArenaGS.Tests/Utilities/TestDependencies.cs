@@ -1,4 +1,5 @@
 ﻿using ArenaGS.Engine;
+using ArenaGS.Engine.Behavior;
 using ArenaGS.Model;
 using ArenaGS.Platform;
 

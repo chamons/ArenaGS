@@ -1,8 +1,8 @@
-﻿using System;
-using ArenaGS.Engine;
+﻿using ArenaGS.Engine.Utilities;
 using ArenaGS.Model;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
+
 using NUnit.Framework;
 
 namespace ArenaGS.Tests

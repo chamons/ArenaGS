@@ -1,6 +1,6 @@
-﻿using System;
-using ArenaGS.Engine;
+﻿using ArenaGS.Engine;
 using ArenaGS.Utilities;
+
 using ProtoBuf;
 
 namespace ArenaGS.Model

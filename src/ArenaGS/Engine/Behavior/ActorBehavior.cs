@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+
+using ArenaGS.Engine.Utilities;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
+
 using Optional;
 
-namespace ArenaGS.Engine
+namespace ArenaGS.Engine.Behavior
 {
 	public interface IActorBehavior
 	{
