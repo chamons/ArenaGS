@@ -1,8 +1,9 @@
-﻿using System;
-using ArenaGS.Engine;
+﻿using ArenaGS.Engine;
+using ArenaGS.Engine.Utilities;
 using ArenaGS.Model;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
+
 using NUnit.Framework;
 
 namespace ArenaGS.Tests
@@ -10,16 +11,19 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	public class DijkstraTests
 	{
+		IGenerator Generator;
+
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
+			Generator = Dependencies.Get<IGenerator> ();
 		}
 
 		[Test]
 		public void TinyRoomDijkstra_CorrectValues ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			var pathArray = Dijkstra.CalculateShortestPathArray (state.Map, state.Player.Position);
 			Assert.AreEqual (1, pathArray [0, 0]);
 			Assert.AreEqual (1, pathArray [0, 1]);

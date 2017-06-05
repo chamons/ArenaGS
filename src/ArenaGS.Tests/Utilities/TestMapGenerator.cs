@@ -1,6 +1,7 @@
 ﻿using System;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
+using System.Collections.Immutable;
 
 namespace ArenaGS.Tests.Utilities
 {
@@ -20,7 +21,7 @@ namespace ArenaGS.Tests.Utilities
 
 	class TinyRoomTestMapGenerator : IMapGenerator
 	{
-		public Map Generate (int hash)
+		public GeneratedMapData Generate (int hash)
 		{
 			var map = new Map (3, 3, "TinyTest", hash);
 
@@ -30,12 +31,12 @@ namespace ArenaGS.Tests.Utilities
 
 			map.Set (new Point (1, 2), TerrainType.Wall);
 
-			return map;
+			return new GeneratedMapData (map, ImmutableList<MapScript>.Empty);
 		}
 
 		public Map Regenerate (int hash)
 		{
-			return Generate (hash);
+			return Generate (hash).Map;
 		}
 	}
 }

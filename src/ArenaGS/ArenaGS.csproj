@@ -31,23 +31,30 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Dependencies.cs" />
-    <Compile Include="Engine\ActorBehavior.cs" />
     <Compile Include="Engine\Physics.cs" />
+    <Compile Include="Engine\Skills.cs" />
     <Compile Include="Engine\Time.cs" />
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Skill.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapGenerator.cs" />
     <Compile Include="Model\MapTile.cs" />
     <Compile Include="Model\NumberExtensions.cs" />
+    <Compile Include="Utilities\EnumerableExtensions.cs" />
     <Compile Include="Utilities\Point.cs" />
     <Compile Include="Model\WorldGenerator.cs" />
     <Compile Include="Utilities\PointExtensions.cs" />
     <Compile Include="Utilities\Serialization.cs" />
     <Compile Include="Utilities\Size.cs" />
-    <Compile Include="Engine\Dijkstra.cs" />
+    <Compile Include="Model\IQueryGameState.cs" />
+    <Compile Include="Model\MapScript.cs" />
+    <Compile Include="Engine\Behavior\ActorBehavior.cs" />
+    <Compile Include="Engine\Behavior\ScriptBehavior.cs" />
+    <Compile Include="Engine\Utilities\Dijkstra.cs" />
+    <Compile Include="Engine\Generator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
@@ -75,6 +82,10 @@
       <HintPath>..\packages\System.Collections.Immutable.1.3.1\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Engine\Behavior\" />
+    <Folder Include="Engine\Utilities\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

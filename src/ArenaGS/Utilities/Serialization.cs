@@ -69,6 +69,8 @@ namespace ArenaGS.Utilities
 				// Protobuffer serializes empty lists as null
 				// For each list in state, we must instead give an empty list
 				// Else NRE will occur on use
+				if (state.Scripts == null)
+					state = state.WithScripts (ImmutableList<MapScript>.Empty);
 				if (state.Enemies == null)
 					state = state.WithEnemies (ImmutableList<Character>.Empty);
 				if (state.LogEntries == null)

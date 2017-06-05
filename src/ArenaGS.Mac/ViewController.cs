@@ -51,7 +51,7 @@ namespace ArenaGS.Mac {
 			Controller = new GameController (this);
 			Controller.Startup (new FileStorage ());
 
-			Canvas = new CanvasView (View.Frame);
+			Canvas = new CanvasView (View.Frame) { IgnorePixelScaling = true };
 			Canvas.PaintSurface += OnPlatformPaint;
 
 			View.AddSubview (Canvas);
@@ -76,7 +76,6 @@ namespace ArenaGS.Mac {
 
 		public override void KeyDown (NSEvent theEvent)
 		{
-			base.KeyDown (theEvent);
 			KeyArgs.Character = ConvertNSEventToKeyString(theEvent);
 			OnKeyDown?.Invoke (this, KeyArgs);
 		}
@@ -118,7 +117,8 @@ namespace ArenaGS.Mac {
 
 		public void Invalidate ()
 		{
-			Canvas.NeedsDisplay = true;
+			if (Canvas != null)
+				Canvas.NeedsDisplay = true;
 		}
 
 		void OnPlatformPaint (object sender, SKPaintSurfaceEventArgs e)

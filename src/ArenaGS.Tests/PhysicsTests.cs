@@ -1,4 +1,5 @@
-﻿using ArenaGS.Engine;
+﻿using System;
+using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
@@ -9,16 +10,21 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	public class PhysicsTests
 	{
+		IPhysics Physics;
+		IGenerator Generator;
+
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
+			Physics = Dependencies.Get<IPhysics> ();
+			Generator = Dependencies.Get<IGenerator> ();
 		}
 
 		[Test]
 		public void SimpleMovementOntoFloor_MovesPlayer ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			GameState newState = Physics.MovePlayer (state, Direction.North);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 0), "Walk north to floor works");
 			Assert.AreEqual (0, newState.Player.CT);
@@ -27,7 +33,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementIntoWall_DoesNotMove ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			Assert.IsFalse (Physics.CouldCharacterWalk (state, state.Player, state.Player.Position.InDirection (Direction.South)));
 
 			GameState newState = Physics.MovePlayer (state, Direction.South);
@@ -39,7 +45,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementNone_DoesNotMove ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			GameState newState = Physics.MovePlayer (state, Direction.None);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk none should not move");
 			Assert.AreEqual (100, newState.Player.CT);
@@ -48,7 +54,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SimpleMovementOffMap_DoesNotMoveOffMap ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			GameState firstState = Physics.MovePlayer (state, Direction.North);
 			Assert.AreEqual (0, firstState.Player.CT);
 
@@ -60,7 +66,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void MovementIntoEnemy_DoesNotMove ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			GameState newState = Physics.MovePlayer (state, Direction.Southeast);
 			Assert.AreEqual (newState.Player.Position, new Point (1, 1), "Walk into enemy should not move us");
 			Assert.AreEqual (100, newState.Player.CT);
@@ -69,7 +75,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void MovementByEnemyIntoPlayer_DoesNotMove ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 
 			state = state.WithReplaceEnemy (state.Enemies[0].WithCT (100));
 
@@ -81,7 +87,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void MovementByEnemyIntoEmpty_DoesMove ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 
 			state = state.WithReplaceEnemy (state.Enemies[0].WithCT (100));
 
@@ -93,7 +99,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void WaitCharacter_ReturnsCTAsExpected ()
 		{
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			Assert.AreEqual (100, state.Player.CT);
 			Assert.AreEqual (100, state.Enemies[0].CT);
 
@@ -104,6 +110,24 @@ namespace ArenaGS.Tests
 			state = Physics.WaitEnemy (state, state.Enemies[0]);
 			Assert.AreEqual (0, state.Player.CT);
 			Assert.AreEqual (0, state.Enemies[0].CT);
+		}
+
+		[Test]
+		public void DamagedNonPlayerCharacters_Removed ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			Character enemy = state.Enemies[0];
+			state = Physics.Damage (state, enemy, 1); 
+			Assert.Zero (state.Enemies.Count);
+		}
+
+		[Test]
+		public void DamagedPlayer_Logs ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			Assert.Zero (state.LogEntries.Count);
+			state = Physics.Damage (state, state.Player, 1);
+			Assert.AreEqual (1, state.LogEntries.Count);
 		}
 	}
 }

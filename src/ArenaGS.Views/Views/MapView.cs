@@ -1,5 +1,6 @@
 ﻿using ArenaGS.Model;
 using ArenaGS.Utilities;
+using ArenaGS.Views.Utilities;
 using SkiaSharp;
 
 namespace ArenaGS.Views.Views
@@ -19,7 +20,7 @@ namespace ArenaGS.Views.Views
 			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 		}
 
-		public override SKSurface Draw (GameState state)
+		public override SKSurface Draw (GameState state, object data)
 		{
 			BlankCanvas ();
 
@@ -42,16 +43,35 @@ namespace ArenaGS.Views.Views
 
 			DrawTile (new Point (MapCenterX, MapCenterY), PlayerBitmap);
 
+			if (data != null)
+			{
+				TargetOverlayInfo overlayInfo = (TargetOverlayInfo)data;
+				SKColor color = overlayInfo.Valid ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
+				foreach (var tile in overlayInfo.Position.PointsInBurst (overlayInfo.Area))
+					DrawOverlayMapSquare (tile, color);
+			}
+
 			return Surface;
+		}
+
+		void DrawOverlayMapSquare (Point mapPosition, SKColor color)
+		{
+			Point uiPosition = TranslateModelToUIPosition (mapPosition);
+			if (IsUIDrawnTile (uiPosition))
+				Canvas.DrawRect (DrawRectForUIPosition (uiPosition), new SKPaint () { Color = color });
 		}
 
 		void DrawTile (Point currentUIPosition, SKBitmap image)
 		{
+			Canvas.DrawBitmap (image, DrawRectForUIPosition (currentUIPosition));
+		}
+
+		private SKRect DrawRectForUIPosition (Point currentUIPosition)
+		{
 			int left = Position.X + (currentUIPosition.X * MapTileSize);
 			int top = Position.Y + (currentUIPosition.Y * MapTileSize);
 			var drawPosition = new SKRect (left, top, left + MapTileSize, top + MapTileSize);
-
-			Canvas.DrawBitmap (image, drawPosition);
+			return drawPosition;
 		}
 
 		GameState GameState;
@@ -65,9 +85,14 @@ namespace ArenaGS.Views.Views
 		public const int MapCenterX = (int)(((MapSizeX - 1) / 2));
 		public const int MapCenterY = (int)(((MapSizeY - 1) / 2));
 
-		public bool IsOnMap (Point p)
+		bool IsUIDrawnTile (Point uiPosition)
 		{
-			Point position = TranslateUIToModelPosition (p);
+			return uiPosition.X >= 0 && uiPosition.X < MapSizeX && uiPosition.Y >= 0 && uiPosition.Y < MapSizeY;
+		}
+
+		public bool IsOnMap (Point uiPosition)
+		{
+			Point position = TranslateUIToModelPosition (uiPosition);
 			return CurrentMap.IsOnMap (position);
 		}
 

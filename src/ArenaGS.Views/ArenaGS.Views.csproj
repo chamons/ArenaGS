@@ -42,10 +42,13 @@
     <Compile Include="IGameWindow.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Scenes\CombatScene.cs" />
+    <Compile Include="Scenes\IOverlay.cs" />
     <Compile Include="Scenes\IScene.cs" />
+    <Compile Include="Scenes\TargettingOverlay.cs" />
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\LogView.cs" />
     <Compile Include="Views\SkillBarView.cs" />
+    <Compile Include="Utilities\TargetOverlayInfo.cs" />
     <Compile Include="Views\View.cs" />
     <Compile Include="Views\MapView.cs" />
   </ItemGroup>

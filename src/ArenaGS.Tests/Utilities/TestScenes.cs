@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
@@ -6,20 +7,21 @@ namespace ArenaGS.Tests.Utilities
 {
 	static class TestScenes
 	{
-		internal static GameState CreateTinyRoomState ()
+		internal static GameState CreateTinyRoomState (IGenerator generator)
 		{
-			var character = Character.CreatePlayer (new Point (1, 1)).WithCT (100);
-			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0);
-			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (2, 2)) });
-			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
+			var character = generator.CreatePlayer (new Point (1, 1));
+			var mapData = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0);
+			var enemies = generator.CreateCharacters (new Point [] { new Point (2, 2) });
+			return new GameState (mapData.Map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
-		internal static GameState CreateBoxRoomState ()
+		internal static GameState CreateBoxRoomState (IGenerator generator)
 		{
-			var character = Character.CreatePlayer (new Point (1, 1)).WithCT (100);
+			var character = generator.CreatePlayer (new Point (1, 1));
 			var map = CreateBoxRoom (50, 50);
-			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (3, 3)), Character.Create (new Point (20, 20)), Character.Create (new Point (5, 40)), Character.Create (new Point (40, 20))});
-			return new GameState (map, character, enemies, ImmutableList<string>.Empty);
+			var enemies = generator.CreateCharacters (new Point [] { new Point (3, 3), new Point (20, 20), new Point (20, 20),
+				new Point (40, 20)});
+			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static Map CreateBoxRoom (int width, int height)

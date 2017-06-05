@@ -1,6 +1,4 @@
-﻿using ProtoBuf;
-
-namespace ArenaGS.Model
+﻿namespace ArenaGS.Model
 {
 	public enum TerrainType : byte
 	{
@@ -8,10 +6,8 @@ namespace ArenaGS.Model
 		Floor
 	}
 
-	[ProtoContract]
 	public struct MapTile
 	{
-		[ProtoMember (1)]
 		public TerrainType Terrain { get; private set; }
 
 		public MapTile (TerrainType type)

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ArenaGS.Utilities
 {
@@ -78,6 +80,60 @@ namespace ArenaGS.Utilities
 				default:
 					throw new NotImplementedException ();
 			}
+		}
+
+		public static IEnumerable<Point> PointsInBurst (this Point center, int burstDistance)
+		{
+			List<Point> points = new List<Point> ();
+
+			for (int i = -burstDistance; i <= burstDistance; ++i)
+			{
+				for (int j = -burstDistance; j <= burstDistance; ++j)
+				{
+					int distanceFromCenter = Math.Abs (i) + Math.Abs (j);
+					if (distanceFromCenter <= burstDistance)
+						points.Add (new Point (center.X + i, center.Y + j));
+				}
+			}
+			return points;
+		}
+
+		public static IEnumerable<Point> PointsInCone (this Point center, Direction direction, int coneLength)
+		{
+			if (direction == Direction.None)
+				return Enumerable.Empty<Point> ();
+
+			if (direction == Direction.Northeast || direction == Direction.Northwest || direction == Direction.Southeast || direction == Direction.Southwest)
+				throw new NotImplementedException ();
+
+			List<Point> affectedPoints = new List<Point> ();
+
+			Point firstPointInDirection = center.InDirection (direction);
+			if (center == firstPointInDirection)
+				return affectedPoints;
+
+			int deltaX = firstPointInDirection.X - center.X;
+			int deltaY = firstPointInDirection.Y - center.Y;
+			Point coneCenterForDistance = firstPointInDirection;
+			for (int i = 0; i < coneLength; ++i)
+			{
+				affectedPoints.Add (coneCenterForDistance);
+				for (int z = 0; z < i + 1; ++z)
+				{
+					if (deltaX != 0)
+					{
+						affectedPoints.Add (new Point (coneCenterForDistance.X, coneCenterForDistance.Y - (z + 1)));
+						affectedPoints.Add (new Point (coneCenterForDistance.X, coneCenterForDistance.Y + (z + 1)));
+					}
+					else
+					{
+						affectedPoints.Add (new Point (coneCenterForDistance.X - (z + 1), coneCenterForDistance.Y));
+						affectedPoints.Add (new Point (coneCenterForDistance.X + (z + 1), coneCenterForDistance.Y));
+					}
+				}
+				coneCenterForDistance = new Point (coneCenterForDistance.X + deltaX, coneCenterForDistance.Y + deltaY);
+			}
+			return affectedPoints;
 		}
 	}
 }

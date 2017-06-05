@@ -1,4 +1,5 @@
 ﻿using ArenaGS.Utilities;
+using ArenaGS.Views.Utilities;
 using SkiaSharp;
 
 namespace ArenaGS.Views.Views
@@ -17,6 +18,7 @@ namespace ArenaGS.Views.Views
 		MapView Map;
 		LogView Log;
 		SkillBarView SkillBar;
+		TargetOverlayInfo CurrentOverlayInfo;
 
 		public CombatView (Point position, Size size) : base (position, size)
 		{
@@ -25,15 +27,25 @@ namespace ArenaGS.Views.Views
 			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);
 		}
 
-		public override SKSurface Draw (GameState state)
+		public override SKSurface Draw (GameState state, object data = null)
 		{
 			BlankCanvas ();
 
-			Canvas.DrawSurface (Map.Draw (state), MapOffset.X, MapOffset.Y);
-			Canvas.DrawSurface (Log.Draw (state), LogOffset.X, LogOffset.Y);
-			Canvas.DrawSurface (SkillBar.Draw (state), SkillBarOffset.X, SkillBarOffset.Y);
+			Canvas.DrawSurface (Map.Draw (state, CurrentOverlayInfo), MapOffset.X, MapOffset.Y);
+			Canvas.DrawSurface (Log.Draw (state, null), LogOffset.X, LogOffset.Y);
+			Canvas.DrawSurface (SkillBar.Draw (state, null), SkillBarOffset.X, SkillBarOffset.Y);
 
 			return Surface;
+		}
+
+		public void SetTargetOverlay (Point position, int area, bool valid)
+		{
+			CurrentOverlayInfo = new TargetOverlayInfo (position, area, valid);
+		}
+
+		public void ClearTargetOverlay ()
+		{
+			CurrentOverlayInfo = null;
 		}
 	}
 }

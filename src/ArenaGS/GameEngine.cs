@@ -1,26 +1,43 @@
 ﻿using System;
-using ArenaGS.Model;
-using ArenaGS.Utilities;
-using ArenaGS.Engine;
-using ArenaGS.Platform;
-using System.Threading.Tasks;
 using System.Collections.Immutable;
+
+using ArenaGS.Engine;
+using ArenaGS.Engine.Behavior;
+using ArenaGS.Model;
+using ArenaGS.Platform;
+using ArenaGS.Utilities;
 
 namespace ArenaGS
 {
 	public class GameEngine
 	{
+		public GameState CurrentState { get; private set; }
+		IPhysics Physics;
+		ISkills Skills;
+		ITime Time;
+		IGenerator Generator;
+		public QueryGameState QueryGameState { get; }
+
 		public GameEngine (IFileStorage storage)
 		{	
-			Dependencies.Register<IFileStorage> (storage);
-			Dependencies.Register<IActorBehavior> (new DefaultActorBehavior ());
-		}
+			Dependencies.RegisterInstance <IFileStorage> (storage);
+			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
+			Dependencies.Register<IScriptBehavior> (typeof (ScriptBehavior));
+			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
+			Dependencies.Register<IPhysics> (typeof (Physics));
+			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<ITime> (typeof (Time));
+			Dependencies.Register<IGenerator> (typeof(Generator));
 
-		public GameState CurrentState { get; private set; }
+			Physics = Dependencies.Get<IPhysics> ();
+			Skills = Dependencies.Get<ISkills> ();
+			Time = Dependencies.Get<ITime> ();
+			Generator = Dependencies.Get<IGenerator> ();
+			QueryGameState = new QueryGameState ();
+		}		
 
 		public void Load ()
 		{
-			SetupDefaultDependencies ();
 			if (Serialization.SaveGameExists)
 				CurrentState = Serialization.Load ();
 			else
@@ -48,10 +65,10 @@ namespace ArenaGS
 		GameState CreateNewGameState ()
 		{
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
-			Map map = mapGenerator.Generate (0);
-			Character player = Character.CreatePlayer (new Point (5, 5));
-			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (1, 1)), Character.Create (new Point (8,7)) });
-			return new GameState (map, player, enemies, ImmutableList<string>.Empty);
+			GeneratedMapData mapData = mapGenerator.Generate (0);
+			Character player = Generator.CreatePlayer (new Point (5, 5));
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (1, 1), new Point (8,7)});
+			return new GameState (mapData.Map, player, enemies, mapData.Scripts, ImmutableList<string>.Empty);
 		}
 
 		public void AcceptCommand (Command c, object data)
@@ -69,15 +86,16 @@ namespace ArenaGS
 					SetNewState (Physics.WaitPlayer (CurrentState));
 					break;
 				}
+				case Command.Skill:
+				{
+					SkillTarget target = (SkillTarget)data;
+					SetNewState (Skills.Invoke (CurrentState, CurrentState.Player, CurrentState.Player.Skills[target.Index], target.Position));
+					break;
+				}
 				default:
 					throw new NotImplementedException ($"Command {c} not implemented.");
 			}
 			SetNewState (Time.ProcessUntilPlayerReady (CurrentState));
-		}
-
-		void SetupDefaultDependencies ()
-		{
-			Dependencies.Register<IWorldGenerator> (new WorldGenerator ());
 		}
 	}
 }

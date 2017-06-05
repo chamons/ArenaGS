@@ -48,7 +48,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActorBehaviorTests.cs" />
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
     <Compile Include="TimeTests.cs" />
@@ -57,6 +56,10 @@
     <Compile Include="Utilities\TestMapGenerator.cs" />
     <Compile Include="Utilities\TestScenes.cs" />
     <Compile Include="DijkstraTests.cs" />
+    <Compile Include="SkillTests.cs" />
+    <Compile Include="Behavior\ActorBehaviorTests.cs" />
+    <Compile Include="Behavior\ScriptBehaviorTests.cs" />
+    <Compile Include="QueryStateTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -75,7 +78,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <Folder Include="Behavior\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

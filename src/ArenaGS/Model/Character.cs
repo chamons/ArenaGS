@@ -1,21 +1,13 @@
 ﻿using ArenaGS.Utilities;
 using ProtoBuf;
+using System.Collections.Immutable;
+using ArenaGS.Engine;
 
 namespace ArenaGS.Model
 {
 	[ProtoContract]
-	public sealed class Character
+	public sealed class Character : ITimedElement
 	{
-		internal static int PlayerID = 42;
-
-		static int NextID = 100;
-		static int GetNextID ()
-		{
-			int next = NextID;
-			NextID++;
-			return next;
-		}
-
 		[ProtoMember (1)]
 		public int ID { get; private set; }
 
@@ -25,15 +17,19 @@ namespace ArenaGS.Model
 		[ProtoMember (3)]
 		public int CT { get; private set; }
 
+		[ProtoMember (4)]
+		public ImmutableList<Skill> Skills { get; private set; }
+
 		public Character ()
 		{
 		}
 
-		public Character (int id, Point position, int ct)
+		public Character (int id, Point position, int ct, ImmutableList<Skill> skills)
 		{
 			ID = id;
 			Position = position;
 			CT = ct;
+			Skills = skills;
 		}
 
 		Character (Character original)
@@ -41,6 +37,13 @@ namespace ArenaGS.Model
 			ID = original.ID;
 			Position = original.Position;
 			CT = original.CT;
+			Skills = original.Skills;
+		}
+
+		public override string ToString ()
+		{
+			string debugName = IsPlayer ? "Player" : $"Character : {ID}";
+			return $"{debugName} - {Position} {CT}";
 		}
 
 		internal Character WithPosition (Point position)
@@ -63,15 +66,13 @@ namespace ArenaGS.Model
 			return new Character (this) { CT = ct };
 		}
 
-		internal static Character Create (Point position)
+		internal Character WithSkills (ImmutableList<Skill> skills)
 		{
-			return new Character (GetNextID (), position, 100);
+			return new Character (this) { Skills = skills };
 		}
 
-		internal static Character CreatePlayer (Point position)
-		{
-			return new Character (PlayerID, position, 100);
+		internal static int PlayerID = 42;
+		public bool IsPlayer => ID == PlayerID;
 
-		}
 	}
 }

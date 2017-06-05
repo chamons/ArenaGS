@@ -1,10 +1,11 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Text;
+
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
-namespace ArenaGS.Engine
+namespace ArenaGS.Engine.Utilities
 {
 	public static class Dijkstra
 	{

@@ -1,35 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Linq;
+
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
 namespace ArenaGS.Engine
 {
-	static class Physics
+	public interface IPhysics
 	{
-		internal static GameState MovePlayer (GameState state, Direction direction)
+		GameState MovePlayer (GameState state, Direction direction);
+		GameState WaitPlayer (GameState state);
+		GameState MoveEnemy (GameState state, Character enemy, Direction direction);
+		GameState WaitEnemy (GameState state, Character enemy);
+		GameState Damage (GameState state, Character target, int amount);
+		GameState Wait (GameState state, Character c);
+
+		bool CouldCharacterWalk (GameState state, Character actor, Point newPosition);		
+	}
+
+	public class Physics : IPhysics
+	{
+		ITime Time;
+		public Physics ()
+		{
+			Time = Dependencies.Get<ITime> ();
+		}
+		
+		public GameState MovePlayer (GameState state, Direction direction)
 		{
 			return state.WithPlayer (MoveCharacter (state, state.Player, direction));
 		}
 
-		internal static GameState WaitPlayer (GameState state)
+		public GameState WaitPlayer (GameState state)
 		{
 			return state.WithPlayer (Wait (state.Player));
 		}
 
-		internal static GameState MoveEnemy (GameState state, Character enemy, Direction direction)
+		public GameState MoveEnemy (GameState state, Character enemy, Direction direction)
 		{
 			return state.WithReplaceEnemy (MoveCharacter (state, enemy, direction));
 		}
 
-		internal static GameState WaitEnemy (GameState state, Character enemy)
+		public GameState WaitEnemy (GameState state, Character enemy)
 		{
 			return state.WithReplaceEnemy (Wait (enemy));
 		}
 
-		internal static bool CouldCharacterWalk (GameState state, Character actor, Point newPosition)
+		public GameState Wait (GameState state, Character c)
+		{
+			if (c.IsPlayer)
+				return WaitPlayer (state);
+			else
+				return WaitEnemy (state, c); 
+		}
+
+		public bool CouldCharacterWalk (GameState state, Character actor, Point newPosition)
 		{
 			Map map = state.Map;
 
@@ -37,21 +61,30 @@ namespace ArenaGS.Engine
 				return false;
 
 			bool isWalkableLocation = map[newPosition].Terrain == TerrainType.Floor;
-			bool isLocationEmpty = state.AllActors.All (x => x.Position != newPosition);
+			bool isLocationEmpty = state.AllCharacters.All (x => x.Position != newPosition);
 			return isWalkableLocation && isLocationEmpty;
 		}
 
-		static Character MoveCharacter (GameState state, Character actor, Direction direction)
+		Character MoveCharacter (GameState state, Character actor, Direction direction)
 		{
 			Point newPosition = actor.Position.InDirection (direction);
 			if (CouldCharacterWalk (state, actor, newPosition))
-				return (actor.WithPosition (newPosition, actor.CT - Time.CTPerMovement));
+				return actor.WithPosition (newPosition, Time.ChargeTime (actor, TimeConstants.CTPerMovement));
+
 			return actor;
 		}
 
-		internal static Character Wait (Character c)
+		Character Wait (Character c)
 		{
-			return c.WithCT (c.CT - Time.CTPerBasicAction);
+			return c.WithCT (Time.ChargeTime (c, TimeConstants.CTPerBasicAction));
+		}
+
+		public GameState Damage (GameState state, Character target, int amount)
+		{
+			if (target.IsPlayer)
+				return state.WithNewLogLine ($"{target} damaged by {amount}.");
+			else
+				return state.WithEnemies (state.Enemies.Remove (target));
 		}
 	}
 }
