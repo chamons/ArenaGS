@@ -55,6 +55,7 @@
     <Compile Include="Engine\Behavior\ScriptBehavior.cs" />
     <Compile Include="Engine\Utilities\Dijkstra.cs" />
     <Compile Include="Engine\Generator.cs" />
+    <Compile Include="Engine\Utilities\BresenhamLine.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
