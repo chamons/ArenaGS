@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using ArenaGS.Model;
+﻿using System;
 using System.Collections.Immutable;
-using System;
+using System.Linq;
+using ArenaGS.Model;
 
 namespace ArenaGS.Engine
 {
@@ -62,7 +62,6 @@ namespace ArenaGS.Engine
 				
 				if (next != null)
 				{
-					// TODO C#7
 					if (next is Character activeCharacter) 
 					{
 						if (activeCharacter.IsPlayer)

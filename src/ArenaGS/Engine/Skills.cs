@@ -29,8 +29,6 @@ namespace ArenaGS.Engine
 			if (!IsValidTarget (state, invoker, skill, target))
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} at {target} but was invalid.");
 
-			// Skill is in range of target
-
 			switch (skill.Effect)
 			{
 				case Effect.Damage:

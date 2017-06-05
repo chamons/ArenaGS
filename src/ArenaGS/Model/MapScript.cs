@@ -52,10 +52,14 @@ namespace ArenaGS.Model
 		[ProtoMember (4)]
 		public int Cooldown { get; private set; }
 
-		[ProtoMember (5)] 		public int TotalToSpawn { get; private set; } 
-		[ProtoMember (6)] 		public int TimeToNextSpawn { get; private set; }
+		[ProtoMember (5)]
+		public int TotalToSpawn { get; private set; }
+		 
+		[ProtoMember (6)]
+		public int TimeToNextSpawn { get; private set; }
 
-		[ProtoMember (7)] 		public int SpawnCount { get; private set; }
+		[ProtoMember (7)]
+		public int SpawnCount { get; private set; }
 
 		public SpawnerScript (Point position, int spawnCount, int cooldown) : base (position, GetNextID (), 0)
 		{
@@ -91,11 +95,6 @@ namespace ArenaGS.Model
 		public MapScript AfterSpawn ()
 		{
 			return new SpawnerScript (this) { TimeToNextSpawn = Cooldown, SpawnCount = SpawnCount + 1 };
-		}
-
-		public MapScript IncrementSpawnCount ()
-		{
-			return WithTimeToNextSpawn (TimeToNextSpawn - 1);
 		}
 
 		public MapScript DecrementSpawnTimer ()
