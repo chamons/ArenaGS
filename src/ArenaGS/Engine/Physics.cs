@@ -12,7 +12,7 @@ namespace ArenaGS.Engine
 		GameState MoveEnemy (GameState state, Character enemy, Direction direction);
 		GameState WaitEnemy (GameState state, Character enemy);
 		GameState Damage (GameState state, Character target, int amount);
-		Character Wait (Character c);
+		GameState Wait (GameState state, Character c);
 
 		bool CouldCharacterWalk (GameState state, Character actor, Point newPosition);		
 	}
@@ -45,6 +45,14 @@ namespace ArenaGS.Engine
 			return state.WithReplaceEnemy (Wait (enemy));
 		}
 
+		public GameState Wait (GameState state, Character c)
+		{
+			if (c.IsPlayer)
+				return WaitPlayer (state);
+			else
+				return WaitEnemy (state, c); 
+		}
+
 		public bool CouldCharacterWalk (GameState state, Character actor, Point newPosition)
 		{
 			Map map = state.Map;
@@ -66,7 +74,7 @@ namespace ArenaGS.Engine
 			return actor;
 		}
 
-		public Character Wait (Character c)
+		Character Wait (Character c)
 		{
 			return c.WithCT (Time.ChargeTime (c, TimeConstants.CTPerBasicAction));
 		}

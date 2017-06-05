@@ -32,7 +32,9 @@ namespace ArenaGS.Engine.Behavior
 						state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
 					}
 					else
+					{
 						state = state.WithReplaceScript (spawnerScript.DecrementSpawnTimer ());
+					}
 				}
 			}
 			script = state.Scripts.First (x => x.ID == script.ID);

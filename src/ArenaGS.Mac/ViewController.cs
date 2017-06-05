@@ -76,7 +76,6 @@ namespace ArenaGS.Mac {
 
 		public override void KeyDown (NSEvent theEvent)
 		{
-			base.KeyDown (theEvent);
 			KeyArgs.Character = ConvertNSEventToKeyString(theEvent);
 			OnKeyDown?.Invoke (this, KeyArgs);
 		}

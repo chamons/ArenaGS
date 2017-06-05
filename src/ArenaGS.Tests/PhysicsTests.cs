@@ -1,4 +1,5 @@
-﻿using ArenaGS.Engine;
+﻿using System;
+using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
@@ -109,6 +110,24 @@ namespace ArenaGS.Tests
 			state = Physics.WaitEnemy (state, state.Enemies[0]);
 			Assert.AreEqual (0, state.Player.CT);
 			Assert.AreEqual (0, state.Enemies[0].CT);
+		}
+
+		[Test]
+		public void DamagedNonPlayerCharacters_Removed ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			Character enemy = state.Enemies[0];
+			state = Physics.Damage (state, enemy, 1); 
+			Assert.Zero (state.Enemies.Count);
+		}
+
+		[Test]
+		public void DamagedPlayer_Logs ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			Assert.Zero (state.LogEntries.Count);
+			state = Physics.Damage (state, state.Player, 1);
+			Assert.AreEqual (1, state.LogEntries.Count);
 		}
 	}
 }

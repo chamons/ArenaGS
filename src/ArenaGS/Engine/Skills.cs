@@ -41,7 +41,7 @@ namespace ArenaGS.Engine
 					break;
 			}
 
-			return Physics.WaitPlayer (state).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
 

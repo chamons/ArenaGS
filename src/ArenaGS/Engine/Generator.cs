@@ -19,11 +19,6 @@ namespace ArenaGS.Engine
 
 	public class Generator : IGenerator
 	{
-		public GameState CreateEnemy (GameState state, Point position)
-		{
-			return state.WithEnemies (state.Enemies.Add (CreateCharacter (position)));
-		}
-
 		const int CharacterOffset = 100;
 		const int ScriptOffset = 2000;
 		int CharacterCount = 0;
@@ -41,6 +36,11 @@ namespace ArenaGS.Engine
 			int next = ScriptOffset + ScriptCount;
 			ScriptCount++;
 			return next;
+		}
+
+		public GameState CreateEnemy (GameState state, Point position)
+		{
+			return state.WithEnemies (state.Enemies.Add (CreateCharacter (position)));
 		}
 
 		public Character CreateCharacter (Point position)

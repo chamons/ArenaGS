@@ -27,12 +27,12 @@ namespace ArenaGS
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
 			Dependencies.Register<ITime> (typeof (Time));
-			Dependencies.Register<IGenerator>(typeof(Generator));
+			Dependencies.Register<IGenerator> (typeof(Generator));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
 			Time = Dependencies.Get<ITime> ();
-			Generator = Dependencies.Get<Generator> ();
+			Generator = Dependencies.Get<IGenerator> ();
 			QueryGameState = new QueryGameState ();
 		}		
 
