@@ -71,8 +71,7 @@ namespace ArenaGS.Model
 			return new Character (this) { Skills = skills };
 		}
 
-		internal static int PlayerID = 42;
+		internal const int PlayerID = 42;
 		public bool IsPlayer => ID == PlayerID;
-
 	}
 }
