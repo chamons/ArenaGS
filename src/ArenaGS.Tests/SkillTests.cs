@@ -16,7 +16,11 @@ namespace ArenaGS.Tests
 
 		internal static GameState CreateStateWithTestSkill (IGenerator generator)
 		{
-			GameState state = TestScenes.CreateBoxRoomState (generator);
+			return AddTestSkill (TestScenes.CreateBoxRoomState (generator));
+		}
+
+		internal static GameState AddTestSkill (GameState state)
+		{
 			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
 		}
 	}
@@ -84,6 +88,16 @@ namespace ArenaGS.Tests
 			{
 				GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
 				Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (-10, 10));
+			});
+		}
+
+		[Test]
+		public void SkillUse_ShouldRespectWallsInWay ()
+		{
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateWallRoomState (Generator);
+				Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (3, 1));
 			});
 		}
 	}
