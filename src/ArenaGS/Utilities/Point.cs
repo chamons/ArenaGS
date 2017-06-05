@@ -43,6 +43,7 @@ namespace ArenaGS.Utilities
 	public struct Point
 	{
 		public static readonly Point Empty;
+		public static readonly Point Invalid = new Point(-1, -1);
 
 		public static Point operator + (Point pt, Size sz)
 		{

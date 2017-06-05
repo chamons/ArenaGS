@@ -22,7 +22,7 @@ namespace ArenaGS.Tests
 		{
 			Assert.IsFalse (Serialization.SaveGameExists);
 
-			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			GameState state = TestScenes.CreateRoomFromMapgen (Generator);
 
 			Serialization.Save (state);
 			Assert.IsTrue(Serialization.SaveGameExists);
