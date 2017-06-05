@@ -1,4 +1,5 @@
-﻿using ArenaGS.Tests.Utilities;
+﻿using ArenaGS.Engine;
+using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
 using NUnit.Framework;
 
@@ -7,10 +8,13 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	class SaveLoadTests
 	{
+		IGenerator Generator;
+
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
+			Generator = Dependencies.Get<IGenerator> ();
 		}
 
 		[Test]
@@ -18,7 +22,7 @@ namespace ArenaGS.Tests
 		{
 			Assert.IsFalse (Serialization.SaveGameExists);
 
-			GameState state = TestScenes.CreateTinyRoomState ();
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
 
 			Serialization.Save (state);
 			Assert.IsTrue(Serialization.SaveGameExists);

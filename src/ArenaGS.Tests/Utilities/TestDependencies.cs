@@ -17,7 +17,7 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Register<IFileStorage> (typeof (TestFileStorage));
 			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
 			Dependencies.Register<IScriptBehavior> (typeof (ScriptBehavior));
-
+			Dependencies.Register<IGenerator> (typeof(Generator));
 		}
 	}
 }

@@ -30,6 +30,12 @@ namespace ArenaGS.Model
 
 	internal class SimpleMapGenerator : IMapGenerator
 	{
+		IGenerator Generator;
+		public SimpleMapGenerator ()
+		{
+			Generator = Dependencies.Get<IGenerator> ();
+		}
+
 		public GeneratedMapData Generate (int hash)
 		{
 			int width = 15;
@@ -42,7 +48,7 @@ namespace ArenaGS.Model
 
 			List<MapScript> scripts = new List<MapScript> ();
 
-			scripts.Add (new SpawnerScript (new Point (8, 8), 5, 3));
+			scripts.Add (Generator.CreateSpawner (new Point (8, 8)));
 
 			return new GeneratedMapData (map, scripts.ToImmutableList ());
 		}

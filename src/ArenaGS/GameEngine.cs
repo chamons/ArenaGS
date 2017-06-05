@@ -15,6 +15,7 @@ namespace ArenaGS
 		IPhysics Physics;
 		ISkills Skills;
 		ITime Time;
+		IGenerator Generator;
 		public QueryGameState QueryGameState { get; }
 
 		public GameEngine (IFileStorage storage)
@@ -26,10 +27,12 @@ namespace ArenaGS
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
 			Dependencies.Register<ITime> (typeof (Time));
+			Dependencies.Register<IGenerator>(typeof(Generator));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
 			Time = Dependencies.Get<ITime> ();
+			Generator = Dependencies.Get<Generator> ();
 			QueryGameState = new QueryGameState ();
 		}		
 
@@ -63,8 +66,8 @@ namespace ArenaGS
 		{
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
 			GeneratedMapData mapData = mapGenerator.Generate (0);
-			Character player = Character.CreatePlayer (new Point (5, 5));
-			var enemies = ImmutableList.Create (new Character[] { Character.Create (new Point (1, 1)), Character.Create (new Point (8,7)) });
+			Character player = Generator.CreatePlayer (new Point (5, 5));
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (1, 1), new Point (8,7)});
 			return new GameState (mapData.Map, player, enemies, mapData.Scripts, ImmutableList<string>.Empty);
 		}
 

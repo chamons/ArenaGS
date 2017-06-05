@@ -74,26 +74,5 @@ namespace ArenaGS.Model
 		internal static int PlayerID = 42;
 		public bool IsPlayer => ID == PlayerID;
 
-		// HACKID
-		static int NextID = 100;
-		static int GetNextID ()
-		{
-			int next = NextID;
-			NextID++;
-			return next;
-		}
-
-		internal static Character Create (Point position)
-		{
-			return new Character (GetNextID (), position, 100, ImmutableList<Skill>.Empty);
-		}
-
-		internal static Character CreatePlayer (Point position)
-		{
-			return new Character (PlayerID, position, 100, new Skill [] {
-				new Skill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8)),
-				new Skill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3))
-			}.ToImmutableList ());
-		}
 	}
 }

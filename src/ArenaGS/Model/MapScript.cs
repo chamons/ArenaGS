@@ -18,16 +18,6 @@ namespace ArenaGS.Model
 		[ProtoMember (3)]
 		public int CT { get; protected set; }
 
-		// HACKID
-		static int NextID = 1000;
-
-		protected static int GetNextID ()
-		{
-			int next = NextID;
-			NextID++;
-			return next;
-		}
-
 		public MapScript (Point position, int id, int ct)
 		{
 			Position = position;
@@ -54,14 +44,14 @@ namespace ArenaGS.Model
 
 		[ProtoMember (5)]
 		public int TotalToSpawn { get; private set; }
-		 
+
 		[ProtoMember (6)]
 		public int TimeToNextSpawn { get; private set; }
 
 		[ProtoMember (7)]
 		public int SpawnCount { get; private set; }
 
-		public SpawnerScript (Point position, int spawnCount, int cooldown) : base (position, GetNextID (), 0)
+		public SpawnerScript (Point position, int id, int ct, int spawnCount, int cooldown) : base (position, id, ct)
 		{
 			Cooldown = cooldown;
 			TotalToSpawn = spawnCount;

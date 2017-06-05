@@ -16,6 +16,7 @@ namespace ArenaGS.Tests
 	{
 		List<Character> CharactersThatActed;
 		ITime Time;
+		IGenerator Generator;
 
 		[SetUp]
 		public void Setup ()
@@ -23,6 +24,7 @@ namespace ArenaGS.Tests
 			TestDependencies.SetupTestDependencies ();
 			Dependencies.RegisterInstance<IActorBehavior> (this);
 			Time = Dependencies.Get<ITime> ();
+			Generator = Dependencies.Get<IGenerator> ();
 
 			CharactersThatActed = new List<Character> ();
 		}
@@ -34,11 +36,11 @@ namespace ArenaGS.Tests
 			return state.WithReplaceEnemy (c.WithCT (0));
 		}
 
-		static GameState CreateTestState (int playerCT, int firstCT, int secondCT)
+		GameState CreateTestState (int playerCT, int firstCT, int secondCT)
 		{
-			Character player = Character.CreatePlayer (new Point (1, 1)).WithCT (playerCT);
-			Character firstEnemy = Character.Create (new Point (2, 2)).WithCT (firstCT);
-			Character secondEnemy = Character.Create (new Point (2, 2)).WithCT (secondCT);
+			Character player = Generator.CreatePlayer (new Point (1, 1)).WithCT (playerCT);
+			Character firstEnemy = Generator.CreateCharacter (new Point (2, 2)).WithCT (firstCT);
+			Character secondEnemy = Generator.CreateCharacter (new Point (2, 2)).WithCT (secondCT);
 			return new GameState (null, player, (new Character[] { firstEnemy, secondEnemy }).ToImmutableList (),
 			                      ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}

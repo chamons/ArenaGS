@@ -12,9 +12,12 @@ namespace ArenaGS.Engine.Behavior
 	public class ScriptBehavior : IScriptBehavior
 	{
 		ITime Time;
+		IGenerator Generator;
+
 		public ScriptBehavior ()
 		{
 			Time = Dependencies.Get<ITime> ();
+			Generator = Dependencies.Get<IGenerator>();
 		}
 
 		public GameState Act (GameState state, MapScript script)
@@ -25,8 +28,7 @@ namespace ArenaGS.Engine.Behavior
 				{
 					if (spawnerScript.TimeToNextSpawn == 0) 
 					{
-						// TODO - This spawning should be done elsewhere. Script management is ok.
-						state = state.WithEnemies (state.Enemies.Add (Character.Create (script.Position)));
+						state = Generator.CreateEnemy (state, script.Position);
 						state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
 					}
 					else
