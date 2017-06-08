@@ -17,7 +17,6 @@ namespace ArenaGS.Views.Views
 		readonly Point SkillBarOffset = new Point (2, 580);
 		readonly Size SkillBarSize = new Size (550, 40);
 
-		IScene Parent;
 		MapView Map;
 		LogView Log;
 		SkillBarView SkillBar;
@@ -25,7 +24,6 @@ namespace ArenaGS.Views.Views
 
 		public CombatView (IScene parent, Point position, Size size) : base (position, size)
 		{
-			Parent = parent;
 			Map = new MapView (parent, MapOffset, MapSize);
 			Log = new LogView (LogOffset, LogSize);
 			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);

@@ -61,12 +61,12 @@ namespace ArenaGS
 		{
 			if (CurrentScene.AnimationInProgress)
 			{
-				Log.Log ($"OnGameEngineStateChanged - Enqueue.", LogMask.Animation);
+				Log.Log ("OnGameEngineStateChanged - Enqueue.", LogMask.Animation);
 				QueuedStates.Enqueue (new QueuedUpdate (e.State, null));
 			}
 			else
 			{
-				Log.Log ($"OnGameEngineStateChanged - Direct", LogMask.Animation);
+				Log.Log ("OnGameEngineStateChanged - Direct", LogMask.Animation);
 				CurrentState = e.State;
 				Invalidate ();
 			}
@@ -100,7 +100,6 @@ namespace ArenaGS
 				else
 				{
 					Log.Log ($"OnAnimationComplete It has no queued states.", LogMask.Animation);
-
 				}
 			});
 		}

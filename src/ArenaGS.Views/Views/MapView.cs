@@ -46,7 +46,7 @@ namespace ArenaGS.Views.Views
 					}
 				}
 			}
-			foreach (var enemy in GameState.Enemies.Where (x => characterToAnimate == null || x.ID != characterToAnimate.Item1))
+			foreach (var enemy in GameState.Enemies.Where (x => x.ID != characterToAnimate?.Item1))
 				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
 
 			if (characterToAnimate != null)
