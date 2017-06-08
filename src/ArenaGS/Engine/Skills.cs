@@ -5,6 +5,7 @@ using ArenaGS.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using ArenaGS.Engine.Utilities;
+using ArenaGS.Platform;
 
 namespace ArenaGS.Engine
 {
@@ -17,10 +18,12 @@ namespace ArenaGS.Engine
 	public class Skills : ISkills
 	{
 		IPhysics Physics;
+		IAnimationRequest Animation;
 
 		public Skills ()
 		{
 			Physics = Dependencies.Get<IPhysics> ();
+			Animation = Dependencies.Get<IAnimationRequest> ();
 		}
 
 		public GameState Invoke (GameState state, Character invoker, Skill skill, Point target)
@@ -34,10 +37,17 @@ namespace ArenaGS.Engine
 			switch (skill.Effect)
 			{
 				case Effect.Damage:
+				{
+					List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
+					Animation.Request (state, new ProjectileAnimationInfo (AnimationType.Projectile, path));
+					if (skill.TargetInfo.Area > 1)
+						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area)); 
+
 					HashSet<Point> areaAffected = new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area));					
 					foreach (var enemy in state.Enemies.Concat (state.Player.Yield ()).Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
 					break;
+				}
 				case Effect.None:
 					break;
 			}

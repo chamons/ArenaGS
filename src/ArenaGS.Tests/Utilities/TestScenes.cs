@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using ArenaGS.Engine;
 using ArenaGS.Model;
+using ArenaGS.Platform;
 using ArenaGS.Utilities;
 
 namespace ArenaGS.Tests.Utilities
@@ -69,6 +70,30 @@ namespace ArenaGS.Tests.Utilities
 			map.Set (new Point (2, 1), TerrainType.Wall);
 			map.Set (new Point (2, 2), TerrainType.Wall);
 			return map;
+		}
+
+		internal static Skill TestSkill { get; } = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0));
+
+		internal static GameState CreateBoxRoomStateWithSkill (IGenerator generator)
+		{
+			return AddTestSkill (CreateBoxRoomState (generator));
+		}
+
+		internal static GameState AddTestSkill (GameState state)
+		{
+			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
+		}
+
+		internal static Skill TestAOESkill { get; } = new Skill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2));
+
+		internal static GameState CreateBoxRoomStateWithAOESkill (IGenerator generator)
+		{
+			return AddTestAOESkill (CreateBoxRoomState (generator));
+		}
+
+		internal static GameState AddTestAOESkill (GameState state)
+		{
+			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestAOESkill }.ToImmutableList ()));
 		}
 	}
 }

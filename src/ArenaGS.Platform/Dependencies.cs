@@ -1,17 +1,17 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 
-namespace ArenaGS
+namespace ArenaGS.Platform
 {
-	internal static class Dependencies
+	public static class Dependencies
 	{
 		static Dictionary<Type, object> Items = new Dictionary<Type, object> ();
 		static Dictionary<Type, Type> Types = new Dictionary<Type, Type> ();
 
-		internal static void Register<T> (Type type) => Types [typeof (T)] = type;
-		internal static void RegisterInstance<T> (object value) => Items [typeof (T)] = value;
+		public static void Register<T> (Type type) => Types [typeof (T)] = type;
+		public static void RegisterInstance<T> (object value) => Items [typeof (T)] = value;
 
-		internal static T Get<T> ()
+		public static T Get<T> ()
 		{
 			object value;
 			if (Items.TryGetValue (typeof (T), out value))
@@ -28,7 +28,7 @@ namespace ArenaGS
 			throw new InvalidOperationException ($"Dependency {typeof (T)} was not registered in the dependency dictionary.");
 		}
 
-		internal static void Unregister<T> ()
+		public static void Unregister<T> ()
 		{
 			if (Items.ContainsKey (typeof (T)))
 				Items.Remove (typeof (T));
@@ -36,7 +36,7 @@ namespace ArenaGS
 				Types.Remove (typeof (T));
 		}
 
-		internal static void Clear ()
+		public static void Clear ()
 		{
 			Items.Clear ();
 			Types.Clear ();

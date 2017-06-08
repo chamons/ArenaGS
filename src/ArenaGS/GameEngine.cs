@@ -9,9 +9,19 @@ using ArenaGS.Utilities;
 
 namespace ArenaGS
 {
-	public class GameEngine
+	public class GameStateChangedEventArgs : EventArgs
 	{
-		public GameState CurrentState { get; private set; }
+		public GameState State { get; }
+
+		public GameStateChangedEventArgs (GameState state)
+		{
+			State = state;
+		}
+	}
+
+	public class GameEngine : IAnimationRequest
+	{
+		internal GameState CurrentState { get; private set; }
 		IPhysics Physics;
 		ISkills Skills;
 		ITime Time;
@@ -28,6 +38,8 @@ namespace ArenaGS
 			Dependencies.Register<ISkills> (typeof (Skills));
 			Dependencies.Register<ITime> (typeof (Time));
 			Dependencies.Register<IGenerator> (typeof(Generator));
+			Dependencies.RegisterInstance<IAnimationRequest> (this);
+			Dependencies.Register<ILogger> (typeof(Logger));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
@@ -39,9 +51,9 @@ namespace ArenaGS
 		public void Load ()
 		{
 			if (Serialization.SaveGameExists)
-				CurrentState = Serialization.Load ();
+				SetNewState (Serialization.Load ());
 			else
-				CurrentState = CreateNewGameState ();
+				SetNewState (CreateNewGameState ());
 		}
 
 		public void SaveGame ()
@@ -53,13 +65,19 @@ namespace ArenaGS
 		{
 			SetNewState (Serialization.Load ());
 		}
-
-		public event EventHandler StateChanged;
+	
+		public event EventHandler<GameStateChangedEventArgs> StateChanged;
 
 		void SetNewState (GameState state)
 		{
 			CurrentState = state;
-			StateChanged?.Invoke (this, EventArgs.Empty);
+			StateChanged?.Invoke (this, new GameStateChangedEventArgs (CurrentState));
+		}
+
+		public event EventHandler<AnimationEventArgs> AnimationRequested;
+		public void Request (GameState state, AnimationInfo info)
+		{
+			AnimationRequested?.Invoke (this, new AnimationEventArgs (state, info));
 		}
 
 		GameState CreateNewGameState ()
