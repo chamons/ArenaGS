@@ -1,4 +1,6 @@
-﻿using ArenaGS.Utilities;
+﻿using System;
+using ArenaGS.Utilities;
+using ArenaGS.Views.Scenes;
 using ArenaGS.Views.Utilities;
 using SkiaSharp;
 
@@ -15,14 +17,16 @@ namespace ArenaGS.Views.Views
 		readonly Point SkillBarOffset = new Point (2, 580);
 		readonly Size SkillBarSize = new Size (550, 40);
 
+		IScene Parent;
 		MapView Map;
 		LogView Log;
 		SkillBarView SkillBar;
 		TargetOverlayInfo CurrentOverlayInfo;
 
-		public CombatView (Point position, Size size) : base (position, size)
+		public CombatView (IScene parent, Point position, Size size) : base (position, size)
 		{
-			Map = new MapView (MapOffset, MapSize);
+			Parent = parent;
+			Map = new MapView (parent, MapOffset, MapSize);
 			Log = new LogView (LogOffset, LogSize);
 			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);
 		}
@@ -46,6 +50,11 @@ namespace ArenaGS.Views.Views
 		public void ClearTargetOverlay ()
 		{
 			CurrentOverlayInfo = null;
+		}
+
+		public void BeginAnimation (AnimationInfo info, Action onAnimationComplete)
+		{
+			Map.BeginAnimation (info, onAnimationComplete);
 		}
 	}
 }

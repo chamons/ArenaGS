@@ -4,28 +4,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using ArenaGS.Engine;
 using ArenaGS.Model;
+using ArenaGS.Platform;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
 using NUnit.Framework;
 
 namespace ArenaGS.Tests
 {
-	class SkillTestHelpers
-	{
-		internal static Skill TestSkill { get; } = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0));
-
-		internal static GameState CreateStateWithTestSkill (IGenerator generator)
-		{
-			return AddTestSkill (TestScenes.CreateBoxRoomState (generator));
-		}
-
-		internal static GameState AddTestSkill (GameState state)
-		{
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
-		}
-	}
-
-
 	[TestFixture]
 	class SkillTests
 	{
@@ -43,9 +28,9 @@ namespace ArenaGS.Tests
 		[Test]
 		public void UseOfSkill_ReducesInvokersCT ()
 		{
-			Skill testSkill = SkillTestHelpers.TestSkill;
+			Skill testSkill = TestScenes.TestSkill;
 
-			GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
+			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 			Character enemy = state.Enemies.First (x => x.Position == new Point (3, 3));
 			state = state.WithReplaceEnemy (enemy.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
 			enemy = state.Enemies.First (x => x.ID == enemy.ID);
@@ -67,7 +52,7 @@ namespace ArenaGS.Tests
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateTinyRoomState (Generator);
-				Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (2, 2));
+				Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (2, 2));
 			});
 		}
 
@@ -76,8 +61,8 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
-				Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (10, 10));
+				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+				Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (10, 10));
 			});
 		}
 
@@ -86,8 +71,8 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
-				Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (-10, 10));
+				GameState state = TestScenes.CreateBoxRoomStateWithSkill  (Generator);
+				Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (-10, 10));
 			});
 		}
 
@@ -143,9 +128,9 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ActorIsUsingPointSkillValid_DoesDamageToTarget ()
 		{
-			GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
+			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 
-			state = Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (3, 3));
+			state = Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (3, 3));
 
 			Character enemyHit = state.Enemies.First (x => x.Position == new Point (3, 3));
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
@@ -155,9 +140,9 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ActorIsUsingPointSkillValid_DoesDamageToSelf()
 		{
-			GameState state = SkillTestHelpers.CreateStateWithTestSkill (Generator);
+			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 
-			state = Skills.Invoke (state, state.Player, SkillTestHelpers.TestSkill, new Point (1, 1));
+			state = Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (1, 1));
 
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
 			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);

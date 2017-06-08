@@ -35,7 +35,7 @@ namespace ArenaGS.Engine.Utilities
 	// as it is a port of C code
 	public class BresenhamLine
 	{
-		public static IEnumerable <Point> PointsOnLine (Point start, Point end)
+		public static List <Point> PointsOnLine (Point start, Point end)
 		{
 			List <Point> points = new List<Point> ();
 			BresenhamLine line = new BresenhamLine (start, end);

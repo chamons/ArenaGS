@@ -8,8 +8,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ArenaGS.Views</RootNamespace>
     <AssemblyName>ArenaGS.Views</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile44</TargetFrameworkProfile>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -51,6 +51,7 @@
     <Compile Include="Utilities\TargetOverlayInfo.cs" />
     <Compile Include="Views\View.cs" />
     <Compile Include="Views\MapView.cs" />
+    <Compile Include="Utilities\AnimationHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\mud3.png" />
@@ -66,6 +67,9 @@
     <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Immutable.1.3.1\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Optional">
+      <HintPath>..\packages\Optional.3.2.0\lib\netstandard1.0\Optional.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

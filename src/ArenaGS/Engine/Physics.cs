@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using ArenaGS.Model;
+using ArenaGS.Platform;
 using ArenaGS.Utilities;
 
 namespace ArenaGS.Engine
@@ -19,10 +20,15 @@ namespace ArenaGS.Engine
 
 	public class Physics : IPhysics
 	{
+		ILogger Log;
 		ITime Time;
+		IAnimationRequest Animation;
+
 		public Physics ()
 		{
 			Time = Dependencies.Get<ITime> ();
+			Log = Dependencies.Get<ILogger> ();
+			Animation = Dependencies.Get<IAnimationRequest> ();
 		}
 		
 		public GameState MovePlayer (GameState state, Direction direction)
@@ -69,7 +75,14 @@ namespace ArenaGS.Engine
 		{
 			Point newPosition = actor.Position.InDirection (direction);
 			if (CouldCharacterWalk (state, actor, newPosition))
+			{
+				if (!actor.IsPlayer)
+				{
+					Log.Log (() => $"{actor} in {direction} to {newPosition}", LogMask.Animation);
+					Animation.Request (state, new MovementAnimationInfo (actor, newPosition));
+				}
 				return actor.WithPosition (newPosition, Time.ChargeTime (actor, TimeConstants.CTPerMovement));
+			}
 
 			return actor;
 		}

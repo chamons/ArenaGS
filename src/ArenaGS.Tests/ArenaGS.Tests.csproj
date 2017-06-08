@@ -60,6 +60,7 @@
     <Compile Include="Behavior\ActorBehaviorTests.cs" />
     <Compile Include="Behavior\ScriptBehaviorTests.cs" />
     <Compile Include="QueryStateTests.cs" />
+    <Compile Include="AnimationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

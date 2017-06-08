@@ -23,6 +23,25 @@ namespace ArenaGS.Utilities
 			}
 		}
 
+		public string LogLocation
+		{
+			get
+			{
+#if __MACOS__
+				string logPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library/Application Support/");
+#else
+				string logPath = System.Environment.ExpandEnvironmentVariables ("%USERPROFILE%\\Saved Games");
+#endif
+				return Path.Combine (logPath, "Arena Gunpowder and Sorcery", "log.txt");
+			}
+		}
+
+		public StreamWriter GetLogStream ()
+		{
+			Directory.CreateDirectory (Path.GetDirectoryName (LogLocation));
+			return new StreamWriter (LogLocation, false);
+		}
+
 		public byte [] LoadFile (string filename)
 		{
 			return File.ReadAllBytes (filename);

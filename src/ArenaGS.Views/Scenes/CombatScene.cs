@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArenaGS.Model;
+using ArenaGS.Platform;
 using ArenaGS.Utilities;
 using ArenaGS.Views.Views;
 using SkiaSharp;
@@ -17,13 +20,19 @@ namespace ArenaGS.Views.Scenes
 
 		CombatDefault DefaultOverlay;
 		IOverlay Overlay;
+		ILogger Log;
+
+		public bool AnimationInProgress { get; private set; }
+		public event EventHandler AnimationsComplete;
 
 		public CombatScene (GameController controller, GameEngine engine)
 		{
 			Controller = controller;
 			Engine = engine;
-			CombatView = new CombatView (CombatOffset, CombatSize);
-			DefaultOverlay = new CombatDefault (this, Engine);
+			Log = Dependencies.Get<ILogger> ();
+
+			CombatView = new CombatView (this, CombatOffset, CombatSize);
+			DefaultOverlay = new CombatDefault (this, Controller, Engine);
 
 			SetDefaultOverlay ();
 		}
@@ -47,18 +56,27 @@ namespace ArenaGS.Views.Scenes
 
 		public void HandleMouseDown (SKPointI point)
 		{
+			if (AnimationInProgress)
+				return;
+
 			Overlay.HandleMouseDown (point);
 		}
 
 		public void HandleMouseUp (SKPointI point)
 		{
+			if (AnimationInProgress)
+				return;
+
 			Overlay.HandleMouseUp (point);
 		}
 
 		string EscapeString = ((char)27).ToString (); // 27 is ESC ascii code. macOS returns this
 		public void HandleKeyDown (string character)
 		{
-			if (character ==  EscapeString || character == "Escape")
+			if (AnimationInProgress)
+				return;
+
+			if (character == EscapeString || character == "Escape")
 			{
 				SetDefaultOverlay ();
 				return;
@@ -72,18 +90,32 @@ namespace ArenaGS.Views.Scenes
 			surface.Canvas.Clear (SKColors.Black);
 
 			Overlay.ConfigureView (CombatView);
-			surface.Canvas.DrawSurface (CombatView.Draw (Engine.CurrentState), 0, 0);
+			surface.Canvas.DrawSurface (CombatView.Draw (Controller.CurrentState), 0, 0);
+		}
+
+		public void HandleAnimation (AnimationInfo info)
+		{
+			AnimationInProgress = true;
+			CombatView.BeginAnimation (info, OnAnimationComplete);
+		}
+
+		void OnAnimationComplete ()
+		{
+			AnimationInProgress = false;
+			AnimationsComplete?.Invoke (this, EventArgs.Empty);
 		}
 	}
 
 	class CombatDefault : IOverlay
 	{
 		GameEngine Engine;
+		GameController Controller;
 		CombatScene Parent;
 
-		public CombatDefault (CombatScene parent, GameEngine engine)
+		public CombatDefault (CombatScene parent, GameController controller, GameEngine engine)
 		{
 			Parent = parent;
+			Controller = controller;
 			Engine = engine;		
 		}
 
@@ -174,14 +206,16 @@ namespace ArenaGS.Views.Scenes
 
 		internal void RequestSkill (int index)
 		{
-			var skills = Engine.CurrentState.Player.Skills;
+			var state = Controller.CurrentState;
+
+			var skills = state.Player.Skills;
 			if (index < skills.Count)
 			{
 				Skill selectedSkill = skills [index];
 				switch (selectedSkill.TargetInfo.TargettingStyle)
 				{
 					case TargettingStyle.Point:
-						TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, Engine.CurrentState, selectedSkill, Engine.CurrentState.Player.Position, p =>
+						TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, state.Player.Position, p =>
 						{
 							Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
 						});
