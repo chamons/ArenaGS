@@ -109,13 +109,13 @@ namespace ArenaGS
 
 		internal GameState WithReplaceEnemy (Character newEnemy)
 		{
-			Character oldEnemy = Enemies.Single (x => x.ID == newEnemy.ID);
+			Character oldEnemy = Enemies.First (x => x.ID == newEnemy.ID);
 			return new GameState (this) { Enemies = Enemies.Replace (oldEnemy, newEnemy) };
 		}
 
 		internal GameState WithReplaceScript (MapScript newScript)
 		{
-			MapScript oldScript = Scripts.Single (x => x.ID == newScript.ID);
+			MapScript oldScript = Scripts.First (x => x.ID == newScript.ID);
 			return new GameState (this) { Scripts = Scripts.Replace (oldScript, newScript) };
 		}
 
@@ -130,6 +130,16 @@ namespace ArenaGS
 					shortestPath = Dijkstra.CalculateShortestPathArray (Map, Player.Position);
 				return shortestPath;
 			}
+		}
+
+		public Character UpdateEnemyReference (Character oldReference)
+		{
+			return Enemies.First (x => x.ID == oldReference.ID);
+		}
+
+		public MapScript UpdateScriptReference (MapScript oldReference)
+		{
+			return Scripts.First (x => x.ID == oldReference.ID);
 		}
 	}
 }

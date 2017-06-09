@@ -67,7 +67,6 @@ namespace ArenaGS.Tests
 
 				state = behavior.Act (state, state.Scripts[0]);
 				Assert.AreEqual (expected, state.Enemies.Count);
-
 			}
 		}
 	}

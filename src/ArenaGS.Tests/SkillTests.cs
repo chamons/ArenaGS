@@ -33,18 +33,17 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 			Character enemy = state.Enemies.First (x => x.Position == new Point (3, 3));
 			state = state.WithReplaceEnemy (enemy.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
-			enemy = state.Enemies.First (x => x.ID == enemy.ID);
+			enemy = state.UpdateEnemyReference (enemy);
 
 			Assert.IsTrue (enemy.CT >= 100);
 			state = Skills.Invoke (state, enemy, testSkill, new Point(1,1));
-			enemy = state.Enemies.First (x => x.ID == enemy.ID);
+			enemy = state.UpdateEnemyReference (enemy);
 			Assert.IsTrue (enemy.CT < 100);
 
 			Assert.IsTrue (state.Player.CT >= 100);
 			state = Skills.Invoke (state, state.Player, testSkill, new Point (1, 1));
 			Assert.IsTrue (state.Player.CT < 100);
 		}
-
 
 		[Test]
 		public void ActorUsingUnownedSkill_Throws ()

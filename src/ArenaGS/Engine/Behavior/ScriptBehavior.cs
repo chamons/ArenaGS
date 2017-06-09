@@ -38,7 +38,7 @@ namespace ArenaGS.Engine.Behavior
 					}
 				}
 			}
-			script = state.Scripts.First (x => x.ID == script.ID);
+			script = state.UpdateScriptReference (script);
 			state = state.WithReplaceScript (script.WithCT (Time.ChargeTime (script, TimeConstants.CTPerBasicAction)));
 			return state;
 		}
