@@ -22,8 +22,8 @@ namespace ArenaGS.Platform
 	public interface ILogger
 	{
 		LogMask DiagnosticMask {get; set; }
-		void Log (string message, LogMask mask, Servarity sevarity = Servarity.Normal);
-		void Log (Func<string> messageProc, LogMask mask, Servarity sevarity = Servarity.Normal);
+		void Log (string message, LogMask mask, Servarity sevarity = Servarity.Diagnostic);
+		void Log (Func<string> messageProc, LogMask mask, Servarity sevarity = Servarity.Diagnostic);
 	}
 
 	public class Logger : ILogger
