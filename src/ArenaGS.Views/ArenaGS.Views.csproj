@@ -42,16 +42,17 @@
     <Compile Include="IGameWindow.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Scenes\CombatScene.cs" />
-    <Compile Include="Scenes\IOverlay.cs" />
     <Compile Include="Scenes\IScene.cs" />
-    <Compile Include="Scenes\TargettingOverlay.cs" />
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\LogView.cs" />
     <Compile Include="Views\SkillBarView.cs" />
     <Compile Include="Views\View.cs" />
     <Compile Include="Views\MapView.cs" />
     <Compile Include="Utilities\AnimationHelper.cs" />
-    <Compile Include="Scenes\DescribeOverlay.cs" />
+    <Compile Include="Scenes\Overlays\CombatDefaultOverlay.cs" />
+    <Compile Include="Scenes\Overlays\DescribeOverlay.cs" />
+    <Compile Include="Scenes\Overlays\IOverlay.cs" />
+    <Compile Include="Scenes\Overlays\TargettingOverlay.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\mud3.png" />
@@ -290,6 +291,9 @@
     <EmbeddedResource Include="Resources\skoll\pocket-watch.png" />
     <EmbeddedResource Include="Resources\skoll\stick-grenade.png" />
     <EmbeddedResource Include="Resources\skoll\winchester-rifle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scenes\Overlays\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

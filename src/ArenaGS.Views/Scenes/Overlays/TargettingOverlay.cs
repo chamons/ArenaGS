@@ -5,7 +5,7 @@ using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
 
-namespace ArenaGS.Views.Scenes
+namespace ArenaGS.Views.Scenes.Overlays
 {
 	class TargettingOverlay : IOverlay
 	{

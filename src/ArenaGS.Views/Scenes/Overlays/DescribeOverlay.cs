@@ -3,7 +3,7 @@ using ArenaGS.Utilities;
 using ArenaGS.Views.Views;
 using SkiaSharp;
 
-namespace ArenaGS.Views.Scenes
+namespace ArenaGS.Views.Scenes.Overlays
 {
 	class DescribeOverlay : IOverlay
 	{
