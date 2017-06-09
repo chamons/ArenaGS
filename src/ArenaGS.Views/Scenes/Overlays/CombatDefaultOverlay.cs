@@ -23,6 +23,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 		{
 			switch (character)
 			{
+				case ".":
 				case "OemPeriod":
 				case "Decimal":
 					Engine.AcceptCommand (Command.Wait, null);
@@ -102,7 +103,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 					RequestSkill (12);
 					return;
 				case "v":
-					Parent.SetOverlay (new DescribeOverlay (Parent, Controller.CurrentState.Player.Position));
+					Parent.SetOverlay (new DescribeOverlay (Parent, Controller));
 					return;
 			}
 		}
@@ -110,7 +111,6 @@ namespace ArenaGS.Views.Scenes.Overlays
 		internal void RequestSkill (int index)
 		{
 			var state = Controller.CurrentState;
-
 			var skills = state.Player.Skills;
 			if (index < skills.Count)
 			{
@@ -137,6 +137,30 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void HandleMouseUp (SKPointI point)
 		{
+			HitTestResults hitTest = Parent.HitTestScene (point);
+			if (hitTest != null)
+			{
+				if (hitTest.View is SkillBarView)
+				{
+					int skill = (int)hitTest.Data;
+					RequestSkill (skill);
+				}
+				else if (hitTest.View is MapView)
+				{
+					Point position = (Point)hitTest.Data;
+					Point playerPosition = Controller.CurrentState.Player.Position;
+					if (position == playerPosition)
+						Engine.AcceptCommand (Command.Wait, null);
+					else if (position == playerPosition.InDirection (Direction.North))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.North);
+					else if (position == playerPosition.InDirection (Direction.South))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.South);
+					else if (position == playerPosition.InDirection (Direction.West))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.West);
+					else if (position == playerPosition.InDirection (Direction.East))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.East);
+				}
+			}
 		}
 
 		public void ConfigureMap (MapView map)

@@ -27,5 +27,10 @@ namespace ArenaGS.Views.Views
 			}
 			return Surface;
 		}
+
+		public override HitTestResults HitTest(SKPointI point)
+		{
+			return null;
+		}
 	}
 }

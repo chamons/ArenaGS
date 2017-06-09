@@ -43,5 +43,18 @@ namespace ArenaGS.Views.Views
 		{
 			Map.BeginAnimation (info, onAnimationComplete);
 		}
+
+		public override HitTestResults HitTest (SKPointI point)
+		{
+			HitTestResults results = Map.HitTest (point);
+			if (results != null)
+				return results;
+
+			results = Log.HitTest (point);
+			if (results != null)
+				return results;
+
+			return SkillBar.HitTest (point);
+		} 
 	}
 }

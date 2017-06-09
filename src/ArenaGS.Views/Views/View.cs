@@ -4,7 +4,19 @@ using SkiaSharp;
 
 namespace ArenaGS.Views.Views
 {
-	internal abstract class View
+	class HitTestResults
+	{
+		internal View View { get; }
+		internal object Data { get; }
+
+		internal HitTestResults (View view, object data)
+		{
+			View = view;
+			Data = data;
+		}
+	}
+
+	abstract class View
 	{
 		public Point Position { get; protected set; }
 		public Size Size { get; protected set; }
@@ -27,5 +39,6 @@ namespace ArenaGS.Views.Views
 		protected SKCanvas Canvas => Surface.Canvas;
 
 		public abstract SKSurface Draw (GameState state);
+		public abstract HitTestResults HitTest (SKPointI point);
 	}
 }
