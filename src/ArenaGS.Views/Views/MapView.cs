@@ -32,10 +32,13 @@ namespace ArenaGS.Views.Views
 			ExplosionBitmap = Resources.Get ("cloud_fire2.png");
 		}
 
-		public override SKSurface Draw (GameState state, object data)
+		public override SKSurface Draw (GameState state)
 		{
 			BlankCanvas ();
 			GameState = state;
+			CenterPosition = state.Player.Position;
+
+			Parent.Overlay.ConfigureMap (this);
 
 			var characterToAnimate = CharacterToAnimate ();
 
@@ -57,18 +60,12 @@ namespace ArenaGS.Views.Views
 			if (characterToAnimate != null)
 				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), EnemyBitmap);
 
-			DrawTile (new Point (MapCenterX, MapCenterY), PlayerBitmap);
+			DrawTile (TranslateModelToUIPosition (GameState.Player.Position), PlayerBitmap);
 
 			DrawProjectile ();
 			DrawExplosion ();
 
-			if (data != null)
-			{
-				TargetOverlayInfo overlayInfo = (TargetOverlayInfo)data;
-				SKColor color = overlayInfo.Valid ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
-				foreach (var tile in overlayInfo.Position.PointsInBurst (overlayInfo.Area))
-					DrawOverlayMapSquare (tile, color);
-			}
+			Parent.Overlay.Draw (this);
 
 			return Surface;
 		}
@@ -111,7 +108,7 @@ namespace ArenaGS.Views.Views
 			return null;
 		}
 
-		void DrawOverlayMapSquare (Point mapPosition, SKColor color)
+		public void DrawOverlaySquare (Point mapPosition, SKColor color)
 		{
 			Point uiPosition = TranslateModelToUIPosition (mapPosition);
 			if (IsUIDrawnTile (uiPosition))
@@ -120,7 +117,14 @@ namespace ArenaGS.Views.Views
 
 		void DrawFloatingTile (SKPoint currentUIPosition, SKBitmap image)
 		{
-			Canvas.DrawBitmap (image, DrawRectForFloatingUIPosition (currentUIPosition));
+			if (IsUIDrawnTile (currentUIPosition))
+				Canvas.DrawBitmap (image, DrawRectForFloatingUIPosition (currentUIPosition));
+		}
+
+		public void DrawTile (Point currentUIPosition, SKBitmap image)
+		{
+			if (IsUIDrawnTile (currentUIPosition))
+				Canvas.DrawBitmap (image, DrawRectForUIPosition (currentUIPosition));
 		}
 
 		SKRect DrawRectForFloatingUIPosition (SKPoint currentUIPosition)
@@ -129,11 +133,6 @@ namespace ArenaGS.Views.Views
 			float top = Position.Y + (currentUIPosition.Y * MapTileSize);
 			var drawPosition = new SKRect (left, top, left + MapTileSize, top + MapTileSize);
 			return drawPosition;
-		}
-
-		void DrawTile (Point currentUIPosition, SKBitmap image)
-		{
-			Canvas.DrawBitmap (image, DrawRectForUIPosition (currentUIPosition));
 		}
 
 		SKRect DrawRectForUIPosition (Point currentUIPosition)
@@ -147,7 +146,8 @@ namespace ArenaGS.Views.Views
 		GameState GameState;
 		Map CurrentMap => GameState.Map;
 		Character Player => GameState.Player;
-		Point CenterPosition => Player.Position;
+
+		public Point CenterPosition { get; set; }
 
 		public const int MapTileSize = 32;
 		public const int MapSizeX = 17;
@@ -158,6 +158,12 @@ namespace ArenaGS.Views.Views
 		bool IsUIDrawnTile (Point uiPosition)
 		{
 			return uiPosition.X >= 0 && uiPosition.X < MapSizeX && uiPosition.Y >= 0 && uiPosition.Y < MapSizeY;
+		}
+
+		bool IsUIDrawnTile (SKPoint uiPosition)
+		{
+			Point convertedPoint = new Point ((int)Math.Ceiling (uiPosition.X), (int)Math.Ceiling (uiPosition.Y));
+			return IsUIDrawnTile (convertedPoint);
 		}
 
 		public bool IsOnMap (Point uiPosition)

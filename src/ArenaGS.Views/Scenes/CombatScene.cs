@@ -19,7 +19,7 @@ namespace ArenaGS.Views.Scenes
 		GameEngine Engine;
 
 		CombatDefault DefaultOverlay;
-		IOverlay Overlay;
+		public IOverlay Overlay { get; private set; }	
 		ILogger Log;
 
 		public bool AnimationInProgress { get; private set; }
@@ -89,7 +89,6 @@ namespace ArenaGS.Views.Scenes
 		{		
 			surface.Canvas.Clear (SKColors.Black);
 
-			Overlay.ConfigureView (CombatView);
 			surface.Canvas.DrawSurface (CombatView.Draw (Controller.CurrentState), 0, 0);
 		}
 
@@ -201,6 +200,9 @@ namespace ArenaGS.Views.Scenes
 				case "Oem5":
 					RequestSkill (12);
 					return;
+				case "v":
+					Parent.SetOverlay (new DescribeOverlay (Parent, Controller.CurrentState.Player.Position));
+					return;
 			}
 		}
 
@@ -236,11 +238,15 @@ namespace ArenaGS.Views.Scenes
 		{
 		}
 
-		public void ConfigureView (CombatView combatView)
+		public void ConfigureMap (MapView map)
 		{
 		}
 
 		public void DisableOverlay (CombatView combatView)
+		{
+		}
+
+		public void Draw (MapView map)
 		{
 		}
 	}

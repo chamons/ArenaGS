@@ -48,10 +48,10 @@
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\LogView.cs" />
     <Compile Include="Views\SkillBarView.cs" />
-    <Compile Include="Utilities\TargetOverlayInfo.cs" />
     <Compile Include="Views\View.cs" />
     <Compile Include="Views\MapView.cs" />
     <Compile Include="Utilities\AnimationHelper.cs" />
+    <Compile Include="Scenes\DescribeOverlay.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\mud3.png" />
