@@ -13,7 +13,7 @@ namespace ArenaGS.Views
 		{
 			var assembly = typeof (Resources).GetTypeInfo ().Assembly;
 
-			foreach (var name in assembly.GetManifestResourceNames ().Where (x => x.EndsWith (".png")))
+			foreach (var name in assembly.GetManifestResourceNames ().Where (x => x.EndsWith (".png", System.StringComparison.Ordinal)))
 				LoadedResources.Add (FileNameFromResourceName (name), SKBitmap.Decode (assembly.GetManifestResourceStream (name)));
 		}
 
