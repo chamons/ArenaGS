@@ -11,8 +11,9 @@ namespace ArenaGS.Views.Utilities
 			Reset();
 		}
 
-		public bool AnimationInProgress;
-		public int Frame;
+		public const int FramesPerSecond = 60;
+		public bool AnimationInProgress { get; private set; }
+		public int Frame { get; private set; }
 		int Length;
 		Stopwatch Stopwatch;
 		Action OnAnimationComplete;
@@ -36,7 +37,7 @@ namespace ArenaGS.Views.Utilities
 				}
 
 				invalidateProc ();
-				await Task.Delay (TimeSpan.FromSeconds (1.0 / 30));
+				await Task.Delay (TimeSpan.FromSeconds (1.0 / FramesPerSecond));
 			}
 
 			Stopwatch.Stop();

@@ -56,6 +56,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\mud3.png" />
     <EmbeddedResource Include="Resources\stone_gray1.png" />
+    <EmbeddedResource Include="Resources\cloud_fire2.png" />
+    <EmbeddedResource Include="Resources\sling_bullet0.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\orc_knight.png" />

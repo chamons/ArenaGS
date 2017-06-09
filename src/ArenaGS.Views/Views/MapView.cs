@@ -14,6 +14,9 @@ namespace ArenaGS.Views.Views
 		SKBitmap FloorBitmap;
 		SKBitmap PlayerBitmap;
 		SKBitmap EnemyBitmap;
+		SKBitmap ProjectileBitmap;
+		SKBitmap ExplosionBitmap;
+
 		IScene Parent;
 		AnimationHelper AnimationHelper = new AnimationHelper ();
 		AnimationInfo currentAnimation;
@@ -25,6 +28,8 @@ namespace ArenaGS.Views.Views
 			FloorBitmap = Resources.Get ("mud3.png");
 			PlayerBitmap = Resources.Get ("orc_knight.png");
 			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
+			ProjectileBitmap = Resources.Get ("sling_bullet0.png");
+			ExplosionBitmap = Resources.Get ("cloud_fire2.png");
 		}
 
 		public override SKSurface Draw (GameState state, object data)
@@ -54,6 +59,9 @@ namespace ArenaGS.Views.Views
 
 			DrawTile (new Point (MapCenterX, MapCenterY), PlayerBitmap);
 
+			DrawProjectile ();
+			DrawExplosion ();
+
 			if (data != null)
 			{
 				TargetOverlayInfo overlayInfo = (TargetOverlayInfo)data;
@@ -63,6 +71,28 @@ namespace ArenaGS.Views.Views
 			}
 
 			return Surface;
+		}
+
+		void DrawProjectile ()
+		{
+			if (currentAnimation != null && currentAnimation.Type == AnimationType.Projectile)
+			{
+				ProjectileAnimationInfo projectileInfo = (ProjectileAnimationInfo)currentAnimation;
+				int currentTileIndex = AnimationHelper.Frame / ProjectileTravelTime;
+				Point projectilePosition = projectileInfo.Path[currentTileIndex];
+				DrawTile (TranslateModelToUIPosition (projectilePosition), ProjectileBitmap);
+			}
+		}
+
+		void DrawExplosion ()
+		{
+			if (currentAnimation != null && currentAnimation.Type == AnimationType.Explosion)
+			{
+				ExplosionAnimationInfo explosionInfo = (ExplosionAnimationInfo)currentAnimation;
+				int currentRange = AnimationHelper.Frame / ExplosionExpandTime;
+				foreach (var point in explosionInfo.Center.PointsInBurst (currentRange))
+					DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
+			}
 		}
 
 		Tuple<int, SKPoint> CharacterToAnimate ()
@@ -162,13 +192,33 @@ namespace ArenaGS.Views.Views
 			currentAnimation = info;
 
 #pragma warning disable CS4014 // This is desired behavior, we are using it for timing
-			AnimationHelper.AnimationLoop (3, Parent.Invalidate, () =>
+			AnimationHelper.AnimationLoop (CalculateAnimationFrameLength (info), Parent.Invalidate, () =>
 			{
 				currentAnimation = null;
 				AnimationHelper.Reset();
 				onAnimationComplete();
 			});
 #pragma warning restore CS4014
+		}
+
+		const int MovementAnimationTime = 2;
+		const int ExplosionExpandTime = 2;
+		const int ProjectileTravelTime = 2;
+		int CalculateAnimationFrameLength (AnimationInfo info)
+		{
+			switch (info.Type)
+			{
+				case AnimationType.Movement:
+					return MovementAnimationTime;
+				case AnimationType.Explosion:
+					ExplosionAnimationInfo explosionInfo = (ExplosionAnimationInfo)info;
+					return (ExplosionExpandTime * (explosionInfo.Size + 1)) - 1;
+				case AnimationType.Projectile:
+					ProjectileAnimationInfo projectileInfo = (ProjectileAnimationInfo)info;
+					return (ProjectileTravelTime * projectileInfo.Path.Count) - 1;
+				default:
+					throw new NotImplementedException ();
+			}
 		}
 	}
 }
