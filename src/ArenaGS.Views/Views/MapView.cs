@@ -225,5 +225,15 @@ namespace ArenaGS.Views.Views
 					throw new NotImplementedException ();
 			}
 		}
+
+		public override HitTestResults HitTest(SKPointI point)
+		{
+			if (!ScreenRect.Contains (point))
+				return null;
+
+			int x = (point.X - Position.X) / MapTileSize;
+			int y = (point.Y - Position.Y) / MapTileSize;
+			return new HitTestResults(this, TranslateUIToModelPosition (new Point (x, y)));
+		}
 	}
 }

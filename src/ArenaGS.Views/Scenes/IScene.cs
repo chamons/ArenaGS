@@ -1,5 +1,6 @@
 ﻿using System;
 using ArenaGS.Views.Scenes.Overlays;
+using ArenaGS.Views.Views;
 using SkiaSharp;
 
 namespace ArenaGS.Views.Scenes
@@ -17,5 +18,6 @@ namespace ArenaGS.Views.Scenes
 
 		void Invalidate ();
 		IOverlay Overlay { get; }
+		HitTestResults HitTestScene (SKPointI point);
 	}
 }

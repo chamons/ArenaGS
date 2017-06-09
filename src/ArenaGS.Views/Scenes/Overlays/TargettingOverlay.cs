@@ -45,32 +45,44 @@ namespace ArenaGS.Views.Scenes.Overlays
 			{
 				case "\r":
 				case "Return":
-					if (CurrentPositionIsValidTarget)
-					{
-						Parent.SetDefaultOverlay ();
-						OnTargetSelected (CurrentTargettedPosition);
-					}
+					Select ();
 					return;
 				case "Up":
 				case "NumPad8":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.North);
-					Parent.Invalidate ();
+					Move (Direction.North);
 					return;
 				case "Down":
 				case "NumPad2":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.South);
-					Parent.Invalidate ();
+					Move (Direction.South);
 					return;
 				case "Left":
 				case "NumPad4":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.West);
-					Parent.Invalidate ();
+					Move (Direction.West);
 					return;
 				case "Right":
 				case "NumPad6":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.East);
-					Parent.Invalidate ();
+					Move (Direction.East);
 					return;
+			}
+		}
+
+		void Move (Direction direction)
+		{
+			MoveTo (CurrentTargettedPosition.InDirection (direction));
+		}
+
+		void MoveTo (Point p)
+		{
+			CurrentTargettedPosition = p;
+			Parent.Invalidate ();
+		}
+
+		void Select ()
+		{
+			if (CurrentPositionIsValidTarget)
+			{
+				Parent.SetDefaultOverlay ();
+				OnTargetSelected (CurrentTargettedPosition);
 			}
 		}
 
@@ -80,6 +92,15 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void HandleMouseUp (SKPointI point)
 		{
+			HitTestResults hitTest = Parent.HitTestScene (point);
+			if (hitTest != null && hitTest.View is MapView)
+			{
+				Point position = (Point)hitTest.Data;
+				if (CurrentTargettedPosition == position)
+					Select ();
+				else
+					MoveTo (position);
+			}
 		}
 
 		public void Draw (MapView map)

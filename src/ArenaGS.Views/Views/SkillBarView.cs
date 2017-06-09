@@ -36,30 +36,53 @@ namespace ArenaGS.Views.Views
 		SKPaint CellText = new SKPaint () { Color = SKColors.White, TextSize = 10, TextAlign = SKTextAlign.Center };
 		SKPaint CellBorder = new SKPaint () { Color = SKColors.White, StrokeWidth = 2, IsStroke = true };
 
+		SKRect RectForSkill (int i)
+		{
+			int left = Padding + ((Padding + CellSize) * i);
+			int top = Padding;
+			int right = left + CellSize + Padding;
+			int bottom = top + CellSize + Padding;
+
+			return new SKRect (left, top, right, bottom);
+		}
+
 		public override SKSurface Draw (GameState state)
 		{
 			var skills = state.Player.Skills;
 			for (int i = 0; i < Math.Min (skills.Count, MaxNumberOfSkills); ++i)
 			{
-				int left = Padding + ((Padding + CellSize) * i);
-				int top = Padding;
-				int right = left + CellSize + Padding;
-				int bottom = top + CellSize + Padding;
+				SKRect rect = RectForSkill (i);
 
-				Canvas.DrawRect (new SKRect (left, top, right, bottom), CellBorder);
+				Canvas.DrawRect (rect, CellBorder);
 
-				Canvas.DrawBitmap (Resources.Get (ImageForSkill (skills[i])), new SKRect (left + Padding, top + Padding, right - Padding, bottom - Padding), AntialiasPaint);
+				SKRect bitmapRect = new SKRect (rect.Left + Padding, rect.Top + Padding, rect.Right - Padding, rect.Bottom - Padding);
+				Canvas.DrawBitmap (Resources.Get (ImageForSkill (skills[i])), bitmapRect, AntialiasPaint);
 
 				if (ShowHotkey)
 				{
-					int textLeft = left + (CellSize / 2);
-					int textTop = CellSize + Padding + 3;
+					float textLeft = rect.Left + (CellSize / 2);
+					float textTop = CellSize + Padding + 3;
 					Canvas.DrawRect (new SKRect (textLeft - 3, textTop - 8, textLeft + 4, textTop + 8), BlackPaint);
 					Canvas.DrawText (CellLabels [i], textLeft, CellSize + Padding + 3, CellText);
 				}
 			}
 
 			return Surface;
+		}
+
+		public override HitTestResults HitTest (SKPointI point)
+		{
+			if (!ScreenRect.Contains (point))
+				return null;
+
+			for (int i = 0 ; i < MaxNumberOfSkills ; ++i)
+			{
+				SKRect buttonRect = RectForSkill (i);
+				buttonRect.Offset (Position.X, Position.Y);
+				if (buttonRect.Contains (point))
+					return new HitTestResults (this, i);
+			}
+			return null;
 		}
 	}
 }

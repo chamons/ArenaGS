@@ -104,5 +104,10 @@ namespace ArenaGS.Views.Scenes
 			AnimationInProgress = false;
 			AnimationsComplete?.Invoke (this, EventArgs.Empty);
 		}
+
+		public HitTestResults HitTestScene (SKPointI point)
+		{
+			return CombatView.HitTest (point);
+		}
 	}
 }

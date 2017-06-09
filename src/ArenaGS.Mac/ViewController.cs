@@ -104,14 +104,14 @@ namespace ArenaGS.Mac {
 		public override void MouseDown (NSEvent theEvent)
 		{
 			CGPoint p = theEvent.LocationInWindow;
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
+			ClickArgs.Position = new SKPointI ((int)p.X, (int)View.Frame.Height - (int)p.Y);
 			OnMouseDown?.Invoke (this, ClickArgs);	
 		}
 
 		public override void MouseUp (NSEvent theEvent)
 		{
 			CGPoint p = theEvent.LocationInWindow;
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
+			ClickArgs.Position = new SKPointI ((int)p.X, (int)View.Frame.Height - (int)p.Y);
 			OnMouseUp?.Invoke (this, ClickArgs);
 		}
 

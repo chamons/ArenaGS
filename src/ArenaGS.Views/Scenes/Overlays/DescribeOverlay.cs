@@ -8,12 +8,14 @@ namespace ArenaGS.Views.Scenes.Overlays
 	class DescribeOverlay : IOverlay
 	{
 		CombatScene Parent;
+		GameController Controller;
 		Point CurrentTargettedPosition;
 
-		public DescribeOverlay (CombatScene parent, Point playerPosition)
+		public DescribeOverlay (CombatScene parent, GameController controller)
 		{
 			Parent = parent;
-			CurrentTargettedPosition = playerPosition;
+			Controller = controller;
+			CurrentTargettedPosition = Controller.CurrentState.Player.Position;
 		}
 
 		public void ConfigureMap (MapView map)
@@ -35,25 +37,32 @@ namespace ArenaGS.Views.Scenes.Overlays
 			{
 				case "Up":
 				case "NumPad8":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.North);
-					Parent.Invalidate ();
+					Move (Direction.North);
 					return;
 				case "Down":
 				case "NumPad2":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.South);
-					Parent.Invalidate ();
+					Move (Direction.South);
 					return;
 				case "Left":
 				case "NumPad4":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.West);
-					Parent.Invalidate ();
+					Move (Direction.West);
 					return;
 				case "Right":
 				case "NumPad6":
-					CurrentTargettedPosition = CurrentTargettedPosition.InDirection (Direction.East);
-					Parent.Invalidate ();
+					Move (Direction.East);
 					return;
 			}
+		}
+
+		void Move (Direction direction)
+		{
+			MoveTo (CurrentTargettedPosition.InDirection (direction));
+		}
+
+		void MoveTo (Point position)
+		{
+			CurrentTargettedPosition = position;
+			Parent.Invalidate ();
 		}
 
 		public void HandleMouseDown (SKPointI point)
@@ -62,6 +71,9 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void HandleMouseUp (SKPointI point)
 		{
+			HitTestResults hitTest = Parent.HitTestScene (point);
+			if (hitTest != null && hitTest.View is MapView)
+				MoveTo ((Point)hitTest.Data);
 		}
 	}
 }
