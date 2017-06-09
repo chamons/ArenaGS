@@ -38,14 +38,15 @@ namespace ArenaGS.Tests
 
 			// First movement should move to 2,2
 			state = behavior.Act (state, closest);
-			closest = state.Enemies.First (x => x.ID == closest.ID);
+			closest = state.UpdateEnemyReference (closest);
 			Assert.AreEqual (closest.Position, new Point (2, 2));
 
 			// After getting CT, second move should not move closer
 			state = state.WithEnemies (state.Enemies.Select (x => x.WithAdditionalCT (TimeConstants.CTNededForAction)).ToImmutableList ());
-			closest = state.Enemies.First (x => x.ID == closest.ID);
+			closest = state.UpdateEnemyReference (closest);
+
 			state = behavior.Act (state, closest);
-			closest = state.Enemies.First (x => x.ID == closest.ID);
+			closest = state.UpdateEnemyReference (closest);
 			Assert.AreEqual (closest.Position, new Point (2, 2));
 		}
 
@@ -65,7 +66,7 @@ namespace ArenaGS.Tests
 			Character blockedCharacter = enemies.First (x => x.Position == new Point (3, 3));
 			DefaultActorBehavior behavior = new DefaultActorBehavior ();
 			state = behavior.Act (state, blockedCharacter);
-			blockedCharacter = state.Enemies.First (x => x.ID == blockedCharacter.ID);
+			blockedCharacter = state.UpdateEnemyReference (blockedCharacter);
 
 			Assert.AreEqual (blockedCharacter.Position, new Point (3, 3));
 			Assert.AreEqual (blockedCharacter.CT, 0);
