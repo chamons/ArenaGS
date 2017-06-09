@@ -39,8 +39,8 @@ namespace ArenaGS.Model
 
 		public GeneratedMapData Generate (int hash)
 		{
-			int width = 15;
-			int height = 10;
+			int width = 25;
+			int height = 20;
 			Map map = new Map (width, height, "Simple", hash);
 			for (int i = 1; i < width - 1; ++i)
 				for (int j = 1; j < height - 1; ++j)
@@ -49,7 +49,7 @@ namespace ArenaGS.Model
 
 			List<MapScript> scripts = new List<MapScript> ();
 
-			scripts.Add (Generator.CreateSpawner (new Point (8, 8)));
+			scripts.Add (Generator.CreateSpawner (new Point (18, 8)));
 
 			return new GeneratedMapData (map, scripts.ToImmutableList ());
 		}

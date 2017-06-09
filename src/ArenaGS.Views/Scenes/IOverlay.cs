@@ -9,7 +9,9 @@ namespace ArenaGS.Views.Scenes
 		void HandleMouseUp (SKPointI point);
 		void HandleKeyDown (string character);
 
-		void ConfigureView (CombatView combatView);
 		void DisableOverlay (CombatView combatView);
+
+		void ConfigureMap (MapView map);
+		void Draw (MapView map);
 	}
 }

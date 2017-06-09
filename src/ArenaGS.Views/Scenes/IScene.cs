@@ -15,5 +15,6 @@ namespace ArenaGS.Views.Scenes
 		event EventHandler AnimationsComplete;
 
 		void Invalidate ();
+		IOverlay Overlay { get; }
 	}
 }

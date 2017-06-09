@@ -31,14 +31,12 @@ namespace ArenaGS.Views.Scenes
 			OnTargetSelected = onTargetSelected;
 		}
 
-		public void ConfigureView (CombatView combatView)
+		public 	void ConfigureMap (MapView map)
 		{
-			combatView.SetTargetOverlay (CurrentTargettedPosition, Skill.TargetInfo.Area, CurrentPositionIsValidTarget);
 		}
 
 		public void DisableOverlay (CombatView combatView)
 		{
-			combatView.ClearTargetOverlay ();
 		}
 
 		public void HandleKeyDown (string character)
@@ -82,6 +80,13 @@ namespace ArenaGS.Views.Scenes
 
 		public void HandleMouseUp (SKPointI point)
 		{
+		}
+
+		public void Draw (MapView map)
+		{
+			SKColor color = CurrentPositionIsValidTarget ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
+			foreach (var tile in CurrentTargettedPosition.PointsInBurst (Skill.TargetInfo.Area))
+				map.DrawOverlaySquare (tile, color);
 		}
 	}
 }
