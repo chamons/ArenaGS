@@ -20,6 +20,7 @@ namespace ArenaGS.Views.Views
 		IScene Parent;
 		AnimationHelper AnimationHelper = new AnimationHelper ();
 		AnimationInfo currentAnimation;
+		public Point CenterPosition { get; set; }
 
 		public MapView (IScene parent, Point position, Size size) : base (position, size)
 		{
@@ -146,8 +147,6 @@ namespace ArenaGS.Views.Views
 		GameState GameState;
 		Map CurrentMap => GameState.Map;
 		Character Player => GameState.Player;
-
-		public Point CenterPosition { get; set; }
 
 		public const int MapTileSize = 32;
 		public const int MapSizeX = 17;
