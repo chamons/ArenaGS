@@ -39,16 +39,12 @@
     <Compile Include="Model\Skill.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
-    <Compile Include="Model\MapGenerator.cs" />
     <Compile Include="Model\MapTile.cs" />
-    <Compile Include="Model\NumberExtensions.cs" />
     <Compile Include="Utilities\EnumerableExtensions.cs" />
     <Compile Include="Utilities\Point.cs" />
-    <Compile Include="Model\WorldGenerator.cs" />
     <Compile Include="Utilities\PointExtensions.cs" />
     <Compile Include="Utilities\Serialization.cs" />
     <Compile Include="Utilities\Size.cs" />
-    <Compile Include="Model\IQueryGameState.cs" />
     <Compile Include="Model\MapScript.cs" />
     <Compile Include="Engine\Behavior\ActorBehavior.cs" />
     <Compile Include="Engine\Behavior\ScriptBehavior.cs" />
@@ -57,6 +53,10 @@
     <Compile Include="Engine\Utilities\BresenhamLine.cs" />
     <Compile Include="AnimationInfo.cs" />
     <Compile Include="Utilities\Extensions.cs" />
+    <Compile Include="QueryGameState.cs" />
+    <Compile Include="Engine\Generators\MapGenerator.cs" />
+    <Compile Include="Engine\Generators\WorldGenerator.cs" />
+    <Compile Include="Utilities\NumberExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
@@ -88,6 +88,7 @@
   <ItemGroup>
     <Folder Include="Engine\Behavior\" />
     <Folder Include="Engine\Utilities\" />
+    <Folder Include="Engine\Generators\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

@@ -3,6 +3,7 @@ using ArenaGS.Platform;
 using ProtoBuf;
 using ArenaGS.Model;
 using System.Collections.Immutable;
+using ArenaGS.Engine.Generators;
 
 namespace ArenaGS.Utilities
 {

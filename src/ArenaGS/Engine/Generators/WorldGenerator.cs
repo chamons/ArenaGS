@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ArenaGS.Model
+namespace ArenaGS.Engine.Generators
 {
 	interface IWorldGenerator
 	{

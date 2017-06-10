@@ -1,9 +1,0 @@
-In general the game is divided into a MVC like layers, but with no data bindings and more gaming like terms.
-
-- Model - The game has a general world state that is passed to an engine for translating a command and the current state into the next turn (with some number of possible actions to animate on screen). This will include some AI to handle other actors in the arena.
-- View - Though everything is painting on one Skia window, there will be a very basic view hierarchy to divide drawing work. In addition, some common controls such as list boxes will likley be needed.
-- Controller - Scenes will handel the orchestration. Things like "Gameplay scene", "Shop scene", "Inventory scene".
-
-The current plan is to use SkiaSharp with a thin plaform specific layer to handle mouse / keyboard / touch events. Game will be designed for mouse/kb first, and will figure out some mobile plan later.
-
-The model layer will have tests, the view layer will absolutely not have tests. Controller is up in the air.
