@@ -104,7 +104,7 @@ namespace ArenaGS.Model
 		{
 			Map map;
 			MapShape mapShape = (MapShape)rng.Next (3);
-			MapTheme mapTheme = (MapTheme)rng.Next (Enum.GetValues(typeof(MapTheme)).Length);
+			MapTheme mapTheme = (MapTheme)rng.Next (Enum.GetValues (typeof (MapTheme)).Length);
 
 			switch (mapShape)
 			{
@@ -112,7 +112,7 @@ namespace ArenaGS.Model
 				{
 					int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
 					int height = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next());
+					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next ());
 					DigRectangleCenter (map, width, height);
 					break;
 				}
@@ -120,14 +120,14 @@ namespace ArenaGS.Model
 				{
 					int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
 					int height = width;
-					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next());
-					DigRectangleCenter (map, width, height); 
+					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next ());
+					DigRectangleCenter (map, width, height);
 					break;
 				}
 				case MapShape.Circle:
 				{
 					int size = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-					map = new Map (size, size, "OpenArenaMap", mapTheme, hash, rng.Next());
+					map = new Map (size, size, "OpenArenaMap", mapTheme, hash, rng.Next ());
 					DigCircleCenter (map, size);
 					break;
 				}
@@ -135,6 +135,13 @@ namespace ArenaGS.Model
 					throw new NotImplementedException ();
 			}
 
+			GenerateAdditions (rng, map, mapShape);
+
+			return map;
+		}
+
+		static void GenerateAdditions (Random rng, Map map, MapShape mapShape)
+		{
 			MapAdditions additionType = (MapAdditions)rng.Next (4);
 			if (additionType == MapAdditions.Spread && mapShape == MapShape.Circle)
 				additionType = MapAdditions.None;
@@ -147,10 +154,10 @@ namespace ArenaGS.Model
 				{
 					int centerWidth = rng.CoinFlip () ? 1 : 3;
 					int centerHeight = rng.CoinFlip () ? 1 : 3;
-					int [] offset = { 0, 1, -1};
+					int [] offset = { 0, 1, -1 };
 
-					for (int i = 0 ; i < centerWidth ; ++i)
-						for (int j = 0 ; j < centerHeight ; ++j)
+					for (int i = 0; i < centerWidth; ++i)
+						for (int j = 0; j < centerHeight; ++j)
 							map.Set (new Point ((map.Width / 2) + offset[i], (map.Height / 2) + offset[j]), TerrainType.Decoration);
 					map.Set (new Point ((map.Width / 2), (map.Height / 2)), TerrainType.DecorationSpecial);
 					break;
@@ -159,10 +166,10 @@ namespace ArenaGS.Model
 				{
 					int centerWidth = rng.CoinFlip () ? 1 : 3;
 					int centerHeight = rng.CoinFlip () ? 1 : 3;
-					int [] offset = { 0, 1, -1};
+					int [] offset = { 0, 1, -1 };
 
-					for (int i = 0 ; i < centerWidth ; ++i)
-						for (int j = 0 ; j < centerHeight ; ++j)
+					for (int i = 0; i < centerWidth; ++i)
+						for (int j = 0; j < centerHeight; ++j)
 							map.Set (new Point ((map.Width / 2) + offset[i], (map.Height / 2) + offset[j]), TerrainType.Decoration);
 					map.Set (new Point ((map.Width / 2), (map.Height / 2)), TerrainType.DecorationSpecial);
 
@@ -179,21 +186,18 @@ namespace ArenaGS.Model
 				}
 				case MapAdditions.Spread:
 				{
-					int groupsWide = rng.CoinFlip () ? 3 : 5;
-					int groupsHigh = rng.CoinFlip () ? 3 : 5;
-					int distantApartWidth = map.Width / groupsWide;
-					int distantApartHeight = map.Height / groupsHigh;
+					int groupsWide = rng.CoinFlip () ? 2 : 3;
+					int groupsHigh = rng.CoinFlip () ? 2 : 3;
+					int distanceFromWalls = rng.Next (4, 6);
 
-					// The first and last point are the walls
-					for (int i = 1 ; i < groupsWide ; ++i)
-						for (int j = 1 ; j < groupsHigh ; ++j)
-							map.Set (new Point (distantApartWidth * i, distantApartHeight * j), TerrainType.DecorationSpecial);
+					map.Set (new Point (1 + distanceFromWalls, distanceFromWalls + 1), TerrainType.DecorationSpecial);
+					map.Set (new Point (map.Width - distanceFromWalls - 2, distanceFromWalls + 1), TerrainType.DecorationSpecial);
+					map.Set (new Point (1 + distanceFromWalls, map.Height - distanceFromWalls - 2), TerrainType.DecorationSpecial);
+					map.Set (new Point (map.Width - distanceFromWalls - 2, map.Height - distanceFromWalls - 2), TerrainType.DecorationSpecial);
 
 					break;
 				}
 			}
-
-			return map;
 		}
 
 		public Map Regenerate (int hash)
