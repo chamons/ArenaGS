@@ -1,4 +1,5 @@
 ﻿﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
@@ -10,8 +11,8 @@ namespace ArenaGS.Views.Views
 {
 	class MapView : View
 	{
-		SKBitmap WallBitmap;
-		SKBitmap FloorBitmap;
+		SKBitmap [] WallBitmaps = new SKBitmap [4];
+		SKBitmap [] FloorBitmaps = new SKBitmap [4];
 		SKBitmap PlayerBitmap;
 		SKBitmap EnemyBitmap;
 		SKBitmap ProjectileBitmap;
@@ -21,12 +22,18 @@ namespace ArenaGS.Views.Views
 		AnimationHelper AnimationHelper = new AnimationHelper ();
 		AnimationInfo currentAnimation;
 		public Point CenterPosition { get; set; }
+		MapTileVariants TilesVariant = new MapTileVariants ();   
 
 		public MapView (IScene parent, Point position, Size size) : base (position, size)
 		{
 			Parent = parent;
-			WallBitmap = Resources.Get ("stone_gray1.png");
-			FloorBitmap = Resources.Get ("mud3.png");
+
+			for (int i = 0 ; i < 4; ++i)
+				WallBitmaps[i] = Resources.Get ($"stone_gray{i}.png");
+
+			for (int i = 0 ; i < 4; ++i)
+				FloorBitmaps[i] = Resources.Get ($"mud{i}.png");
+
 			PlayerBitmap = Resources.Get ("orc_knight.png");
 			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 			ProjectileBitmap = Resources.Get ("sling_bullet0.png");
@@ -50,8 +57,10 @@ namespace ArenaGS.Views.Views
 					Point currentUIPosition = new Point (i, j);
 					if (IsOnMap (currentUIPosition))
 					{
-						var currentTile = CurrentMap[TranslateUIToModelPosition (currentUIPosition)];
-						DrawTile (currentUIPosition, currentTile.Terrain == TerrainType.Floor ? FloorBitmap : WallBitmap);
+						Point currentModelPosition = TranslateUIToModelPosition (currentUIPosition);
+						var currentTile = CurrentMap [currentModelPosition];
+						int tileIndex = TilesVariant.Get (GameState.Map, currentModelPosition);
+						DrawTile (currentUIPosition, currentTile.Terrain == TerrainType.Floor ? FloorBitmaps [tileIndex] : WallBitmaps [tileIndex]);
 					}
 				}
 			}

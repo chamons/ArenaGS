@@ -53,12 +53,19 @@
     <Compile Include="Scenes\Overlays\DescribeOverlay.cs" />
     <Compile Include="Scenes\Overlays\IOverlay.cs" />
     <Compile Include="Scenes\Overlays\TargettingOverlay.cs" />
+    <Compile Include="Views\MapTileVariants.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\mud3.png" />
     <EmbeddedResource Include="Resources\stone_gray1.png" />
     <EmbeddedResource Include="Resources\cloud_fire2.png" />
     <EmbeddedResource Include="Resources\sling_bullet0.png" />
+    <EmbeddedResource Include="Resources\mud0.png" />
+    <EmbeddedResource Include="Resources\mud1.png" />
+    <EmbeddedResource Include="Resources\mud2.png" />
+    <EmbeddedResource Include="Resources\stone_gray0.png" />
+    <EmbeddedResource Include="Resources\stone_gray2.png" />
+    <EmbeddedResource Include="Resources\stone_gray3.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\orc_knight.png" />
