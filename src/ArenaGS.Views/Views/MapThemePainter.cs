@@ -14,15 +14,15 @@ namespace ArenaGS.Views.Views
 			switch (theme)
 			{
 				case MapTheme.Beach:
-					return Resources.Get ($"sand{TilesVariant.Get (map, currentModelPosition, 8, startAt: 1)}.png");
+					return Resources.Get ($"sand{TilesVariant.Get (map, currentModelPosition, 8, startAt: 1, rareAbove: 4)}.png");
 				case MapTheme.Dungeon:
-					return Resources.Get ($"pebble_brown{TilesVariant.Get (map, currentModelPosition, 8)}.png");
+					return Resources.Get ($"pebble_brown{TilesVariant.Get (map, currentModelPosition, 8, rareAbove: 4)}.png");
 				case MapTheme.FancyInside:
 					return Resources.Get ($"crystal_floor{TilesVariant.Get (map, currentModelPosition, 6)}.png");
 				case MapTheme.Mud:
 					return Resources.Get ($"mud{TilesVariant.Get (map, currentModelPosition, 3)}.png");
 				case MapTheme.Sandstone:
-					return Resources.Get ($"sandstone_floor{TilesVariant.Get (map, currentModelPosition, 9)}.png");
+					return Resources.Get ($"sandstone_floor{TilesVariant.Get (map, currentModelPosition, 9, rareAbove: 5)}.png");
 				default:
 					throw new NotImplementedException ();
 			}
@@ -33,11 +33,11 @@ namespace ArenaGS.Views.Views
 			switch (theme)
 			{
 				case MapTheme.Beach:
-					return Resources.Get ($"stone2_brown{TilesVariant.Get (map, currentModelPosition, 4)}.png");
+					return Resources.Get ($"stone2_brown{TilesVariant.Get (map, currentModelPosition, 4, rareAbove:0)}.png");
 				case MapTheme.Dungeon:
-					return Resources.Get ($"catacombs{TilesVariant.Get (map, currentModelPosition, 6)}.png");
+					return Resources.Get ($"catacombs{TilesVariant.Get (map, currentModelPosition, 6, rareAbove:2)}.png");
 				case MapTheme.FancyInside:
-					return Resources.Get ($"stone2_gray{TilesVariant.Get (map, currentModelPosition, 4)}.png");
+					return Resources.Get ($"stone2_gray{TilesVariant.Get (map, currentModelPosition, 4, rareAbove:0)}.png");
 				case MapTheme.Mud:
 					return Resources.Get ($"stone_gray{TilesVariant.Get (map, currentModelPosition, 4)}.png");
 				case MapTheme.Sandstone:
@@ -54,13 +54,13 @@ namespace ArenaGS.Views.Views
 				case MapTheme.Beach:
 					return Resources.Get (ShallowWater [TilesVariant.Get (map, currentModelPosition, 2)]);
 				case MapTheme.Dungeon:
-					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
+					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1, rareAbove: 1)}.png");
 				case MapTheme.FancyInside:
-					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
+					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1, rareAbove: 1)}.png");
 				case MapTheme.Mud:
 					return Resources.Get ($"mangrove{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
 				case MapTheme.Sandstone:
-					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
+					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1, rareAbove: 1)}.png");
 				default:
 					throw new NotImplementedException ();
 			}
