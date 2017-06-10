@@ -17,6 +17,8 @@ namespace ArenaGS.Views.Views
 		SKBitmap EnemyBitmap;
 		SKBitmap ProjectileBitmap;
 		SKBitmap ExplosionBitmap;
+		SKBitmap StatueBitmap;
+		SKBitmap WaterBitmap;
 
 		IScene Parent;
 		AnimationHelper AnimationHelper = new AnimationHelper ();
@@ -38,6 +40,8 @@ namespace ArenaGS.Views.Views
 			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 			ProjectileBitmap = Resources.Get ("sling_bullet0.png");
 			ExplosionBitmap = Resources.Get ("cloud_fire2.png");
+			StatueBitmap = Resources.Get ("crumbled_column_1.png");
+			WaterBitmap = Resources.Get ("shallow_water.png");
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -58,9 +62,7 @@ namespace ArenaGS.Views.Views
 					if (IsOnMap (currentUIPosition))
 					{
 						Point currentModelPosition = TranslateUIToModelPosition (currentUIPosition);
-						var currentTile = CurrentMap [currentModelPosition];
-						int tileIndex = TilesVariant.Get (GameState.Map, currentModelPosition);
-						DrawTile (currentUIPosition, currentTile.Terrain == TerrainType.Floor ? FloorBitmaps [tileIndex] : WallBitmaps [tileIndex]);
+						DrawMapTile (currentUIPosition, currentModelPosition);
 					}
 				}
 			}
@@ -78,6 +80,30 @@ namespace ArenaGS.Views.Views
 			Parent.Overlay.Draw (this);
 
 			return Surface;
+		}
+
+		void DrawMapTile (Point currentUIPosition, Point currentModelPosition)
+		{
+			var currentTile = CurrentMap [currentModelPosition];
+			int tileIndex = TilesVariant.Get (GameState.Map, currentModelPosition);
+			switch (currentTile.Terrain)
+			{
+				case TerrainType.Floor:
+					DrawTile (currentUIPosition, FloorBitmaps [tileIndex]);
+					return;
+				case TerrainType.Wall:
+					DrawTile (currentUIPosition, WallBitmaps [tileIndex]);
+					return;
+				case TerrainType.Decoration:
+					DrawTile (currentUIPosition, WaterBitmap);
+					return;
+				case TerrainType.DecorationSpecial:
+					DrawTile (currentUIPosition, FloorBitmaps [tileIndex]);
+					DrawTile (currentUIPosition, StatueBitmap);
+					return;
+				default:
+					throw new NotImplementedException ();	
+			}
 		}
 
 		void DrawProjectile ()

@@ -1,9 +1,32 @@
-﻿namespace ArenaGS.Model
+﻿using System;
+
+namespace ArenaGS.Model
 {
 	public enum TerrainType : byte
 	{
 		Wall = 0,
-		Floor
+		Floor,
+		Decoration,
+		DecorationSpecial
+	}
+
+	public static class TerrainTypeExtensions
+	{
+		public static string ToDebugString (this TerrainType type)
+		{
+			switch (type)
+			{
+				case TerrainType.Decoration:
+				case TerrainType.DecorationSpecial:
+					return "+";
+				case TerrainType.Wall:
+					return "#";
+				case TerrainType.Floor:
+					return ".";
+				default:
+					throw new NotImplementedException ();
+			}
+		}
 	}
 
 	public struct MapTile

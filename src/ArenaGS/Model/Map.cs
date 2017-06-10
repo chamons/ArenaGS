@@ -65,7 +65,7 @@ namespace ArenaGS.Model
 			{
 				StringBuilder buffer = new StringBuilder (Width);
 				for (int i = 0; i < Width; ++i)
-					buffer.Append (Tiles[i, j].Terrain == TerrainType.Wall ? '#' : '.');
+					buffer.Append (Tiles[i, j].Terrain.ToDebugString ());
 				output.AppendLine (buffer.ToString ());
 			}
 			output.AppendLine ();

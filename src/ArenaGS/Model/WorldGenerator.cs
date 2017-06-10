@@ -15,6 +15,8 @@ namespace ArenaGS.Model
 			{
 				case "Simple":
 					return new SimpleMapGenerator ();
+				case "OpenArenaMap":
+					return new OpenArenaMapGenerator ();
 				default:
 					throw new NotImplementedException ();
 			}
