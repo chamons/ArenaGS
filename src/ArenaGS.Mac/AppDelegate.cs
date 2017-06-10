@@ -1,21 +1,23 @@
-﻿using AppKit;
+﻿using System;
+using AppKit;
+using ArenaGS.Platform;
 using Foundation;
 
-namespace ArenaGS.Mac {
+namespace ArenaGS.Mac
+{
 	[Register ("AppDelegate")]
-	public class AppDelegate : NSApplicationDelegate {
-		public AppDelegate ()
-		{
-		}
+	public class AppDelegate : NSApplicationDelegate
+	{
 
 		public override void DidFinishLaunching (NSNotification notification)
 		{
-			// Insert code here to initialize your application
-		}
-
-		public override void WillTerminate (NSNotification notification)
-		{
-			// Insert code here to tear down your application
+			ObjCRuntime.Runtime.MarshalManagedException += (sender, args) =>
+			{
+				ILogger log = Dependencies.Get<ILogger> ();
+				Exception e = args.Exception;
+				log.Log ($"Uncaught exception \"{e.Message}\" with stacktrace:\n {e.StackTrace}. Exiting.", LogMask.All, Servarity.Normal);
+				throw e;
+			};
 		}
 
 		public override bool ApplicationShouldTerminateAfterLastWindowClosed (NSApplication sender)

@@ -67,6 +67,8 @@ namespace ArenaGS.Platform
 				if (shouldWriteToLog)
 					LogStream.WriteLine ($"[{mask}] {message}");
 			}
+			if (sevarity == Servarity.Normal)
+				LogStream.Flush ();
 		}
 	}
 }
