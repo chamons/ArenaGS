@@ -82,10 +82,11 @@ namespace ArenaGS
 
 		GameState CreateNewGameState ()
 		{
-			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("Simple");
-			GeneratedMapData mapData = mapGenerator.Generate (0);
-			Character player = Generator.CreatePlayer (new Point (5, 5));
-			var enemies = Generator.CreateCharacters (new Point [] { new Point (1, 1), new Point (8,7)});
+			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("OpenArenaMap");
+			Random r = new Random ();
+			GeneratedMapData mapData = mapGenerator.Generate (r.Next ());
+			Character player = Generator.CreatePlayer (new Point (8, 8));
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (8,7) });
 			return new GameState (mapData.Map, player, enemies, mapData.Scripts, ImmutableList<string>.Empty);
 		}
 
