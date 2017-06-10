@@ -62,10 +62,19 @@ namespace ArenaGS.Model
 
 	class OpenArenaMapGenerator : IMapGenerator
 	{
+		ILogger Log;
+
 		const int MinDimensionSize = 14;
 		const int MaxDimensionSize = 24;
+
+		public OpenArenaMapGenerator ()
+		{
+			Log = Dependencies.Get<ILogger> ();
+		}
+
 		public GeneratedMapData Generate (int hash)
 		{
+			Log.Log ($"OpenArenaMapGenerator generating with hash: {hash}", LogMask.Engine);
 			Random rng = new Random(hash);
 			Map map = GenerateMap (hash, rng);
 			return new GeneratedMapData(map, new MapScript[] { }.ToImmutableList());

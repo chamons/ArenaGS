@@ -14,7 +14,7 @@ namespace ArenaGS.Utilities
 		{
 			get
 			{
-#if __MACOS__
+#if __UNIFIED__
 				string savedGamePath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library/Application Support/");
 #else
 				string savedGamePath = System.Environment.ExpandEnvironmentVariables ("%USERPROFILE%\\Saved Games");
@@ -27,7 +27,7 @@ namespace ArenaGS.Utilities
 		{
 			get
 			{
-#if __MACOS__
+#if __UNIFIED__
 				string logPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library/Application Support/");
 #else
 				string logPath = System.Environment.ExpandEnvironmentVariables ("%USERPROFILE%\\Saved Games");
