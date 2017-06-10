@@ -88,11 +88,8 @@ namespace ArenaGS.Views.Views
 			{
 				ExplosionAnimationInfo explosionInfo = (ExplosionAnimationInfo)currentAnimation;
 				int currentRange = AnimationHelper.Frame / ExplosionExpandTime;
-				foreach (var point in explosionInfo.Center.PointsInBurst (currentRange))
-				{
-					if (CurrentMap[point].Terrain == TerrainType.Floor)
-						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
-				}
+				foreach (var point in explosionInfo.Center.PointsInBurst (currentRange).Where (x => explosionInfo.PointsAffected.Contains (x)))
+					DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
 			}
 		}
 
