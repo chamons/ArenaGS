@@ -45,7 +45,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static Map CreateTinyRoom ()
 		{
-			var map = new Map (3, 3, "Tiny", 0);
+			var map = new Map (3, 3, "Tiny", 0, 0);
 
 			for (int i = 0; i < 3; ++i)
 				for (int j = 0; j < 3; ++j)
@@ -57,7 +57,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static Map CreateBoxRoom (int width, int height)
 		{
-			Map map = new Map (width, height, "Box", 0);
+			Map map = new Map (width, height, "Box", 0, 0);
 			for (int i = 1; i < width - 1; ++i)
 				for (int j = 1; j < height - 1; ++j)
 					map.Set (new Point (i, j), TerrainType.Floor);

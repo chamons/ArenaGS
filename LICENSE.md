@@ -56,12 +56,12 @@ src/ArenaGS/Engine/Utilities/BresenhamLine.cs is a port from libtcod and is unde
 
 ---
 
-All images in root of src\ArenaGS.Views\Resources\ are from https://github.com/crawl/tiles and
+All images in root of src\ArenaGS.Views\Resources\dcss are from https://github.com/crawl/tiles and
 are covered under the CC:Zero license - https://creativecommons.org/publicdomain/zero/1.0/
 
 ---
 
-All images are in subdirectories of src\ArenaGS.Views\Resources\ are from game-icons.net and are covered under the following license:
+All images are in subdirectories of src\ArenaGS.Views\Resources\ except dcss are from game-icons.net and are covered under the following license:
 
 Icons provided under the Creative Commons 3.0 BY or CC0 if mentioned below.
 
