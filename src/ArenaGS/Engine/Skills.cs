@@ -67,11 +67,14 @@ namespace ArenaGS.Engine
 
 		static bool SkillPathIsClear (GameState state, Point source, Point target, TargettingInfo targetInfo)
 		{
+			if (state.Map[target].Terrain != TerrainType.Floor)
+				return false;
+
 			foreach (Point p in BresenhamLine.PointsOnLine (source, target))
 			{
 				if (p == target)
 					return true;
-				if (state.Map[p].Terrain == TerrainType.Wall)
+				if (state.Map[p].Terrain != TerrainType.Floor)
 					return false;
 				if (state.Enemies.Any (x => x.Position == p))
 					return false;
