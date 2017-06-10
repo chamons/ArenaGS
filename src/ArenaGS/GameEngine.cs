@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 using ArenaGS.Engine;
 using ArenaGS.Engine.Behavior;
@@ -85,9 +87,25 @@ namespace ArenaGS
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("OpenArenaMap");
 			Random r = new Random ();
 			GeneratedMapData mapData = mapGenerator.Generate (r.Next ());
-			Character player = Generator.CreatePlayer (new Point (8, 8));
-			var enemies = Generator.CreateCharacters (new Point [] { new Point (8,7) });
+			Character player = Generator.CreatePlayer (FindOpenSpot (mapData.Map, new Point (8, 8), Enumerable.Empty<Point>()));
+			var enemies = Generator.CreateCharacters ( new Point [] { FindOpenSpot (mapData.Map, new Point (7, 8), new Point [] { player.Position }) });
 			return new GameState (mapData.Map, player, enemies, mapData.Scripts, ImmutableList<string>.Empty);
+		}
+
+		Point FindOpenSpot (Map map, Point target, IEnumerable<Point> pointsToAvoid)
+		{
+			if (map[target].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (target))
+				return target;
+
+			for (int i = 0 ; i < 3 ; ++i)
+			{
+				foreach (var point in target.PointsInBurst (i))
+				{
+					if (map[point].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (point))
+						return point;
+				}
+	         }
+			throw new InvalidOperationException ("Unable to find open spot");
 		}
 
 		public void AcceptCommand (Command c, object data)
