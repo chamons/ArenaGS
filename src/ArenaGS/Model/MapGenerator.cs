@@ -41,7 +41,7 @@ namespace ArenaGS.Model
 		{
 			int width = 25;
 			int height = 20;
-			Map map = new Map (width, height, "Simple", hash, 42);
+			Map map = new Map (width, height, "Simple", MapTheme.Mud, hash, 42);
 			for (int i = 1; i < width - 1; ++i)
 				for (int j = 1; j < height - 1; ++j)
 					map.Set (new Point (i, j), TerrainType.Floor);
@@ -104,35 +104,35 @@ namespace ArenaGS.Model
 		{
 			Map map;
 			MapShape mapShape = (MapShape)rng.Next (3);
+			MapTheme mapTheme = (MapTheme)rng.Next (Enum.GetValues(typeof(MapTheme)).Length);
+
+			switch (mapShape)
 			{
-				switch (mapShape)
+				case MapShape.Rectangle:
 				{
-					case MapShape.Rectangle:
-					{
-						int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-						int height = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-						map = new Map (width, height, "OpenArenaMap", hash, rng.Next());
-						DigRectangleCenter (map, width, height);
-						break;
-					}
-					case MapShape.Square:
-					{
-						int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-						int height = width;
-						map = new Map (width, height, "OpenArenaMap", hash, rng.Next());
-						DigRectangleCenter (map, width, height); 
-						break;
-					}
-					case MapShape.Circle:
-					{
-						int size = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
-						map = new Map (size, size, "OpenArenaMap", hash, rng.Next());
-						DigCircleCenter (map, size);
-						break;
-					}
-					default:
-						throw new NotImplementedException ();
+					int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
+					int height = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
+					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next());
+					DigRectangleCenter (map, width, height);
+					break;
 				}
+				case MapShape.Square:
+				{
+					int width = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
+					int height = width;
+					map = new Map (width, height, "OpenArenaMap", mapTheme, hash, rng.Next());
+					DigRectangleCenter (map, width, height); 
+					break;
+				}
+				case MapShape.Circle:
+				{
+					int size = rng.Next (MinDimensionSize, MaxDimensionSize).MakeOdd ();
+					map = new Map (size, size, "OpenArenaMap", mapTheme, hash, rng.Next());
+					DigCircleCenter (map, size);
+					break;
+				}
+				default:
+					throw new NotImplementedException ();
 			}
 
 			MapAdditions additionType = (MapAdditions)rng.Next (4);

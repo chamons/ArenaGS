@@ -54,6 +54,7 @@
     <Compile Include="Scenes\Overlays\IOverlay.cs" />
     <Compile Include="Scenes\Overlays\TargettingOverlay.cs" />
     <Compile Include="Views\MapTileVariants.cs" />
+    <Compile Include="Views\MapThemePainter.cs" />
   </ItemGroup>
   <ItemGroup>
     </ItemGroup>
@@ -354,6 +355,41 @@
     <EmbeddedResource Include="Resources\dcss\decorations\statue_orb.png" />
     <EmbeddedResource Include="Resources\dcss\decorations\statue_sword.png" />
     <EmbeddedResource Include="Resources\dcss\decorations\statue_twins.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor4.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor5.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\marble_floor6.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown0.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown4.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown5.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown6.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown7.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\pebble_brown8.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\mangrove1.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\mangrove2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\mangrove3.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree1_lightred.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree1_red.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree1_yellow.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree2_lightred.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree2_red.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\tree2_yellow.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\blue_fountain.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\blue_fountain2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\golden_statue_1.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\golden_statue_2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_iron_golem.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor0.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor4.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\crystal_floor5.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Scenes\Overlays\" />

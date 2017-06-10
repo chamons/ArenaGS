@@ -11,37 +11,24 @@ namespace ArenaGS.Views.Views
 {
 	class MapView : View
 	{
-		SKBitmap [] WallBitmaps = new SKBitmap [4];
-		SKBitmap [] FloorBitmaps = new SKBitmap [4];
 		SKBitmap PlayerBitmap;
 		SKBitmap EnemyBitmap;
 		SKBitmap ProjectileBitmap;
 		SKBitmap ExplosionBitmap;
-		SKBitmap StatueBitmap;
-		SKBitmap WaterBitmap;
 
 		IScene Parent;
 		AnimationHelper AnimationHelper = new AnimationHelper ();
 		AnimationInfo currentAnimation;
 		public Point CenterPosition { get; set; }
-		MapTileVariants TilesVariant = new MapTileVariants ();   
+		MapThemePainter Painter { get; } = new MapThemePainter ();
 
 		public MapView (IScene parent, Point position, Size size) : base (position, size)
 		{
 			Parent = parent;
-
-			for (int i = 0 ; i < 4; ++i)
-				WallBitmaps[i] = Resources.Get ($"stone_gray{i}.png");
-
-			for (int i = 0 ; i < 4; ++i)
-				FloorBitmaps[i] = Resources.Get ($"mud{i}.png");
-
 			PlayerBitmap = Resources.Get ("orc_knight.png");
 			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 			ProjectileBitmap = Resources.Get ("sling_bullet0.png");
 			ExplosionBitmap = Resources.Get ("cloud_fire2.png");
-			StatueBitmap = Resources.Get ("crumbled_column_1.png");
-			WaterBitmap = Resources.Get ("shallow_water.png");
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -62,7 +49,7 @@ namespace ArenaGS.Views.Views
 					if (IsOnMap (currentUIPosition))
 					{
 						Point currentModelPosition = TranslateUIToModelPosition (currentUIPosition);
-						DrawMapTile (currentUIPosition, currentModelPosition);
+						Painter.DrawMapTile (this, CurrentMap.Theme, currentUIPosition, currentModelPosition, CurrentMap);
 					}
 				}
 			}
@@ -82,29 +69,7 @@ namespace ArenaGS.Views.Views
 			return Surface;
 		}
 
-		void DrawMapTile (Point currentUIPosition, Point currentModelPosition)
-		{
-			var currentTile = CurrentMap [currentModelPosition];
-			int tileIndex = TilesVariant.Get (GameState.Map, currentModelPosition);
-			switch (currentTile.Terrain)
-			{
-				case TerrainType.Floor:
-					DrawTile (currentUIPosition, FloorBitmaps [tileIndex]);
-					return;
-				case TerrainType.Wall:
-					DrawTile (currentUIPosition, WallBitmaps [tileIndex]);
-					return;
-				case TerrainType.Decoration:
-					DrawTile (currentUIPosition, WaterBitmap);
-					return;
-				case TerrainType.DecorationSpecial:
-					DrawTile (currentUIPosition, FloorBitmaps [tileIndex]);
-					DrawTile (currentUIPosition, StatueBitmap);
-					return;
-				default:
-					throw new NotImplementedException ();	
-			}
-		}
+
 
 		void DrawProjectile ()
 		{
