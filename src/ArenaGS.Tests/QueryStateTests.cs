@@ -32,6 +32,8 @@ namespace ArenaGS.Tests
 			Assert.IsTrue (query.IsValidTargetForSkill (state, skill, new Point (2, 2)));
 			Assert.IsTrue (query.IsValidTargetForSkill (state, skill, new Point (0, 1)));
 			Assert.IsFalse (query.IsValidTargetForSkill (state, skill, new Point (-10, 2)));
+
+			Assert.IsTrue (query.AffectedPointsForSkill (state, skill, new Point (2, 2)).Count > 0);
 		}
 	}
 }

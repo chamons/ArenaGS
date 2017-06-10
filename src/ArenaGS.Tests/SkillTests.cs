@@ -150,12 +150,32 @@ namespace ArenaGS.Tests
 		[Test]
 		public void SkillsWithAreaAffect_AffectMultipleCharacters ()
 		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			var areaSkill = new Skill ("AreaBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 3));
-			state = state.WithPlayer (state.Player.WithSkills (new Skill [] { areaSkill }.ToImmutableList ()));
+			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 
-			state = Skills.Invoke (state, state.Player, areaSkill, new Point (2, 2));
+			state = Skills.Invoke (state, state.Player, TestScenes.TestAOESkill, new Point (2, 2));
 			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
+		}
+
+
+		[Test]
+		public void SkillsWithInvalidTargets_AreNotValidTargets ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills[0], new Point (-1, 1)));
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills[0], new Point (0, 0)));
+		}
+
+		[Test]
+		public void SkillsWithAreaAffect_DoNotAffectThroughWalls ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			for (int i = 1 ; i <= 5; ++i)
+				state.Map.Set (new Point (2, i), TerrainType.Wall);
+			state = Skills.Invoke (state, state.Player, TestScenes.TestAOESkill, new Point (1, 3));
+
+			// Only player should be damaged, not enemy at 3,3
+			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
+			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
 		}
 	}
 }

@@ -20,13 +20,13 @@ namespace ArenaGS
 			Type = type;
 		}
 		
-		public AnimationType Type;
+		public AnimationType Type { get; }
 	}
 
 	public class MovementAnimationInfo : AnimationInfo
 	{
-		public Character Character;
-		public Point NewPosition;
+		public Character Character { get; }
+		public Point NewPosition { get; }
 
 		public MovementAnimationInfo (Character character, Point newPosition) : base (AnimationType. Movement)
 		{
@@ -37,7 +37,7 @@ namespace ArenaGS
 
 	public class ProjectileAnimationInfo : AnimationInfo
 	{
-		public ImmutableList <Point> Path;
+		public ImmutableList <Point> Path { get; }
 
 		public ProjectileAnimationInfo (AnimationType type, List<Point> path) : base (AnimationType.Projectile)
 		{
@@ -47,13 +47,15 @@ namespace ArenaGS
 
 	public class ExplosionAnimationInfo : AnimationInfo
 	{
-		public Point Center;
-		public int Size;
+		public Point Center { get; }
+		public int Size { get; }
+		public HashSet <Point> PointsAffected { get; }
 
-		public ExplosionAnimationInfo (Point center, int size) : base (AnimationType.Explosion)
+		public ExplosionAnimationInfo (Point center, int size, HashSet<Point> pointsAffected) : base (AnimationType.Explosion)
 		{
 			Center = center;
 			Size = size;
+			PointsAffected = pointsAffected;
 		}
 	}
 

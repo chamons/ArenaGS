@@ -31,7 +31,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 			OnTargetSelected = onTargetSelected;
 		}
 
-		public 	void ConfigureMap (MapView map)
+		public void ConfigureMap (MapView map)
 		{
 		}
 
@@ -106,7 +106,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 		public void Draw (MapView map)
 		{
 			SKColor color = CurrentPositionIsValidTarget ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
-			foreach (var tile in CurrentTargettedPosition.PointsInBurst (Skill.TargetInfo.Area))
+			foreach (var tile in QueryGameState.AffectedPointsForSkill (State, Skill, CurrentTargettedPosition))
 				map.DrawOverlaySquare (tile, color);
 		}
 	}

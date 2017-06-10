@@ -13,6 +13,7 @@ namespace ArenaGS.Engine
 	{
 		GameState Invoke (GameState state, Character invoker, Skill skill, Point target);
 		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
+		HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target);
 	}
 
 	public class Skills : ISkills
@@ -40,10 +41,12 @@ namespace ArenaGS.Engine
 				{
 					List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
 					Animation.Request (state, new ProjectileAnimationInfo (AnimationType.Projectile, path));
-					if (skill.TargetInfo.Area > 1)
-						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area)); 
 
-					HashSet<Point> areaAffected = new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area));					
+					HashSet<Point> areaAffected = UnblockedPointsInBurst (state, skill, target);
+
+					if (skill.TargetInfo.Area > 1)
+						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected));
+
 					foreach (var enemy in state.Enemies.Concat (state.Player.Yield ()).Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
 					break;
@@ -55,6 +58,11 @@ namespace ArenaGS.Engine
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
+		public HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target)
+		{
+			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathClear (state, target, x)));
+		}
+
 		public bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target)
 		{
 			if (!state.Map.IsOnMap (target))
@@ -62,21 +70,25 @@ namespace ArenaGS.Engine
 
 			TargettingInfo targetInfo = skill.TargetInfo;
 			Point source = invoker.Position;
-			return SkillInRange (source, target, targetInfo) && SkillPathIsClear (state, source, target, targetInfo);
+			return SkillInRange (source, target, targetInfo) && IsPathClear (state, source, target);
 		}
 
-		static bool SkillPathIsClear (GameState state, Point source, Point target, TargettingInfo targetInfo)
+		static bool IsPathClear (GameState state, Point source, Point target)
 		{
+			if (!state.Map.IsOnMap (target))
+				return false;
 			if (state.Map[target].Terrain != TerrainType.Floor)
 				return false;
 
 			foreach (Point p in BresenhamLine.PointsOnLine (source, target))
 			{
+				if (!state.Map.IsOnMap (p))
+					return false;
 				if (p == target)
 					return true;
 				if (state.Map[p].Terrain != TerrainType.Floor)
 					return false;
-				if (state.Enemies.Any (x => x.Position == p))
+				if (state.AllCharacters.Any (x => x.Position == p))
 					return false;
 			}
 			return true;
