@@ -5,6 +5,15 @@ using ProtoBuf;
 
 namespace ArenaGS.Model
 {
+	public enum MapTheme
+	{
+		Beach, // sand && stone2_brown
+		Sandstone, // sandstone_flooor && sandstone_wall
+		FancyInside, // marble_floor && stone2_gray
+		Mud, // mud && stone_gray
+		Dungeon, // pebble_brown && catacombs
+	}
+	
 	// Technically not immutable, given Set, but promised to be never called outside of MapGen
 	[ProtoContract]
 	public sealed class Map
@@ -17,6 +26,7 @@ namespace ArenaGS.Model
 		public int TileHash { get; }
 		public int Width { get; }
 		public int Height { get; }
+		public MapTheme Theme { get;}
 
 		public Map ()
 		{
@@ -24,7 +34,7 @@ namespace ArenaGS.Model
 
 		MapTile[,] Tiles;
 
-		public Map (int width, int height, string mapType, int generateHash, int tileHash)
+		public Map (int width, int height, string mapType, MapTheme theme, int generateHash, int tileHash)
 		{
 			Width = width;
 			Height = height;
@@ -32,6 +42,7 @@ namespace ArenaGS.Model
 			MapType = mapType;
 			GenerateHash = generateHash;
 			TileHash = tileHash;
+			Theme = theme;
 		}
 
 		public MapTile this [int x, int y] => Tiles[x, y];

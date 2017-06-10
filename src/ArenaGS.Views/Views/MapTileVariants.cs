@@ -10,7 +10,7 @@ namespace ArenaGS.Views.Views
 		Dictionary <int, byte []> Hashes = new Dictionary<int, byte[]> ();
 
 		// This is not super fast - https://github.com/chamons/ArenaGS/issues/49
-		internal int Get (Map map, Point position)
+		internal int Get (Map map, Point position, int variants, int startAt = 0)
 		{
 			byte [] hash;
 			if (!Hashes.TryGetValue (map.TileHash, out hash))
@@ -19,7 +19,7 @@ namespace ArenaGS.Views.Views
 				hash = new byte [map.Width * map.Height];
 				rng.NextBytes (hash);
 			}
-			return hash [position.X + map.Width * position.Y] % 4;
+			return startAt + hash [position.X + map.Width * position.Y] % variants;
 		}
 	}
 }

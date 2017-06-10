@@ -23,7 +23,7 @@ namespace ArenaGS.Tests.Utilities
 	{
 		public GeneratedMapData Generate (int hash)
 		{
-			var map = new Map (3, 3, "TinyTest", hash, hash);
+			var map = new Map (3, 3, "TinyTest", MapTheme.Mud, hash, hash);
 
 			for (int i = 0; i < 3; ++i)
 				for (int j = 0; j < 3; ++j)
