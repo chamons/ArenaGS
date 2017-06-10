@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Immutable;
+using ArenaGS.Engine.Generators;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
-using System.Collections.Immutable;
 
 namespace ArenaGS.Tests.Utilities
 {

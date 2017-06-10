@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -6,8 +6,9 @@ using System.Collections.Immutable;
 using ArenaGS.Utilities;
 using ArenaGS.Engine;
 using ArenaGS.Platform;
+using ArenaGS.Model;
 
-namespace ArenaGS.Model
+namespace ArenaGS.Engine.Generators
 {
 	internal struct GeneratedMapData
 	{

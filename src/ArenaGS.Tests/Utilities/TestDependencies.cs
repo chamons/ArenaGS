@@ -1,9 +1,8 @@
 ﻿using System;
 using ArenaGS.Engine;
 using ArenaGS.Engine.Behavior;
-using ArenaGS.Model;
+using ArenaGS.Engine.Generators;
 using ArenaGS.Platform;
-using ArenaGS.Utilities;
 
 namespace ArenaGS.Tests.Utilities
 {

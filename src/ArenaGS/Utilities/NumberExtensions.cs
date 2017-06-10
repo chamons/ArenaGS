@@ -1,4 +1,4 @@
-﻿namespace ArenaGS.Model
+﻿﻿namespace ArenaGS.Utilities
 {
 	static class NumberExtensions
 	{
