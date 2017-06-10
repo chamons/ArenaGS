@@ -56,19 +56,8 @@
     <Compile Include="Views\MapTileVariants.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\mud3.png" />
-    <EmbeddedResource Include="Resources\stone_gray1.png" />
-    <EmbeddedResource Include="Resources\cloud_fire2.png" />
-    <EmbeddedResource Include="Resources\sling_bullet0.png" />
-    <EmbeddedResource Include="Resources\mud0.png" />
-    <EmbeddedResource Include="Resources\mud1.png" />
-    <EmbeddedResource Include="Resources\mud2.png" />
-    <EmbeddedResource Include="Resources\stone_gray0.png" />
-    <EmbeddedResource Include="Resources\stone_gray2.png" />
-    <EmbeddedResource Include="Resources\stone_gray3.png" />
-  </ItemGroup>
+    </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\orc_knight.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="SkiaSharp, Version=1.57.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
@@ -84,9 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\skeletal_warrior.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\carl-olsen\crossbow.png" />
@@ -298,9 +284,80 @@
     <EmbeddedResource Include="Resources\skoll\pocket-watch.png" />
     <EmbeddedResource Include="Resources\skoll\stick-grenade.png" />
     <EmbeddedResource Include="Resources\skoll\winchester-rifle.png" />
+    <EmbeddedResource Include="Resources\dcss\skeletal_warrior.png" />
+    <EmbeddedResource Include="Resources\dcss\orc_knight.png" />
+    <EmbeddedResource Include="Resources\dcss\cloud_fire2.png" />
+    <EmbeddedResource Include="Resources\dcss\sling_bullet0.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\mud0.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\mud1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\mud2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\mud3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone_gray0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone_gray1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone_gray2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone_gray3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs4.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs5.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\catacombs6.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\sandstone_wall0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\sandstone_wall1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\sandstone_wall2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\sandstone_wall3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\sandstone_wall4.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_brown0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_brown1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_brown2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_brown3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_dark0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_dark1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_dark2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_dark3.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_gray0.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_gray1.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_gray2.png" />
+    <EmbeddedResource Include="Resources\dcss\walls\stone2_gray3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand4.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand5.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand6.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand7.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sand8.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor0.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor1.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor2.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor3.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor4.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor5.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor6.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor7.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor8.png" />
+    <EmbeddedResource Include="Resources\dcss\floor\sandstone_floor9.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\crumbled_column_1.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\crumbled_column_2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\crumbled_column_3.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shallow_water.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shallow_water2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water0.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water1.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water2.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water3.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water4.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\shoals_deep_water5.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_angel.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_archer.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_orb.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_sword.png" />
+    <EmbeddedResource Include="Resources\dcss\decorations\statue_twins.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Scenes\Overlays\" />
+    <Folder Include="Resources\dcss\decorations\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>
