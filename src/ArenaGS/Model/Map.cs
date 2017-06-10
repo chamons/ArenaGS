@@ -10,12 +10,13 @@ namespace ArenaGS.Model
 	public sealed class Map
 	{
 		[ProtoMember (1)] // Unless we add destructable terrain, the RNG hash and map name should be sufficient
-		public int Hash { get; private set; }
+		public int GenerateHash { get; private set; }
 		[ProtoMember (2)]
 		public string MapType { get; private set; }
 
-		public int Width { get; private set; }
-		public int Height { get; private set; }
+		public int TileHash { get; }
+		public int Width { get; }
+		public int Height { get; }
 
 		public Map ()
 		{
@@ -23,13 +24,14 @@ namespace ArenaGS.Model
 
 		MapTile[,] Tiles;
 
-		public Map (int width, int height, string mapType, int hash)
+		public Map (int width, int height, string mapType, int generateHash, int tileHash)
 		{
 			Width = width;
 			Height = height;
 			Tiles = new MapTile[width, height];
 			MapType = mapType;
-			Hash = hash;
+			GenerateHash = generateHash;
+			TileHash = tileHash;
 		}
 
 		public MapTile this [int x, int y] => Tiles[x, y];

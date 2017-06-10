@@ -41,7 +41,7 @@ namespace ArenaGS.Model
 		{
 			int width = 25;
 			int height = 20;
-			Map map = new Map (width, height, "Simple", hash);
+			Map map = new Map (width, height, "Simple", hash, 42);
 			for (int i = 1; i < width - 1; ++i)
 				for (int j = 1; j < height - 1; ++j)
 					map.Set (new Point (i, j), TerrainType.Floor);

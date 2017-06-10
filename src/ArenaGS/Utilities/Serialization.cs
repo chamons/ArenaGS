@@ -63,7 +63,7 @@ namespace ArenaGS.Utilities
 
 				Map savedStubMap = container.State.Map;
 				var worldGenerator = Dependencies.Get<IWorldGenerator> ();
-				Map map = worldGenerator.GetMapGenerator (savedStubMap.MapType).Regenerate (savedStubMap.Hash);
+				Map map = worldGenerator.GetMapGenerator (savedStubMap.MapType).Regenerate (savedStubMap.GenerateHash);
 				GameState state = container.State.WithMap (map);
 
 				// Protobuffer serializes empty lists as null
