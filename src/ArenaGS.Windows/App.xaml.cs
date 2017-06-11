@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using ArenaGS.Platform;
+using System;
 using System.Windows;
-using System.Windows.Navigation;
 
 namespace ArenaGS.Windows
 {
@@ -14,5 +9,15 @@ namespace ArenaGS.Windows
 	/// </summary>
 	public partial class App : Application
 	{
+		public App ()
+		{
+			AppDomain.CurrentDomain.UnhandledException += (o, e) =>
+			{
+				ILogger log = Dependencies.Get<ILogger> ();
+				Exception exception = e.ExceptionObject as Exception;
+				log.Log ($"Uncaught exception \"{exception.Message}\" with stacktrace:\n {exception.StackTrace}. Exiting.", LogMask.All, Servarity.Normal);
+				throw exception;
+			};
+		}
 	}
 }

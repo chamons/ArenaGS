@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ArenaGS.Windows"
         xmlns:v="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="660" Width="560">
+        Title="MainWindow" Height="660" Width="570">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
