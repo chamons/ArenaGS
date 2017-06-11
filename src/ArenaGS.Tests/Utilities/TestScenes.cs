@@ -73,7 +73,7 @@ namespace ArenaGS.Tests.Utilities
 			return map;
 		}
 
-		internal static Skill TestSkill { get; } = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0));
+		internal static Skill TestSkill { get; } = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
 
 		internal static GameState CreateBoxRoomStateWithSkill (IGenerator generator)
 		{
@@ -85,7 +85,7 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
 		}
 
-		internal static Skill TestAOESkill { get; } = new Skill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2));
+		internal static Skill TestAOESkill { get; } = new Skill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None);
 
 		internal static GameState CreateBoxRoomStateWithAOESkill (IGenerator generator)
 		{

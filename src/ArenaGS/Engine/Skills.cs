@@ -35,6 +35,9 @@ namespace ArenaGS.Engine
 			if (!IsValidTarget (state, invoker, skill, target))
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} at {target} but was invalid.");
 
+			if (!skill.ReadyForUse)
+				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} but was not ready for use: {skill.Resources}.");
+
 			switch (skill.Effect)
 			{
 				case Effect.Damage:

@@ -22,7 +22,7 @@ namespace ArenaGS.Tests
 		{
 			TestDependencies.SetupTestDependencies ();
 			Skills = Dependencies.Get<ISkills> ();
-			Generator = Dependencies.Get<IGenerator>();
+			Generator = Dependencies.Get<IGenerator> ();
 		}
 
 		[Test]
@@ -36,7 +36,7 @@ namespace ArenaGS.Tests
 			enemy = state.UpdateEnemyReference (enemy);
 
 			Assert.IsTrue (enemy.CT >= 100);
-			state = Skills.Invoke (state, enemy, testSkill, new Point(1,1));
+			state = Skills.Invoke (state, enemy, testSkill, new Point (1, 1));
 			enemy = state.UpdateEnemyReference (enemy);
 			Assert.IsTrue (enemy.CT < 100);
 
@@ -70,7 +70,7 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkill  (Generator);
+				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 				Skills.Invoke (state, state.Player, TestScenes.TestSkill, new Point (-10, 10));
 			});
 		}
@@ -81,8 +81,38 @@ namespace ArenaGS.Tests
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateWallRoomState (Generator);
-				Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (3, 1));
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			});
+		}
+
+		[Test]
+		public void SkillNotReadyForUse_ThrowsIfUsed ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		[Test]
+		public void AmmoBasedSkill_ReducesAmmoWhenUsed ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		[Test]
+		public void CooledBasedSkill_SetsCooldownWhenUsed ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		[Test]
+		public void CooledBasedSkillUnderCooldown_ReducesEveryPlayerTurn ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		[Test]
+		public void CooledBasedSkillUnderCooldown_RemovedMapScriptWhenRecharged ()
+		{
+			throw new NotImplementedException ();
 		}
 	}
 
