@@ -13,8 +13,6 @@ namespace ArenaGS.Windows
 		{
 			AppDomain.CurrentDomain.UnhandledException += (o, e) =>
 			{
-				IFileStorage fileStorage = Dependencies.Get<IFileStorage> ();
-
 				ILogger log = Dependencies.Get<ILogger> ();
 				Exception exception = e.ExceptionObject as Exception;
 				log.Log ($"Uncaught exception \"{exception.Message}\" with stacktrace:\n {exception.StackTrace}. Exiting.", LogMask.All, Servarity.Normal);
