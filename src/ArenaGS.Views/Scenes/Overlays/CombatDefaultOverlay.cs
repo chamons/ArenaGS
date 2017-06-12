@@ -115,18 +115,21 @@ namespace ArenaGS.Views.Scenes.Overlays
 			if (index < skills.Count)
 			{
 				Skill selectedSkill = skills [index];
-				switch (selectedSkill.TargetInfo.TargettingStyle)
+				if (selectedSkill.ReadyForUse)
 				{
-					case TargettingStyle.Point:
-						TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, state.Player.Position, p =>
-						{
-							Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
-						});
-						Parent.SetOverlay (overlay);
-						return;
-					case TargettingStyle.None:
-						Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index });
-						return;
+					switch (selectedSkill.TargetInfo.TargettingStyle)
+					{
+						case TargettingStyle.Point:
+							TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, state.Player.Position, p =>
+							{
+								Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
+							});
+							Parent.SetOverlay (overlay);
+							return;
+						case TargettingStyle.None:
+							Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index });
+							return;
+					}
 				}
 			}
 		}

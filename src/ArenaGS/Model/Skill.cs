@@ -60,7 +60,7 @@ namespace ArenaGS.Model
 		public bool RechargedAmmoOnCooldown { get; private set; }
 
 		public bool UsesAmmo => MaxAmmo != -1;
-		public bool HasAmmo => CurrentAmmo > 0;
+		public bool HasAmmoRemaining => CurrentAmmo > 0;
 		public bool UsesCooldown => MaxCooldown != -1;
 		public bool UnderCooldown => Cooldown > 0;
 
@@ -97,7 +97,7 @@ namespace ArenaGS.Model
 
 		public SkillResources WithLessAmmo ()
 		{
-			if (!HasAmmo)
+			if (!HasAmmoRemaining)
 				throw new InvalidOperationException ();
 
 			return new SkillResources (this) { CurrentAmmo = CurrentAmmo - 1 };
@@ -182,7 +182,7 @@ namespace ArenaGS.Model
 		}
 
 		public bool UsesAmmo => Resources.UsesAmmo;
-		public bool HasAmmo => Resources.HasAmmo;
+		public bool HasAmmoRemaining => Resources.HasAmmoRemaining;
 		public bool UsesCooldown => Resources.UsesCooldown;
 		public bool UnderCooldown => Resources.UnderCooldown;
 
@@ -190,7 +190,7 @@ namespace ArenaGS.Model
 		{
 			get
 			{
-				if (UsesAmmo && !HasAmmo)
+				if (UsesAmmo && !HasAmmoRemaining)
 					return false;
 				if (UsesCooldown && UnderCooldown)
 					return false;
