@@ -73,28 +73,32 @@ namespace ArenaGS.Tests.Utilities
 			return map;
 		}
 
-		internal static Skill TestSkill { get; } = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
-
 		internal static GameState CreateBoxRoomStateWithSkill (IGenerator generator)
 		{
-			return AddTestSkill (CreateBoxRoomState (generator));
+			return AddTestSkill (generator, CreateBoxRoomState (generator));
 		}
 
-		internal static GameState AddTestSkill (GameState state)
+		internal static GameState AddTestSkill (IGenerator generator, GameState state)
 		{
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
+			Skill testSkill = generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
 		}
-
-		internal static Skill TestAOESkill { get; } = new Skill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None);
 
 		internal static GameState CreateBoxRoomStateWithAOESkill (IGenerator generator)
 		{
-			return AddTestAOESkill (CreateBoxRoomState (generator));
+			return AddTestAOESkill (generator, CreateBoxRoomState (generator));
 		}
 
-		internal static GameState AddTestAOESkill (GameState state)
+		internal static GameState AddTestAOESkill (IGenerator generator, GameState state)
 		{
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { TestAOESkill }.ToImmutableList ()));
+			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None);
+			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
+		}
+
+		internal static GameState CreateBoxRoomStateWithSkillWithResources (IGenerator generator, SkillResources resources)
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithSkill (generator);
+			return state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithResources (resources).Yield ().ToImmutableList ()));
 		}
 	}
 }

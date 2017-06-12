@@ -15,14 +15,20 @@ namespace ArenaGS.Engine
 		ImmutableList<Character> CreateCharacters (IEnumerable<Point> positions);
 
 		SpawnerScript CreateSpawner (Point position);
+		ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill);
+
+		Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources);
 	}
 
 	public class Generator : IGenerator
 	{
 		const int CharacterOffset = 100;
 		const int ScriptOffset = 2000;
+		const int SkillOffset = 30000;
+
 		int CharacterCount = 0;
 		int ScriptCount = 0;
+		int SkillCount = 0;
 
 		int NextCharacterID ()
 		{
@@ -35,6 +41,13 @@ namespace ArenaGS.Engine
 		{
 			int next = ScriptOffset + ScriptCount;
 			ScriptCount++;
+			return next;
+		}
+
+		int NextSkillID ()
+		{
+			int next = SkillOffset + SkillCount;
+			SkillCount++;
 			return next;
 		}
 
@@ -51,8 +64,8 @@ namespace ArenaGS.Engine
 		public Character CreatePlayer (Point position)
 		{
 			return new Character (Character.PlayerID, position, 100, new Skill [] {
-				new Skill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 2)),
-				new Skill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2))
+				CreateSkill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 2)),
+				CreateSkill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2))
 			}.ToImmutableList ());
 		}
 
@@ -63,8 +76,17 @@ namespace ArenaGS.Engine
 
 		public SpawnerScript CreateSpawner (Point position)
 		{
-			return new SpawnerScript (position, NextScriptID (), 100, 5, 3);
+			return new SpawnerScript (NextScriptID (), position, 100, 5, 3);
 		}
 
+		public Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources)
+		{
+			return new Skill (NextSkillID (), name, effect, targetInfo, resources);
+		}
+
+		public ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill)
+		{
+			return new ReduceCooldownScript (NextScriptID (), ct, character.ID, skill.ID);
+		}
 	}
 }

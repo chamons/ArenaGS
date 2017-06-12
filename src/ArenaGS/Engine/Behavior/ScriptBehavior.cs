@@ -25,22 +25,56 @@ namespace ArenaGS.Engine.Behavior
 		{
 			if (script is SpawnerScript spawnerScript)
 			{
-				if (spawnerScript.SpawnCount < spawnerScript.TotalToSpawn) 
+				state = HandleSpawnerScript (state, spawnerScript);
+				script = state.UpdateScriptReference (script);
+			}
+			else if (script is ReduceCooldownScript reduceCDScript)
+			{
+				state = HandleReduceCDScript (state, reduceCDScript);
+				script = state.UpdateScriptReferenceIfExists (script);
+			}
+			
+			if (script != null)
+				state = state.WithReplaceScript (script.WithCT (Time.ChargeTime (script, TimeConstants.CTPerBasicAction)));
+			return state;
+		}
+
+		GameState HandleSpawnerScript (GameState state, SpawnerScript spawnerScript)
+		{
+			if (spawnerScript.SpawnCount < spawnerScript.TotalToSpawn)
+			{
+				if (spawnerScript.TimeToNextSpawn == 0)
 				{
-					if (spawnerScript.TimeToNextSpawn == 0) 
-					{
-						state = Generator.CreateEnemy (state, script.Position);
-						state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
-					}
-					else
-					{
-						state = state.WithReplaceScript (spawnerScript.DecrementSpawnTimer ());
-					}
+					state = Generator.CreateEnemy (state, spawnerScript.Position);
+					state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
+				}
+				else
+				{
+					state = state.WithReplaceScript (spawnerScript.DecrementSpawnTimer ());
 				}
 			}
-			script = state.UpdateScriptReference (script);
-			state = state.WithReplaceScript (script.WithCT (Time.ChargeTime (script, TimeConstants.CTPerBasicAction)));
+
 			return state;
+		}
+
+		GameState HandleReduceCDScript (GameState state, ReduceCooldownScript script)
+		{
+			Character character = state.AllCharacters.First (x => x.ID == script.CharacterID);
+			Skill skill = character.Skills.First (x => x.ID == script.SkillID);
+			skill = skill.WithCooldownReduced ();
+
+			if (!skill.UnderCooldown)
+			{
+				state = state.WithScripts (state.Scripts.Remove (script));
+				if (skill.UsesAmmo && skill.Resources.RechargedAmmoOnCooldown && skill.Resources.CurrentAmmo < skill.Resources.MaxAmmo)
+				{
+					state = state.WithReplaceCharacter (character.WithReplaceSkill (skill.WithIncrementedAmmo ()));
+					character = state.UpdateCharacterReference (character);
+					skill = character.UpdateSkillReference (skill);
+				}
+			}
+
+			return state.WithReplaceCharacter (character.WithReplaceSkill (skill));
 		}
 	}
 }

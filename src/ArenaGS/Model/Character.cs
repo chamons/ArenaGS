@@ -1,7 +1,8 @@
-﻿using ArenaGS.Utilities;
+﻿using ArenaGS.Engine;
+using ArenaGS.Utilities;
 using ProtoBuf;
 using System.Collections.Immutable;
-using ArenaGS.Engine;
+using System.Linq;
 
 namespace ArenaGS.Model
 {
@@ -69,6 +70,17 @@ namespace ArenaGS.Model
 		internal Character WithSkills (ImmutableList<Skill> skills)
 		{
 			return new Character (this) { Skills = skills };
+		}
+
+		internal Character WithReplaceSkill (Skill newSkill)
+		{
+			Skill oldSkill = Skills.First (x => x.ID == newSkill.ID);
+			return new Character (this) { Skills = Skills.Replace (oldSkill, newSkill) };
+		}
+
+		internal Skill UpdateSkillReference (Skill oldSkill)
+		{
+			return Skills.First (x => x.ID == oldSkill.ID);
 		}
 
 		internal const int PlayerID = 42;

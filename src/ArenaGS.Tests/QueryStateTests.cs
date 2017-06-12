@@ -26,7 +26,7 @@ namespace ArenaGS.Tests
 		public void QuerySmokeTest ()
 		{
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Skill skill = new Skill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			Skill skill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
 
 			QueryGameState query = new QueryGameState ();
 			Assert.IsTrue (query.IsValidTargetForSkill (state, skill, new Point (2, 2)));

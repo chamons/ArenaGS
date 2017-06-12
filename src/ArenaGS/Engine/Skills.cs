@@ -20,11 +20,14 @@ namespace ArenaGS.Engine
 	{
 		IPhysics Physics;
 		IAnimationRequest Animation;
+		IGenerator Generator;
 
+	
 		public Skills ()
 		{
 			Physics = Dependencies.Get<IPhysics> ();
 			Animation = Dependencies.Get<IAnimationRequest> ();
+			Generator = Dependencies.Get<IGenerator> ();
 		}
 
 		public GameState Invoke (GameState state, Character invoker, Skill skill, Point target)
@@ -50,15 +53,33 @@ namespace ArenaGS.Engine
 					if (skill.TargetInfo.Area > 1)
 						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected));
 
-					foreach (var enemy in state.Enemies.Concat (state.Player.Yield ()).Where (x => areaAffected.Contains (x.Position)))
+					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
+
+					invoker = state.UpdateCharacterReference (invoker);
 					break;
 				}
 				case Effect.None:
 					break;
 			}
 
+			state = ChargeSkillForResources (state, invoker, skill);
+
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+		}
+
+		private GameState ChargeSkillForResources (GameState state, Character invoker, Skill skill)
+		{
+			if (skill.UsesAmmo)
+				skill = skill.WithLessAmmo ();
+
+			if (skill.UsesCooldown)
+			{
+				skill = skill.WithCooldownSet ();
+				state = state.WithScripts (state.Scripts.Add (Generator.CreateCooldownScript (1, invoker, skill)));
+			}
+
+			return state.WithReplaceCharacter (invoker.WithReplaceSkill (skill));
 		}
 
 		public HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target)
