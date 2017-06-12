@@ -43,7 +43,7 @@ namespace ArenaGS.Tests
 			Assert.IsTrue (enemy.CT < 100);
 
 			Assert.IsTrue (state.Player.CT >= 100);
-			state = Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (1, 1));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 			Assert.IsTrue (state.Player.CT < 100);
 		}
 
@@ -63,7 +63,7 @@ namespace ArenaGS.Tests
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
-				Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (10, 10));
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
 			});
 		}
 
@@ -225,7 +225,7 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 
-			state = Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (1, 1));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
 			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
@@ -245,8 +245,8 @@ namespace ArenaGS.Tests
 		public void SkillsWithInvalidTargets_AreNotValidTargets ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills[0], new Point (-1, 1)));
-			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills[0], new Point (0, 0)));
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (-1, 1)));
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (0, 0)));
 		}
 
 		[Test]
