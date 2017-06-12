@@ -119,6 +119,14 @@ namespace ArenaGS
 			return new GameState (this) { Scripts = Scripts.Replace (oldScript, newScript) };
 		}
 
+		internal GameState WithReplaceCharacter (Character character)
+		{
+			if (character.IsPlayer)
+				return WithPlayer (character);
+			else
+				return WithReplaceEnemy (character);
+		}
+
 		// TODO - This cache could be copied in GameState (GameState original) if we are 
 		// very careful about invalidation.
 		private int[,] shortestPath;
@@ -132,14 +140,19 @@ namespace ArenaGS
 			}
 		}
 
-		public Character UpdateEnemyReference (Character oldReference)
+		public Character UpdateCharacterReference (Character oldReference)
 		{
-			return Enemies.First (x => x.ID == oldReference.ID);
+			return AllCharacters.First (x => x.ID == oldReference.ID);
 		}
 
 		public MapScript UpdateScriptReference (MapScript oldReference)
 		{
 			return Scripts.First (x => x.ID == oldReference.ID);
+		}
+
+		public MapScript UpdateScriptReferenceIfExists (MapScript oldReference)
+		{
+			return Scripts.FirstOrDefault (x => x.ID == oldReference.ID);
 		}
 	}
 }

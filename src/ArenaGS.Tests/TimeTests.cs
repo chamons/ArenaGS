@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 using ArenaGS.Engine;
 using ArenaGS.Engine.Behavior;
@@ -14,9 +15,9 @@ using NUnit.Framework;
 namespace ArenaGS.Tests
 {
 	[TestFixture]
-	class TimeTests : IActorBehavior
+	class TimeTests : IActorBehavior, IScriptBehavior
 	{
-		List<Character> CharactersThatActed;
+		List<ITimedElement> ElementsThatActed;
 		ITime Time;
 		IGenerator Generator;
 
@@ -25,17 +26,26 @@ namespace ArenaGS.Tests
 		{
 			TestDependencies.SetupTestDependencies ();
 			Dependencies.RegisterInstance<IActorBehavior> (this);
+			Dependencies.RegisterInstance<IScriptBehavior> (this);
+
 			Time = Dependencies.Get<ITime> ();
 			Generator = Dependencies.Get<IGenerator> ();
 
-			CharactersThatActed = new List<Character> ();
+			ElementsThatActed = new List<ITimedElement> ();
 		}
 
 		// Registered for IActorBehavior for all characters
 		public GameState Act (GameState state, Character c)
 		{
-			CharactersThatActed.Add (c);
+			ElementsThatActed.Add (c);
 			return state.WithReplaceEnemy (c.WithCT (0));
+		}
+
+		// Registered for IActorBehavior for all characters
+		public GameState Act (GameState state, MapScript script)
+		{
+			ElementsThatActed.Add (script);
+			return state.WithReplaceScript (script.WithCT (0));
 		}
 
 		GameState CreateTestState (int playerCT, int firstCT, int secondCT)
@@ -43,13 +53,13 @@ namespace ArenaGS.Tests
 			Character player = Generator.CreatePlayer (new Point (1, 1)).WithCT (playerCT);
 			Character firstEnemy = Generator.CreateCharacter (new Point (2, 2)).WithCT (firstCT);
 			Character secondEnemy = Generator.CreateCharacter (new Point (2, 2)).WithCT (secondCT);
-			return new GameState (null, player, (new Character[] { firstEnemy, secondEnemy }).ToImmutableList (),
-			                      ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			return new GameState (null, player, (new Character [] { firstEnemy, secondEnemy }).ToImmutableList (),
+								  ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		class TestScript : MapScript
 		{
-			public TestScript (Point position) : base (position, 100, 100)
+			public TestScript (Point position) : base (100, 100)
 			{
 			}
 
@@ -60,7 +70,7 @@ namespace ArenaGS.Tests
 		GameState CreateTestStateWithScripts (int playerCT, int firstCT, int secondCT, int scriptCT)
 		{
 			GameState state = CreateTestState (playerCT, firstCT, secondCT);
-			state = state.WithScripts (new MapScript [] { Generator.CreateSpawner (new Point(0, 0)).WithCT(scriptCT) }.ToImmutableList ());
+			state = state.WithScripts (new MapScript [] { Generator.CreateSpawner (new Point (0, 0)).WithCT (scriptCT) }.ToImmutableList ());
 			return state;
 		}
 
@@ -71,9 +81,9 @@ namespace ArenaGS.Tests
 			GameState newState = Time.ProcessUntilPlayerReady (state);
 
 			Assert.AreEqual (state.Player.CT, newState.Player.CT);
-			Assert.AreEqual (state.Enemies[0].CT, newState.Enemies[0].CT);
-			Assert.AreEqual (state.Enemies[1].CT, newState.Enemies[1].CT);
-			Assert.AreEqual (0, CharactersThatActed.Count);
+			Assert.AreEqual (state.Enemies [0].CT, newState.Enemies [0].CT);
+			Assert.AreEqual (state.Enemies [1].CT, newState.Enemies [1].CT);
+			Assert.AreEqual (0, ElementsThatActed.Count);
 		}
 
 		[Test]
@@ -83,9 +93,9 @@ namespace ArenaGS.Tests
 			state = Time.ProcessUntilPlayerReady (state);
 
 			Assert.AreEqual (100, state.Player.CT);
-			Assert.AreEqual (50, state.Enemies[0].CT);
-			Assert.AreEqual (70, state.Enemies[1].CT);
-			Assert.AreEqual (1, CharactersThatActed.Count);
+			Assert.AreEqual (50, state.Enemies [0].CT);
+			Assert.AreEqual (70, state.Enemies [1].CT);
+			Assert.AreEqual (1, ElementsThatActed.Count);
 		}
 
 		[Test]
@@ -96,9 +106,19 @@ namespace ArenaGS.Tests
 			state = Time.ProcessUntilPlayerReady (state);
 
 			Assert.AreEqual (100, state.Player.CT);
-			Assert.AreEqual (90, state.Enemies[0].CT);
-			Assert.AreEqual (80, state.Enemies[1].CT);
-			Assert.AreEqual (10, state.Scripts[0].CT);
+			Assert.AreEqual (90, state.Enemies [0].CT);
+			Assert.AreEqual (80, state.Enemies [1].CT);
+			Assert.AreEqual (10, state.Scripts [0].CT);
+		}
+
+		[Test]
+		public void CharacterWithSmallCTDifferences_GoInCorrectOrder ()
+		{
+			// Mapscript has higher CT, it should go before player returned
+			GameState state = CreateTestStateWithScripts (90, 0, 0, 91);
+			state = Time.ProcessUntilPlayerReady (state);
+			Assert.AreEqual (1, ElementsThatActed.Count);
+			Assert.IsTrue (ElementsThatActed.First () is MapScript);
 		}
 	}
 }
