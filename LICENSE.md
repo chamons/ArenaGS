@@ -22,7 +22,10 @@ SOFTWARE.
 
 --------
 
-src/ArenaGS/Engine/Utilities/BresenhamLine.cs is a port from libtcod and is under the following license
+src/ArenaGS/Engine/Utilities/BresenhamLine.cs
+src/ArenaGS/Engine/Utilities/ShadowCastingFOV.cs
+
+are both ports from libtcod and is under the following license
 
 * libtcod 1.6.3
 * Copyright (c) 2008,2009,2010,2012,2013,2016,2017 Jice & Mingos & rmtew

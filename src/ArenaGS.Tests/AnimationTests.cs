@@ -70,7 +70,7 @@ namespace ArenaGS.Tests
 		public void TargettedSkill_ShouldFireProjectile ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
-			Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (1,2));
+			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Projectile, AnimationRequests[0].Type);
 		}
@@ -79,7 +79,7 @@ namespace ArenaGS.Tests
 		public void TargettedSkillWithArea_ShouldFireProjectileAndExplosion ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (1,2));
+			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
 			Assert.AreEqual (2, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Projectile, AnimationRequests[0].Type);
 			Assert.AreEqual (AnimationType.Explosion, AnimationRequests[1].Type);

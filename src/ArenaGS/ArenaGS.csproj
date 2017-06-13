@@ -41,9 +41,11 @@
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapTile.cs" />
     <Compile Include="Utilities\EnumerableExtensions.cs" />
+    <Compile Include="Utilities\MapVisibility.cs" />
     <Compile Include="Utilities\Point.cs" />
     <Compile Include="Utilities\PointExtensions.cs" />
     <Compile Include="Utilities\Serialization.cs" />
+    <Compile Include="Engine\Utilities\ShadowCastingFOV.cs" />
     <Compile Include="Utilities\Size.cs" />
     <Compile Include="Model\MapScript.cs" />
     <Compile Include="Engine\Behavior\ActorBehavior.cs" />
@@ -85,10 +87,6 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Engine\Behavior\" />
-    <Folder Include="Engine\Utilities\" />
-    <Folder Include="Engine\Generators\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

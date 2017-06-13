@@ -32,6 +32,8 @@ namespace ArenaGS.Model
 	public struct MapTile
 	{
 		public TerrainType Terrain { get; private set; }
+		public bool Transparent => Terrain == TerrainType.Floor;
+		public bool Walkable => Terrain == TerrainType.Floor;
 
 		public MapTile (TerrainType type)
 		{
