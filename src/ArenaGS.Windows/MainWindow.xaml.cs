@@ -25,6 +25,7 @@ namespace ArenaGS.Windows
 		{
 			InitializeComponent ();
 			Loaded += OnLoaded;
+			TextInput += OnPlatformTextEnter;
 			KeyDown += OnPlatformKeyDown;
 			Closed += OnPlatformClose;
 		}
@@ -63,8 +64,25 @@ namespace ArenaGS.Windows
 
 		private void OnPlatformKeyDown (object sender, System.Windows.Input.KeyEventArgs e)
 		{
-			KeyArgs.Character = e.Key.ToString ();
-			OnKeyDown?.Invoke (this, KeyArgs);
+			string entry = e.Key.ToString ();
+			if (entry.Length > 1)
+			{
+				Console.WriteLine (entry);
+				KeyArgs.Character = e.Key.ToString ();
+				OnKeyDown?.Invoke (this, KeyArgs);
+			}
+		}
+
+
+		private void OnPlatformTextEnter (object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
+			string entry = e.TextComposition.Text;
+			if (entry.Length == 1 && char.IsLetter (entry[0]))
+			{
+				Console.WriteLine (entry);
+				KeyArgs.Character = entry;
+				OnKeyDown?.Invoke (this, KeyArgs);
+			}
 		}
 
 		private void OnPlatformClose (object sender, EventArgs e)

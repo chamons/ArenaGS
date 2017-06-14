@@ -1,9 +1,10 @@
 ﻿using System;
-using ArenaGS.Views.Views;
-using SkiaSharp;
-using ArenaGS.Engine;
+
 using ArenaGS.Model;
 using ArenaGS.Utilities;
+using ArenaGS.Views.Utilities;
+using ArenaGS.Views.Views;
+using SkiaSharp;
 
 namespace ArenaGS.Views.Scenes.Overlays
 {
@@ -41,29 +42,17 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void HandleKeyDown (string character)
 		{
-			switch (character)
+			if (KeyboardBindings.IsReturn (character))
 			{
-				case "\r":
-				case "Return":
-					Select ();
-					return;
-				case "Up":
-				case "NumPad8":
-					Move (Direction.North);
-					return;
-				case "Down":
-				case "NumPad2":
-					Move (Direction.South);
-					return;
-				case "Left":
-				case "NumPad4":
-					Move (Direction.West);
-					return;
-				case "Right":
-				case "NumPad6":
-					Move (Direction.East);
-					return;
+				Select ();
+				return;
 			}
+
+			KeyboardBindings.IsDirectionKey (character).MatchSome (d =>
+			{
+				Move (d);
+				return;
+			});
 		}
 
 		void Move (Direction direction)

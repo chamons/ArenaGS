@@ -1,6 +1,6 @@
-﻿﻿using System;
-using ArenaGS.Model;
+﻿using ArenaGS.Model;
 using ArenaGS.Utilities;
+using ArenaGS.Views.Utilities;
 using ArenaGS.Views.Views;
 using SkiaSharp;
 
@@ -21,6 +21,12 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void HandleKeyDown (string character)
 		{
+			KeyboardBindings.IsDirectionKey (character).MatchSome (d =>
+			{
+				Engine.AcceptCommand (Command.PlayerMove, d);
+				return;
+			});
+
 			switch (character)
 			{
 				case ".":
@@ -33,23 +39,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 					return;
 				case "L":
 					Engine.LoadGame ();
-					return;
-				case "Up":
-				case "NumPad8":
-					Engine.AcceptCommand (Command.PlayerMove, Direction.North);
-					return;
-				case "Down":
-				case "NumPad2":
-					Engine.AcceptCommand (Command.PlayerMove, Direction.South);
-					return;
-				case "Left":
-				case "NumPad4":
-					Engine.AcceptCommand (Command.PlayerMove, Direction.West);
-					return;
-				case "Right":
-				case "NumPad6":
-					Engine.AcceptCommand (Command.PlayerMove, Direction.East);
-					return;
+					return;		
 				case "1":
 				case "D1":
 					RequestSkill (0);
