@@ -152,6 +152,14 @@ namespace ArenaGS.Views.Scenes.Overlays
 						Engine.AcceptCommand (Command.PlayerMove, Direction.West);
 					else if (position == playerPosition.InDirection (Direction.East))
 						Engine.AcceptCommand (Command.PlayerMove, Direction.East);
+					else if (position == playerPosition.InDirection (Direction.Northwest))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.Northwest);
+					else if (position == playerPosition.InDirection (Direction.Northeast))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.Northeast);
+					else if (position == playerPosition.InDirection (Direction.Southwest))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.Southwest);
+					else if (position == playerPosition.InDirection (Direction.Southeast))
+						Engine.AcceptCommand (Command.PlayerMove, Direction.Southeast);
 				}
 			}
 		}
