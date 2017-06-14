@@ -10,7 +10,8 @@ namespace ArenaGS
 	{
 		Movement,
 		Projectile,
-		Explosion
+		Explosion,
+		Cone
 	}
 
 	public abstract class AnimationInfo
@@ -39,7 +40,7 @@ namespace ArenaGS
 	{
 		public ImmutableList <Point> Path { get; }
 
-		public ProjectileAnimationInfo (AnimationType type, List<Point> path) : base (AnimationType.Projectile)
+		public ProjectileAnimationInfo (List<Point> path) : base (AnimationType.Projectile)
 		{
 			Path = path.ToImmutableList ();
 		}
@@ -56,6 +57,20 @@ namespace ArenaGS
 			Center = center;
 			Size = size;
 			PointsAffected = pointsAffected;
+		}
+	}
+
+	public class ConeAnimationInfo : AnimationInfo
+	{
+		public Point Center { get; }
+		public Direction Direction { get; }
+		public int Length { get; }
+
+		public ConeAnimationInfo (Point center, Direction direction, int length) : base (AnimationType.Cone)
+		{
+			Center = center;
+			Direction = direction;
+			Length = length;
 		}
 	}
 

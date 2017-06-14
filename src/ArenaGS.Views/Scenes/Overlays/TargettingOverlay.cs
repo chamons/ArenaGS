@@ -94,9 +94,18 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		public void Draw (MapView map)
 		{
-			SKColor color = CurrentPositionIsValidTarget ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
-			foreach (var tile in QueryGameState.AffectedPointsForSkill (State, Skill, CurrentTargettedPosition))
-				map.DrawOverlaySquare (tile, color);
+			bool validTarget = CurrentPositionIsValidTarget;
+			SKColor color = validTarget ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
+
+			if (validTarget)
+			{
+				foreach (var tile in QueryGameState.AffectedPointsForSkill (State, Skill, CurrentTargettedPosition))
+					map.DrawOverlaySquare (tile, color);
+			}
+			else
+			{
+				map.DrawOverlaySquare (CurrentTargettedPosition, color);
+			}
 		}
 	}
 }

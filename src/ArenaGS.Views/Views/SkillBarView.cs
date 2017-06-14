@@ -26,6 +26,8 @@ namespace ArenaGS.Views.Views
 					return "burning-meteor.png";
 				case "Grenade":
 					return "grenade.png";
+				case "Dragon's Breath":
+					return "fire-breath.png";
 				default:
 					return "cog.png";
 			}			

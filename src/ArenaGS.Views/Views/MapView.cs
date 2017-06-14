@@ -71,6 +71,7 @@ namespace ArenaGS.Views.Views
 
 			DrawProjectile ();
 			DrawExplosion ();
+			DrawCones ();
 
 			Parent.Overlay.Draw (this);
 
@@ -96,6 +97,20 @@ namespace ArenaGS.Views.Views
 				ExplosionAnimationInfo explosionInfo = (ExplosionAnimationInfo)currentAnimation;
 				int currentRange = AnimationHelper.Frame / ExplosionExpandTime;
 				foreach (var point in explosionInfo.Center.PointsInBurst (currentRange).Where (x => explosionInfo.PointsAffected.Contains (x)))
+				{
+					if (CurrentVisibility.IsVisible (point))
+						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
+				}
+			}
+		}
+
+		void DrawCones ()
+		{
+			if (currentAnimation != null && currentAnimation.Type == AnimationType.Cone)
+			{
+				ConeAnimationInfo coneInfo = (ConeAnimationInfo)currentAnimation;
+				int currentRange = AnimationHelper.Frame / ConeExpandTime;
+				foreach (var point in coneInfo.Center.PointsInCone (coneInfo.Direction, currentRange)) // TODO - .Where (x => explosionInfo.PointsAffected.Contains (x))
 				{
 					if (CurrentVisibility.IsVisible (point))
 						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
@@ -222,6 +237,8 @@ namespace ArenaGS.Views.Views
 		const int MovementAnimationTime = 2;
 		const int ExplosionExpandTime = 2;
 		const int ProjectileTravelTime = 2;
+		const int ConeExpandTime = 2;
+
 		int CalculateAnimationFrameLength (AnimationInfo info)
 		{
 			switch (info.Type)
@@ -234,6 +251,9 @@ namespace ArenaGS.Views.Views
 				case AnimationType.Projectile:
 					ProjectileAnimationInfo projectileInfo = (ProjectileAnimationInfo)info;
 					return (ProjectileTravelTime * projectileInfo.Path.Count) - 1;
+				case AnimationType.Cone:
+					ConeAnimationInfo coneInfo = (ConeAnimationInfo)info;
+					return (ConeExpandTime * coneInfo.Length);
 				default:
 					throw new NotImplementedException ();
 			}

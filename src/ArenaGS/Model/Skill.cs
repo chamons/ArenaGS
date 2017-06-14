@@ -14,7 +14,8 @@ namespace ArenaGS.Model
 	public enum TargettingStyle
 	{
 		None,
-		Point
+		Point,
+		Cone
 	}
 
 	[ProtoContract]

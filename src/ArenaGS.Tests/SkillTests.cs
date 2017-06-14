@@ -58,11 +58,17 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void ActorUsingSkillOutOfRange_Throws ()
+		public void SkillsOutOfRange_Throws ()
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
 			});
 		}
@@ -72,18 +78,60 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);	
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
 			});
 		}
 
 		[Test]
-		public void SkillUse_ShouldRespectWallsInWay ()
+		public void SkillsThroughWall_Throw ()
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateWallRoomState (Generator);
+				state = TestScenes.AddTestSkill (Generator, state);			
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateWallRoomState (Generator);
+				state = TestScenes.AddTestAOESkill (Generator, state);
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.CreateWallRoomState (Generator);
+				state = TestScenes.AddTestConeSkill (Generator, state);
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
+			});
+		}
+
+		[Test]
+		public void ConeSkillNotAdjacent_Throws ()
+		{
+			GameState state = TestScenes.CreateWallRoomState (Generator);
+			state = TestScenes.AddTestConeSkill (Generator, state);
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
+			});
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
 			});
 		}
 
@@ -122,7 +170,6 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (3, state.Player.Skills [0].Resources.Cooldown);
 		}
-
 
 		[Test]
 		public void CooledBasedSkillUnderCooldown_ReducesEveryPlayerTurn ()
@@ -230,7 +277,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void ActorIsUsingPointSkillValid_DoesDamageToSelf()
+		public void ActorIsUsingPointSkillValid_DoesDamageToSelf ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 
@@ -241,7 +288,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void SkillsWithAreaAffect_AffectMultipleCharacters ()
+		public void AOESkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 
@@ -249,24 +296,8 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
 		}
 
-
 		[Test]
-		public void SkillsWithInvalidTargets_AreNotValidTargets ()
-		{
-			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (-1, 1)));
-		}
-
-
-		[Test]
-		public void TargetedSkills_DoNotConsiderWallsValid ()
-		{
-			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (-1, 1)));
-		}
-
-		[Test]
-		public void SkillsWithAreaAffect_DoNotAffectThroughWalls ()
+		public void AOESkills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 			for (int i = 1 ; i <= 5; ++i)
@@ -276,6 +307,31 @@ namespace ArenaGS.Tests
 			// Only player should be damaged, not enemy at 3,3
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
 			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void ConeSkills_AffectMultipleCharacters ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
+			state = state.WithEnemies (enemies.ToImmutableList ());
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
+			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+		}
+
+		[Test]
+		public void ConeSkills_DoNotAffectThroughWalls ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (4, 1) });
+			state = state.WithEnemies (enemies.ToImmutableList ());
+
+			for (int i = 1; i <= 5; ++i)
+				state.Map.Set (new Point (3, i), TerrainType.Wall);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
+
+			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
 		}
 	}
 }
