@@ -39,11 +39,6 @@ namespace ArenaGS.Engine.Utilities
 													{0,1,1,0,0,-1,-1,0},
 													{1,0,0,1,-1,0,0,-1}};
 
-		static bool IsSquareTransparent (GameState state, int x, int y)
-		{
-			return state.Map [x, y].Transparent && !state.Enemies.Any (c => c.Position.X == x && c.Position.Y == y);
-		}
-
 		static void CastLight (GameState state, MapVisibility visibilityInfo, int cx, int cy, int row, float start, float end, int radius, int r2, int xx, int xy, int yx, int yy, int id, bool light_walls)
 		{
 			float new_start = 0.0f;
@@ -69,11 +64,11 @@ namespace ArenaGS.Engine.Utilities
 							continue;
 						else if (end > l_slope)
 							break;
-						if (dx * dx + dy * dy <= r2 && (light_walls || IsSquareTransparent (state, X, Y)))
+						if (dx * dx + dy * dy <= r2 && (light_walls || state.Map [X, Y].Transparent))
 							visibilityInfo.Visibility [X, Y] = true;
 						if (blocked)
 						{
-							if (!IsSquareTransparent (state, X, Y))
+							if (!state.Map [X, Y].Transparent)
 							{
 								new_start = r_slope;
 								continue;
@@ -86,7 +81,7 @@ namespace ArenaGS.Engine.Utilities
 						}
 						else
 						{
-							if (!IsSquareTransparent (state, X, Y) && j < radius)
+							if (!state.Map [X, Y].Transparent && j < radius)
 							{
 								blocked = true;
 								CastLight (state, visibilityInfo, cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, id + 1, light_walls);

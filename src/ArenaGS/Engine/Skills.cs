@@ -98,7 +98,10 @@ namespace ArenaGS.Engine
 				return false;
 
 			MapVisibility visibility = state.CalculateVisibility (invoker);
-			return visibility.IsVisible (target);
+			if (!visibility.IsVisible (target))
+				return false;
+
+			return IsPathBetweenPointsClear (state, invoker.Position, target);
 		}
 
 		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target)

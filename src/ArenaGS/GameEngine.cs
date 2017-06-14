@@ -98,7 +98,9 @@ namespace ArenaGS
 			for (int i = 0; i < 10; ++i)
 			{
 				Point position = new Point (r.Next (1, mapData.Map.Width), r.Next (1, mapData.Map.Height));
-				enemyPositions.Add (FindOpenSpot (mapData.Map, position, enemyPositions.Concat (player.Position.Yield ())));
+				Point openSpot = FindOpenSpot (mapData.Map, position, enemyPositions.Concat (player.Position.Yield ()));
+				if (openSpot != Point.Invalid)
+					enemyPositions.Add (openSpot);
 			}
 
 			var enemies = Generator.CreateCharacters (enemyPositions);
@@ -122,7 +124,7 @@ namespace ArenaGS
 						return point;
 				}
 	         }
-			throw new InvalidOperationException ("Unable to find open spot");
+			return Point.Invalid;
 		}
 
 		public void AcceptCommand (Command c, object data)
