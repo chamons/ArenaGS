@@ -123,6 +123,7 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (3, state.Player.Skills [0].Resources.Cooldown);
 		}
 
+
 		[Test]
 		public void CooledBasedSkillUnderCooldown_ReducesEveryPlayerTurn ()
 		{
@@ -146,11 +147,11 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void CooledBasedAmmo_IncreasesAmmoOnCooldown ()
+		public void CooledBasedAmmoSkill_IncreasesAmmoOnCooldown ()
 		{
 			const int StartingCooldown = 3;
 
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (2, 3));
+			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (StartingCooldown - 1, StartingCooldown));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
@@ -163,8 +164,16 @@ namespace ArenaGS.Tests
 			}
 
 			Assert.AreEqual (0, state.Player.Skills [0].Resources.Cooldown);
-			Assert.AreEqual (2, state.Player.Skills [0].Resources.CurrentAmmo);
+			Assert.AreEqual (StartingCooldown - 1, state.Player.Skills [0].Resources.CurrentAmmo);
 			Assert.Zero (state.Scripts.Count);
+		}
+
+		[Test]
+		public void CooledBasedAmmoSkill_UnderCooldownButHasAmmo_IsUsable()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (1, 2, 2, 3, true));
+			Assert.IsTrue (state.Player.Skills [0].ReadyForUse);
+
 		}
 	}
 

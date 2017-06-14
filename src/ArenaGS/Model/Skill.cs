@@ -185,11 +185,14 @@ namespace ArenaGS.Model
 		public bool HasAmmoRemaining => Resources.HasAmmoRemaining;
 		public bool UsesCooldown => Resources.UsesCooldown;
 		public bool UnderCooldown => Resources.UnderCooldown;
+		public bool RechargedAmmoOnCooldown => Resources.RechargedAmmoOnCooldown;
 
 		public bool ReadyForUse
 		{
 			get
 			{
+				if (RechargedAmmoOnCooldown && HasAmmoRemaining)
+					return true;
 				if (UsesAmmo && !HasAmmoRemaining)
 					return false;
 				if (UsesCooldown && UnderCooldown)
