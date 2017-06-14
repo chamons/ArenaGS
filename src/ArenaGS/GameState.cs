@@ -7,6 +7,7 @@ using ArenaGS.Engine.Utilities;
 using ArenaGS.Model;
 
 using ProtoBuf;
+using ArenaGS.Utilities;
 
 namespace ArenaGS
 {
@@ -28,9 +29,9 @@ namespace ArenaGS
 		[ProtoMember (5)]
 		public ImmutableList<MapScript> Scripts { get; private set; }
 
-		public IEnumerable<Character> AllCharacters 
+		public IEnumerable<Character> AllCharacters
 		{
-			get 
+			get
 			{
 				yield return Player;
 				foreach (var enemy in Enemies)
@@ -104,7 +105,7 @@ namespace ArenaGS
 			if (logBuilder.Count == 5)
 				logBuilder.RemoveAt (0);
 			logBuilder.Add (line);
-			return new GameState (this) { LogEntries = logBuilder.ToImmutable() };
+			return new GameState (this) { LogEntries = logBuilder.ToImmutable () };
 		}
 
 		internal GameState WithReplaceEnemy (Character newEnemy)
@@ -129,8 +130,8 @@ namespace ArenaGS
 
 		// TODO - This cache could be copied in GameState (GameState original) if we are 
 		// very careful about invalidation.
-		private int[,] shortestPath;
-		internal int[,] ShortestPath
+		int [,] shortestPath;
+		internal int [,] ShortestPath
 		{
 			get
 			{
@@ -138,6 +139,21 @@ namespace ArenaGS
 					shortestPath = Dijkstra.CalculateShortestPathArray (Map, Player.Position);
 				return shortestPath;
 			}
+		}
+
+		Dictionary<Character, MapVisibility> VisibiltyCache;
+		public MapVisibility CalculateVisibility (Character c)
+		{
+			if (VisibiltyCache == null)
+				VisibiltyCache = new Dictionary<Character, MapVisibility> ();
+
+			MapVisibility visibility;
+			if (VisibiltyCache.TryGetValue (c, out visibility))
+				return visibility;
+
+			visibility = ShadowCastingFOV.ComputeRecursiveShadowcasting (this, c, 100, true);
+			VisibiltyCache[c] = visibility;
+			return visibility;
 		}
 
 		public Character UpdateCharacterReference (Character oldReference)

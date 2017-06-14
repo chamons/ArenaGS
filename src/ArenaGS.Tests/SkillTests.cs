@@ -246,7 +246,14 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (-1, 1)));
-			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (0, 0)));
+		}
+
+
+		[Test]
+		public void TargetedSkills_DoNotConsiderWallsValid ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (-1, 1)));
 		}
 
 		[Test]

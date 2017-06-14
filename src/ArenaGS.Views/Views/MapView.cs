@@ -21,6 +21,7 @@ namespace ArenaGS.Views.Views
 		AnimationInfo currentAnimation;
 		public Point CenterPosition { get; set; }
 		MapThemePainter Painter { get; } = new MapThemePainter ();
+		MapVisibility CurrentVisibility;
 
 		public MapView (IScene parent, Point position, Size size) : base (position, size)
 		{
@@ -36,6 +37,7 @@ namespace ArenaGS.Views.Views
 			BlankCanvas ();
 			GameState = state;
 			CenterPosition = state.Player.Position;
+			CurrentVisibility = state.CalculateVisibility (state.Player);
 
 			Parent.Overlay.ConfigureMap (this);
 
@@ -50,11 +52,17 @@ namespace ArenaGS.Views.Views
 					{
 						Point currentModelPosition = TranslateUIToModelPosition (currentUIPosition);
 						Painter.DrawMapTile (this, CurrentMap.Theme, currentUIPosition, currentModelPosition, CurrentMap);
+
+						if (!CurrentVisibility.IsVisible (currentModelPosition))
+							DrawOverlaySquare (currentModelPosition, SKColors.Black.WithAlpha (196));
 					}
 				}
 			}
-			foreach (var enemy in GameState.Enemies.Where (x => x.ID != characterToAnimate?.Item1))
+
+			foreach (var enemy in GameState.Enemies.Where (x => x.ID != characterToAnimate?.Item1 && CurrentVisibility.IsVisible (x.Position)))
+			{
 				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
+			}
 
 			if (characterToAnimate != null)
 				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), EnemyBitmap);
@@ -69,8 +77,6 @@ namespace ArenaGS.Views.Views
 			return Surface;
 		}
 
-
-
 		void DrawProjectile ()
 		{
 			if (currentAnimation != null && currentAnimation.Type == AnimationType.Projectile)
@@ -78,7 +84,8 @@ namespace ArenaGS.Views.Views
 				ProjectileAnimationInfo projectileInfo = (ProjectileAnimationInfo)currentAnimation;
 				int currentTileIndex = AnimationHelper.Frame / ProjectileTravelTime;
 				Point projectilePosition = projectileInfo.Path[currentTileIndex];
-				DrawTile (TranslateModelToUIPosition (projectilePosition), ProjectileBitmap);
+				if (CurrentVisibility.IsVisible (projectilePosition))
+					DrawTile (TranslateModelToUIPosition (projectilePosition), ProjectileBitmap);
 			}
 		}
 
@@ -89,7 +96,10 @@ namespace ArenaGS.Views.Views
 				ExplosionAnimationInfo explosionInfo = (ExplosionAnimationInfo)currentAnimation;
 				int currentRange = AnimationHelper.Frame / ExplosionExpandTime;
 				foreach (var point in explosionInfo.Center.PointsInBurst (currentRange).Where (x => explosionInfo.PointsAffected.Contains (x)))
-					DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
+				{
+					if (CurrentVisibility.IsVisible (point))
+						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
+				}
 			}
 		}
 
@@ -98,7 +108,10 @@ namespace ArenaGS.Views.Views
 		    if (currentAnimation != null && currentAnimation.Type == AnimationType.Movement)
 			{
 				MovementAnimationInfo movementInfo = (MovementAnimationInfo)currentAnimation;
-				var animatingCharacter = movementInfo.Character;
+				if (!CurrentVisibility.IsVisible (movementInfo.NewPosition))
+					return null;
+
+				var animatingCharacter = movementInfo.Character;				
 				int deltaX = movementInfo.NewPosition.X - animatingCharacter.Position.X;
 				int deltaY = movementInfo.NewPosition.Y - animatingCharacter.Position.Y;
 				float percentageDone = AnimationHelper.PercentComplete;

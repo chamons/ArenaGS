@@ -93,7 +93,17 @@ namespace ArenaGS
 			int hash = r.Next ();
 			GeneratedMapData mapData = mapGenerator.Generate (hash);
 			Character player = Generator.CreatePlayer (FindOpenSpot (mapData.Map, new Point (8, 8), Enumerable.Empty<Point>()));
-			var enemies = Generator.CreateCharacters ( new Point [] { FindOpenSpot (mapData.Map, new Point (7, 8), new Point [] { player.Position }) });
+
+			List<Point> enemyPositions = new List<Point> ();
+			for (int i = 0; i < 10; ++i)
+			{
+				Point position = new Point (r.Next (1, mapData.Map.Width), r.Next (1, mapData.Map.Height));
+				Point openSpot = FindOpenSpot (mapData.Map, position, enemyPositions.Concat (player.Position.Yield ()));
+				if (openSpot != Point.Invalid)
+					enemyPositions.Add (openSpot);
+			}
+
+			var enemies = Generator.CreateCharacters (enemyPositions);
 			ImmutableList<string> startingLog = ImmutableList.Create<string> ();
 #if DEBUG
 			startingLog = startingLog.Add ($"Map Hash: {hash}");
@@ -110,11 +120,11 @@ namespace ArenaGS
 			{
 				foreach (var point in target.PointsInBurst (i))
 				{
-					if (map[point].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (point))
+					if (map.IsOnMap (point) && map [point].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (point))
 						return point;
 				}
 	         }
-			throw new InvalidOperationException ("Unable to find open spot");
+			return Point.Invalid;
 		}
 
 		public void AcceptCommand (Command c, object data)

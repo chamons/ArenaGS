@@ -68,7 +68,7 @@ namespace ArenaGS.Engine
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
-		private GameState ChargeSkillForResources (GameState state, Character invoker, Skill skill)
+		GameState ChargeSkillForResources (GameState state, Character invoker, Skill skill)
 		{
 			if (skill.UsesAmmo)
 				skill = skill.WithLessAmmo ();
@@ -84,7 +84,7 @@ namespace ArenaGS.Engine
 
 		public HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target)
 		{
-			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathClear (state, target, x)));
+			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x)));
 		}
 
 		public bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target)
@@ -94,10 +94,17 @@ namespace ArenaGS.Engine
 
 			TargettingInfo targetInfo = skill.TargetInfo;
 			Point source = invoker.Position;
-			return SkillInRange (source, target, targetInfo) && IsPathClear (state, source, target);
+			if (!SkillInRange (source, target, targetInfo))
+				return false;
+
+			MapVisibility visibility = state.CalculateVisibility (invoker);
+			if (!visibility.IsVisible (target))
+				return false;
+
+			return IsPathBetweenPointsClear (state, invoker.Position, target);
 		}
 
-		static bool IsPathClear (GameState state, Point source, Point target)
+		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target)
 		{
 			if (!state.Map.IsOnMap (target))
 				return false;
