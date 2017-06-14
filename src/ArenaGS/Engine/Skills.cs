@@ -62,7 +62,7 @@ namespace ArenaGS.Engine
 							case TargettingStyle.Cone:
 							{
 								Direction direction = invoker.Position.DirectionTo (target);
-								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range));
+								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected));
 								break;
 							}
 					}
@@ -104,7 +104,7 @@ namespace ArenaGS.Engine
 		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker,  Skill skill, Point target)
 		{
 			Direction direction = invoker.Position.DirectionTo (target);
-			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range)); // TODO - .Where (x => IsPathBetweenPointsClear (state, target, x))
+			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range).Where(x => IsPathBetweenPointsClear(state, invoker.Position, x)));
 		}
 
 		public HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target)

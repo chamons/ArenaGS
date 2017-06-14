@@ -110,7 +110,7 @@ namespace ArenaGS.Views.Views
 			{
 				ConeAnimationInfo coneInfo = (ConeAnimationInfo)currentAnimation;
 				int currentRange = AnimationHelper.Frame / ConeExpandTime;
-				foreach (var point in coneInfo.Center.PointsInCone (coneInfo.Direction, currentRange)) // TODO - .Where (x => explosionInfo.PointsAffected.Contains (x))
+				foreach (var point in coneInfo.Center.PointsInCone (coneInfo.Direction, currentRange).Where(x => coneInfo.PointsAffected.Contains(x)))
 				{
 					if (CurrentVisibility.IsVisible (point))
 						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);

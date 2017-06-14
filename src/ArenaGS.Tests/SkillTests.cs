@@ -317,7 +317,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
 		}
 
 		[Test]

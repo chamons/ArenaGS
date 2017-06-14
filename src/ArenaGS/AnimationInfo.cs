@@ -65,12 +65,14 @@ namespace ArenaGS
 		public Point Center { get; }
 		public Direction Direction { get; }
 		public int Length { get; }
+		public HashSet<Point> PointsAffected { get; }
 
-		public ConeAnimationInfo (Point center, Direction direction, int length) : base (AnimationType.Cone)
+		public ConeAnimationInfo (Point center, Direction direction, int length, HashSet<Point> pointsAffected) : base (AnimationType.Cone)
 		{
 			Center = center;
 			Direction = direction;
 			Length = length;
+			PointsAffected = pointsAffected;
 		}
 	}
 
