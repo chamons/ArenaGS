@@ -38,8 +38,8 @@ namespace ArenaGS.Mac {
 		KeyEventArgs KeyArgs = new KeyEventArgs ();
 
 		public event EventHandler<PaintEventArgs> OnPaint;
-		public event EventHandler<ClickEventArgs> OnMouseDown;
-		public event EventHandler<ClickEventArgs> OnMouseUp;
+		public event EventHandler<ClickEventArgs> OnDetailPress;
+		public event EventHandler<ClickEventArgs> OnPress;
 		public event EventHandler<KeyEventArgs> OnKeyDown;
 		public event EventHandler<EventArgs> OnQuit;
 
@@ -115,18 +115,18 @@ namespace ArenaGS.Mac {
 			}
 		}
 
-		public override void MouseDown (NSEvent theEvent)
+		public override void RightMouseDown (NSEvent theEvent)
 		{
 			CGPoint p = theEvent.LocationInWindow;
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)View.Frame.Height - (int)p.Y);
-			OnMouseDown?.Invoke (this, ClickArgs);	
+			ClickArgs.Position = new SKPointI((int)p.X, (int)View.Frame.Height - (int)p.Y);
+			OnDetailPress?.Invoke(this, ClickArgs);
 		}
 
 		public override void MouseUp (NSEvent theEvent)
 		{
 			CGPoint p = theEvent.LocationInWindow;
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)View.Frame.Height - (int)p.Y);
-			OnMouseUp?.Invoke (this, ClickArgs);
+			ClickArgs.Position = new SKPointI((int)p.X, (int)View.Frame.Height - (int)p.Y);
+			OnPress?.Invoke(this, ClickArgs);
 		}
 
 		public void Invalidate ()

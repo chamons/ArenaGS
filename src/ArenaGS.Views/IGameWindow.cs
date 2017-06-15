@@ -27,8 +27,8 @@ namespace ArenaGS.Views
 		void Invalidate ();
 
 		event EventHandler<PaintEventArgs> OnPaint;
-		event EventHandler<ClickEventArgs> OnMouseDown;
-		event EventHandler<ClickEventArgs> OnMouseUp;
+		event EventHandler<ClickEventArgs> OnDetailPress;
+		event EventHandler<ClickEventArgs> OnPress;
 		event EventHandler<KeyEventArgs> OnKeyDown;
 		event EventHandler<EventArgs> OnQuit;
 	}

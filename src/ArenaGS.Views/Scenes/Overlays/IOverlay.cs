@@ -5,8 +5,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 {
 	internal interface IOverlay
 	{
-		void HandleMouseDown (SKPointI point);
-		void HandleMouseUp (SKPointI point);
+		void OnPress (SKPointI point);
 		void HandleKeyDown (string character);
 
 		void DisableOverlay (CombatView combatView);

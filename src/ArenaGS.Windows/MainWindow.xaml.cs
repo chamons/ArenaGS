@@ -16,9 +16,10 @@ namespace ArenaGS.Windows
 		KeyEventArgs KeyArgs = new KeyEventArgs ();
 
 		public event EventHandler<PaintEventArgs> OnPaint;
-		public new event EventHandler<ClickEventArgs> OnMouseDown;
-		public new event EventHandler<ClickEventArgs> OnMouseUp;
+		public event EventHandler<ClickEventArgs> OnPress;
 		public new event EventHandler<KeyEventArgs> OnKeyDown;
+		public event EventHandler<ClickEventArgs> OnDetailPress;
+
 		public event EventHandler<EventArgs> OnQuit;
 
 		public MainWindow ()
@@ -50,19 +51,25 @@ namespace ArenaGS.Windows
 
 		void OnPlatformMouseDown (object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
-			Point p = e.GetPosition (null);
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
-			OnMouseDown?.Invoke (this, ClickArgs);
+			if (e.ChangedButton == System.Windows.Input.MouseButton.Right)
+			{
+				Point p = e.GetPosition (null);
+				ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
+				OnDetailPress?.Invoke (this, ClickArgs);
+			}
 		}
 
 		void OnPlatformMouseUp (object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
-			Point p = e.GetPosition (null);
-			ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
-			OnMouseUp?.Invoke (this, ClickArgs);
+			if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+			{
+				Point p = e.GetPosition (null);
+				ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
+				OnPress?.Invoke (this, ClickArgs);
+			}
 		}
 
-		private void OnPlatformKeyDown (object sender, System.Windows.Input.KeyEventArgs e)
+		void OnPlatformKeyDown (object sender, System.Windows.Input.KeyEventArgs e)
 		{
 			string entry = e.Key.ToString ();
 			if (entry.Length > 1)
@@ -73,8 +80,7 @@ namespace ArenaGS.Windows
 			}
 		}
 
-
-		private void OnPlatformTextEnter (object sender, System.Windows.Input.TextCompositionEventArgs e)
+		void OnPlatformTextEnter (object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
 			string entry = e.TextComposition.Text;
 			if (entry.Length == 1 && char.IsLetter (entry[0]))
@@ -85,7 +91,7 @@ namespace ArenaGS.Windows
 			}
 		}
 
-		private void OnPlatformClose (object sender, EventArgs e)
+		void OnPlatformClose (object sender, EventArgs e)
 		{
 			OnQuit?.Invoke (this, e);
 		}

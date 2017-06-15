@@ -35,8 +35,8 @@ namespace ArenaGS
 		{
 			GameWindow = gameWindow;
 			GameWindow.OnPaint += OnPaint;
-			GameWindow.OnMouseDown += OnMouseDown;
-			GameWindow.OnMouseUp += OnMouseUp;
+			GameWindow.OnPress += OnPress;
+			GameWindow.OnDetailPress += OnDetailPress;
 			GameWindow.OnKeyDown += OnKeyDown;
 			GameWindow.OnQuit += OnQuit;
 		}
@@ -135,14 +135,14 @@ namespace ArenaGS
 			CurrentScene.HandleKeyDown (e.Character);
 		}
 
-		void OnMouseUp (object sender, ClickEventArgs e)
+		void OnPress (object sender, ClickEventArgs e)
 		{
-			CurrentScene.HandleMouseUp (e.Position);
+			CurrentScene.OnPress (e.Position);
 		}
 
-		void OnMouseDown (object sender, ClickEventArgs e)
+		void OnDetailPress (object sender, ClickEventArgs e)
 		{
-			CurrentScene.HandleMouseDown (e.Position);
+			CurrentScene.OnDetailPress (e.Position);
 		}
 
 		void OnPaint (object sender, PaintEventArgs e)

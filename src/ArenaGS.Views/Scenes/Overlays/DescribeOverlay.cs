@@ -66,11 +66,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 			Parent.Invalidate ();
 		}
 
-		public void HandleMouseDown (SKPointI point)
-		{
-		}
-
-		public void HandleMouseUp (SKPointI point)
+		public void OnPress (SKPointI point)
 		{
 			HitTestResults hitTest = Parent.HitTestScene (point);
 			if (hitTest != null && hitTest.View is MapView)

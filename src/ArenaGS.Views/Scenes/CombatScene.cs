@@ -55,20 +55,38 @@ namespace ArenaGS.Views.Scenes
 			Controller.Invalidate ();
 		}
 
-		public void HandleMouseDown (SKPointI point)
+		public void OnDetailPress (SKPointI point)
 		{
 			if (AnimationInProgress)
 				return;
 
-			Overlay.HandleMouseDown (point);
+			OverrideInfoTarget = null;
+			HitTestResults hitTest = HitTestScene (point);
+			if (hitTest != null)
+			{
+				if (hitTest.View is MapView)
+				{
+					OverrideInfoTarget = Controller.CurrentState.AllCharacters.FirstOrDefault (x => x.Position == (Point)hitTest.Data);
+				}
+				else if (hitTest.View is SkillBarView)
+				{
+					int skillIndex = (int)hitTest.Data;
+					if (skillIndex < Controller.CurrentState.Player.Skills.Count)
+						OverrideInfoTarget = Controller.CurrentState.Player.Skills [skillIndex];
+				}
+			}
+
+			Invalidate ();
 		}
 
-		public void HandleMouseUp (SKPointI point)
+		public void OnPress (SKPointI point)
 		{
 			if (AnimationInProgress)
 				return;
 
-			Overlay.HandleMouseUp (point);
+			OverrideInfoTarget = null;
+
+			Overlay.OnPress (point);
 		}
 
 		string EscapeString = ((char)27).ToString (); // 27 is ESC ascii code. macOS returns this
@@ -76,6 +94,8 @@ namespace ArenaGS.Views.Scenes
 		{
 			if (AnimationInProgress)
 				return;
+
+			OverrideInfoTarget = null;
 
 			if (character == EscapeString || character == "Escape")
 			{
@@ -86,11 +106,13 @@ namespace ArenaGS.Views.Scenes
 			Overlay.HandleKeyDown (character);
 		}
 
+		object OverrideInfoTarget;
+
 		public void HandlePaint (SKSurface surface)
 		{		
 			surface.Canvas.Clear (SKColors.Black);
 
-			CombatView.InfoTarget = Overlay.InfoTarget;
+			CombatView.InfoTarget = OverrideInfoTarget ?? Overlay.InfoTarget;
 			surface.Canvas.DrawSurface (CombatView.Draw (Controller.CurrentState), 0, 0);
 		}
 
