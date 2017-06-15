@@ -1,7 +1,10 @@
-﻿using ArenaGS.Utilities;
+﻿using System;
+using System.Linq;
+using ArenaGS.Utilities;
 using ArenaGS.Views.Utilities;
 using ArenaGS.Views.Views;
 using SkiaSharp;
+using ArenaGS.Model;
 
 namespace ArenaGS.Views.Scenes.Overlays
 {
@@ -27,8 +30,11 @@ namespace ArenaGS.Views.Scenes.Overlays
 		{
 		}
 
+		SKColor CursorColor = SKColors.Yellow.WithAlpha (100);
+
 		public void Draw (MapView map)
 		{
+			map.DrawOverlaySquare (CurrentTargettedPosition, CursorColor);
 		}
 
 		public void HandleKeyDown (string character)
@@ -69,6 +75,17 @@ namespace ArenaGS.Views.Scenes.Overlays
 			HitTestResults hitTest = Parent.HitTestScene (point);
 			if (hitTest != null && hitTest.View is MapView)
 				MoveTo ((Point)hitTest.Data);
+		}
+
+		public object InfoTarget
+		{
+			get
+			{
+				Character targettedCharacter = Controller.CurrentState.AllCharacters.FirstOrDefault (x => x.Position == CurrentTargettedPosition);
+				if (targettedCharacter != null)
+					return targettedCharacter;
+				return Controller.CurrentState.Player;
+			}
 		}
 	}
 }

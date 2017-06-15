@@ -45,6 +45,7 @@
     <Compile Include="Scenes\IScene.cs" />
     <Compile Include="Utilities\KeyboardBindings.cs" />
     <Compile Include="Views\CombatView.cs" />
+    <Compile Include="Views\InfoView.cs" />
     <Compile Include="Views\LogView.cs" />
     <Compile Include="Views\SkillBarView.cs" />
     <Compile Include="Views\View.cs" />
