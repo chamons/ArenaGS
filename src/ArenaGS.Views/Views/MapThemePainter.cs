@@ -52,7 +52,7 @@ namespace ArenaGS.Views.Views
 			switch (theme)
 			{
 				case MapTheme.Beach:
-					return Resources.Get (ShallowWater [TilesVariant.Get (map, currentModelPosition, 2)]);
+					return Resources.Get ($"mangrove{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
 				case MapTheme.Dungeon:
 					return Resources.Get ($"crumbled_column_{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1, rareAbove: 1)}.png");
 				case MapTheme.FancyInside:
@@ -66,8 +66,6 @@ namespace ArenaGS.Views.Views
 			}
 		}
 
-		readonly string [] ShallowWater = { "shallow_water.png", "shallow_water2.png" };
-
 		readonly string [] Statues = { "statue_angel.png", "statue_archer.png", "statue_archer.png", "statue_sword.png", "statue_twins.png" }; 
 		readonly string [] Trees = { "tree1_lightred.png", "tree1_red.png", "tree1_yellow.png", "tree2_lightred.png", "tree2_red.png", "tree2_yellow.png" };
 		readonly string [] OtherStatues = { "golden_statue_1.png", "golden_statue_2.png", "statue_iron_golem.png" };
@@ -77,7 +75,7 @@ namespace ArenaGS.Views.Views
 			switch (theme)
 			{
 				case MapTheme.Beach:
-					return Resources.Get ($"shoals_deep_water{TilesVariant.Get (map, currentModelPosition, 6)}.png");
+					return Resources.Get ($"mangrove{TilesVariant.Get (map, currentModelPosition, 3, startAt: 1)}.png");
 				case MapTheme.Dungeon:
 					return Resources.Get (Statues [TilesVariant.Get (map, currentModelPosition, 5)]);
 				case MapTheme.FancyInside:
