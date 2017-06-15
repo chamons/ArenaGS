@@ -15,6 +15,7 @@ namespace ArenaGS.Tests
 	class SkillTests
 	{
 		ISkills Skills;
+		IPhysics Physics;
 		IGenerator Generator;
 		ITime Time;
 		Skill TestSkill;
@@ -24,6 +25,7 @@ namespace ArenaGS.Tests
 		{
 			TestDependencies.SetupTestDependencies ();
 			Skills = Dependencies.Get<ISkills> ();
+			Physics = Dependencies.Get<IPhysics> ();
 			Generator = Dependencies.Get<IGenerator> ();
 			Time = Dependencies.Get<ITime> ();
 			TestSkill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
@@ -216,11 +218,27 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void CooledBasedAmmoSkill_UnderCooldownButHasAmmo_IsUsable()
+		public void CooledBasedAmmoSkill_UnderCooldownButHasAmmo_IsUsable ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (1, 2, 2, 3, true));
 			Assert.IsTrue (state.Player.Skills [0].ReadyForUse);
+		}
 
+		[Test]
+		public void CooledBasedAmmoSkill_WhenSkillUserIsRemoved_DoesNothing ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2));
+			state = state.WithReplaceEnemy (state.Enemies [0].WithSkills (skill.Yield ().ToImmutableList ()));
+
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], state.Player.Position);
+			state = state.WithEnemies (ImmutableList<Character>.Empty);
+
+			for (int i = 0; i < 5; ++i)
+			{
+				state = Physics.WaitPlayer (state);
+				state = Time.ProcessUntilPlayerReady (state);
+			}
 		}
 	}
 
