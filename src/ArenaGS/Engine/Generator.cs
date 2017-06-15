@@ -63,10 +63,7 @@ namespace ArenaGS.Engine
 
 		public Character CreatePlayer (Point position)
 		{
-			return new Character (Character.PlayerID, position, 100, new Skill [] {
-				CreateSkill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 3)),
-				CreateSkill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2))
-			}.ToImmutableList ());
+			return new Character (Character.PlayerID, position, 100, ImmutableList<Skill>.Empty);
 		}
 
 		public ImmutableList<Character> CreateCharacters (IEnumerable<Point> positions)

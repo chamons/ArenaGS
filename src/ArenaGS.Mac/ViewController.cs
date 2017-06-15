@@ -85,17 +85,31 @@ namespace ArenaGS.Mac {
 			switch (theEvent.KeyCode)
 			{
 				case (ushort)NSKey.UpArrow:
-				case (ushort)NSKey.Keypad8:
 					return "Up";
 				case (ushort)NSKey.DownArrow:
-				case (ushort)NSKey.Keypad2:
 					return "Down";
 				case (ushort)NSKey.LeftArrow:
-				case (ushort)NSKey.Keypad4:
 					return "Left";
 				case (ushort)NSKey.RightArrow:
-				case (ushort)NSKey.Keypad6:
 					return "Right";
+				case (ushort)NSKey.Keypad1:
+					return "NumPad1";
+				case (ushort)NSKey.Keypad2:
+					return "NumPad2";
+				case (ushort)NSKey.Keypad3:
+					return "NumPad3";
+				case (ushort)NSKey.Keypad4:
+					return "NumPad4";
+				case (ushort)NSKey.Keypad5:
+					return "NumPad5";
+				case (ushort)NSKey.Keypad6:
+					return "NumPad6";
+				case (ushort)NSKey.Keypad7:
+					return "NumPad7";
+				case (ushort)NSKey.Keypad8:
+					return "NumPad8";
+				case (ushort)NSKey.Keypad9:
+					return "NumPad9";
 				default:
 					return theEvent.Characters;
 			}

@@ -13,7 +13,7 @@ namespace ArenaGS.Engine
 	{
 		GameState Invoke (GameState state, Character invoker, Skill skill, Point target);
 		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
-		HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target);
+		HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target);
 	}
 
 	public class Skills : ISkills
@@ -45,13 +45,27 @@ namespace ArenaGS.Engine
 			{
 				case Effect.Damage:
 				{
-					List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
-					Animation.Request (state, new ProjectileAnimationInfo (AnimationType.Projectile, path));
+					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
 
-					HashSet<Point> areaAffected = UnblockedPointsInBurst (state, skill, target);
+					switch (skill.TargetInfo.TargettingStyle)
+					{
+							case TargettingStyle.Point:
+							{
+								List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
+								Animation.Request (state, new ProjectileAnimationInfo (path));
 
-					if (skill.TargetInfo.Area > 1)
-						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected));
+								if (skill.TargetInfo.Area > 1)
+									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected));
+
+								break;
+							}
+							case TargettingStyle.Cone:
+							{
+								Direction direction = invoker.Position.DirectionTo (target);
+								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected));
+								break;
+							}
+					}
 
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
@@ -87,21 +101,64 @@ namespace ArenaGS.Engine
 			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x)));
 		}
 
+		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker,  Skill skill, Point target)
+		{
+			Direction direction = invoker.Position.DirectionTo (target);
+			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range).Where(x => IsPathBetweenPointsClear(state, invoker.Position, x)));
+		}
+
+		public HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target)
+		{
+			switch (skill.TargetInfo.TargettingStyle)
+			{
+				case TargettingStyle.Point:
+					return UnblockedPointsInBurst (state, skill, target);
+				case TargettingStyle.Cone:
+					return UnblockedPointsInCone (state, invoker, skill, target);
+				default:
+					return new HashSet<Point> ();
+			}
+		}
+
 		public bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target)
 		{
-			if (!state.Map.IsOnMap (target))
-				return false;
+			switch (skill.TargetInfo.TargettingStyle)
+			{
+				case TargettingStyle.Point:
+				{
+					if (!state.Map.IsOnMap (target))
+						return false;
 
-			TargettingInfo targetInfo = skill.TargetInfo;
-			Point source = invoker.Position;
-			if (!SkillInRange (source, target, targetInfo))
-				return false;
+					TargettingInfo targetInfo = skill.TargetInfo;
+					Point source = invoker.Position;
+					if (!SkillInRange (source, target, targetInfo))
+						return false;
 
-			MapVisibility visibility = state.CalculateVisibility (invoker);
-			if (!visibility.IsVisible (target))
-				return false;
+					MapVisibility visibility = state.CalculateVisibility (invoker);
+					if (!visibility.IsVisible (target))
+						return false;
 
-			return IsPathBetweenPointsClear (state, invoker.Position, target);
+					return IsPathBetweenPointsClear (state, invoker.Position, target);
+				}
+				case TargettingStyle.Cone:
+				{
+					if (!state.Map.IsOnMap (target))
+						return false;
+
+					if (!state.Map [target].Walkable)
+						return false;
+
+					int distance = invoker.Position.LatticeDistance (target);
+					if (distance == 1)
+					{
+						Direction direction = invoker.Position.DirectionTo (target);
+						return direction == Direction.North || direction == Direction.South || direction == Direction.West || direction == Direction.East;
+					}
+					return false;
+				}
+				default:
+					return true;		
+			}
 		}
 
 		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target)

@@ -100,5 +100,16 @@ namespace ArenaGS.Tests.Utilities
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (generator);
 			return state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithResources (resources).Yield ().ToImmutableList ()));
 		}
+
+		internal static GameState AddTestConeSkill (IGenerator generator, GameState state)
+		{
+			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), SkillResources.None);
+			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
+		}
+
+		internal static GameState CreateBoxRoomStateWithCone (IGenerator generator)
+		{
+			return AddTestConeSkill (generator, CreateBoxRoomState (generator));
+		}
 	}
 }

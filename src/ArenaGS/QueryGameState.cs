@@ -33,7 +33,7 @@ namespace ArenaGS
 
 		public HashSet <Point> AffectedPointsForSkill (GameState state, Skill skill, Point target)
 		{
-			return Skills.UnblockedPointsInBurst (state, skill, target);
+			return Skills.AffectedPointsForSkill (state, state.Player, skill, target);
 		}
 	}
 }
