@@ -1,13 +1,16 @@
-﻿using ArenaGS.Engine;
+﻿using System;
+using ArenaGS.Engine;
 using ArenaGS.Utilities;
 
 using ProtoBuf;
+using System.Collections.Immutable;
 
 namespace ArenaGS.Model
 {
 	[ProtoContract]
 	[ProtoInclude (500, typeof (SpawnerScript))]
 	[ProtoInclude (500, typeof (ReduceCooldownScript))]
+	[ProtoInclude (500, typeof (AreaDamageScript))]
 	public abstract class MapScript : ITimedElement
 	{
 		[ProtoMember (1)]
@@ -50,7 +53,7 @@ namespace ArenaGS.Model
 		[ProtoMember (7)]
 		public int SpawnCount { get; private set; }
 
-		public SpawnerScript (int id, Point position, int ct, int spawnCount, int cooldown) : base (id, ct)
+		public SpawnerScript (int id, int ct, Point position, int spawnCount, int cooldown) : base (id, ct)
 		{
 			Position = position;
 			Cooldown = cooldown;
@@ -117,6 +120,38 @@ namespace ArenaGS.Model
 		public override MapScript WithCT (int ct)
 		{
 			return new ReduceCooldownScript (this) { CT = ct };
+		}
+
+		public override MapScript WithAdditionalCT (int additionalCT)
+		{
+			return WithCT (CT + additionalCT);
+		}
+	}
+
+	// Don't stand in fire...
+	public sealed class AreaDamageScript : MapScript
+	{
+		[ProtoMember (3)]
+		public int Damage { get; private set; } // TODO - https://github.com/chamons/ArenaGS/issues/79
+
+		[ProtoMember (4)]
+		public ImmutableHashSet <Point> Area { get; private set; }
+
+		public AreaDamageScript (int id, int ct, int damage, ImmutableHashSet<Point> area) : base (id, ct)
+		{
+			Damage = damage;
+			Area = area;
+		}
+
+		AreaDamageScript (AreaDamageScript script) : base (script)
+		{
+			Damage = script.Damage;
+			Area = script.Area;
+		}
+
+		public override MapScript WithCT (int ct)
+		{
+			return new AreaDamageScript (this) { CT = ct };
 		}
 
 		public override MapScript WithAdditionalCT (int additionalCT)

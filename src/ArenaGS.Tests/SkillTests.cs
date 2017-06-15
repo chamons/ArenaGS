@@ -245,41 +245,24 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	class SkillTestsWithStubbedPhysics
 	{
-		public class TestPhysics : IPhysics
-		{
-			public GameState MovePlayer (GameState state, Direction direction) => throw new NotImplementedException ();
-			public GameState MoveEnemy (GameState state, Character enemy, Direction direction) => throw new NotImplementedException ();
-			public GameState WaitEnemy (GameState state, Character enemy) => throw new NotImplementedException ();
-			public bool CouldCharacterWalk (GameState state, Character actor, Point newPosition) => throw new NotImplementedException ();
-
-			public GameState Wait (GameState state, Character c) => state;
-			public GameState WaitPlayer (GameState state) => state;
-
-			public List<Tuple<Character, int>> CharactersDamaged = new List<Tuple<Character, int>> ();
-			public GameState Damage (GameState state, Character target, int amount)
-			{
-				CharactersDamaged.Add (new Tuple<Character, int> (target, amount));
-				return state;
-			}
-		}
-
-		ISkills Skills;
-		TestPhysics Physics;
 		IGenerator Generator;
-		Skill TestSkill;
+		ISkills Skills;
+		ITime Time;
+		
+		TestPhysics Physics;
 
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
-			Dependencies.Unregister<IPhysics> ();
 
+			Dependencies.Unregister<IPhysics> ();
 			Physics = new TestPhysics ();
 			Dependencies.RegisterInstance<IPhysics> (Physics);
 
+			Generator = Dependencies.Get<IGenerator> ();
 			Skills = Dependencies.Get<ISkills> ();
-			Generator = Dependencies.Get<IGenerator>();
-			TestSkill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			Time = Dependencies.Get<ITime> ();
 		}
 
 		[Test]
@@ -302,7 +285,7 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
+			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
@@ -310,7 +293,7 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 
-			state = Skills.Invoke (state, state.Player, state.Player.Skills[0], new Point (2, 2));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
 			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
 		}
 
@@ -318,13 +301,13 @@ namespace ArenaGS.Tests
 		public void AOESkills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			for (int i = 1 ; i <= 5; ++i)
+			for (int i = 1; i <= 5; ++i)
 				state.Map.Set (new Point (2, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
 
 			// Only player should be damaged, not enemy at 3,3
 			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
+			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
@@ -350,6 +333,22 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
 			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
+		}
+
+		[Test]
+		public void DelayedDamage_DamagesAfterCT ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill delayedDamageSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None);
+			state = state.WithPlayer (state.Player.WithSkills (delayedDamageSkill.Yield ().ToImmutableList ()));
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			state = state.WithPlayer (state.Player.WithCT (-300));
+			state = Time.ProcessUntilPlayerReady (state);
+
+			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (new Point (3, 3), Physics.CharactersDamaged[0].Item1.Position);
 		}
 	}
 }

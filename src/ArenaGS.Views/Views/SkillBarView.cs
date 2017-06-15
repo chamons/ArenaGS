@@ -28,6 +28,8 @@ namespace ArenaGS.Views.Views
 					return "grenade.png";
 				case "Dragon's Breath":
 					return "fire-breath.png";
+				case "Delayed Blast":
+					return "cannister.png";
 				default:
 					return "cog.png";
 			}			

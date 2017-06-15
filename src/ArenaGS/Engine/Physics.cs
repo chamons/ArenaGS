@@ -12,6 +12,7 @@ namespace ArenaGS.Engine
 		GameState WaitPlayer (GameState state);
 		GameState MoveEnemy (GameState state, Character enemy, Direction direction);
 		GameState WaitEnemy (GameState state, Character enemy);
+		// TODO - https://github.com/chamons/ArenaGS/issues/79
 		GameState Damage (GameState state, Character target, int amount);
 		GameState Wait (GameState state, Character c);
 
@@ -92,6 +93,7 @@ namespace ArenaGS.Engine
 			return c.WithCT (Time.ChargeTime (c, TimeConstants.CTPerBasicAction));
 		}
 
+		// TODO - https://github.com/chamons/ArenaGS/issues/79
 		public GameState Damage (GameState state, Character target, int amount)
 		{
 			if (target.IsPlayer)

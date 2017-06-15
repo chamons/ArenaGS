@@ -8,7 +8,8 @@ namespace ArenaGS.Model
 	public enum Effect
 	{
 		None,
-		Damage
+		Damage,
+		DelayedDamage
 	}
 
 	public enum TargettingStyle

@@ -2,6 +2,7 @@
 
 using ArenaGS.Model;
 using ArenaGS.Platform;
+using ArenaGS.Utilities;
 
 namespace ArenaGS.Engine.Behavior
 {
@@ -13,12 +14,17 @@ namespace ArenaGS.Engine.Behavior
 	public class ScriptBehavior : IScriptBehavior
 	{
 		ITime Time;
+		IPhysics Physics;
+		IAnimationRequest Animation;
+
 		IGenerator Generator;
 
 		public ScriptBehavior ()
 		{
 			Time = Dependencies.Get<ITime> ();
+			Physics = Dependencies.Get<IPhysics> ();
 			Generator = Dependencies.Get<IGenerator>();
+			Animation = Dependencies.Get<IAnimationRequest> ();
 		}
 
 		public GameState Act (GameState state, MapScript script)
@@ -33,7 +39,12 @@ namespace ArenaGS.Engine.Behavior
 				state = HandleReduceCDScript (state, reduceCDScript);
 				script = state.UpdateScriptReferenceIfExists (script);
 			}
-			
+			else if (script is AreaDamageScript damageScript)
+			{
+				state = HandleDamageScript (state, damageScript);
+				script = state.UpdateScriptReferenceIfExists (script);
+			}
+
 			if (script != null)
 				state = state.WithReplaceScript (script.WithCT (Time.ChargeTime (script, TimeConstants.CTPerBasicAction)));
 			return state;
@@ -69,7 +80,7 @@ namespace ArenaGS.Engine.Behavior
 
 			if (!skill.UnderCooldown)
 			{
-				state = state.WithScripts (state.Scripts.Remove (script));
+				state = state.WithRemovedScript (script);
 				if (skill.UsesAmmo && skill.Resources.RechargedAmmoOnCooldown && skill.Resources.CurrentAmmo < skill.Resources.MaxAmmo)
 				{
 					state = state.WithReplaceCharacter (character.WithReplaceSkill (skill.WithIncrementedAmmo ()));
@@ -80,5 +91,17 @@ namespace ArenaGS.Engine.Behavior
 
 			return state.WithReplaceCharacter (character.WithReplaceSkill (skill));
 		}
+
+		GameState HandleDamageScript (GameState state, AreaDamageScript script)
+		{
+			Animation.Request (state, new SpecificAreaExplosionAnimationInfo (script.Area));
+
+			foreach (Character damagedCharacter in state.AllCharacters.Where (x => script.Area.Contains (x.Position)))
+				state = Physics.Damage (state, damagedCharacter, script.Damage);
+
+			state = state.WithRemovedScript (script);
+			return state;
+		}
+
 	}
 }

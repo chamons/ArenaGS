@@ -15,6 +15,8 @@ namespace ArenaGS.Views.Views
 		SKBitmap EnemyBitmap;
 		SKBitmap ProjectileBitmap;
 		SKBitmap ExplosionBitmap;
+		SKColor DarkTile = SKColors.Black.WithAlpha (196);
+		SKColor DelayedExplosionTile = SKColors.DarkRed.WithAlpha (196);
 
 		IScene Parent;
 		AnimationHelper AnimationHelper = new AnimationHelper ();
@@ -54,23 +56,23 @@ namespace ArenaGS.Views.Views
 						Painter.DrawMapTile (this, CurrentMap.Theme, currentUIPosition, currentModelPosition, CurrentMap);
 
 						if (!CurrentVisibility.IsVisible (currentModelPosition))
-							DrawOverlaySquare (currentModelPosition, SKColors.Black.WithAlpha (196));
+							DrawOverlaySquare (currentModelPosition, DarkTile);
 					}
 				}
 			}
 
 			foreach (var enemy in GameState.Enemies.Where (x => x.ID != characterToAnimate?.Item1 && CurrentVisibility.IsVisible (x.Position)))
-			{
 				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
-			}
 
 			if (characterToAnimate != null)
 				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), EnemyBitmap);
 
 			DrawTile (TranslateModelToUIPosition (GameState.Player.Position), PlayerBitmap);
+			DrawDelayedDamageAreas ();
 
 			DrawProjectile ();
 			DrawExplosion ();
+			DrawSpecificExplosion ();
 			DrawCones ();
 
 			Parent.Overlay.Draw (this);
@@ -104,6 +106,19 @@ namespace ArenaGS.Views.Views
 			}
 		}
 
+		void DrawSpecificExplosion ()
+		{
+			if (currentAnimation != null && currentAnimation.Type == AnimationType.SpecificAreaExplosion)
+			{
+				SpecificAreaExplosionAnimationInfo explosionInfo = (SpecificAreaExplosionAnimationInfo)currentAnimation;
+				foreach (var point in explosionInfo.PointsAffected)
+				{
+					if (CurrentVisibility.IsVisible (point))
+						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
+				}
+			}
+		}
+
 		void DrawCones ()
 		{
 			if (currentAnimation != null && currentAnimation.Type == AnimationType.Cone)
@@ -116,6 +131,18 @@ namespace ArenaGS.Views.Views
 						DrawTile (TranslateModelToUIPosition (point), ExplosionBitmap);
 				}
 			}
+		}
+
+		void DrawDelayedDamageAreas ()
+		{
+			foreach (AreaDamageScript damageScript in GameState.Scripts.OfType<AreaDamageScript> ())
+			{
+				foreach (Point point in damageScript.Area)
+				{
+					if (CurrentVisibility.IsVisible (point))
+						DrawOverlaySquare (point, DelayedExplosionTile);
+				}
+			}			
 		}
 
 		Tuple<int, SKPoint> CharacterToAnimate ()
@@ -254,6 +281,8 @@ namespace ArenaGS.Views.Views
 				case AnimationType.Cone:
 					ConeAnimationInfo coneInfo = (ConeAnimationInfo)info;
 					return (ConeExpandTime * coneInfo.Length);
+				case AnimationType.SpecificAreaExplosion:
+					return ProjectileTravelTime;
 				default:
 					throw new NotImplementedException ();
 			}

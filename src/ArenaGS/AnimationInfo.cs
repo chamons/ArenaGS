@@ -11,6 +11,7 @@ namespace ArenaGS
 		Movement,
 		Projectile,
 		Explosion,
+		SpecificAreaExplosion,
 		Cone
 	}
 
@@ -50,9 +51,9 @@ namespace ArenaGS
 	{
 		public Point Center { get; }
 		public int Size { get; }
-		public HashSet <Point> PointsAffected { get; }
+		public ImmutableHashSet<Point> PointsAffected { get; }
 
-		public ExplosionAnimationInfo (Point center, int size, HashSet<Point> pointsAffected) : base (AnimationType.Explosion)
+		public ExplosionAnimationInfo (Point center, int size, ImmutableHashSet<Point> pointsAffected) : base (AnimationType.Explosion)
 		{
 			Center = center;
 			Size = size;
@@ -65,13 +66,23 @@ namespace ArenaGS
 		public Point Center { get; }
 		public Direction Direction { get; }
 		public int Length { get; }
-		public HashSet<Point> PointsAffected { get; }
+		public ImmutableHashSet <Point> PointsAffected { get; }
 
-		public ConeAnimationInfo (Point center, Direction direction, int length, HashSet<Point> pointsAffected) : base (AnimationType.Cone)
+		public ConeAnimationInfo (Point center, Direction direction, int length, ImmutableHashSet<Point> pointsAffected) : base (AnimationType.Cone)
 		{
 			Center = center;
 			Direction = direction;
 			Length = length;
+			PointsAffected = pointsAffected;
+		}
+	}
+
+	public class SpecificAreaExplosionAnimationInfo : AnimationInfo
+	{
+		public ImmutableHashSet<Point> PointsAffected { get; }
+
+		public SpecificAreaExplosionAnimationInfo (ImmutableHashSet<Point> pointsAffected) : base (AnimationType.SpecificAreaExplosion)
+		{
 			PointsAffected = pointsAffected;
 		}
 	}
