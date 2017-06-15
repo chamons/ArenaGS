@@ -59,7 +59,11 @@ namespace ArenaGS.Engine.Behavior
 
 		GameState HandleReduceCDScript (GameState state, ReduceCooldownScript script)
 		{
-			Character character = state.AllCharacters.First (x => x.ID == script.CharacterID);
+			Character character = state.AllCharacters.FirstOrDefault (x => x.ID == script.CharacterID);
+			// If our target is no longer in existance, just remove ourself
+			if (character == null)
+				return state.WithScripts (state.Scripts.Remove (script));
+
 			Skill skill = character.Skills.First (x => x.ID == script.SkillID);
 			skill = skill.WithCooldownReduced ();
 
