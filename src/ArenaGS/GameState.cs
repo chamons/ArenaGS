@@ -89,6 +89,16 @@ namespace ArenaGS
 			return new GameState (this) { Enemies = enemies };
 		}
 
+		internal GameState WithAddedScript (MapScript newScript)
+		{
+			return new GameState (this) { Scripts = Scripts.Add (newScript) };
+		}
+
+		internal GameState WithRemovedScript (MapScript removedScript)
+		{
+			return new GameState (this) { Scripts = Scripts.Remove (removedScript) };
+		}
+
 		internal GameState WithScripts (ImmutableList<MapScript> scripts)
 		{
 			return new GameState (this) { Scripts = scripts };

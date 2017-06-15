@@ -32,6 +32,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 				case ".":
 				case "OemPeriod":
 				case "Decimal":
+				case "NumPad5":
 					Engine.AcceptCommand (Command.Wait, null);
 					return;
 				case "S":

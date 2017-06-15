@@ -16,6 +16,7 @@ namespace ArenaGS.Engine
 
 		SpawnerScript CreateSpawner (Point position);
 		ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill);
+		AreaDamageScript CreateDamageScript (int ct, int damage, ImmutableHashSet<Point> affectedPoints);
 
 		Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources);
 	}
@@ -73,7 +74,7 @@ namespace ArenaGS.Engine
 
 		public SpawnerScript CreateSpawner (Point position)
 		{
-			return new SpawnerScript (NextScriptID (), position, 100, 5, 3);
+			return new SpawnerScript (NextScriptID (), 100, position, 5, 3);
 		}
 
 		public Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources)
@@ -84,6 +85,11 @@ namespace ArenaGS.Engine
 		public ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill)
 		{
 			return new ReduceCooldownScript (NextScriptID (), ct, character.ID, skill.ID);
+		}
+
+		public AreaDamageScript CreateDamageScript (int ct, int damage, ImmutableHashSet<Point> affectedPoints)
+		{
+			return new AreaDamageScript (NextScriptID (), ct, damage, affectedPoints);
 		}
 	}
 }

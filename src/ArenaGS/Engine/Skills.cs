@@ -1,11 +1,12 @@
 ﻿using System;
-
-using ArenaGS.Model;
-using ArenaGS.Utilities;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+
 using ArenaGS.Engine.Utilities;
+using ArenaGS.Model;
 using ArenaGS.Platform;
+using ArenaGS.Utilities;
 
 namespace ArenaGS.Engine
 {
@@ -21,7 +22,6 @@ namespace ArenaGS.Engine
 		IPhysics Physics;
 		IAnimationRequest Animation;
 		IGenerator Generator;
-
 	
 		public Skills ()
 		{
@@ -55,14 +55,14 @@ namespace ArenaGS.Engine
 								Animation.Request (state, new ProjectileAnimationInfo (path));
 
 								if (skill.TargetInfo.Area > 1)
-									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected));
+									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected.ToImmutableHashSet ()));
 
 								break;
 							}
 							case TargettingStyle.Cone:
 							{
 								Direction direction = invoker.Position.DirectionTo (target);
-								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected));
+								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected.ToImmutableHashSet ()));
 								break;
 							}
 					}
@@ -70,13 +70,19 @@ namespace ArenaGS.Engine
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Physics.Damage (state, enemy, 1);
 
-					invoker = state.UpdateCharacterReference (invoker);
+					break;
+				}
+				case Effect.DelayedDamage:
+				{
+					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
+					state = state.WithAddedScript (Generator.CreateDamageScript (-100, 1, areaAffected.ToImmutableHashSet ()));
 					break;
 				}
 				case Effect.None:
 					break;
 			}
 
+			invoker = state.UpdateCharacterReference (invoker);
 			state = ChargeSkillForResources (state, invoker, skill);
 
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
@@ -90,7 +96,7 @@ namespace ArenaGS.Engine
 			if (skill.UsesCooldown)
 			{
 				skill = skill.WithCooldownSet ();
-				state = state.WithScripts (state.Scripts.Add (Generator.CreateCooldownScript (1, invoker, skill)));
+				state = state.WithAddedScript (Generator.CreateCooldownScript (1, invoker, skill));
 			}
 
 			return state.WithReplaceCharacter (invoker.WithReplaceSkill (skill));

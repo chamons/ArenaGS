@@ -53,7 +53,7 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 
-			SpawnerScript script = new SpawnerScript (1, new Point (2, 3), 100, 2, 2);
+			SpawnerScript script = new SpawnerScript (1, 100, new Point (2, 3), 2, 2);
 			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
 
 			// First enemy spawned Cooldown (2) turns away
@@ -121,6 +121,38 @@ namespace ArenaGS.Tests
 
 			ScriptBehavior behavior = new ScriptBehavior ();
 			behavior.Act (state, script);
+		}
+	}
+
+	[TestFixture]
+	public class ScriptBehaviorTestsWithStubbedPhysics
+	{
+		IGenerator Generator;
+		TestPhysics Physics;
+
+		[SetUp]
+		public void Setup ()
+		{
+			TestDependencies.SetupTestDependencies ();
+			Generator = Dependencies.Get<IGenerator> ();
+
+			Dependencies.Unregister<IPhysics> ();
+			Physics = new TestPhysics ();
+			Dependencies.RegisterInstance<IPhysics> (Physics);
+		}
+
+		[Test]
+		public void AreaDamageScript_DamagesJustCharactersInArea ()
+		{
+			GameState state = TestScenes.CreateTinyRoomState (Generator);
+			AreaDamageScript damageScript = new AreaDamageScript (1, 100, 1, new Point [] { new  Point (1, 1) }.ToImmutableHashSet ());
+			state = state.WithScripts (damageScript.Yield ().ToImmutableList <MapScript> ());
+
+			ScriptBehavior behavior = new ScriptBehavior ();
+
+			state = behavior.Act (state, damageScript);
+			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
+			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
 		}
 	}
 }
