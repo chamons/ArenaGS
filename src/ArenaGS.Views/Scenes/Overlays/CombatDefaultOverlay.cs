@@ -176,5 +176,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 		public void Draw (MapView map)
 		{
 		}
+
+		public object InfoTarget => Controller.CurrentState.Player;
 	}
 }

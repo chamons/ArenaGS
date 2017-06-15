@@ -90,6 +90,7 @@ namespace ArenaGS.Views.Scenes
 		{		
 			surface.Canvas.Clear (SKColors.Black);
 
+			CombatView.InfoTarget = Overlay.InfoTarget;
 			surface.Canvas.DrawSurface (CombatView.Draw (Controller.CurrentState), 0, 0);
 		}
 

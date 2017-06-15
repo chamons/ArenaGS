@@ -17,15 +17,22 @@ namespace ArenaGS.Views.Views
 		readonly Point SkillBarOffset = new Point (2, 580);
 		readonly Size SkillBarSize = new Size (550, 40);
 
+		readonly Point InfoOffset = new Point (560, 4);
+		readonly Size InfoSize = new Size (200, 485 - 5);
+
 		MapView Map;
 		LogView Log;
 		SkillBarView SkillBar;
+		InfoView Info;
+
+		public object InfoTarget { get; set; }
 
 		public CombatView (IScene parent, Point position, Size size) : base (position, size)
 		{
 			Map = new MapView (parent, MapOffset, MapSize);
 			Log = new LogView (LogOffset, LogSize);
 			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);
+			Info = new InfoView (InfoOffset, InfoSize);
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -35,6 +42,9 @@ namespace ArenaGS.Views.Views
 			Canvas.DrawSurface (Map.Draw (state), MapOffset.X, MapOffset.Y);
 			Canvas.DrawSurface (Log.Draw (state), LogOffset.X, LogOffset.Y);
 			Canvas.DrawSurface (SkillBar.Draw (state), SkillBarOffset.X, SkillBarOffset.Y);
+
+			Info.Target = InfoTarget;
+			Canvas.DrawSurface (Info.Draw (state), InfoOffset.X, InfoOffset.Y);
 
 			return Surface;
 		}

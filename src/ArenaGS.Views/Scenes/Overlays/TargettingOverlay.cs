@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using ArenaGS.Model;
 using ArenaGS.Utilities;
@@ -31,6 +32,8 @@ namespace ArenaGS.Views.Scenes.Overlays
 			CurrentTargettedPosition = startingPosition;
 			OnTargetSelected = onTargetSelected;
 		}
+
+		public object InfoTarget => Skill;
 
 		public void ConfigureMap (MapView map)
 		{

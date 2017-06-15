@@ -13,5 +13,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		void ConfigureMap (MapView map);
 		void Draw (MapView map);
+
+		object InfoTarget { get; }
 	}
 }
