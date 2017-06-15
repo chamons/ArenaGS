@@ -16,6 +16,7 @@ namespace ArenaGS.Model
 	{
 		None,
 		Point,
+		Line,
 		Cone
 	}
 

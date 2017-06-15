@@ -112,6 +112,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 					{
 						case TargettingStyle.Point:
 						case TargettingStyle.Cone:
+						case TargettingStyle.Line:
 							TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, state.Player.Position, p =>
 							{
 								Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });

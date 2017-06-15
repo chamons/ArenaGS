@@ -65,6 +65,11 @@ namespace ArenaGS.Engine
 								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected.ToImmutableHashSet ()));
 								break;
 							}
+							case TargettingStyle.Line:
+							{
+								Animation.Request(state, new SpecificAreaExplosionAnimationInfo (areaAffected.ToImmutableHashSet ()));
+								break;
+							}
 					}
 
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
@@ -107,11 +112,22 @@ namespace ArenaGS.Engine
 			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x)));
 		}
 
-		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker,  Skill skill, Point target)
+		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker, Skill skill, Point target)
 		{
 			Direction direction = invoker.Position.DirectionTo (target);
 			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range).Where(x => IsPathBetweenPointsClear(state, invoker.Position, x)));
 		}
+
+		public HashSet<Point> UnblockedPointsInLine (GameState state, Character invoker, Skill skill, Point target)
+		{
+			Direction direction = invoker.Position.DirectionTo (target);
+			Point lineTarget = invoker.Position;
+			for (int i = 0; i < skill.TargetInfo.Range; ++i)
+				lineTarget = lineTarget.InDirection (direction);
+
+			return new HashSet<Point> (BresenhamLine.PointsOnLine (invoker.Position, lineTarget).Where (x => IsPathBetweenPointsClear (state, invoker.Position, x)));
+		}
+
 
 		public HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target)
 		{
@@ -121,6 +137,8 @@ namespace ArenaGS.Engine
 					return UnblockedPointsInBurst (state, skill, target);
 				case TargettingStyle.Cone:
 					return UnblockedPointsInCone (state, invoker, skill, target);
+				case TargettingStyle.Line:
+					return UnblockedPointsInLine (state, invoker, skill, target);
 				default:
 					return new HashSet<Point> ();
 			}
