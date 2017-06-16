@@ -292,9 +292,11 @@ namespace ArenaGS.Tests
 		public void AOESkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			var enemies = Generator.CreateCharacters (new Point [] { new Point (2, 2), new Point (3, 2)});
+			state = state.WithEnemies (enemies.ToImmutableList ());
 
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
-			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
+			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -318,7 +320,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -343,7 +345,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point(2, 1));
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
 		}
 
 		[Test]

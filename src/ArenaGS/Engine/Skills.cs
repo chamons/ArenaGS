@@ -109,13 +109,13 @@ namespace ArenaGS.Engine
 
 		public HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target)
 		{
-			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x)));
+			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
 		}
 
 		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker, Skill skill, Point target)
 		{
 			Direction direction = invoker.Position.DirectionTo (target);
-			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range).Where(x => IsPathBetweenPointsClear(state, invoker.Position, x)));
+			return new HashSet<Point> (invoker.Position.PointsInCone (direction, skill.TargetInfo.Range).Where(x => IsPathBetweenPointsClear(state, invoker.Position, x, true)));
 		}
 
 		public HashSet<Point> UnblockedPointsInLine (GameState state, Character invoker, Skill skill, Point target)
@@ -125,7 +125,7 @@ namespace ArenaGS.Engine
 			for (int i = 0; i < skill.TargetInfo.Range; ++i)
 				lineTarget = lineTarget.InDirection (direction);
 
-			return new HashSet<Point> (BresenhamLine.PointsOnLine (invoker.Position, lineTarget).Where (x => IsPathBetweenPointsClear (state, invoker.Position, x)));
+			return new HashSet<Point> (BresenhamLine.PointsOnLine (invoker.Position, lineTarget).Where (x => IsPathBetweenPointsClear (state, invoker.Position, x, true)));
 		}
 
 
@@ -162,7 +162,7 @@ namespace ArenaGS.Engine
 					if (!visibility.IsVisible (target))
 						return false;
 
-					return IsPathBetweenPointsClear (state, invoker.Position, target);
+					return IsPathBetweenPointsClear (state, invoker.Position, target, false);
 				}
 				case TargettingStyle.Cone:
 				{
@@ -180,12 +180,19 @@ namespace ArenaGS.Engine
 					}
 					return false;
 				}
+				case TargettingStyle.Line:
+				{
+						Direction direction = invoker.Position.DirectionTo (target);
+						if (direction == Direction.None)
+							return false;
+						return true;
+				}
 				default:
 					return true;		
 			}
 		}
 
-		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target)
+		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target, bool pierceCharacters)
 		{
 			if (!state.Map.IsOnMap (target))
 				return false;
@@ -200,7 +207,7 @@ namespace ArenaGS.Engine
 					return true;
 				if (state.Map[p].Terrain != TerrainType.Floor)
 					return false;
-				if (state.AllCharacters.Any (x => x.Position == p))
+				if (!pierceCharacters && state.AllCharacters.Any (x => x.Position == p))
 					return false;
 			}
 			return true;

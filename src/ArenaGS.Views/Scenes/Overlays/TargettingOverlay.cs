@@ -91,19 +91,24 @@ namespace ArenaGS.Views.Scenes.Overlays
 			}
 		}
 
+		SKColor CursorColor = SKColors.Yellow.WithAlpha (50);
+		SKColor ValidTargetColor = SKColors.Yellow.WithAlpha (100);
+		SKColor InvalidTargetColor = SKColors.Red.WithAlpha (100);
+
 		public void Draw (MapView map)
 		{
 			bool validTarget = CurrentPositionIsValidTarget;
-			SKColor color = validTarget ? SKColors.Yellow.WithAlpha (100) : SKColors.Red.WithAlpha (100);
+			SKColor color = validTarget ? ValidTargetColor : InvalidTargetColor;
 
 			if (validTarget)
 			{
 				foreach (var tile in QueryGameState.AffectedPointsForSkill (State, Skill, CurrentTargettedPosition))
 					map.DrawOverlaySquare (tile, color);
+				map.DrawOverlaySquare (CurrentTargettedPosition, CursorColor);
 			}
 			else
 			{
-				map.DrawOverlaySquare (CurrentTargettedPosition, color);
+				map.DrawOverlaySquare (CurrentTargettedPosition, CursorColor);
 			}
 		}
 	}
