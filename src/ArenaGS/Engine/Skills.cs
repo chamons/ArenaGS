@@ -82,7 +82,7 @@ namespace ArenaGS.Engine
 				case Effect.DelayedDamage:
 				{
 					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
-					state = state.WithAddedScript (Generator.CreateDamageScript (-100, 1, areaAffected.ToImmutableHashSet ()));
+					state = state.WithAddedScript (Generator.CreateDamageScript (-100, skill.Power, areaAffected.ToImmutableHashSet ()));
 					break;
 				}
 				case Effect.None:

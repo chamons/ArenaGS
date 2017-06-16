@@ -135,6 +135,11 @@ namespace ArenaGS.Mac {
 				Canvas.NeedsDisplay = true;
 		}
 
+		public void Close ()
+		{ 
+			NSApplication.SharedApplication.Terminate (this);
+		}
+
 		void OnPlatformPaint (object sender, SKPaintSurfaceEventArgs e)
 		{
 			PaintArgs.Surface = e.Surface;
