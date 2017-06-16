@@ -52,6 +52,11 @@ namespace ArenaGS.Model
 			return false;
 		}
 
+		public override int GetHashCode ()
+		{
+			return Rolls ^ Faces ^ Constant;
+		}
+
 		public bool Equals (Dice other) => Rolls == other.Rolls && Faces == other.Faces && Constant == other.Constant;
 
 		public override string ToString () => $"{Rolls}d{Faces} + {Constant}";

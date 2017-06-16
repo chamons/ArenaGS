@@ -9,11 +9,10 @@ namespace ArenaGS.Engine
 	public interface IPhysics
 	{
 		GameState MovePlayer (GameState state, Direction direction);
-		GameState WaitPlayer (GameState state);
 		GameState MoveEnemy (GameState state, Character enemy, Direction direction);
+
+		GameState WaitPlayer (GameState state);
 		GameState WaitEnemy (GameState state, Character enemy);
-		// TODO - https://github.com/chamons/ArenaGS/issues/79
-		GameState Damage (GameState state, Character target, int amount);
 		GameState Wait (GameState state, Character c);
 
 		bool CouldCharacterWalk (GameState state, Character actor, Point newPosition);		
@@ -91,15 +90,6 @@ namespace ArenaGS.Engine
 		Character Wait (Character c)
 		{
 			return c.WithCT (Time.ChargeTime (c, TimeConstants.CTPerBasicAction));
-		}
-
-		// TODO - https://github.com/chamons/ArenaGS/issues/79
-		public GameState Damage (GameState state, Character target, int amount)
-		{
-			if (target.IsPlayer)
-				return state.WithNewLogLine ($"{target} damaged by {amount}.");
-			else
-				return state.WithEnemies (state.Enemies.Remove (target));
 		}
 	}
 }

@@ -41,6 +41,7 @@ namespace ArenaGS
 			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<ICombat> (typeof (Combat));
 			Dependencies.Register<ITime> (typeof (Time));
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.RegisterInstance<IAnimationRequest> (this);

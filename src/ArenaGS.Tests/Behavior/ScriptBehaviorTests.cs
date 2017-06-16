@@ -128,7 +128,7 @@ namespace ArenaGS.Tests
 	public class ScriptBehaviorTestsWithStubbedPhysics
 	{
 		IGenerator Generator;
-		TestPhysics Physics;
+		TestCombat Combat;
 
 		[SetUp]
 		public void Setup ()
@@ -136,9 +136,9 @@ namespace ArenaGS.Tests
 			TestDependencies.SetupTestDependencies ();
 			Generator = Dependencies.Get<IGenerator> ();
 
-			Dependencies.Unregister<IPhysics> ();
-			Physics = new TestPhysics ();
-			Dependencies.RegisterInstance<IPhysics> (Physics);
+			Dependencies.Unregister<ICombat> ();
+			Combat = new TestCombat ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
 		}
 
 		[Test]
@@ -151,8 +151,8 @@ namespace ArenaGS.Tests
 			ScriptBehavior behavior = new ScriptBehavior ();
 
 			state = behavior.Act (state, damageScript);
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged[0].Item1.IsPlayer);
 		}
 	}
 }

@@ -30,6 +30,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Commands.cs" />
+    <Compile Include="Engine\Combat.cs" />
     <Compile Include="Engine\Physics.cs" />
     <Compile Include="Engine\Skills.cs" />
     <Compile Include="Engine\Time.cs" />

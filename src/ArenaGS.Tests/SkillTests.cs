@@ -249,16 +249,16 @@ namespace ArenaGS.Tests
 		ISkills Skills;
 		ITime Time;
 		
-		TestPhysics Physics;
+		TestCombat Combat;
 
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
 
-			Dependencies.Unregister<IPhysics> ();
-			Physics = new TestPhysics ();
-			Dependencies.RegisterInstance<IPhysics> (Physics);
+			Dependencies.Unregister<ICombat> ();
+			Combat = new TestCombat ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
 
 			Generator = Dependencies.Get<IGenerator> ();
 			Skills = Dependencies.Get<ISkills> ();
@@ -273,8 +273,8 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 
 			Character enemyHit = state.Enemies.First (x => x.Position == new Point (3, 3));
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.AreEqual (enemyHit.ID, Physics.CharactersDamaged [0].Item1.ID);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual (enemyHit.ID, Combat.CharactersDamaged [0].Item1.ID);
 		}
 
 		[Test]
@@ -284,8 +284,8 @@ namespace ArenaGS.Tests
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
@@ -296,7 +296,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -308,8 +308,8 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
 
 			// Only player should be damaged, not enemy at 3,3
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
@@ -320,7 +320,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -334,7 +334,7 @@ namespace ArenaGS.Tests
 				state.Map.Set (new Point (3, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
-			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -345,7 +345,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point(2, 1));
-			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (2, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -359,7 +359,7 @@ namespace ArenaGS.Tests
 				state.Map.Set(new Point (2, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
-			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -374,8 +374,8 @@ namespace ArenaGS.Tests
 			state = state.WithPlayer (state.Player.WithCT (-300));
 			state = Time.ProcessUntilPlayerReady (state);
 
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.AreEqual (new Point (3, 3), Physics.CharactersDamaged[0].Item1.Position);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual (new Point (3, 3), Combat.CharactersDamaged[0].Item1.Position);
 		}
 	}
 }

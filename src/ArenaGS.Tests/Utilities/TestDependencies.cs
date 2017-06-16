@@ -33,6 +33,7 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Clear ();
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<ICombat> (typeof (Combat));
 			Dependencies.Register<ITime> (typeof (Time));
 			Dependencies.Register<IWorldGenerator> (typeof (TestWorldGenerator));
 			Dependencies.Register<IFileStorage> (typeof (TestFileStorage));

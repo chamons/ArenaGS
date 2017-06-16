@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CombatTests.cs" />
     <Compile Include="Model\DiceTests.cs" />
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
@@ -55,7 +56,7 @@
     <Compile Include="Utilities\TestDependencies.cs" />
     <Compile Include="Utilities\TestFileStorage.cs" />
     <Compile Include="Utilities\TestMapGenerator.cs" />
-    <Compile Include="Utilities\TestPhysics.cs" />
+    <Compile Include="Utilities\TestCombat.cs" />
     <Compile Include="Utilities\TestScenes.cs" />
     <Compile Include="DijkstraTests.cs" />
     <Compile Include="SkillTests.cs" />

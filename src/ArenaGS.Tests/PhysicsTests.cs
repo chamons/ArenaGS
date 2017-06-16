@@ -112,23 +112,5 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (0, state.Player.CT);
 			Assert.AreEqual (0, state.Enemies[0].CT);
 		}
-
-		[Test] // TODO - https://github.com/chamons/ArenaGS/issues/79
-		public void DamagedNonPlayerCharacters_Removed ()
-		{
-			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Character enemy = state.Enemies[0];
-			state = Physics.Damage (state, enemy, 1); 
-			Assert.Zero (state.Enemies.Count);
-		}
-
-		[Test]  // TODO - https://github.com/chamons/ArenaGS/issues/79
-		public void DamagedPlayer_Logs ()
-		{
-			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Assert.Zero (state.LogEntries.Count);
-			state = Physics.Damage (state, state.Player, 1);
-			Assert.AreEqual (1, state.LogEntries.Count);
-		}
 	}
 }

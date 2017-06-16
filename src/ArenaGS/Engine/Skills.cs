@@ -20,12 +20,14 @@ namespace ArenaGS.Engine
 	public class Skills : ISkills
 	{
 		IPhysics Physics;
+		ICombat Combat;
 		IAnimationRequest Animation;
 		IGenerator Generator;
 	
 		public Skills ()
 		{
 			Physics = Dependencies.Get<IPhysics> ();
+			Combat = Dependencies.Get<ICombat> ();
 			Animation = Dependencies.Get<IAnimationRequest> ();
 			Generator = Dependencies.Get<IGenerator> ();
 		}
@@ -73,7 +75,7 @@ namespace ArenaGS.Engine
 					}
 
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
-						state = Physics.Damage (state, enemy, 1);
+						state = Combat.Damage (state, enemy, 1);
 
 					break;
 				}
