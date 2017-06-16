@@ -163,11 +163,11 @@ namespace ArenaGS.Views.Scenes.Overlays
 			}
 		}
 
-		public void ConfigureMap (MapView map)
+		public void ConfigureMapForDrawing (MapView map)
 		{
 		}
 
-		public void DisableOverlay (CombatView combatView)
+		public void BeforeDisabled (CombatView combatView)
 		{
 		}
 

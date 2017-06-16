@@ -23,6 +23,8 @@ namespace ArenaGS.Tests
 			AnimationRequests.Add (info);
 		}
 
+		public void RequestPlayerDead (GameState state) { }
+
 		[SetUp]
 		public void Setup ()
 		{
@@ -67,7 +69,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void TargettedSkill_ShouldFireProjectile ()
+		public void TargettedSkill_ShouldFireProjectileAnimation ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
@@ -76,13 +78,31 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void TargettedSkillWithArea_ShouldFireProjectileAndExplosion ()
+		public void TargettedSkillWithArea_ShouldFireProjectileAndExplosionAnimation ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
 			Assert.AreEqual (2, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Projectile, AnimationRequests[0].Type);
 			Assert.AreEqual (AnimationType.Explosion, AnimationRequests[1].Type);
+		}
+
+		[Test]
+		public void ConeSkill_ShouldFireConeAnimation ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
+			Assert.AreEqual (1, AnimationRequests.Count);
+			Assert.AreEqual (AnimationType.Cone, AnimationRequests [0].Type);
+		}
+
+		[Test]
+		public void LineSkill_ShouldFireSpecificAreaExplosionAnimation ()
+		{
+			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
+			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
+			Assert.AreEqual (1, AnimationRequests.Count);
+			Assert.AreEqual (AnimationType.SpecificAreaExplosion, AnimationRequests [0].Type);
 		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using ArenaGS.Engine;
+using ArenaGS.Model;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -34,9 +35,9 @@ namespace ArenaGS.Tests.Model
 		[Test]
 		public void DiceRoll_SmokeTest ()
 		{
-			Random rng = new Random (42);
+			RandomGenerator random = new RandomGenerator (42);
 			Dice dice = new Dice (3, 4, 2);
-			int value = dice.Roll (rng);
+			int value = dice.Roll (random);
 			Assert.IsTrue (value >= 5 && value <= 14);
 		}
 

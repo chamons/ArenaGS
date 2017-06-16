@@ -45,7 +45,7 @@ namespace ArenaGS.Views.Scenes
 
 		public void SetOverlay (IOverlay overlay)
 		{
-			Overlay?.DisableOverlay (CombatView);
+			Overlay?.BeforeDisabled (CombatView);
 			Overlay = overlay;
 			Invalidate (); // Nothing happened in GameState but we need to redraw
 		}
@@ -131,6 +131,11 @@ namespace ArenaGS.Views.Scenes
 		public HitTestResults HitTestScene (SKPointI point)
 		{
 			return CombatView.HitTest (point);
+		}
+
+		public void HandlePlayerDeath (GameState state)
+		{
+			SetOverlay (new DeathOverlay (Engine, this, Controller.GameWindow));
 		}
 	}
 }

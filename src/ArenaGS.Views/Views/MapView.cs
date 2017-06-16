@@ -41,7 +41,7 @@ namespace ArenaGS.Views.Views
 			CenterPosition = state.Player.Position;
 			CurrentVisibility = state.CalculateVisibility (state.Player);
 
-			Parent.Overlay.ConfigureMap (this);
+			Parent.Overlay.ConfigureMapForDrawing (this);
 
 			var characterToAnimate = CharacterToAnimate ();
 
@@ -296,6 +296,14 @@ namespace ArenaGS.Views.Views
 			int x = (point.X - Position.X) / MapTileSize;
 			int y = (point.Y - Position.Y) / MapTileSize;
 			return new HitTestResults(this, TranslateUIToModelPosition (new Point (x, y)));
+		}
+
+		public void DrawDeathNotice ()
+		{
+			Canvas.DrawRect (VisualRect, new SKPaint () { Color = SKColors.Black.WithAlpha (225) });
+			Canvas.DrawText ("You died.", VisualRect.Width / 2, VisualRect.Height / 2, new SKPaint () { Color = SKColors.White, TextSize = 20, IsAntialias = true, TextAlign = SKTextAlign.Center });
+			Canvas.DrawText ("Press 'q' to quit or 'n' to start a new game.", VisualRect.Width / 2, (VisualRect.Height / 2) + 25, new SKPaint () { Color = SKColors.White, TextSize = 20, IsAntialias = true, TextAlign = SKTextAlign.Center });
+			
 		}
 	}
 }

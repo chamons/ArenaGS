@@ -162,17 +162,21 @@ namespace ArenaGS.Model
 		[ProtoMember (5)]
 		public SkillResources Resources { get; private set; }
 
+		[ProtoMember (6)]
+		public int Power { get; private set; }
+
 		public Skill ()
 		{
 		}
 
-		public Skill (int id, string name, Effect effect, TargettingInfo targetInfo, SkillResources resources)
+		public Skill (int id, string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power)
 		{
 			ID = id;
 			Name = name;
 			Effect = effect;
 			TargetInfo = targetInfo;
 			Resources = resources;
+			Power = power;
 		}
 
 		Skill (Skill original)
@@ -182,6 +186,7 @@ namespace ArenaGS.Model
 			Effect = original.Effect;
 			TargetInfo = original.TargetInfo;
 			Resources = original.Resources;
+			Power = original.Power;
 		}
 
 		public bool UsesAmmo => Resources.UsesAmmo;

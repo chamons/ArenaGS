@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using ArenaGS.Engine;
+using ProtoBuf;
 using System;
 using System.Globalization;
 using System.Xml;
@@ -64,11 +65,11 @@ namespace ArenaGS.Model
 
 	public static class DiceExtensions
 	{
-		public static int Roll (this Dice dice, Random rng)
+		public static int Roll (this Dice dice, IRandomGenerator random)
 		{
 			int total = 0;
 			for (int i = 0; i < dice.Rolls; i++)
-				total += rng.Next (1, dice.Faces);
+				total += random.Roll (1, dice.Faces);
 			return total + dice.Constant;
 		}
 

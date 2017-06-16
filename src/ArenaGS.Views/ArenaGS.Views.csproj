@@ -43,6 +43,7 @@
     <Compile Include="Resources.cs" />
     <Compile Include="Scenes\CombatScene.cs" />
     <Compile Include="Scenes\IScene.cs" />
+    <Compile Include="Scenes\Overlays\DeathOverlay.cs" />
     <Compile Include="Utilities\KeyboardBindings.cs" />
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\InfoView.cs" />
@@ -59,7 +60,7 @@
     <Compile Include="Views\MapThemePainter.cs" />
   </ItemGroup>
   <ItemGroup>
-    </ItemGroup>
+  </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
@@ -393,9 +394,6 @@
     <EmbeddedResource Include="Resources\dcss\floor\crystal_floor4.png" />
     <EmbeddedResource Include="Resources\dcss\floor\crystal_floor5.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scenes\Overlays\" />
-    <Folder Include="Resources\dcss\decorations\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

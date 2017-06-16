@@ -8,9 +8,9 @@ namespace ArenaGS.Tests.Utilities
 {
 	class TestAnimation : IAnimationRequest
 	{
-		public void Request (GameState state, AnimationInfo info)
-		{
-		}
+		public void RequestPlayerDead (GameState state) => throw new InvalidOperationException ();
+
+		public void Request (GameState state, AnimationInfo info) { }
 	}
 
 	class TestLogger : ILogger
@@ -42,6 +42,9 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<IAnimationRequest> (typeof(TestAnimation));
 			Dependencies.Register<ILogger>(typeof(TestLogger));
+
+			// At least individual test runs will be consistent
+			Dependencies.RegisterInstance<IRandomGenerator> (new RandomGenerator (42));
 		}
 	}
 }

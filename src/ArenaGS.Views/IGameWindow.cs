@@ -25,6 +25,7 @@ namespace ArenaGS.Views
 	public interface IGameWindow
 	{
 		void Invalidate ();
+		void Close ();
 
 		event EventHandler<PaintEventArgs> OnPaint;
 		event EventHandler<ClickEventArgs> OnDetailPress;

@@ -32,12 +32,15 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Engine\Combat.cs" />
     <Compile Include="Engine\Physics.cs" />
+    <Compile Include="Engine\Random.cs" />
     <Compile Include="Engine\Skills.cs" />
     <Compile Include="Engine\Time.cs" />
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Defense.cs" />
     <Compile Include="Model\Dice.cs" />
+    <Compile Include="Model\Health.cs" />
     <Compile Include="Model\Skill.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />

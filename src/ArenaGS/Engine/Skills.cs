@@ -75,7 +75,7 @@ namespace ArenaGS.Engine
 					}
 
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
-						state = Combat.Damage (state, enemy, 1);
+						state = Combat.Damage (state, enemy, skill.Power);
 
 					break;
 				}

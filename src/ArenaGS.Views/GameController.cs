@@ -22,7 +22,7 @@ namespace ArenaGS
 
 	public class GameController
 	{
-		IGameWindow GameWindow;
+		public IGameWindow GameWindow { get; }
 		GameEngine GameEngine;
 		IScene CurrentScene;
 		ILogger Log;
@@ -54,7 +54,13 @@ namespace ArenaGS
 
 			GameEngine.StateChanged += OnGameEngineStateChanged;
 			GameEngine.AnimationRequested += OnGameAnimation;
+			GameEngine.PlayerDeath += OnPlayerDead;
 			GameEngine.Load ();
+		}
+
+		private void OnPlayerDead (object sender, GameState e)
+		{
+			CurrentScene.HandlePlayerDeath (e);
 		}
 
 		void OnGameEngineStateChanged (object sender, GameStateChangedEventArgs e)

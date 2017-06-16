@@ -35,6 +35,11 @@ namespace ArenaGS.Windows
 		{
 			SkiaView.InvalidateVisual ();
 		}
+
+		void IGameWindow.Close ()
+		{
+			Application.Current.Shutdown ();
+		}
 			
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{

@@ -58,7 +58,7 @@ namespace ArenaGS.Engine.Behavior
 			{
 				if (spawnerScript.TimeToNextSpawn == 0)
 				{
-					state = Generator.CreateEnemy (state, spawnerScript.Position);
+					state = state.WithAddedEnemy (Generator.CreateCharacter (spawnerScript.Position, new Health (3 ,3), new Defense (1)));
 					state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
 				}
 				else
