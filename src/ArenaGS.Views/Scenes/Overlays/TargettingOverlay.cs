@@ -58,6 +58,21 @@ namespace ArenaGS.Views.Scenes.Overlays
 			});
 		}
 
+		void MoveAndSnapIfNeeded (Point p)
+		{
+			Direction direction = State.Player.Position.DirectionTo (p);
+			switch (Skill.TargetInfo.TargettingStyle)
+			{
+				case TargettingStyle.Cone:
+				case TargettingStyle.Line:
+					CurrentTargettedPosition = State.Player.Position.InDirection (direction);
+					break;
+				default:
+					CurrentTargettedPosition = p;
+					break;
+			}
+		}
+
 		void Move (Direction direction)
 		{
 			MoveTo (CurrentTargettedPosition.InDirection (direction));
@@ -65,7 +80,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		void MoveTo (Point p)
 		{
-			CurrentTargettedPosition = p;
+			MoveAndSnapIfNeeded (p);
 			Parent.Invalidate ();
 		}
 
@@ -92,6 +107,8 @@ namespace ArenaGS.Views.Scenes.Overlays
 		}
 
 		SKColor CursorColor = SKColors.Yellow.WithAlpha (50);
+		SKColor InvalidCursorColor = SKColors.Red.WithAlpha (50);
+
 		SKColor ValidTargetColor = SKColors.Yellow.WithAlpha (100);
 		SKColor InvalidTargetColor = SKColors.Red.WithAlpha (100);
 
@@ -108,7 +125,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 			}
 			else
 			{
-				map.DrawOverlaySquare (CurrentTargettedPosition, CursorColor);
+				map.DrawOverlaySquare (CurrentTargettedPosition, InvalidCursorColor);
 			}
 		}
 	}
