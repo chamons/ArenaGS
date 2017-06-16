@@ -36,6 +36,7 @@
     <Compile Include="GameEngine.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Dice.cs" />
     <Compile Include="Model\Skill.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />

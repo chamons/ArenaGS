@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\DiceTests.cs" />
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
     <Compile Include="TimeTests.cs" />
