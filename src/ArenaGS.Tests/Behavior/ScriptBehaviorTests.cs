@@ -125,7 +125,7 @@ namespace ArenaGS.Tests
 	}
 
 	[TestFixture]
-	public class ScriptBehaviorTestsWithStubbedPhysics
+	public class CombatScriptBehavior
 	{
 		IGenerator Generator;
 		TestCombat Combat;

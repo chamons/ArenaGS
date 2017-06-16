@@ -243,7 +243,7 @@ namespace ArenaGS.Tests
 	}
 
 	[TestFixture]
-	class SkillTestsWithStubbedPhysics
+	class CombatSkillTests
 	{
 		IGenerator Generator;
 		ISkills Skills;
