@@ -66,6 +66,9 @@ namespace ArenaGS.Views.Views
 						case TargettingStyle.Cone:
 							Write ($"Targetting: Cone of distance {skill.TargetInfo.Range}.", currentOffset);
 							break;
+						case TargettingStyle.Line:
+							Write($"Targetting: Line of distance {skill.TargetInfo.Range}.", currentOffset);
+							break;
 					}
 					currentOffset++;
 
