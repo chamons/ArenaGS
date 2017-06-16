@@ -249,7 +249,7 @@ namespace ArenaGS.Tests
 		ISkills Skills;
 		ITime Time;
 		
-		TestCombat Combat;
+		CombatStub Combat;
 
 		[SetUp]
 		public void Setup ()
@@ -257,7 +257,7 @@ namespace ArenaGS.Tests
 			TestDependencies.SetupTestDependencies ();
 
 			Dependencies.Unregister<ICombat> ();
-			Combat = new TestCombat ();
+			Combat = new CombatStub ();
 			Dependencies.RegisterInstance<ICombat> (Combat);
 
 			Generator = Dependencies.Get<IGenerator> ();

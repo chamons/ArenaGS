@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ArenaGS.Tests.Utilities
 {
-	class TestCombat : ICombat
+	class CombatStub : ICombat
 	{
 		public List<Tuple<Character, int>> CharactersDamaged = new List<Tuple<Character, int>> ();
 		public GameState Damage (GameState state, Character target, int amount)

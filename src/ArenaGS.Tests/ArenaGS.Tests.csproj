@@ -56,7 +56,7 @@
     <Compile Include="Utilities\TestDependencies.cs" />
     <Compile Include="Utilities\TestFileStorage.cs" />
     <Compile Include="Utilities\TestMapGenerator.cs" />
-    <Compile Include="Utilities\TestCombat.cs" />
+    <Compile Include="Utilities\CombatStub.cs" />
     <Compile Include="Utilities\TestScenes.cs" />
     <Compile Include="DijkstraTests.cs" />
     <Compile Include="SkillTests.cs" />

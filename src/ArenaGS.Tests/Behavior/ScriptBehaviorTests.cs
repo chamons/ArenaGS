@@ -128,7 +128,7 @@ namespace ArenaGS.Tests
 	public class CombatScriptBehavior
 	{
 		IGenerator Generator;
-		TestCombat Combat;
+		CombatStub Combat;
 
 		[SetUp]
 		public void Setup ()
@@ -137,7 +137,7 @@ namespace ArenaGS.Tests
 			Generator = Dependencies.Get<IGenerator> ();
 
 			Dependencies.Unregister<ICombat> ();
-			Combat = new TestCombat ();
+			Combat = new CombatStub ();
 			Dependencies.RegisterInstance<ICombat> (Combat);
 		}
 
