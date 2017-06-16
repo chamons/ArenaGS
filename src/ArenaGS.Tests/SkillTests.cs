@@ -28,7 +28,7 @@ namespace ArenaGS.Tests
 			Physics = Dependencies.Get<IPhysics> ();
 			Generator = Dependencies.Get<IGenerator> ();
 			Time = Dependencies.Get<ITime> ();
-			TestSkill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			TestSkill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None, 1);
 		}
 
 		[Test]
@@ -40,12 +40,12 @@ namespace ArenaGS.Tests
 			enemy = state.UpdateCharacterReference (enemy);
 
 			Assert.IsTrue (enemy.CT >= 100);
-			state = Skills.Invoke (state, enemy, enemy.Skills [0], new Point (1, 1));
+			state = Skills.Invoke (state, enemy, enemy.Skills [0], new Point (2, 3));
 			enemy = state.UpdateCharacterReference (enemy);
 			Assert.IsTrue (enemy.CT < 100);
 
 			Assert.IsTrue (state.Player.CT >= 100);
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 3));
 			Assert.IsTrue (state.Player.CT < 100);
 		}
 
@@ -228,10 +228,10 @@ namespace ArenaGS.Tests
 		public void CooledBasedAmmoSkill_WhenSkillUserIsRemoved_DoesNothing ()
 		{
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2));
+			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2), 1);
 			state = state.WithReplaceEnemy (state.Enemies [0].WithSkills (skill.Yield ().ToImmutableList ()));
 
-			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], state.Player.Position);
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (2, 1));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 
 			for (int i = 0; i < 5; ++i)
@@ -243,22 +243,22 @@ namespace ArenaGS.Tests
 	}
 
 	[TestFixture]
-	class SkillTestsWithStubbedPhysics
+	class CombatSkillTests
 	{
 		IGenerator Generator;
 		ISkills Skills;
 		ITime Time;
 		
-		TestPhysics Physics;
+		CombatStub Combat;
 
 		[SetUp]
 		public void Setup ()
 		{
 			TestDependencies.SetupTestDependencies ();
 
-			Dependencies.Unregister<IPhysics> ();
-			Physics = new TestPhysics ();
-			Dependencies.RegisterInstance<IPhysics> (Physics);
+			Dependencies.Unregister<ICombat> ();
+			Combat = new CombatStub ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
 
 			Generator = Dependencies.Get<IGenerator> ();
 			Skills = Dependencies.Get<ISkills> ();
@@ -273,8 +273,8 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 
 			Character enemyHit = state.Enemies.First (x => x.Position == new Point (3, 3));
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.AreEqual (enemyHit.ID, Physics.CharactersDamaged [0].Item1.ID);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual (enemyHit.ID, Combat.CharactersDamaged [0].Item1.ID);
 		}
 
 		[Test]
@@ -284,19 +284,19 @@ namespace ArenaGS.Tests
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
 		public void AOESkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
-			var enemies = Generator.CreateCharacters (new Point [] { new Point (2, 2), new Point (3, 2)});
+			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 2), new Point (3, 2)});
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
@@ -308,65 +308,65 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
 
 			// Only player should be damaged, not enemy at 3,3
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged [0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
 		}
 
 		[Test]
 		public void ConeSkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
-			var enemies = Generator.CreateCharacters (new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
+			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
-			Assert.AreEqual (3, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
 		public void ConeSkills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
-			var enemies = Generator.CreateCharacters (new Point [] { new Point (4, 1) });
+			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (4, 1) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			for (int i = 1; i <= 5; ++i)
 				state.Map.Set (new Point (3, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
-			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
 		public void LineSkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
-			var enemies = Generator.CreateCharacters (new Point[] { new Point(2, 1), new Point(3, 1), new Point(3, 3), new Point(3, 2)});
+			var enemies = Generator.CreateStubEnemies (new Point[] { new Point(2, 1), new Point(3, 1), new Point(3, 3), new Point(3, 2)});
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			state = Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point(2, 1));
-			Assert.AreEqual (2, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (2, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
 		public void Linekills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
-			var enemies = Generator.CreateCharacters(new Point[] { new Point (3, 1) });
+			var enemies = Generator.CreateStubEnemies (new Point[] { new Point (3, 1) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
 			for (int i = 1; i <= 5; ++i)
 				state.Map.Set(new Point (2, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
-			Assert.AreEqual (0, Physics.CharactersDamaged.Count);
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
 		}
 
 		[Test]
 		public void DelayedDamage_DamagesAfterCT ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill delayedDamageSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None);
+			Skill delayedDamageSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None, 1);
 			state = state.WithPlayer (state.Player.WithSkills (delayedDamageSkill.Yield ().ToImmutableList ()));
 			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
 
@@ -374,8 +374,8 @@ namespace ArenaGS.Tests
 			state = state.WithPlayer (state.Player.WithCT (-300));
 			state = Time.ProcessUntilPlayerReady (state);
 
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.AreEqual (new Point (3, 3), Physics.CharactersDamaged[0].Item1.Position);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual (new Point (3, 3), Combat.CharactersDamaged[0].Item1.Position);
 		}
 	}
 }

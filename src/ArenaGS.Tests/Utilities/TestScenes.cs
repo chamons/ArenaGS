@@ -11,36 +11,36 @@ namespace ArenaGS.Tests.Utilities
 	{
 		internal static GameState CreateRoomFromMapgen (IGenerator generator)
 		{
-			var character = generator.CreatePlayer (new Point (1, 1));
+			var character = generator.CreateStubPlayer (new Point (1, 1));
 			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0).Map;
-			var enemies = generator.CreateCharacters (new Point [] { new Point (2, 2) });
+			var enemies = generator.CreateStubEnemies (new Point [] { new Point (2, 2) });
 			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 		
 		internal static GameState CreateTinyRoomState (IGenerator generator)
 		{
-			var character = generator.CreatePlayer (new Point (1, 1));
+			var character = generator.CreateStubPlayer (new Point (1, 1));
 			var map = CreateTinyRoom ();
-			var enemies = generator.CreateCharacters (new Point [] { new Point (2, 2) });
+			var enemies = generator.CreateStubEnemies (new Point [] { new Point (2, 2) });
 			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static GameState CreateBoxRoomState (IGenerator generator)
 		{
-			var character = generator.CreatePlayer (new Point (1, 1));
+			var character = generator.CreateStubPlayer (new Point (1, 1));
 			var map = CreateBoxRoom (50, 50);
-			var enemies = generator.CreateCharacters (new Point [] { new Point (3, 3), new Point (20, 20), new Point (20, 20),
+			var enemies = generator.CreateStubEnemies (new Point [] { new Point (3, 3), new Point (20, 20), new Point (20, 20),
 				new Point (40, 20)});
 			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static GameState CreateWallRoomState (IGenerator generator)
 		{
-			var character = generator.CreatePlayer (new Point (1, 1));
+			var character = generator.CreateStubPlayer (new Point (1, 1));
 			var map = CreateBoxRoom (5, 5);
 			for (int i = 0 ; i < 5 ; ++i)
 				map.Set (new Point(2, i), TerrainType.Wall);
-			var enemies = generator.CreateCharacters (new Point [] { new Point (3, 1) });
+			var enemies = generator.CreateStubEnemies (new Point [] { new Point (3, 1) });
 			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
@@ -80,7 +80,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddTestSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None, 1);
 			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
 		}
 
@@ -91,7 +91,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddTestAOESkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None, 1);
 			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
 		}
 
@@ -103,7 +103,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddTestConeSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), SkillResources.None, 1);
 			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
 		}
 
@@ -114,7 +114,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddTestLineSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Line", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("Line", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), SkillResources.None, 1);
 			return state.WithPlayer (state.Player.WithSkills (new Skill[] { testSkill }.ToImmutableList ()));
 		}
 

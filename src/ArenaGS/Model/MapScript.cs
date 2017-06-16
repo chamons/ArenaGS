@@ -132,7 +132,7 @@ namespace ArenaGS.Model
 	public sealed class AreaDamageScript : MapScript
 	{
 		[ProtoMember (3)]
-		public int Damage { get; private set; } // TODO - https://github.com/chamons/ArenaGS/issues/79
+		public int Damage { get; private set; }
 
 		[ProtoMember (4)]
 		public ImmutableHashSet <Point> Area { get; private set; }

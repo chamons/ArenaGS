@@ -41,10 +41,12 @@ namespace ArenaGS
 			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
 			Dependencies.Register<IPhysics> (typeof (Physics));
 			Dependencies.Register<ISkills> (typeof (Skills));
+			Dependencies.Register<ICombat> (typeof (Combat));
 			Dependencies.Register<ITime> (typeof (Time));
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.RegisterInstance<IAnimationRequest> (this);
 			Dependencies.Register<ILogger> (typeof(Logger));
+			Dependencies.Register<IRandomGenerator> (typeof (RandomGenerator));
 
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
@@ -86,19 +88,26 @@ namespace ArenaGS
 			AnimationRequested?.Invoke (this, new AnimationEventArgs (state, info));
 		}
 
+		public event EventHandler<GameState> PlayerDeath;
+
+		public void RequestPlayerDead (GameState state)
+		{
+			PlayerDeath?.Invoke (this, state);
+		}
+
 		GameState CreateNewGameState ()
 		{
 			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("OpenArenaMap");
 			Random r = new Random ();
 			int hash = r.Next ();
 			GeneratedMapData mapData = mapGenerator.Generate (hash);
-			Character player = Generator.CreatePlayer (FindOpenSpot (mapData.Map, new Point (8, 8), Enumerable.Empty<Point>()));
+			Character player = Generator.CreatePlayer (FindOpenSpot (mapData.Map, new Point (8, 8), Enumerable.Empty<Point>()), new Health (3,3), new Defense (1));
 			player = player.WithSkills (new Skill [] {
-				Generator.CreateSkill ("Fireball", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 3)),
-				Generator.CreateSkill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2)),
-				Generator.CreateSkill ("Dragon's Breath", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), new SkillResources (maxCooldown : 5)),
-				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2)),
-				Generator.CreateSkill ("Line Strike", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2)),
+				Generator.CreateSkill ("Shot", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 3), 2),
+				Generator.CreateSkill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2), 1),
+				Generator.CreateSkill ("Dragon's Breath", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), new SkillResources (maxCooldown : 5), 1),
+				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2), 3),
+				Generator.CreateSkill ("Line Strike", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2), 3),
 			}.ToImmutableList ());
 
 			List <Point> enemyPositions = new List<Point> ();
@@ -110,7 +119,7 @@ namespace ArenaGS
 					enemyPositions.Add (openSpot);
 			}
 
-			var enemies = Generator.CreateCharacters (enemyPositions);
+			var enemies = Generator.CreateStubEnemies (enemyPositions);
 			ImmutableList<string> startingLog = ImmutableList.Create<string> ();
 #if DEBUG
 			startingLog = startingLog.Add ($"Map Hash: {hash}");
@@ -140,6 +149,11 @@ namespace ArenaGS
 			{
 				switch (c)
 				{
+					case Command.NewGame:
+					{
+						SetNewState (CreateNewGameState ());
+						break;
+					}
 					case Command.PlayerMove:
 					{
 						Direction direction = (Direction)data;

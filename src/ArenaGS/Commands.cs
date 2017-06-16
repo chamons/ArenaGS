@@ -4,6 +4,7 @@ namespace ArenaGS
 {
 	public enum Command
 	{
+		NewGame, // Null
 		PlayerMove,  // Direction
 		Wait, // Null
 		Skill, // SkillTarget

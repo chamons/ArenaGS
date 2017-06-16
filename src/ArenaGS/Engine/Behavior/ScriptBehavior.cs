@@ -15,6 +15,7 @@ namespace ArenaGS.Engine.Behavior
 	{
 		ITime Time;
 		IPhysics Physics;
+		ICombat Combat;
 		IAnimationRequest Animation;
 
 		IGenerator Generator;
@@ -23,6 +24,7 @@ namespace ArenaGS.Engine.Behavior
 		{
 			Time = Dependencies.Get<ITime> ();
 			Physics = Dependencies.Get<IPhysics> ();
+			Combat = Dependencies.Get<ICombat> ();
 			Generator = Dependencies.Get<IGenerator>();
 			Animation = Dependencies.Get<IAnimationRequest> ();
 		}
@@ -56,7 +58,7 @@ namespace ArenaGS.Engine.Behavior
 			{
 				if (spawnerScript.TimeToNextSpawn == 0)
 				{
-					state = Generator.CreateEnemy (state, spawnerScript.Position);
+					state = state.WithAddedEnemy (Generator.CreateCharacter (spawnerScript.Position, new Health (3 ,3), new Defense (1)));
 					state = state.WithReplaceScript (spawnerScript.AfterSpawn ());
 				}
 				else
@@ -97,7 +99,7 @@ namespace ArenaGS.Engine.Behavior
 			Animation.Request (state, new SpecificAreaExplosionAnimationInfo (script.Area));
 
 			foreach (Character damagedCharacter in state.AllCharacters.Where (x => script.Area.Contains (x.Position)))
-				state = Physics.Damage (state, damagedCharacter, script.Damage);
+				state = Combat.Damage (state, damagedCharacter, script.Damage);
 
 			state = state.WithRemovedScript (script);
 			return state;

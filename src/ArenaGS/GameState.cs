@@ -84,6 +84,16 @@ namespace ArenaGS
 			return new GameState (this) { Map = map };
 		}
 
+		internal GameState WithAddedEnemy (Character enemy)
+		{
+			return new GameState (this) { Enemies = Enemies.Add (enemy) };
+		}
+
+		internal GameState WithRemovedEnemy (Character enemy)
+		{
+			return new GameState (this) { Enemies = Enemies.Remove (enemy) };
+		}
+
 		internal GameState WithEnemies (ImmutableList<Character> enemies)
 		{
 			return new GameState (this) { Enemies = enemies };

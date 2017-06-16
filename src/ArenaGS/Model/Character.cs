@@ -21,16 +21,24 @@ namespace ArenaGS.Model
 		[ProtoMember (4)]
 		public ImmutableList<Skill> Skills { get; private set; }
 
+		[ProtoMember (5)]
+		public Health Health { get; private set; }
+
+		[ProtoMember (6)]
+		public Defense Defense { get; private set; }
+
 		public Character ()
 		{
 		}
 
-		public Character (int id, Point position, int ct, ImmutableList<Skill> skills)
+		public Character (int id, Point position, int ct, ImmutableList<Skill> skills, Health health, Defense defense)
 		{
 			ID = id;
 			Position = position;
 			CT = ct;
 			Skills = skills;
+			Health = health;
+			Defense = defense;
 		}
 
 		Character (Character original)
@@ -39,12 +47,14 @@ namespace ArenaGS.Model
 			Position = original.Position;
 			CT = original.CT;
 			Skills = original.Skills;
+			Health = original.Health;
+			Defense = original.Defense;
 		}
 
 		public override string ToString ()
 		{
 			string debugName = IsPlayer ? "Player" : $"Character : {ID}";
-			return $"{debugName} - {Position} {CT}";
+			return $"{debugName} - {Position} {CT} {Health}";
 		}
 
 		internal Character WithPosition (Point position)
@@ -70,6 +80,16 @@ namespace ArenaGS.Model
 		internal Character WithSkills (ImmutableList<Skill> skills)
 		{
 			return new Character (this) { Skills = skills };
+		}
+
+		internal Character WithHealth (Health health)
+		{
+			return new Character (this) { Health = health };
+		}
+
+		internal Character WithDefense (Defense defense)
+		{
+			return new Character (this) { Defense = defense };
 		}
 
 		internal Character WithReplaceSkill (Skill newSkill)

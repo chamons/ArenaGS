@@ -21,12 +21,12 @@ namespace ArenaGS.Views.Scenes.Overlays
 			CurrentTargettedPosition = Controller.CurrentState.Player.Position;
 		}
 
-		public void ConfigureMap (MapView map)
+		public void ConfigureMapForDrawing (MapView map)
 		{
 			map.CenterPosition = CurrentTargettedPosition;
 		}
 
-		public void DisableOverlay (CombatView combatView)
+		public void BeforeDisabled (CombatView combatView)
 		{
 		}
 

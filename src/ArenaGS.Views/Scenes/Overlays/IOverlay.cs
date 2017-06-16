@@ -8,9 +8,9 @@ namespace ArenaGS.Views.Scenes.Overlays
 		void OnPress (SKPointI point);
 		void HandleKeyDown (string character);
 
-		void DisableOverlay (CombatView combatView);
+		void BeforeDisabled (CombatView combatView);
 
-		void ConfigureMap (MapView map);
+		void ConfigureMapForDrawing (MapView map);
 		void Draw (MapView map);
 
 		object InfoTarget { get; }

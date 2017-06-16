@@ -113,7 +113,7 @@ namespace ArenaGS.Tests
 		public void ReduceCooldownScript_WithRemovedCharacter_DoesNothing ()
 		{
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2));
+			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2), 1);
 			state = state.WithReplaceEnemy (state.Enemies [0].WithSkills (skill.Yield ().ToImmutableList ()));
 
 			ReduceCooldownScript script = new ReduceCooldownScript (1, 100, state.Enemies [0].ID, state.Enemies [0].Skills [0].ID);
@@ -125,10 +125,10 @@ namespace ArenaGS.Tests
 	}
 
 	[TestFixture]
-	public class ScriptBehaviorTestsWithStubbedPhysics
+	public class CombatScriptBehavior
 	{
 		IGenerator Generator;
-		TestPhysics Physics;
+		CombatStub Combat;
 
 		[SetUp]
 		public void Setup ()
@@ -136,9 +136,9 @@ namespace ArenaGS.Tests
 			TestDependencies.SetupTestDependencies ();
 			Generator = Dependencies.Get<IGenerator> ();
 
-			Dependencies.Unregister<IPhysics> ();
-			Physics = new TestPhysics ();
-			Dependencies.RegisterInstance<IPhysics> (Physics);
+			Dependencies.Unregister<ICombat> ();
+			Combat = new CombatStub ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
 		}
 
 		[Test]
@@ -151,8 +151,8 @@ namespace ArenaGS.Tests
 			ScriptBehavior behavior = new ScriptBehavior ();
 
 			state = behavior.Act (state, damageScript);
-			Assert.AreEqual (1, Physics.CharactersDamaged.Count);
-			Assert.IsTrue (Physics.CharactersDamaged[0].Item1.IsPlayer);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged[0].Item1.IsPlayer);
 		}
 	}
 }

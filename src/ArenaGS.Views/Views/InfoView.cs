@@ -38,7 +38,8 @@ namespace ArenaGS.Views.Views
 					else
 						Write ("Enemy");
 					Write ($"Position: {character.Position}", 2);
-
+					Write ($"Health: {character.Health.Current}/{character.Health.Maximum}", 3);
+					Write ($"Defense: {character.Defense.StandardDefense}", 4);
 				}
 				else if (Target is Skill skill)
 				{
@@ -67,10 +68,26 @@ namespace ArenaGS.Views.Views
 							Write ($"Targetting: Cone of distance {skill.TargetInfo.Range}.", currentOffset);
 							break;
 						case TargettingStyle.Line:
-							Write($"Targetting: Line of distance {skill.TargetInfo.Range}.", currentOffset);
+							Write ($"Targetting: Line of distance {skill.TargetInfo.Range}.", currentOffset);
 							break;
 					}
 					currentOffset++;
+
+					switch (skill.Effect)
+					{
+						case Effect.Damage:
+						{
+							Write ($"{skill.Power} dice of damage.", currentOffset);
+							currentOffset++;
+							break;
+						}
+						case Effect.DelayedDamage:
+						{
+							Write ($"{skill.Power} dice of damage after a delay.", currentOffset);
+							currentOffset++;
+							break;
+						}
+					}				
 
 					if (skill.UsesAmmo)
 					{
