@@ -54,6 +54,8 @@ namespace ArenaGS.Views.Views
 
 		public override SKSurface Draw (GameState state)
 		{
+			base.Draw (state);
+
 			var skills = state.Player.Skills;
 			for (int i = 0; i < Math.Min (skills.Count, MaxNumberOfSkills); ++i)
 			{

@@ -18,6 +18,7 @@ namespace ArenaGS.Views.Views
 				Random rng = new Random (map.TileHash);
 				hash = new byte [map.Width * map.Height];
 				rng.NextBytes (hash);
+				Hashes [map.TileHash] = hash;
 			}
 
 			if (rareAbove == -1)

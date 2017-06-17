@@ -79,7 +79,6 @@ namespace ArenaGS.Windows
 			string entry = e.Key.ToString ();
 			if (entry.Length > 1)
 			{
-				Console.WriteLine (entry);
 				KeyArgs.Character = e.Key.ToString ();
 				OnKeyDown?.Invoke (this, KeyArgs);
 			}
@@ -90,7 +89,6 @@ namespace ArenaGS.Windows
 			string entry = e.TextComposition.Text;
 			if (entry.Length == 1 && char.IsLetter (entry[0]))
 			{
-				Console.WriteLine (entry);
 				KeyArgs.Character = entry;
 				OnKeyDown?.Invoke (this, KeyArgs);
 			}

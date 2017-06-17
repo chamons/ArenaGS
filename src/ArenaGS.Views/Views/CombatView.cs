@@ -37,7 +37,7 @@ namespace ArenaGS.Views.Views
 
 		public override SKSurface Draw (GameState state)
 		{
-			BlankCanvas ();
+			base.Draw (state);
 
 			Canvas.DrawSurface (Map.Draw (state), MapOffset.X, MapOffset.Y);
 			Canvas.DrawSurface (Log.Draw (state), LogOffset.X, LogOffset.Y);

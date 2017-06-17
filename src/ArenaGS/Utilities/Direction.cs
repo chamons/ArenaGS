@@ -11,7 +11,7 @@ namespace ArenaGS.Utilities
 
 	public static class Directions
 	{
-		public static readonly IEnumerable<Direction> All = new Direction[] { Direction.North, Direction.Northeast, Direction.East, Direction.Southeast,
+		public static readonly Direction[] All = new Direction [] { Direction.North, Direction.Northeast, Direction.East, Direction.Southeast,
 				Direction.South, Direction.Southwest, Direction.West, Direction.Northwest};
 	}
 
