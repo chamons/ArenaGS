@@ -108,6 +108,7 @@ namespace ArenaGS
 				Generator.CreateSkill ("Dragon's Breath", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), new SkillResources (maxCooldown : 5), 1),
 				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2), 3),
 				Generator.CreateSkill ("Line Strike", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2), 3),
+				Generator.CreateSkill ("Dash")
 			}.ToImmutableList ());
 
 			List <Point> enemyPositions = new List<Point> ();

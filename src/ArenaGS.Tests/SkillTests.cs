@@ -34,7 +34,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void UseOfSkill_ReducesInvokersCT ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+			GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			Character enemy = state.Enemies.First (x => x.Position == new Point (3, 3));
 			state = state.WithReplaceEnemy (enemy.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
 			enemy = state.UpdateCharacterReference (enemy);
@@ -64,13 +64,19 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+				GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
 			});
 
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+				GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
+			});
+
+			Assert.Throws<InvalidOperationException> (() =>
+			{
+				GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (10, 10));
 			});
 		}
@@ -80,19 +86,19 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);	
+				GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
 			});
 
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+				GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
 			});
 
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+				GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (-10, 10));
 			});
 		}
@@ -200,7 +206,7 @@ namespace ArenaGS.Tests
 		{
 			const int StartingCooldown = 3;
 
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (StartingCooldown - 1, StartingCooldown));
+			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (2, StartingCooldown));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
@@ -213,7 +219,7 @@ namespace ArenaGS.Tests
 			}
 
 			Assert.AreEqual (0, state.Player.Skills [0].Resources.Cooldown);
-			Assert.AreEqual (StartingCooldown - 1, state.Player.Skills [0].Resources.CurrentAmmo);
+			Assert.AreEqual (2, state.Player.Skills [0].Resources.CurrentAmmo);
 			Assert.Zero (state.Scripts.Count);
 		}
 
@@ -223,6 +229,34 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (1, 2, 2, 3, true));
 			Assert.IsTrue (state.Player.Skills [0].ReadyForUse);
 		}
+
+		[Test]
+		public void CooledBasedAmmoSkill_UnderCooldownButHasAmmo_UsedMultipleTimesRefreshesCorrectly ()
+		{
+			const int StartingCooldown = 3;
+
+			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (2, StartingCooldown));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
+			state = Time.ProcessUntilPlayerReady (state);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
+
+			for (int i = 1; i <= StartingCooldown - 1; ++i)
+			{
+				state = Time.ProcessUntilPlayerReady (state);
+				state = state.WithPlayer (state.Player.WithCT (0));
+			}
+			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
+			Assert.AreEqual (1, state.Player.Skills [0].Resources.CurrentAmmo);
+
+			for (int i = 1; i <= StartingCooldown; ++i)
+			{
+				state = Time.ProcessUntilPlayerReady (state);
+				state = state.WithPlayer (state.Player.WithCT (0));
+			}
+			Assert.AreEqual (0, state.Player.Skills [0].Resources.Cooldown);
+			Assert.AreEqual (2, state.Player.Skills [0].Resources.CurrentAmmo);
+		}
+
 
 		[Test]
 		public void CooledBasedAmmoSkill_WhenSkillUserIsRemoved_DoesNothing ()
@@ -239,6 +273,30 @@ namespace ArenaGS.Tests
 				state = Physics.WaitPlayer (state);
 				state = Time.ProcessUntilPlayerReady (state);
 			}
+		}
+
+		[Test]
+		public void MovementSkills_ValidTargetInClearLineInRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill skill = Generator.CreateSkill ("Dash", Effect.Movement, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3), 0);
+			state = state.WithPlayer (state.Player.WithAdditionalSkill (skill));
+
+			Assert.IsTrue (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (2, 3))); // In range
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (4, 4))); // In range, blocked line
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (7, 3))); // Not in range
+		}
+
+
+		[Test]
+		public void MovementSkills_MovedInvokerToLocation ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill skill = Generator.CreateSkill ("Dash", Effect.Movement, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3), 0);
+			state = state.WithPlayer (state.Player.WithAdditionalSkill (skill));
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 3));
+			Assert.AreEqual (new Point (2, 3), state.Player.Position);
 		}
 	}
 
@@ -268,7 +326,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ActorIsUsingPointSkillValid_DoesDamageToTarget ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+			GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 
@@ -280,7 +338,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ActorIsUsingPointSkillValid_DoesDamageToSelf ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+			GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 1));
 
@@ -291,7 +349,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void AOESkills_AffectMultipleCharacters ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 2), new Point (3, 2)});
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
@@ -302,7 +360,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void AOESkills_DoNotAffectThroughWalls ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			for (int i = 1; i <= 5; ++i)
 				state.Map.Set (new Point (2, i), TerrainType.Wall);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
@@ -315,7 +373,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ConeSkills_AffectMultipleCharacters ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
@@ -326,7 +384,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ConeSkills_DoNotAffectThroughWalls ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (4, 1) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
@@ -340,7 +398,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void LineSkills_AffectMultipleCharacters ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
+			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			var enemies = Generator.CreateStubEnemies (new Point[] { new Point(2, 1), new Point(3, 1), new Point(3, 3), new Point(3, 2)});
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
@@ -349,9 +407,9 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void Linekills_DoNotAffectThroughWalls ()
+		public void LineSkills_DoNotAffectThroughWalls ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
+			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			var enemies = Generator.CreateStubEnemies (new Point[] { new Point (3, 1) });
 			state = state.WithEnemies (enemies.ToImmutableList ());
 
@@ -365,9 +423,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void DelayedDamage_DamagesAfterCT ()
 		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill delayedDamageSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None, 1);
-			state = state.WithPlayer (state.Player.WithSkills (delayedDamageSkill.Yield ().ToImmutableList ()));
+			GameState state = TestScenes.AddDelayedDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));

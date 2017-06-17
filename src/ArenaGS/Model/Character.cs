@@ -82,6 +82,11 @@ namespace ArenaGS.Model
 			return new Character (this) { Skills = skills };
 		}
 
+		internal Character WithAdditionalSkill (Skill skill)
+		{
+			return new Character (this) { Skills = Skills.Add (skill) };
+		}
+
 		internal Character WithHealth (Health health)
 		{
 			return new Character (this) { Health = health };

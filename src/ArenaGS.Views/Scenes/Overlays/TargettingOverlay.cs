@@ -58,18 +58,21 @@ namespace ArenaGS.Views.Scenes.Overlays
 			});
 		}
 
-		void MoveAndSnapIfNeeded (Point p)
+		// Seperate this to a point conversion and then the snap
+		// We need to hittest, then determine, then snap
+		Point Snap (Point p)
 		{
-			Direction direction = State.Player.Position.DirectionTo (p);
 			switch (Skill.TargetInfo.TargettingStyle)
 			{
 				case TargettingStyle.Cone:
 				case TargettingStyle.Line:
-					CurrentTargettedPosition = State.Player.Position.InDirection (direction);
-					break;
+				{
+					Direction direction = State.Player.Position.DirectionTo (p);
+
+					return State.Player.Position.InDirection (direction);
+				}
 				default:
-					CurrentTargettedPosition = p;
-					break;
+					return p;
 			}
 		}
 
@@ -80,7 +83,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		void MoveTo (Point p)
 		{
-			MoveAndSnapIfNeeded (p);
+			CurrentTargettedPosition = p;
 			Parent.Invalidate ();
 		}
 
@@ -99,6 +102,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 			if (hitTest != null && hitTest.View is MapView)
 			{
 				Point position = (Point)hitTest.Data;
+				position = Snap (position);
 				if (CurrentTargettedPosition == position)
 					Select ();
 				else

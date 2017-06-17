@@ -17,6 +17,7 @@ namespace ArenaGS.Engine
 		AreaDamageScript CreateDamageScript (int ct, int damage, ImmutableHashSet<Point> affectedPoints);
 
 		Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power);
+		Skill CreateSkill (string name);
 
 		Character CreateStubPlayer (Point position);
 		Character CreateStubEnemy (Point position);
@@ -28,6 +29,12 @@ namespace ArenaGS.Engine
 		const int CharacterOffset = 100;
 		const int ScriptOffset = 2000;
 		const int SkillOffset = 30000;
+		SkillLibrary SkillLibrary;
+
+		public Generator ()
+		{
+			SkillLibrary = new SkillLibrary (this);
+		}
 
 		int CharacterCount = 0;
 		int ScriptCount = 0;
@@ -67,6 +74,11 @@ namespace ArenaGS.Engine
 		public SpawnerScript CreateSpawner (Point position)
 		{
 			return new SpawnerScript (NextScriptID (), 100, position, 5, 3);
+		}
+
+		public Skill CreateSkill (string name)
+		{
+			return SkillLibrary.CreateSkill (name);
 		}
 
 		public Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power)

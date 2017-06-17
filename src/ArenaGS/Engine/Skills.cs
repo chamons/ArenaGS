@@ -85,6 +85,12 @@ namespace ArenaGS.Engine
 					state = state.WithAddedScript (Generator.CreateDamageScript (-100, skill.Power, areaAffected.ToImmutableHashSet ()));
 					break;
 				}
+				case Effect.Movement:
+				{
+					Animation.Request (state, new MovementAnimationInfo (invoker, target));
+					state = state.WithReplaceCharacter (invoker.WithPosition (target));
+					break;
+				}
 				case Effect.None:
 					break;
 			}
@@ -102,8 +108,14 @@ namespace ArenaGS.Engine
 
 			if (skill.UsesCooldown)
 			{
-				skill = skill.WithCooldownSet ();
-				state = state.WithAddedScript (Generator.CreateCooldownScript (1, invoker, skill));
+				if (skill.RechargedAmmoOnCooldown && skill.UnderCooldown)
+				{
+				}
+				else
+				{
+					skill = skill.WithCooldownSet ();
+					state = state.WithAddedScript (Generator.CreateCooldownScript (1, invoker, skill));
+				}
 			}
 
 			return state.WithReplaceCharacter (invoker.WithReplaceSkill (skill));

@@ -33,6 +33,7 @@
     <Compile Include="Engine\Combat.cs" />
     <Compile Include="Engine\Physics.cs" />
     <Compile Include="Engine\Random.cs" />
+    <Compile Include="Engine\SkillLibrary.cs" />
     <Compile Include="Engine\Skills.cs" />
     <Compile Include="Engine\Time.cs" />
     <Compile Include="GameEngine.cs" />
