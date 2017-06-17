@@ -26,7 +26,8 @@ namespace ArenaGS.Views.Views
 
 		public override SKSurface Draw (GameState state)
 		{
-			BlankCanvas ();
+			base.Draw (state);
+
 			Canvas.DrawRect (new SKRect (0, 0, VisualRect.Width - InfoBorder, VisualRect.Height - InfoBorder), new SKPaint () { Color = SKColors.White, IsStroke = true });
 
 			if (Target != null)

@@ -48,16 +48,17 @@
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\InfoView.cs" />
     <Compile Include="Views\LogView.cs" />
+    <Compile Include="Views\Map\MapAnimationPainter.cs" />
     <Compile Include="Views\SkillBarView.cs" />
     <Compile Include="Views\View.cs" />
-    <Compile Include="Views\MapView.cs" />
+    <Compile Include="Views\Map\MapView.cs" />
     <Compile Include="Utilities\AnimationHelper.cs" />
     <Compile Include="Scenes\Overlays\CombatDefaultOverlay.cs" />
     <Compile Include="Scenes\Overlays\DescribeOverlay.cs" />
     <Compile Include="Scenes\Overlays\IOverlay.cs" />
     <Compile Include="Scenes\Overlays\TargettingOverlay.cs" />
-    <Compile Include="Views\MapTileVariants.cs" />
-    <Compile Include="Views\MapThemePainter.cs" />
+    <Compile Include="Views\Map\MapTileVariants.cs" />
+    <Compile Include="Views\Map\MapThemePainter.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

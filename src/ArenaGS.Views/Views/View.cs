@@ -30,15 +30,17 @@ namespace ArenaGS.Views.Views
 			Surface = SKSurface.Create (Size.Width, Size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 		}
 
-		protected void BlankCanvas ()
+		protected SKSurface Surface { get; private set; }
+		protected SKCanvas Canvas { get; private set; }
+
+		public virtual SKSurface Draw (GameState state)
 		{
+			Canvas = Surface.Canvas;
 			Canvas.DrawRect (VisualRect, new SKPaint () { Color = SKColors.Black });
+
+			return Surface;
 		}
 
-		protected SKSurface Surface { get; private set; }
-		protected SKCanvas Canvas => Surface.Canvas;
-
-		public abstract SKSurface Draw (GameState state);
 		public abstract HitTestResults HitTest (SKPointI point);
 	}
 }
