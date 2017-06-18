@@ -61,7 +61,7 @@ namespace ArenaGS.Engine
 			// For as long as it takes
 			while (true)
 			{
-				ITimedElement next = state.AllActors.Where (x => x.CT >= TimeConstants.CTNededForAction).OrderBy (x => x.CT).Reverse ().FirstOrDefault ();
+				ITimedElement next = state.AllActors.Where (x => x.CT >= TimeConstants.CTNededForAction).OrderByDescending (x => x.CT).FirstOrDefault ();
 				
 				if (next != null)
 				{

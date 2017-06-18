@@ -79,6 +79,11 @@ namespace ArenaGS.Engine
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Combat.Damage (state, enemy, effectInfo.Power);
 
+					if (effectInfo.Stun)
+					{
+						foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+							state = state.WithReplaceEnemy (enemy.WithAdditionalCT (-200));
+					}
 					if (effectInfo.Knockback)
 					{
 						Direction directionOfFire = invoker.Position.DirectionTo (target);
