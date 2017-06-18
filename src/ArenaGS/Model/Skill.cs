@@ -162,14 +162,18 @@ namespace ArenaGS.Model
 		[ProtoMember (2)]
 		public bool Knockback { get; private set; }
 
+		[ProtoMember (3)]
+		public bool Stun { get; private set; }
+
 		public DamageSkillEffectInfo ()
 		{
 		}
 
-		public DamageSkillEffectInfo (int power, bool knockback = false)
+		public DamageSkillEffectInfo (int power, bool knockback = false, bool stun = false)
 		{
 			Power = power;
 			Knockback = knockback;
+			Stun = stun;
 		}
 	}
 
@@ -232,6 +236,11 @@ namespace ArenaGS.Model
 			EffectInfo = original.EffectInfo;
 			TargetInfo = original.TargetInfo;
 			Resources = original.Resources;
+		}
+
+		public Skill WithEffectInfo (SkillEffectInfo newEfectInfo)
+		{
+			return new Skill (this) { EffectInfo = newEfectInfo };
 		}
 
 		public bool UsesAmmo => Resources.UsesAmmo;

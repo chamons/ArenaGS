@@ -457,5 +457,30 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 			Assert.AreEqual (new Point (3, 3), state.Enemies [0].Position);
 		}
+
+		[Test]
+		public void StunSkills_ReduceCTOfTarget ()
+		{
+			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = TestStunCore (state);
+		}
+
+		[Test]
+		public void StunSkillsWithKnockback_ReduceCTOfTarget ()
+		{
+			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithEffectInfo (new DamageSkillEffectInfo (1, knockback: true, stun: true)).Yield ().ToImmutableList ()));
+			state = TestStunCore (state);
+		}
+
+		private GameState TestStunCore (GameState state)
+		{
+			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
+
+			Assert.AreEqual (100, state.Enemies [0].CT);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.Less (state.Enemies [0].CT, 100);
+			return state;
+		}
 	}
 }
