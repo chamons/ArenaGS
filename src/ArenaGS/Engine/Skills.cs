@@ -79,6 +79,20 @@ namespace ArenaGS.Engine
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Combat.Damage (state, enemy, effectInfo.Power);
 
+					if (effectInfo.Knockback)
+					{
+						Direction directionOfFire = invoker.Position.DirectionTo (target);
+						foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+						{
+							Point knockbackTarget = enemy.Position.InDirection (directionOfFire);
+							if (IsPointClear (state, knockbackTarget))
+							{
+								Animation.Request (state, new MovementAnimationInfo (enemy, knockbackTarget));
+								state = state.WithReplaceEnemy (enemy.WithPosition (knockbackTarget));
+							}
+						}
+					}
+
 					break;
 				}
 				case Effect.DelayedDamage:
@@ -142,7 +156,6 @@ namespace ArenaGS.Engine
 
 			return new HashSet<Point> (BresenhamLine.PointsOnLine (invoker.Position, lineTarget).Where (x => IsPathBetweenPointsClear (state, invoker.Position, x, true)));
 		}
-
 
 		public HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target)
 		{
@@ -220,11 +233,18 @@ namespace ArenaGS.Engine
 					return false;
 				if (p == target)
 					return true;
-				if (state.Map[p].Terrain != TerrainType.Floor)
-					return false;
-				if (!pierceCharacters && state.AllCharacters.Any (x => x.Position == p))
+				if (!IsPointClear (state, p, pierceCharacters))
 					return false;
 			}
+			return true;
+		}
+
+		static bool IsPointClear (GameState state, Point p, bool pierceCharacters = false)
+		{
+			if (state.Map [p].Terrain != TerrainType.Floor)
+				return false;
+			if (!pierceCharacters && state.AllCharacters.Any (x => x.Position == p))
+				return false;
 			return true;
 		}
 

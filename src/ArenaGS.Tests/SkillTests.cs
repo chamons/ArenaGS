@@ -422,5 +422,40 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
 			Assert.AreEqual (new Point (3, 3), Combat.CharactersDamaged[0].Item1.Position);
 		}
+
+		[Test]
+		public void KnockbackSkills_MoveTargetBackIfClear ()
+		{
+			GameState state = TestScenes.AddKnockbackSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.AreEqual (new Point (4, 4), state.Enemies [0].Position);
+		}
+
+		[Test]
+		public void KnockbackSkills_DoesNotMoveTargetBackIfBlockedByWall ()
+		{
+			GameState state = TestScenes.AddKnockbackSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
+
+			state.Map.Set (new Point (4, 4), TerrainType.Wall);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.AreEqual (new Point (3, 3), state.Enemies [0].Position);
+		}
+
+		[Test]
+		public void KnockbackSkills_DoesNotMoveTargetBackIfBlockedByCharacter ()
+		{
+			GameState state = TestScenes.AddKnockbackSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
+			state = state.WithAddedEnemy (Generator.CreateStubEnemy (new Point (4, 4)));
+			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.AreEqual (new Point (3, 3), state.Enemies [0].Position);
+		}
 	}
 }
