@@ -165,15 +165,19 @@ namespace ArenaGS.Model
 		[ProtoMember (3)]
 		public bool Stun { get; private set; }
 
+		[ProtoMember (3)]
+		public bool Charge { get; private set; }
+
 		public DamageSkillEffectInfo ()
 		{
 		}
 
-		public DamageSkillEffectInfo (int power, bool knockback = false, bool stun = false)
+		public DamageSkillEffectInfo (int power, bool knockback = false, bool stun = false, bool charge = false)
 		{
 			Power = power;
 			Knockback = knockback;
 			Stun = stun;
+			Charge = charge;
 		}
 	}
 

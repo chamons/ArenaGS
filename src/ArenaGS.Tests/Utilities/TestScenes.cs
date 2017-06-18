@@ -136,5 +136,11 @@ namespace ArenaGS.Tests.Utilities
 			Skill testSkill = generator.CreateSkill ("Stun", Effect.Damage, new DamageSkillEffectInfo (2, stun: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
+
+		internal static GameState AddChargeSkill (IGenerator generator, GameState state)
+		{
+			Skill testSkill = generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (3, charge: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+		}
 	}
 }

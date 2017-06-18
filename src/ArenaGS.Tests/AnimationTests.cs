@@ -104,5 +104,15 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.SpecificAreaExplosion, AnimationRequests [0].Type);
 		}
+
+		[Test]
+		public void ChargeSkill_ShouldFireMovementNotProjectile ()
+		{
+			GameState state = TestScenes.AddChargeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
+			Assert.AreEqual (1, AnimationRequests.Count);
+			Assert.AreEqual (AnimationType.Movement, AnimationRequests [0].Type);
+
+		}
 	}
 }
