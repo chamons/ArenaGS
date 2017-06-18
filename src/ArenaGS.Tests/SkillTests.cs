@@ -18,7 +18,6 @@ namespace ArenaGS.Tests
 		IPhysics Physics;
 		IGenerator Generator;
 		ITime Time;
-		Skill TestSkill;
 
 		[SetUp]
 		public void Setup ()
@@ -28,21 +27,18 @@ namespace ArenaGS.Tests
 			Physics = Dependencies.Get<IPhysics> ();
 			Generator = Dependencies.Get<IGenerator> ();
 			Time = Dependencies.Get<ITime> ();
-			TestSkill = Generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None, 1);
 		}
 
 		[Test]
 		public void UseOfSkill_ReducesInvokersCT ()
 		{
 			GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			Character enemy = state.Enemies.First (x => x.Position == new Point (3, 3));
-			state = state.WithReplaceEnemy (enemy.WithSkills (new Skill [] { TestSkill }.ToImmutableList ()));
-			enemy = state.UpdateCharacterReference (enemy);
+			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
+			state = TestScenes.AddTestSkill (Generator, state, state.Enemies[0]);
 
-			Assert.IsTrue (enemy.CT >= 100);
-			state = Skills.Invoke (state, enemy, enemy.Skills [0], new Point (2, 3));
-			enemy = state.UpdateCharacterReference (enemy);
-			Assert.IsTrue (enemy.CT < 100);
+			Assert.IsTrue (state.Enemies [0].CT >= 100);
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (2, 3));
+			Assert.IsTrue (state.Enemies [0].CT < 100);
 
 			Assert.IsTrue (state.Player.CT >= 100);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 3));
@@ -55,7 +51,7 @@ namespace ArenaGS.Tests
 			Assert.Throws<InvalidOperationException> (() =>
 			{
 				GameState state = TestScenes.CreateTinyRoomState (Generator);
-				Skills.Invoke (state, state.Player, TestSkill, new Point (2, 2));
+				Skills.Invoke (state, state.Player, TestScenes.CreateSkill (Generator), new Point (2, 2));
 			});
 		}
 
@@ -261,8 +257,7 @@ namespace ArenaGS.Tests
 		public void CooledBasedAmmoSkill_WhenSkillUserIsRemoved_DoesNothing ()
 		{
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
-			Skill skill = Generator.CreateSkill ("Skill", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (3, 2), 1);
-			state = state.WithReplaceEnemy (state.Enemies [0].WithSkills (skill.Yield ().ToImmutableList ()));
+			state = TestScenes.AddSkillWithResources (Generator, state, SkillResources.WithRechargingAmmo (3, 2), state.Enemies[0]);
 
 			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (2, 1));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
@@ -277,9 +272,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void MovementSkills_ValidTargetInClearLineInRange ()
 		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill skill = Generator.CreateSkill ("Dash", Effect.Movement, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3), 0);
-			state = state.WithPlayer (state.Player.WithAdditionalSkill (skill));
+			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 
 			Assert.IsTrue (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (2, 3))); // In range
 			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (4, 4))); // In range, blocked line
@@ -289,9 +282,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void MovementSkills_MovedInvokerToLocation ()
 		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill skill = Generator.CreateSkill ("Dash", Effect.Movement, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3), 0);
-			state = state.WithPlayer (state.Player.WithAdditionalSkill (skill));
+			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 3));
 			Assert.AreEqual (new Point (2, 3), state.Player.Position);

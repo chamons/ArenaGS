@@ -78,13 +78,15 @@ namespace ArenaGS.Views.Views
 					{
 						case Effect.Damage:
 						{
-							Write ($"{skill.Power} dice of damage.", currentOffset);
+							DamageSkillEffectInfo skillInfo = (DamageSkillEffectInfo)skill.EffectInfo;
+							Write ($"{skillInfo.Power} dice of damage.", currentOffset);
 							currentOffset++;
 							break;
 						}
 						case Effect.DelayedDamage:
 						{
-							Write ($"{skill.Power} dice of damage after a delay.", currentOffset);
+							DelayedDamageSkillEffectInfo skillInfo = (DelayedDamageSkillEffectInfo)skill.EffectInfo;
+							Write ($"{skillInfo.Power} dice of damage after a delay.", currentOffset);
 							currentOffset++;
 							break;
 						}

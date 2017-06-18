@@ -16,7 +16,7 @@ namespace ArenaGS.Engine
 		ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill);
 		AreaDamageScript CreateDamageScript (int ct, int damage, ImmutableHashSet<Point> affectedPoints);
 
-		Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power);
+		Skill CreateSkill (string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources);
 		Skill CreateSkill (string name);
 
 		Character CreateStubPlayer (Point position);
@@ -81,9 +81,9 @@ namespace ArenaGS.Engine
 			return SkillLibrary.CreateSkill (name);
 		}
 
-		public Skill CreateSkill (string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power)
+		public Skill CreateSkill (string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources)
 		{
-			return new Skill (NextSkillID (), name, effect, targetInfo, resources, power);
+			return new Skill (NextSkillID (), name, effect, effectInfo, targetInfo, resources);
 		}
 
 		public ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill)
