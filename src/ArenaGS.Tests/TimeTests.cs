@@ -120,5 +120,18 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (1, ElementsThatActed.Count);
 			Assert.IsTrue (ElementsThatActed.First () is MapScript);
 		}
+
+		[Test]
+		public void WithAllCharactersReady_DontDoubleActiveMonster ()
+		{
+			GameState state = CreateTestState (100, 100, 100);
+
+			// First player action
+			state = state.WithPlayer (state.Player.WithCT (0));
+			state = Time.ProcessUntilPlayerReady (state);
+
+			// Each enemy should get 1 action, not 2 each
+			Assert.AreEqual (2, ElementsThatActed.Count);
+		}
 	}
 }
