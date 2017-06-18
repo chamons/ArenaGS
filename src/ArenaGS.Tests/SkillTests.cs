@@ -257,7 +257,6 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (2, state.Player.Skills [0].Resources.CurrentAmmo);
 		}
 
-
 		[Test]
 		public void CooledBasedAmmoSkill_WhenSkillUserIsRemoved_DoesNothing ()
 		{
@@ -286,7 +285,6 @@ namespace ArenaGS.Tests
 			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (4, 4))); // In range, blocked line
 			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (7, 3))); // Not in range
 		}
-
 
 		[Test]
 		public void MovementSkills_MovedInvokerToLocation ()
