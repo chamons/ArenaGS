@@ -146,6 +146,50 @@ namespace ArenaGS.Model
 	}
 
 	[ProtoContract]
+	[ProtoInclude (500, typeof (ReduceCooldownScript))]
+	[ProtoInclude (500, typeof (AreaDamageScript))]
+	public class SkillEffectInfo
+	{
+		public static SkillEffectInfo None { get; } = new SkillEffectInfo ();
+	}
+
+	[ProtoContract]
+	public class DamageSkillEffectInfo : SkillEffectInfo
+	{
+		[ProtoMember (1)]
+		public int Power { get; private set; }
+
+		[ProtoMember (2)]
+		public bool Knockback { get; private set; }
+
+		public DamageSkillEffectInfo ()
+		{
+		}
+
+		public DamageSkillEffectInfo (int power, bool knockback = false)
+		{
+			Power = power;
+			Knockback = knockback;
+		}
+	}
+
+	[ProtoContract]
+	public class DelayedDamageSkillEffectInfo : SkillEffectInfo
+	{
+		[ProtoMember (1)]
+		public int Power { get; private set; }
+
+		public DelayedDamageSkillEffectInfo ()
+		{
+		}
+
+		public DelayedDamageSkillEffectInfo (int power)
+		{
+			Power = power;
+		}
+	}
+
+	[ProtoContract]
 	public sealed class Skill
 	{
 		[ProtoMember (1)]
@@ -158,26 +202,26 @@ namespace ArenaGS.Model
 		public Effect Effect { get; private set; }
 
 		[ProtoMember (4)]
-		public TargettingInfo TargetInfo { get; private set; }
+		public SkillEffectInfo EffectInfo { get; private set; }
 
 		[ProtoMember (5)]
-		public SkillResources Resources { get; private set; }
+		public TargettingInfo TargetInfo { get; private set; }
 
 		[ProtoMember (6)]
-		public int Power { get; private set; }
+		public SkillResources Resources { get; private set; }		
 
 		public Skill ()
 		{
 		}
 
-		public Skill (int id, string name, Effect effect, TargettingInfo targetInfo, SkillResources resources, int power)
+		public Skill (int id, string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources)
 		{
 			ID = id;
 			Name = name;
 			Effect = effect;
+			EffectInfo = effectInfo;
 			TargetInfo = targetInfo;
 			Resources = resources;
-			Power = power;
 		}
 
 		Skill (Skill original)
@@ -185,9 +229,9 @@ namespace ArenaGS.Model
 			ID = original.ID;
 			Name = original.Name;
 			Effect = original.Effect;
+			EffectInfo = original.EffectInfo;
 			TargetInfo = original.TargetInfo;
 			Resources = original.Resources;
-			Power = original.Power;
 		}
 
 		public bool UsesAmmo => Resources.UsesAmmo;

@@ -54,7 +54,8 @@ namespace ArenaGS.Engine
 							case TargettingStyle.Point:
 							{
 								List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
-								Animation.Request (state, new ProjectileAnimationInfo (path));
+								if (path.Count > 0)
+									Animation.Request (state, new ProjectileAnimationInfo (path));
 
 								if (skill.TargetInfo.Area > 1)
 									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected.ToImmutableHashSet ()));
@@ -74,15 +75,18 @@ namespace ArenaGS.Engine
 							}
 					}
 
+					DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
-						state = Combat.Damage (state, enemy, skill.Power);
+						state = Combat.Damage (state, enemy, effectInfo.Power);
 
 					break;
 				}
 				case Effect.DelayedDamage:
 				{
+					DelayedDamageSkillEffectInfo effectInfo = (DelayedDamageSkillEffectInfo)skill.EffectInfo;
+
 					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
-					state = state.WithAddedScript (Generator.CreateDamageScript (-100, skill.Power, areaAffected.ToImmutableHashSet ()));
+					state = state.WithAddedScript (Generator.CreateDamageScript (-100, effectInfo.Power, areaAffected.ToImmutableHashSet ()));
 					break;
 				}
 				case Effect.Movement:

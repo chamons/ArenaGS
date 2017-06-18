@@ -103,11 +103,11 @@ namespace ArenaGS
 			GeneratedMapData mapData = mapGenerator.Generate (hash);
 			Character player = Generator.CreatePlayer (FindOpenSpot (mapData.Map, new Point (8, 8), Enumerable.Empty<Point>()), new Health (3,3), new Defense (1));
 			player = player.WithSkills (new Skill [] {
-				Generator.CreateSkill ("Shot", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 3), 2),
-				Generator.CreateSkill ("Grenade", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2), 1),
-				Generator.CreateSkill ("Dragon's Breath", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), new SkillResources (maxCooldown : 5), 1),
-				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2), 3),
-				Generator.CreateSkill ("Line Strike", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2), 3),
+				Generator.CreateSkill ("Shot", Effect.Damage, new DamageSkillEffectInfo (2), new TargettingInfo (TargettingStyle.Point, 8), new SkillResources (maxCooldown : 3)),
+				Generator.CreateSkill ("Grenade", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Point, 4, 3), new SkillResources (maxAmmo : 2)),
+				Generator.CreateSkill ("Dragon's Breath", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Cone, 3), new SkillResources (maxCooldown : 5)),
+				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (3), new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2)),
+				Generator.CreateSkill ("Line Strike", Effect.Damage, new DamageSkillEffectInfo (3), new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2)),
 				Generator.CreateSkill ("Dash")
 			}.ToImmutableList ());
 

@@ -17,7 +17,7 @@ namespace ArenaGS.Engine
 		{
 			Generator = generator;
 
-			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (2, 3), -1));
+			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (2, 3)));
 		}
 
 		void AddToLibrary (Skill s)
