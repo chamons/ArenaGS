@@ -108,10 +108,7 @@ namespace ArenaGS.Engine
 
 			if (skill.UsesCooldown)
 			{
-				if (skill.RechargedAmmoOnCooldown && skill.UnderCooldown)
-				{
-				}
-				else
+				if (!skill.RechargedAmmoOnCooldown || !skill.UnderCooldown)
 				{
 					skill = skill.WithCooldownSet ();
 					state = state.WithAddedScript (Generator.CreateCooldownScript (1, invoker, skill));
