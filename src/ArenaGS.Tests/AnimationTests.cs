@@ -71,7 +71,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void TargettedSkill_ShouldFireProjectileAnimation ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkill (Generator);
+			GameState state = TestScenes.AddTestSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Projectile, AnimationRequests[0].Type);
@@ -80,7 +80,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void TargettedSkillWithArea_ShouldFireProjectileAndExplosionAnimation ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithAOESkill (Generator);
+			GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1,2));
 			Assert.AreEqual (2, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Projectile, AnimationRequests[0].Type);
@@ -90,7 +90,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void ConeSkill_ShouldFireConeAnimation ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithCone (Generator);
+			GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Cone, AnimationRequests [0].Type);
@@ -99,7 +99,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void LineSkill_ShouldFireSpecificAreaExplosionAnimation ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithLine (Generator);
+			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.SpecificAreaExplosion, AnimationRequests [0].Type);

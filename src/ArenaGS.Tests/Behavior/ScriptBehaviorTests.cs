@@ -74,7 +74,7 @@ namespace ArenaGS.Tests
 		public void ReduceCooldownScript_ReducesCooldownUntilZero_ThenDisappaers ()
 		{
 			const int Cooldown = 3;
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (-1, -1, Cooldown, Cooldown, false));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (-1, -1, Cooldown, Cooldown, false));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			ReduceCooldownScript script = new ReduceCooldownScript (1, 0, state.Player.ID, state.Player.Skills [0].ID);
 			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
@@ -93,7 +93,7 @@ namespace ArenaGS.Tests
 		public void ReduceCooldownScript_WithAmmoRecharge_IncreasesAmmoWhenDone ()
 		{
 			const int Cooldown = 3;
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (1, 2, Cooldown, Cooldown, true));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (1, 2, Cooldown, Cooldown, true));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			ReduceCooldownScript script = new ReduceCooldownScript (1, 0, state.Player.ID, state.Player.Skills [0].ID);
 			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());

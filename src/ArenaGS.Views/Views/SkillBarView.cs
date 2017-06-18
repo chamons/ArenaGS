@@ -35,6 +35,7 @@ namespace ArenaGS.Views.Views
 			}			
 		}
 
+		SKPaint CooldownButUsablePaint = new SKPaint () { Color = SKColors.Black.WithAlpha (110) };
 		SKPaint CooldownPaint = new SKPaint () { Color = SKColors.Black.WithAlpha (220) };
 		SKPaint BlackPaint = new SKPaint () { Color = SKColors.Black.WithAlpha (220) };
 		SKPaint AntialiasPaint = new SKPaint () { IsAntialias = false };
@@ -77,7 +78,7 @@ namespace ArenaGS.Views.Views
 					SKPoint location = bitmapRect.Location;
 					location.Offset (0, remainingHeight);
 					SKRect cooldownRect = SKRect.Create (location, new SKSize (bitmapRect.Width, bitmapRect.Height * percentageLeft));
-					Canvas.DrawRect (cooldownRect, CooldownPaint);
+					Canvas.DrawRect (cooldownRect, skill.ReadyForUse ? CooldownButUsablePaint : CooldownPaint);
 				}
 				if (skill.UsesAmmo)
 				{

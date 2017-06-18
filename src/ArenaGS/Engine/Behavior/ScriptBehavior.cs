@@ -78,20 +78,30 @@ namespace ArenaGS.Engine.Behavior
 				return state.WithScripts (state.Scripts.Remove (script));
 
 			Skill skill = character.Skills.First (x => x.ID == script.SkillID);
-			skill = skill.WithCooldownReduced ();
+			state = state.WithReplaceCharacter (character.WithReplaceSkill (skill.WithCooldownReduced ()));
+			character = state.UpdateCharacterReference (character);
+			skill = character.UpdateSkillReference (skill);
 
 			if (!skill.UnderCooldown)
 			{
 				state = state.WithRemovedScript (script);
-				if (skill.UsesAmmo && skill.Resources.RechargedAmmoOnCooldown && skill.Resources.CurrentAmmo < skill.Resources.MaxAmmo)
+				if (skill.Resources.RechargedAmmoOnCooldown && skill.Resources.CurrentAmmo < skill.Resources.MaxAmmo)
 				{
 					state = state.WithReplaceCharacter (character.WithReplaceSkill (skill.WithIncrementedAmmo ()));
 					character = state.UpdateCharacterReference (character);
 					skill = character.UpdateSkillReference (skill);
+
+					if (skill.Resources.CurrentAmmo < skill.Resources.MaxAmmo)
+					{
+						state = state.WithReplaceCharacter (character.WithReplaceSkill (skill.WithCooldownSet ()));
+						skill = character.UpdateSkillReference (skill);
+						character = state.UpdateCharacterReference (character);
+						state = state.WithAddedScript (Generator.CreateCooldownScript (0, character, skill));
+					}
 				}
 			}
 
-			return state.WithReplaceCharacter (character.WithReplaceSkill (skill));
+			return state;
 		}
 
 		GameState HandleDamageScript (GameState state, AreaDamageScript script)

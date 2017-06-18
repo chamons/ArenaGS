@@ -9,7 +9,8 @@ namespace ArenaGS.Model
 	{
 		None,
 		Damage,
-		DelayedDamage
+		DelayedDamage,
+		Movement
 	}
 
 	public enum TargettingStyle
@@ -111,7 +112,7 @@ namespace ArenaGS.Model
 			if (!UsesAmmo)
 				throw new InvalidOperationException ();
 
-			return new SkillResources (this) { CurrentAmmo = MaxAmmo };
+			return new SkillResources (this) { CurrentAmmo = CurrentAmmo + 1};
 		}
 
 		public SkillResources WithReloadedAmmo ()

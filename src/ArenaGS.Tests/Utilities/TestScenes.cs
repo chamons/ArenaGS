@@ -73,54 +73,40 @@ namespace ArenaGS.Tests.Utilities
 			return map;
 		}
 
-		internal static GameState CreateBoxRoomStateWithSkill (IGenerator generator)
-		{
-			return AddTestSkill (generator, CreateBoxRoomState (generator));
-		}
-
 		internal static GameState AddTestSkill (IGenerator generator, GameState state)
 		{
 			Skill testSkill = generator.CreateSkill ("Blast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None, 1);
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
-		}
-
-		internal static GameState CreateBoxRoomStateWithAOESkill (IGenerator generator)
-		{
-			return AddTestAOESkill (generator, CreateBoxRoomState (generator));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddTestAOESkill (IGenerator generator, GameState state)
 		{
 			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None, 1);
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
-		}
-
-		internal static GameState CreateBoxRoomStateWithSkillWithResources (IGenerator generator, SkillResources resources)
-		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkill (generator);
-			return state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithResources (resources).Yield ().ToImmutableList ()));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddTestConeSkill (IGenerator generator, GameState state)
 		{
 			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new TargettingInfo (TargettingStyle.Cone, 3), SkillResources.None, 1);
-			return state.WithPlayer (state.Player.WithSkills (new Skill [] { testSkill }.ToImmutableList ()));
-		}
-
-		internal static GameState CreateBoxRoomStateWithCone (IGenerator generator)
-		{
-			return AddTestConeSkill (generator, CreateBoxRoomState (generator));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddTestLineSkill (IGenerator generator, GameState state)
 		{
 			Skill testSkill = generator.CreateSkill ("Line", Effect.Damage, new TargettingInfo (TargettingStyle.Line, 3), SkillResources.None, 1);
-			return state.WithPlayer (state.Player.WithSkills (new Skill[] { testSkill }.ToImmutableList ()));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState CreateBoxRoomStateWithLine (IGenerator generator)
+		internal static GameState AddDelayedDamageSkill (IGenerator generator, GameState state)
 		{
-			return AddTestLineSkill (generator, CreateBoxRoomState(generator));
+			Skill testSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None, 1);
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+		}
+
+		internal static GameState AddSkillWithResources (IGenerator generator, GameState state, SkillResources resources)
+		{
+			state = AddTestSkill (generator, state);
+			return state.WithPlayer (state.Player.WithReplaceSkill (state.Player.Skills [0].WithResources (resources)));
 		}
 	}
 }
