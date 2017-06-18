@@ -148,7 +148,7 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (0, 2, -1, -1, false));
+				GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (0, 2, -1, -1, false));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			});
 		}
@@ -158,7 +158,7 @@ namespace ArenaGS.Tests
 		{
 			Assert.Throws<InvalidOperationException> (() =>
 			{
-				GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (-1, -1, 2, 3, false));
+				GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (-1, -1, 2, 3, false));
 				Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			});
 		}
@@ -166,7 +166,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void AmmoBasedSkill_ReducesAmmoWhenUsed ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithAmmo (8));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), SkillResources.WithAmmo (8));
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (7, state.Player.Skills [0].Resources.CurrentAmmo);
 		}
@@ -174,7 +174,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void CooledBasedSkill_SetsCooldownWhenUsed ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithCooldown (3));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), SkillResources.WithCooldown (3));
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (3, state.Player.Skills [0].Resources.Cooldown);
 		}
@@ -184,7 +184,7 @@ namespace ArenaGS.Tests
 		{
 			const int StartingCooldown = 3;
 
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithCooldown (StartingCooldown));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), SkillResources.WithCooldown (StartingCooldown));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
@@ -206,7 +206,7 @@ namespace ArenaGS.Tests
 		{
 			const int StartingCooldown = 3;
 
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (2, StartingCooldown));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), SkillResources.WithRechargingAmmo (2, StartingCooldown));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
@@ -226,7 +226,7 @@ namespace ArenaGS.Tests
 		[Test]
 		public void CooledBasedAmmoSkill_UnderCooldownButHasAmmo_IsUsable ()
 		{
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, new SkillResources (1, 2, 2, 3, true));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (1, 2, 2, 3, true));
 			Assert.IsTrue (state.Player.Skills [0].ReadyForUse);
 		}
 
@@ -235,7 +235,7 @@ namespace ArenaGS.Tests
 		{
 			const int StartingCooldown = 3;
 
-			GameState state = TestScenes.CreateBoxRoomStateWithSkillWithResources (Generator, SkillResources.WithRechargingAmmo (2, StartingCooldown));
+			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), SkillResources.WithRechargingAmmo (2, StartingCooldown));
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 			state = Time.ProcessUntilPlayerReady (state);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));

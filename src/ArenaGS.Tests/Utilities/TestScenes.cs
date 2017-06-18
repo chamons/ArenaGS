@@ -103,9 +103,9 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState CreateBoxRoomStateWithSkillWithResources (IGenerator generator, SkillResources resources)
+		internal static GameState AddSkillWithResources (IGenerator generator, GameState state, SkillResources resources)
 		{
-			GameState state = TestScenes.AddTestSkill (generator, TestScenes.CreateBoxRoomState (generator));
+			state = AddTestSkill (generator, state);
 			return state.WithPlayer (state.Player.WithReplaceSkill (state.Player.Skills [0].WithResources (resources)));
 		}
 	}
