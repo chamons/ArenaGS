@@ -62,9 +62,11 @@ namespace ArenaGS.Views.Views
 				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
 
 			if (characterToAnimate != null)
-				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), EnemyBitmap);
+				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), characterToAnimate.Item1 == Player.ID ? PlayerBitmap : EnemyBitmap);
 
-			DrawTile (TranslateModelToUIPosition (GameState.Player.Position), PlayerBitmap);
+			if (characterToAnimate == null || characterToAnimate.Item1 != Player.ID)
+				DrawTile (TranslateModelToUIPosition (GameState.Player.Position), PlayerBitmap);
+
 			DrawDelayedDamageAreas ();
 
 			AnimationPainter.Draw (this);

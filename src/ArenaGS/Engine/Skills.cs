@@ -48,17 +48,26 @@ namespace ArenaGS.Engine
 				case Effect.Damage:
 				{
 					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
+					DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
 
 					switch (skill.TargetInfo.TargettingStyle)
 					{
 							case TargettingStyle.Point:
 							{
 								List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
-								if (path.Count > 0)
+								if (!effectInfo.Charge && path.Count > 0)
 									Animation.Request (state, new ProjectileAnimationInfo (path));
 
 								if (skill.TargetInfo.Area > 1)
 									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected.ToImmutableHashSet ()));
+
+								if (effectInfo.Charge && path.Count > 1)
+								{
+									Point locationNextToTarget = path[path.Count - 2];
+									Animation.Request (state, new MovementAnimationInfo (invoker, locationNextToTarget));
+									state = state.WithReplaceCharacter (invoker.WithPosition (locationNextToTarget));
+									invoker = state.UpdateCharacterReference (invoker);
+								}
 
 								break;
 							}
@@ -75,7 +84,6 @@ namespace ArenaGS.Engine
 							}
 					}
 
-					DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
 					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
 						state = Combat.Damage (state, enemy, effectInfo.Power);
 

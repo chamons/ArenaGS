@@ -109,7 +109,8 @@ namespace ArenaGS
 				Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (3), new TargettingInfo (TargettingStyle.Point, 3, 1), new SkillResources (maxAmmo : 2)),
 				Generator.CreateSkill ("Line Strike", Effect.Damage, new DamageSkillEffectInfo (3), new TargettingInfo (TargettingStyle.Line, 3), new SkillResources (maxCooldown : 2)),
 				Generator.CreateSkill ("Dash"),
-				Generator.CreateSkill ("Point Blank Shot")
+				Generator.CreateSkill ("Point Blank Shot"),
+				Generator.CreateSkill ("Charge"),
 			}.ToImmutableList ());
 
 			List <Point> enemyPositions = new List<Point> ();

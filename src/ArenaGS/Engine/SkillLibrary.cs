@@ -1,10 +1,7 @@
-﻿using ArenaGS.Model;
-using ArenaGS.Platform;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using ArenaGS.Model;
 
 namespace ArenaGS.Engine
 {
@@ -18,7 +15,8 @@ namespace ArenaGS.Engine
 			Generator = generator;
 
 			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (2, 3)));
-			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true, stun: true), new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithAmmo (1)));
+			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (0, knockback: true, stun: true), new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithAmmo (1)));
+			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (1, charge: true), new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithCooldown (3)));
 
 		}
 

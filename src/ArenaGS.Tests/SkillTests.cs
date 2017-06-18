@@ -236,7 +236,7 @@ namespace ArenaGS.Tests
 			state = Time.ProcessUntilPlayerReady (state);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 1));
 
-			for (int i = 1; i <= StartingCooldown - 1; ++i)
+			for (int i = 0; i < StartingCooldown; ++i)
 			{
 				state = Time.ProcessUntilPlayerReady (state);
 				state = state.WithPlayer (state.Player.WithCT (0));
@@ -244,7 +244,7 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (StartingCooldown, state.Player.Skills [0].Resources.Cooldown);
 			Assert.AreEqual (1, state.Player.Skills [0].Resources.CurrentAmmo);
 
-			for (int i = 1; i <= StartingCooldown; ++i)
+			for (int i = 0; i < StartingCooldown; ++i)
 			{
 				state = Time.ProcessUntilPlayerReady (state);
 				state = state.WithPlayer (state.Player.WithCT (0));
@@ -481,6 +481,24 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 			Assert.Less (state.Enemies [0].CT, 100);
 			return state;
+		}
+
+		[Test]
+		public void ChargeSkills_MoveCasterNextToTargetFirst ()
+		{
+			GameState state = TestScenes.AddChargeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
+		}
+
+		[Test]
+		public void ChargeSkillsNextToTarget_DoesNotMoveCaster ()
+		{
+			GameState state = TestScenes.AddChargeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithPlayer (state.Player.WithPosition (new Point (2, 2)));
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
 		}
 	}
 }
