@@ -96,7 +96,7 @@ namespace ArenaGS.Engine
 								state = state.WithReplaceEnemy (enemy.WithPosition (knockbackTarget));
 							}
 						}
-					}	
+					}
 
 					break;
 				}
