@@ -58,8 +58,6 @@ namespace ArenaGS.Views.Scenes.Overlays
 			});
 		}
 
-		// Seperate this to a point conversion and then the snap
-		// We need to hittest, then determine, then snap
 		Point Snap (Point p)
 		{
 			switch (Skill.TargetInfo.TargettingStyle)
