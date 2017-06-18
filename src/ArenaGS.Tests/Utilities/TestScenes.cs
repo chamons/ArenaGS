@@ -124,5 +124,11 @@ namespace ArenaGS.Tests.Utilities
 			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
+
+		internal static GameState AddKnockbackSkill (IGenerator generator, GameState state)
+		{
+			Skill testSkill = generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (2, knockback: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+		}
 	}
 }
