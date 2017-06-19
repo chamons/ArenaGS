@@ -111,6 +111,7 @@ namespace ArenaGS
 				Generator.CreateSkill ("Dash"),
 				Generator.CreateSkill ("Point Blank Shot"),
 				Generator.CreateSkill ("Charge"),
+				Generator.CreateSkill ("Move & Shoot")
 			}.ToImmutableList ());
 
 			List <Point> enemyPositions = new List<Point> ();

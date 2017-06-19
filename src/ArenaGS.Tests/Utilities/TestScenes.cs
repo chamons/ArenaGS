@@ -143,10 +143,12 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState AddMoveAndDamageSkill (IGenerator generator, GameState state)
+		internal static GameState AddMoveAndDamageSkill (IGenerator generator, GameState state, Character character = null)
 		{
-			Skill testSkill = generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new DamageSkillEffectInfo (3), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
-			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+			if (character == null)
+				character = state.Player;
+			Skill testSkill = generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), new TargettingInfo (TargettingStyle.Point, 1), SkillResources.WithCooldown (3));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 	}
 }

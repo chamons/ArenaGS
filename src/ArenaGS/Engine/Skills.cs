@@ -65,10 +65,24 @@ namespace ArenaGS.Engine
 				}
 				case Effect.MoveAndDamageClosest:
 				{
+					MoveAndDamageSkillEffectInfo effectInfo = (MoveAndDamageSkillEffectInfo)skill.EffectInfo;
 					state = HandleMovement (state, invoker, target);
-						// HandleDamageSkill with some range? Likely need a seperate DamageSkillEffectInfo that gives the range of the auto attack
-						
-						break;
+					invoker = state.UpdateCharacterReference (invoker);
+
+					var orderedCharactersByDistance = state.AllCharacters.Select(x => new Tuple<double, Character>(invoker.Position.NormalDistance(x.Position), x));
+					var potentialTargets = orderedCharactersByDistance.Where(x => x.Item1 <= effectInfo.Range).OrderBy(x => x.Item1).Select(x => x.Item2);
+					var targetsOfCorrectSide = potentialTargets.Where(x => x.ID != invoker.ID).Where(x => x.IsPlayer != invoker.IsPlayer);
+					var targetsWithClearPath = targetsOfCorrectSide.Where(x => IsPathBetweenPointsClear(state, invoker.Position, x.Position, false));
+					var finalTarget = targetsWithClearPath.FirstOrDefault ();
+
+					if (finalTarget != null)
+					{
+						List<Point> path = BresenhamLine.PointsOnLine(invoker.Position, finalTarget.Position);
+						if (path.Count > 0)
+							Animation.Request(state, new ProjectileAnimationInfo (path));
+						state = Combat.Damage(state, finalTarget, effectInfo.Power);
+					}
+					break;
 				}
 				case Effect.None:
 					break;

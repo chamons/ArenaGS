@@ -507,12 +507,52 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (3, 3), new Point (3, 4) }));
 
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
-			Assert.AreEqual (new Point (2, 2), state.Player.Position);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
+			Assert.AreEqual (new Point (2, 1), state.Player.Position);
 			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
-			Assert.AreEqual (new Point (2, 2), Combat.CharactersDamaged[0].Item1.Position);
+			Assert.AreEqual (new Point (3, 3), Combat.CharactersDamaged[0].Item1.Position);
 		}
-		// Test if there is no enemy in range
-		// Test if an enemy does this is will only go after player
+
+		[Test]
+		public void MoveAndDamageClosest_IgnoresClosestIfPathIsThroughWall ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill(Generator, TestScenes.CreateBoxRoomState(Generator));
+			state.Map.Set (new Point (2, 1), TerrainType.Wall);
+			state.Map.Set (new Point (2, 2), TerrainType.Wall);
+
+			state = state.WithEnemies(Generator.CreateStubEnemies(new Point[] { new Point (3, 1), new Point (1, 5) }));
+
+			state = Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point (1, 2));
+			Assert.AreEqual(new Point(1, 2), state.Player.Position);
+			Assert.AreEqual(1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual(new Point(1, 5), Combat.CharactersDamaged[0].Item1.Position);
+		}
+
+		[Test]
+		public void MoveAndDamageClosest_MovesButNoDamageIfNoEnemiesClose ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill(Generator, TestScenes.CreateBoxRoomState(Generator));
+			state = state.WithEnemies(Generator.CreateStubEnemies(new Point[] { new Point(9, 9) }));
+
+			state = Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point(2, 1));
+
+			Assert.AreEqual(new Point(2, 1), state.Player.Position);
+			Assert.AreEqual(0, Combat.CharactersDamaged.Count);
+		}
+
+		[Test]
+		public void MoveAndDamageClosest_EnemyIgnoresOtherEnemiesWhenLookingForTarget ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithEnemies(Generator.CreateStubEnemies (new Point[] { new Point(2, 1), new Point(3, 3) }));
+			int skilledEnemyID = state.Enemies.First(x => x.Position == new Point(3, 3)).ID;
+			state = TestScenes.AddMoveAndDamageSkill (Generator, state, state.Enemies.First (x => x.ID == skilledEnemyID));
+
+			state = Skills.Invoke(state, state.Enemies.First (x => x.ID == skilledEnemyID), state.Enemies.First(x => x.ID == skilledEnemyID).Skills[0], new Point(3, 2));
+
+			Assert.AreEqual (new Point (3, 2), state.Enemies.First (x => x.ID == skilledEnemyID).Position);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
 	}
 }
