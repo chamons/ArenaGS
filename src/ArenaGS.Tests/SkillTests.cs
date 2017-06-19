@@ -500,5 +500,19 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 			Assert.AreEqual (new Point (2, 2), state.Player.Position);
 		}
+
+		[Test]
+		public void MoveAndDamageClosest_MovesAndDamagesNearest ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (3, 3), new Point (3, 4) }));
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.AreEqual (new Point (2, 2), Combat.CharactersDamaged[0].Item1.Position);
+		}
+		// Test if there is no enemy in range
+		// Test if an enemy does this is will only go after player
 	}
 }

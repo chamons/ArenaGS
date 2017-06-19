@@ -10,7 +10,8 @@ namespace ArenaGS.Model
 		None,
 		Damage,
 		DelayedDamage,
-		Movement
+		Movement,
+		MoveAndDamageClosest
 	}
 
 	public enum TargettingStyle
