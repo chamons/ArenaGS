@@ -69,6 +69,7 @@ namespace ArenaGS.Engine
 					state = HandleMovement (state, invoker, target);
 					invoker = state.UpdateCharacterReference (invoker);
 
+					// #100
 					var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (invoker.Position.NormalDistance (x.Position), x));
 					var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= effectInfo.Range).OrderBy (x => x.Item1).Select (x => x.Item2);
 					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
@@ -306,6 +307,7 @@ namespace ArenaGS.Engine
 		{
 			switch (targetInfo.TargettingStyle)
 			{
+				// #100
 				case TargettingStyle.Point:
 					return target.NormalDistance (source) <= targetInfo.Range;
 				case TargettingStyle.None:

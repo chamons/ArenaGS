@@ -18,7 +18,7 @@ namespace ArenaGS.Model
 		public TargettingStyle TargettingStyle { get; private set; }
 
 		[ProtoMember(2)]
-		public int Range { get; private set; }
+		public int Range { get; private set; } // #100
 
 		[ProtoMember(3)]
 		public int Area { get; private set; }

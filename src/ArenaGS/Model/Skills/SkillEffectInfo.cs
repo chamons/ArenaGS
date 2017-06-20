@@ -64,7 +64,7 @@ namespace ArenaGS.Model
 		public int Power { get; private set; }
 
 		[ProtoMember(2)]
-		public int Range { get; private set; }
+		public int Range { get; private set; } // #100
 
 		public MoveAndDamageSkillEffectInfo ()
 		{

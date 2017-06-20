@@ -296,6 +296,9 @@ namespace ArenaGS.Tests
 
 			Assert.AreEqual (state.Player.Health.Maximum, state.Player.Health.Current);
 		}
+
+		// Can move diagonal on move and damage but not 2
+		// Can move diagonal on movement skill but not 2
 	}
 
 	[TestFixture]
