@@ -287,6 +287,15 @@ namespace ArenaGS.Tests
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 3));
 			Assert.AreEqual (new Point (2, 3), state.Player.Position);
 		}
+
+		[Test]
+		public void HealSkillTargettingSelf_IncreasesHealthToMax ()
+		{
+			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], state.Player.Position);
+
+			Assert.AreEqual (state.Player.Health.Maximum, state.Player.Health.Current);
+		}
 	}
 
 	[TestFixture]
@@ -553,16 +562,6 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (new Point (3, 2), state.Enemies.First (x => x.ID == skilledEnemyID).Position);
 			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
 			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
-		}
-
-		[Test]
-		public void HealSkillTargettingSelf_IncreasesHealthToMax ()
-		{
-			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], state.Player.Position);
-
-			Assert.AreEqual (1, Combat.CharactersHealed.Count);
-			Assert.IsTrue (Combat.CharactersHealed [0].Item1.IsPlayer);
 		}
 
 		[Test]
