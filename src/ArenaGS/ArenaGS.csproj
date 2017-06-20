@@ -68,6 +68,7 @@
     <Compile Include="Model\Skills\SkillEffectInfo.cs" />
     <Compile Include="Model\Skills\SkillResources.cs" />
     <Compile Include="Model\Skills\TargettingInfo.cs" />
+    <Compile Include="Engine\CharacterLibrary.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">

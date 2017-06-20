@@ -69,6 +69,7 @@ Global
 		$0.CSharpFormattingPolicy = $2
 		$2.scope = text/x-csharp
 		$2.SpacingAfterMethodDeclarationName = True
+		$2.SpaceAfterMethodCallName = True
 		$0.TextStylePolicy = $3
 		$3.FileWidth = 80
 		$3.scope = text/plain
