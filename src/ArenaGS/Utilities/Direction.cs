@@ -90,14 +90,16 @@ namespace ArenaGS.Utilities
 			}
 		}
 
+		// https://en.wikipedia.org/wiki/Chebyshev_distance
+		public static int GridDistance (this Point point1, Point point2)
+		{
+			return Math.Max (Math.Abs (point1.X - point2.X), Math.Abs (point1.Y - point2.Y));
+		}
+
+		// https://en.wikipedia.org/wiki/Taxicab_geometry
 		public static int LatticeDistance (this Point point1, Point point2)
 		{
 			return Math.Abs (point1.X - point2.X) + Math.Abs (point1.Y - point2.Y);
-		}
-
-		public static double NormalDistance (this Point point1, Point point2)
-		{
-			return Math.Sqrt (Math.Pow (point1.X - point2.X, 2) + Math.Pow (point1.Y - point2.Y, 2));
 		}
 	}
 }

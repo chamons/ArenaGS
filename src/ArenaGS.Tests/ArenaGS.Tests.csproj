@@ -53,6 +53,7 @@
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
     <Compile Include="TimeTests.cs" />
+    <Compile Include="DirectionTests.cs" />
     <Compile Include="Utilities\TestDependencies.cs" />
     <Compile Include="Utilities\TestFileStorage.cs" />
     <Compile Include="Utilities\TestMapGenerator.cs" />
@@ -81,9 +82,7 @@
       <Name>ArenaGS</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Behavior\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

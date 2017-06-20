@@ -107,7 +107,7 @@ namespace ArenaGS.Views.Views
 					}
 					if (skill.RechargedAmmoOnCooldown)
 					{
-						Write ($"Skill recharges charges after each cooldown.", currentOffset);
+						Write ($"Skill recharges charges over time.", currentOffset);
 						currentOffset += 1;
 					}
 				}
