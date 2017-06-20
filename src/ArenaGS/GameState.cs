@@ -110,7 +110,7 @@ namespace ArenaGS
 			};
 
 			if (player != null)
-				newState.Player = (player);
+				newState.Player = player;
 			return newState;
 		}
 
@@ -119,7 +119,7 @@ namespace ArenaGS
 			Character player = characters.FirstOrDefault (x => x.IsPlayer);
 			GameState newState = new GameState (this) { Enemies = characters.Where (x => !x.IsPlayer).ToImmutableList ()  };
 			if (player != null)
-				newState.Player = (player);
+				newState.Player = player;
 			return newState;
 		}
 
