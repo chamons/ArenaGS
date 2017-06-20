@@ -11,7 +11,10 @@ namespace ArenaGS
 	public interface IQueryGameState
 	{
 		bool IsValidTargetForSkill (GameState state, Skill skill, Point target);
-		HashSet <Point> AffectedPointsForSkill (GameState state, Skill skill, Point target);
+		HashSet<Point> AffectedPointsForSkill (GameState state, Skill skill, Point target);
+
+		bool HasSecondaryPointsForSkill (Skill skill);
+		HashSet<Point> AffectedSecondaryPointsForSkill (GameState state, Skill skill, Point target);
 	}
 
 	// Non-mutation calcuation requests on the current GameState
@@ -34,6 +37,31 @@ namespace ArenaGS
 		public HashSet <Point> AffectedPointsForSkill (GameState state, Skill skill, Point target)
 		{
 			return Skills.AffectedPointsForSkill (state, state.Player, skill, target);
+		}
+
+		public bool HasSecondaryPointsForSkill (Skill skill)
+		{
+			switch (skill.Effect)
+			{
+				case Effect.MoveAndDamageClosest:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public HashSet<Point> AffectedSecondaryPointsForSkill (GameState state, Skill skill, Point target)
+		{
+			switch (skill.Effect)
+			{
+				case Effect.MoveAndDamageClosest:
+				{
+					MoveAndDamageSkillEffectInfo skillInfo = (MoveAndDamageSkillEffectInfo)skill.EffectInfo;
+					return new HashSet<Point> (target.PointsInBurst (skillInfo.Range));
+				}
+				default:
+					return null;
+			}
 		}
 	}
 }
