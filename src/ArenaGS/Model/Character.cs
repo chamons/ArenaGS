@@ -14,27 +14,31 @@ namespace ArenaGS.Model
 		public int ID { get; private set; }
 
 		[ProtoMember (2)]
-		public Point Position { get; private set; }
+		public string Name { get; private set; }
 
 		[ProtoMember (3)]
-		public int CT { get; private set; }
+		public Point Position { get; private set; }
 
 		[ProtoMember (4)]
-		public ImmutableList<Skill> Skills { get; private set; }
+		public int CT { get; private set; }
 
 		[ProtoMember (5)]
-		public Health Health { get; private set; }
+		public ImmutableList<Skill> Skills { get; private set; }
 
 		[ProtoMember (6)]
+		public Health Health { get; private set; }
+
+		[ProtoMember (7)]
 		public Defense Defense { get; private set; }
 
 		public Character ()
 		{
 		}
 
-		public Character (int id, Point position, int ct, ImmutableList<Skill> skills, Health health, Defense defense)
+		public Character (int id, string name, Point position, int ct, ImmutableList<Skill> skills, Health health, Defense defense)
 		{
 			ID = id;
+			Name = name;
 			Position = position;
 			CT = ct;
 			Skills = skills;
@@ -45,6 +49,7 @@ namespace ArenaGS.Model
 		Character (Character original)
 		{
 			ID = original.ID;
+			Name = original.Name;
 			Position = original.Position;
 			CT = original.CT;
 			Skills = original.Skills;
@@ -52,11 +57,7 @@ namespace ArenaGS.Model
 			Defense = original.Defense;
 		}
 
-		public override string ToString ()
-		{
-			string debugName = IsPlayer ? "Player" : $"Character : {ID}";
-			return $"{debugName} - {Position} {CT} {Health}";
-		}
+		public override string ToString () => $"{Name} - {Position} {CT} {Health}";
 
 		internal Character WithPosition (Point position)
 		{

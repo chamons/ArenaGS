@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using ArenaGS.Model;
 using ArenaGS.Utilities;
+using ArenaGS.Platform;
 
 namespace ArenaGS.Engine
 {
@@ -29,11 +30,11 @@ namespace ArenaGS.Engine
 		const int CharacterOffset = 100;
 		const int ScriptOffset = 2000;
 		const int SkillOffset = 30000;
-		SkillLibrary SkillLibrary;
+		ISkillLibrary SkillLibrary;
 
 		public Generator ()
 		{
-			SkillLibrary = new SkillLibrary (this);
+			SkillLibrary = Dependencies.Get<ISkillLibrary> ();
 		}
 
 		int CharacterCount = 0;
@@ -63,12 +64,12 @@ namespace ArenaGS.Engine
 
 		public Character CreateCharacter (Point position, Health health, Defense defense)
 		{
-			return new Character (NextCharacterID (), position, 100, ImmutableList<Skill>.Empty, health, defense);
+			return new Character (NextCharacterID (), "Enemy", position, 100, ImmutableList<Skill>.Empty, health, defense);
 		}
 
 		public Character CreatePlayer (Point position, Health health, Defense defense)
 		{
-			return new Character (Character.PlayerID, position, 100, ImmutableList<Skill>.Empty, health, defense);
+			return new Character (Character.PlayerID, "Player", position, 100, ImmutableList<Skill>.Empty, health, defense);
 		}
 
 		public SpawnerScript CreateSpawner (Point position)
