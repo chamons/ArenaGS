@@ -296,6 +296,24 @@ namespace ArenaGS.Tests
 
 			Assert.AreEqual (state.Player.Health.Maximum, state.Player.Health.Current);
 		}
+
+		[Test]
+		public void MoveAndDamageSkill_DiagonalMove ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
+
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
+		}
+
+		[Test]
+		public void MoveSkill_DiagonalMove ()
+		{
+			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator), 2);
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+
+			Assert.AreEqual (new Point (3, 3), state.Player.Position);
+		}
 	}
 
 	[TestFixture]

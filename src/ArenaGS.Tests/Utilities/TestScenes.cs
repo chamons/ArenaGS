@@ -119,9 +119,9 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithReplaceCharacter (character.WithReplaceSkill (character.Skills [0].WithResources (resources)));
 		}
 
-		internal static GameState AddMovementSkill (IGenerator generator, GameState state)
+		internal static GameState AddMovementSkill (IGenerator generator, GameState state, int range = 5)
 		{
-			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, range), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
