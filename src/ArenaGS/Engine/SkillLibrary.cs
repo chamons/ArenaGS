@@ -17,6 +17,7 @@ namespace ArenaGS.Engine
 			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithRechargingAmmo (2, 3)));
 			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (0, knockback: true, stun: true), new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithAmmo (1)));
 			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (1, charge: true), new TargettingInfo (TargettingStyle.Point, 2), SkillResources.WithCooldown (3)));
+			AddToLibrary(Generator.CreateSkill("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo(3, 3), new TargettingInfo(TargettingStyle.Point, 1), SkillResources.WithAmmo (4)));
 
 		}
 

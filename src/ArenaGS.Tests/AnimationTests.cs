@@ -112,7 +112,16 @@ namespace ArenaGS.Tests
 			Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 3));
 			Assert.AreEqual (1, AnimationRequests.Count);
 			Assert.AreEqual (AnimationType.Movement, AnimationRequests [0].Type);
+		}
 
+		[Test]
+		public void MoveAndDamage_ShouldFireMovementThenProjectile ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState(Generator));
+			Skills.Invoke(state, state.Player, state.Player.Skills[0], new Point(1, 2));
+			Assert.AreEqual(2, AnimationRequests.Count);
+			Assert.AreEqual(AnimationType.Movement, AnimationRequests[0].Type);
+			Assert.AreEqual(AnimationType.Projectile, AnimationRequests[1].Type);
 		}
 	}
 }

@@ -47,65 +47,7 @@ namespace ArenaGS.Engine
 			{
 				case Effect.Damage:
 				{
-					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
-					DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
-
-					switch (skill.TargetInfo.TargettingStyle)
-					{
-							case TargettingStyle.Point:
-							{
-								List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
-								if (!effectInfo.Charge && path.Count > 0)
-									Animation.Request (state, new ProjectileAnimationInfo (path));
-
-								if (skill.TargetInfo.Area > 1)
-									Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected.ToImmutableHashSet ()));
-
-								if (effectInfo.Charge && path.Count > 1)
-								{
-									Point locationNextToTarget = path[path.Count - 2];
-									Animation.Request (state, new MovementAnimationInfo (invoker, locationNextToTarget));
-									state = state.WithReplaceCharacter (invoker.WithPosition (locationNextToTarget));
-									invoker = state.UpdateCharacterReference (invoker);
-								}
-
-								break;
-							}
-							case TargettingStyle.Cone:
-							{
-								Direction direction = invoker.Position.DirectionTo (target);
-								Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected.ToImmutableHashSet ()));
-								break;
-							}
-							case TargettingStyle.Line:
-							{
-								Animation.Request(state, new SpecificAreaExplosionAnimationInfo (areaAffected.ToImmutableHashSet ()));
-								break;
-							}
-					}
-
-					foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
-						state = Combat.Damage (state, enemy, effectInfo.Power);
-
-					if (effectInfo.Stun)
-					{
-						foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
-							state = state.WithReplaceEnemy (enemy.WithAdditionalCT (-200));
-					}
-					if (effectInfo.Knockback)
-					{
-						Direction directionOfFire = invoker.Position.DirectionTo (target);
-						foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
-						{
-							Point knockbackTarget = enemy.Position.InDirection (directionOfFire);
-							if (IsPointClear (state, knockbackTarget))
-							{
-								Animation.Request (state, new MovementAnimationInfo (enemy, knockbackTarget));
-								state = state.WithReplaceEnemy (enemy.WithPosition (knockbackTarget));
-							}
-						}
-					}
-
+					state = HandleDamageSkill (state, invoker, skill, target);
 					break;
 				}
 				case Effect.DelayedDamage:
@@ -118,8 +60,28 @@ namespace ArenaGS.Engine
 				}
 				case Effect.Movement:
 				{
-					Animation.Request (state, new MovementAnimationInfo (invoker, target));
-					state = state.WithReplaceCharacter (invoker.WithPosition (target));
+					state = HandleMovement (state, invoker, target);
+					break;
+				}
+				case Effect.MoveAndDamageClosest:
+				{
+					MoveAndDamageSkillEffectInfo effectInfo = (MoveAndDamageSkillEffectInfo)skill.EffectInfo;
+					state = HandleMovement (state, invoker, target);
+					invoker = state.UpdateCharacterReference (invoker);
+
+					var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (invoker.Position.NormalDistance (x.Position), x));
+					var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= effectInfo.Range).OrderBy (x => x.Item1).Select (x => x.Item2);
+					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer);
+					var targetsWithClearPath = targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, invoker.Position, x.Position, false));
+					var finalTarget = targetsWithClearPath.FirstOrDefault ();
+
+					if (finalTarget != null)
+					{
+						List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, finalTarget.Position);
+						if (path.Count > 0)
+							Animation.Request (state, new ProjectileAnimationInfo (path));
+						state = Combat.Damage (state, finalTarget, effectInfo.Power);
+					}
 					break;
 				}
 				case Effect.None:
@@ -130,6 +92,75 @@ namespace ArenaGS.Engine
 			state = ChargeSkillForResources (state, invoker, skill);
 
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+		}
+
+		GameState HandleMovement (GameState state, Character invoker, Point target)
+		{
+			Animation.Request (state, new MovementAnimationInfo (invoker, target));
+			return state.WithReplaceCharacter (invoker.WithPosition (target));
+		}
+
+		GameState HandleDamageSkill (GameState state, Character invoker, Skill skill, Point target)
+		{
+			HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
+			DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
+
+			switch (skill.TargetInfo.TargettingStyle)
+			{
+				case TargettingStyle.Point:
+				{
+					List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, target);
+					if (!effectInfo.Charge && path.Count > 0)
+						Animation.Request (state, new ProjectileAnimationInfo (path));
+
+					if (skill.TargetInfo.Area > 1)
+						Animation.Request (state, new ExplosionAnimationInfo (target, skill.TargetInfo.Area, areaAffected.ToImmutableHashSet ()));
+
+					if (effectInfo.Charge && path.Count > 1)
+					{
+						Point locationNextToTarget = path [path.Count - 2];
+						Animation.Request (state, new MovementAnimationInfo (invoker, locationNextToTarget));
+						state = state.WithReplaceCharacter (invoker.WithPosition (locationNextToTarget));
+						invoker = state.UpdateCharacterReference (invoker);
+					}
+
+					break;
+				}
+				case TargettingStyle.Cone:
+				{
+					Direction direction = invoker.Position.DirectionTo (target);
+					Animation.Request (state, new ConeAnimationInfo (invoker.Position, direction, skill.TargetInfo.Range, areaAffected.ToImmutableHashSet ()));
+					break;
+				}
+				case TargettingStyle.Line:
+				{
+					Animation.Request (state, new SpecificAreaExplosionAnimationInfo (areaAffected.ToImmutableHashSet ()));
+					break;
+				}
+			}
+
+			foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)))
+				state = Combat.Damage (state, enemy, effectInfo.Power);
+
+			if (effectInfo.Stun)
+			{
+				foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+					state = state.WithReplaceEnemy (enemy.WithAdditionalCT (-200));
+			}
+			if (effectInfo.Knockback)
+			{
+				Direction directionOfFire = invoker.Position.DirectionTo (target);
+				foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+				{
+					Point knockbackTarget = enemy.Position.InDirection (directionOfFire);
+					if (IsPointClear (state, knockbackTarget))
+					{
+						Animation.Request (state, new MovementAnimationInfo (enemy, knockbackTarget));
+						state = state.WithReplaceEnemy (enemy.WithPosition (knockbackTarget));
+					}
+				}
+			}
+			return state;
 		}
 
 		GameState ChargeSkillForResources (GameState state, Character invoker, Skill skill)

@@ -42,7 +42,6 @@
     <Compile Include="Model\Defense.cs" />
     <Compile Include="Model\Dice.cs" />
     <Compile Include="Model\Health.cs" />
-    <Compile Include="Model\Skill.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapTile.cs" />
@@ -65,6 +64,10 @@
     <Compile Include="Engine\Generators\MapGenerator.cs" />
     <Compile Include="Engine\Generators\WorldGenerator.cs" />
     <Compile Include="Utilities\NumberExtensions.cs" />
+    <Compile Include="Model\Skills\Skill.cs" />
+    <Compile Include="Model\Skills\SkillEffectInfo.cs" />
+    <Compile Include="Model\Skills\SkillResources.cs" />
+    <Compile Include="Model\Skills\TargettingInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArenaGS.Platform\ArenaGS.Platform.csproj">
@@ -94,5 +97,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Model\Skills\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>
