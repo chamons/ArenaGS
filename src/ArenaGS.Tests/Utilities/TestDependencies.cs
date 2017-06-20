@@ -42,7 +42,7 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<IAnimationRequest> (typeof(TestAnimation));
 			Dependencies.Register<ILogger>(typeof(TestLogger));
-			Dependencies.Register<ICharacterLibrary> (typeof (ICharacterLibrary));
+			Dependencies.Register<ICharacterLibrary> (typeof (CharacterLibrary));
 			Dependencies.Register<ISkillLibrary> (typeof (SkillLibrary));
 
 			// At least individual test runs will be consistent

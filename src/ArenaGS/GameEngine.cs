@@ -47,7 +47,7 @@ namespace ArenaGS
 			Dependencies.RegisterInstance<IAnimationRequest> (this);
 			Dependencies.Register<ILogger> (typeof(Logger));
 			Dependencies.Register<IRandomGenerator> (typeof (RandomGenerator));
-			Dependencies.Register<ICharacterLibrary> (typeof (ICharacterLibrary));
+			Dependencies.Register<ICharacterLibrary> (typeof (CharacterLibrary));
 			Dependencies.Register<ISkillLibrary> (typeof (SkillLibrary));
 
 			Physics = Dependencies.Get<IPhysics> ();
