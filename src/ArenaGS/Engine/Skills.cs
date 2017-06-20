@@ -69,18 +69,18 @@ namespace ArenaGS.Engine
 					state = HandleMovement (state, invoker, target);
 					invoker = state.UpdateCharacterReference (invoker);
 
-					var orderedCharactersByDistance = state.AllCharacters.Select(x => new Tuple<double, Character>(invoker.Position.NormalDistance(x.Position), x));
-					var potentialTargets = orderedCharactersByDistance.Where(x => x.Item1 <= effectInfo.Range).OrderBy(x => x.Item1).Select(x => x.Item2);
-					var targetsOfCorrectSide = potentialTargets.Where(x => x.ID != invoker.ID).Where(x => x.IsPlayer != invoker.IsPlayer);
-					var targetsWithClearPath = targetsOfCorrectSide.Where(x => IsPathBetweenPointsClear(state, invoker.Position, x.Position, false));
+					var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (invoker.Position.NormalDistance (x.Position), x));
+					var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= effectInfo.Range).OrderBy (x => x.Item1).Select (x => x.Item2);
+					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer);
+					var targetsWithClearPath = targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, invoker.Position, x.Position, false));
 					var finalTarget = targetsWithClearPath.FirstOrDefault ();
 
 					if (finalTarget != null)
 					{
-						List<Point> path = BresenhamLine.PointsOnLine(invoker.Position, finalTarget.Position);
+						List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, finalTarget.Position);
 						if (path.Count > 0)
-							Animation.Request(state, new ProjectileAnimationInfo (path));
-						state = Combat.Damage(state, finalTarget, effectInfo.Power);
+							Animation.Request (state, new ProjectileAnimationInfo (path));
+						state = Combat.Damage (state, finalTarget, effectInfo.Power);
 					}
 					break;
 				}
@@ -94,13 +94,13 @@ namespace ArenaGS.Engine
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
-		private GameState HandleMovement (GameState state, Character invoker, Point target)
+		GameState HandleMovement (GameState state, Character invoker, Point target)
 		{
 			Animation.Request (state, new MovementAnimationInfo (invoker, target));
 			return state.WithReplaceCharacter (invoker.WithPosition (target));
 		}
 
-		private GameState HandleDamageSkill (GameState state, Character invoker, Skill skill, Point target)
+		GameState HandleDamageSkill (GameState state, Character invoker, Skill skill, Point target)
 		{
 			HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
 			DamageSkillEffectInfo effectInfo = (DamageSkillEffectInfo)skill.EffectInfo;
