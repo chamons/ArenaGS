@@ -150,5 +150,13 @@ namespace ArenaGS.Tests.Utilities
 			Skill testSkill = generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), new TargettingInfo (TargettingStyle.Point, 1), SkillResources.WithCooldown (3));
 			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
+
+		internal static GameState AddHealSkill (IGenerator generator, GameState state, Character character = null)
+		{
+			if (character == null)
+				character = state.Player;
+			Skill testSkill = generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (3), new TargettingInfo (TargettingStyle.Point, 2, 2), SkillResources.WithCooldown (3));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
+		}
 	}
 }

@@ -4,9 +4,10 @@ using ProtoBuf;
 namespace ArenaGS.Model
 {
 	[ProtoContract]
-	[ProtoInclude(500, typeof(DamageSkillEffectInfo))]
-	[ProtoInclude(500, typeof(DelayedDamageSkillEffectInfo))]
-	[ProtoInclude(500, typeof(MoveAndDamageSkillEffectInfo))]
+	[ProtoInclude (500, typeof (DamageSkillEffectInfo))]
+	[ProtoInclude (500, typeof (DelayedDamageSkillEffectInfo))]
+	[ProtoInclude (500, typeof (MoveAndDamageSkillEffectInfo))]
+	[ProtoInclude (500, typeof (HealEffectInfo))]
 	public class SkillEffectInfo
 	{
 		public static SkillEffectInfo None { get; } = new SkillEffectInfo();
@@ -73,6 +74,22 @@ namespace ArenaGS.Model
 		{
 			Power = power;
 			Range = range;
+		}
+	}
+
+	[ProtoContract]
+	public class HealEffectInfo : SkillEffectInfo
+	{
+		[ProtoMember (1)]
+		public int Power { get; private set; }
+
+		public HealEffectInfo ()
+		{
+		}
+
+		public HealEffectInfo (int power)
+		{
+			Power = power;
 		}
 	}
 }

@@ -71,7 +71,7 @@ namespace ArenaGS.Engine
 
 					var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (invoker.Position.NormalDistance (x.Position), x));
 					var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= effectInfo.Range).OrderBy (x => x.Item1).Select (x => x.Item2);
-					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer);
+					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
 					var targetsWithClearPath = targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, invoker.Position, x.Position, false));
 					var finalTarget = targetsWithClearPath.FirstOrDefault ();
 
@@ -82,6 +82,16 @@ namespace ArenaGS.Engine
 							Animation.Request (state, new ProjectileAnimationInfo (path));
 						state = Combat.Damage (state, finalTarget, effectInfo.Power);
 					}
+					break;
+				}
+				case Effect.Heal:
+				{
+					HealEffectInfo effectInfo = (HealEffectInfo)skill.EffectInfo;
+					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
+					var charactersInRange = state.AllCharacters.Where (x => areaAffected.Contains (x.Position));
+					var charactersAffected = charactersInRange.Where (x => x.IsPlayer == invoker.IsPlayer);  // #105
+					foreach (var enemy in charactersAffected)
+						state = Combat.Heal (state, enemy, effectInfo.Power);
 					break;
 				}
 				case Effect.None:

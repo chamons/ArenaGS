@@ -11,6 +11,7 @@ namespace ArenaGS.Engine
 	public interface ITimedElement
 	{
 		int CT { get; }
+		ITimedElement WithAdditionalCT (int additionalCT);
 	}
 
 	public interface ITime
@@ -89,9 +90,7 @@ namespace ArenaGS.Engine
 						ticksNeeded += 1;
 					
 					int additionalTicks = ticksNeeded * TimeConstants.CTPerTick;
-					state = state.WithPlayer (state.Player.WithAdditionalCT (additionalTicks));
-					state = state.WithEnemies (state.Enemies.Select (x => x.WithAdditionalCT (additionalTicks)).ToImmutableList ());
-					state = state.WithScripts (state.Scripts.Select (x => x.WithAdditionalCT (additionalTicks)).ToImmutableList ());
+					state = state.WithActors (state.AllActors.Select (x => x.WithAdditionalCT (additionalTicks)));
 				}
 			}
 		}

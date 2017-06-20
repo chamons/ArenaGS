@@ -14,5 +14,12 @@ namespace ArenaGS.Tests.Utilities
 			CharactersDamaged.Add (new Tuple<Character, int> (target, amount));
 			return state;
 		}
+
+		public List<Tuple<Character, int>> CharactersHealed = new List<Tuple<Character, int>> ();
+		public GameState Heal (GameState state, Character target, int amount)
+		{
+			CharactersHealed.Add (new Tuple<Character, int> (target, amount));
+			return state;
+		}
 	}
 }

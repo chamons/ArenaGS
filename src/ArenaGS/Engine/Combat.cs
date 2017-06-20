@@ -1,4 +1,6 @@
-﻿using ArenaGS.Model;
+﻿using System;
+
+using ArenaGS.Model;
 using ArenaGS.Platform;
 
 namespace ArenaGS.Engine
@@ -6,6 +8,7 @@ namespace ArenaGS.Engine
 	public interface ICombat
 	{
 		GameState Damage (GameState state, Character target, int amount);
+		GameState Heal (GameState state, Character target, int amount);
 	}
 
 	class Combat : ICombat
@@ -45,6 +48,15 @@ namespace ArenaGS.Engine
 					return state.WithRemovedEnemy (target).WithNewLogLine ($"{target} killed.");
 				}
 			}
+		}
+
+		public GameState Heal (GameState state, Character target, int amount)
+		{
+			Dice healRoll = new Dice (amount, 3, amount);
+			int actualHeal = healRoll.Roll (Random);
+			int newHealth = Math.Min (target.Health.Current + actualHeal, target.Health.Maximum);
+
+			return state.WithReplaceCharacter (target.WithCurrentHealth (newHealth));
 		}
 	}
 }

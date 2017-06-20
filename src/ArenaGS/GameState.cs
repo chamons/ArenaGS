@@ -99,6 +99,30 @@ namespace ArenaGS
 			return new GameState (this) { Enemies = enemies };
 		}
 
+		internal GameState WithActors (IEnumerable<ITimedElement> actors)
+		{
+			Character player = actors.OfType<Character> ().FirstOrDefault (x => x.IsPlayer);
+
+			GameState newState = new GameState (this)
+			{
+				Enemies = actors.OfType<Character> ().Where (x => !x.IsPlayer).ToImmutableList (),
+				Scripts = actors.OfType<MapScript> ().ToImmutableList ()
+			};
+
+			if (player != null)
+				newState.Player = (player);
+			return newState;
+		}
+
+		internal GameState WithCharacters (IEnumerable<Character> characters)
+		{
+			Character player = characters.FirstOrDefault (x => x.IsPlayer);
+			GameState newState = new GameState (this) { Enemies = characters.Where (x => !x.IsPlayer).ToImmutableList ()  };
+			if (player != null)
+				newState.Player = (player);
+			return newState;
+		}
+
 		internal GameState WithAddedScript (MapScript newScript)
 		{
 			return new GameState (this) { Scripts = Scripts.Add (newScript) };
