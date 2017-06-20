@@ -11,7 +11,8 @@ namespace ArenaGS.Model
 		Damage,
 		DelayedDamage,
 		Movement,
-		MoveAndDamageClosest
+		MoveAndDamageClosest,
+		Heal
 	}
 
 	[ProtoContract]

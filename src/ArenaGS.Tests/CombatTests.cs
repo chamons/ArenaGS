@@ -27,9 +27,9 @@ namespace ArenaGS.Tests
 			Generator = Dependencies.Get<IGenerator> ();
 		}
 
-		public void Request (GameState state, AnimationInfo info) {}
+		public void Request (GameState state, AnimationInfo info) { }
 
-		GameState PlayerDeathState ;
+		GameState PlayerDeathState;
 		public void RequestPlayerDead (GameState state)
 		{
 			PlayerDeathState = state;
@@ -79,6 +79,16 @@ namespace ArenaGS.Tests
 			state = Combat.Damage (state, state.Enemies [0], 10);
 			Assert.Zero (state.Enemies.Count);
 			Assert.Null (PlayerDeathState);
+		}
+
+		[Test]
+		public void Overheals_WillNotExceedMaxHealth ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithPlayer (state.Player.WithCurrentHealth (state.Player.Health.Current - 2));
+
+			state = Combat.Heal (state, state.Player, 2);
+			Assert.AreEqual (state.Player.Health.Maximum, state.Player.Health.Current);
 		}
 	}
 }

@@ -33,6 +33,11 @@ namespace ArenaGS.Model
 
 		public abstract MapScript WithCT (int ct);
 		public abstract MapScript WithAdditionalCT (int additionalCT);
+
+		ITimedElement ITimedElement.WithAdditionalCT (int additionalCT)
+		{
+			return WithAdditionalCT (additionalCT);
+		}
 	}
 
 	[ProtoContract]

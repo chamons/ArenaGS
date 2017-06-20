@@ -1,8 +1,9 @@
-﻿using ArenaGS.Engine;
+﻿using System.Collections.Immutable;
+using System.Linq;
+
+using ArenaGS.Engine;
 using ArenaGS.Utilities;
 using ProtoBuf;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace ArenaGS.Model
 {
@@ -76,6 +77,11 @@ namespace ArenaGS.Model
 		{
 			return new Character (this) { CT = ct };
 		}
+		
+		ITimedElement ITimedElement.WithAdditionalCT (int additionalCT)
+		{
+			return WithAdditionalCT (additionalCT);
+		}
 
 		internal Character WithSkills (ImmutableList<Skill> skills)
 		{
@@ -90,6 +96,11 @@ namespace ArenaGS.Model
 		internal Character WithHealth (Health health)
 		{
 			return new Character (this) { Health = health };
+		}
+
+		internal Character WithCurrentHealth (int currentHealth)
+		{
+			return WithHealth (Health.WithCurrentHealth (currentHealth));
 		}
 
 		internal Character WithDefense (Defense defense)
