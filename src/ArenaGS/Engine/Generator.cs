@@ -34,7 +34,6 @@ namespace ArenaGS.Engine
 
 		public Generator ()
 		{
-			SkillLibrary = Dependencies.Get<ISkillLibrary> ();
 		}
 
 		int CharacterCount = 0;
@@ -79,6 +78,10 @@ namespace ArenaGS.Engine
 
 		public Skill CreateSkill (string name)
 		{
+			// This is a bit of a hack around the circular dep chain between IGenerator and ISkillLibrary
+			if (SkillLibrary == null)
+				SkillLibrary = Dependencies.Get<ISkillLibrary> ();
+
 			return SkillLibrary.CreateSkill (name);
 		}
 
