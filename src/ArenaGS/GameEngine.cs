@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -35,7 +35,8 @@ namespace ArenaGS
 
 		public GameEngine (IFileStorage storage)
 		{	
-			Dependencies.RegisterInstance <IFileStorage> (storage);
+			Dependencies.RegisterInstance<IAnimationRequest> (this);
+			Dependencies.RegisterInstance<IFileStorage> (storage);
 			Dependencies.Register<IActorBehavior> (typeof (DefaultActorBehavior));
 			Dependencies.Register<IScriptBehavior> (typeof (ScriptBehavior));
 			Dependencies.Register<IWorldGenerator> (typeof (WorldGenerator));
@@ -44,7 +45,6 @@ namespace ArenaGS
 			Dependencies.Register<ICombat> (typeof (Combat));
 			Dependencies.Register<ITime> (typeof (Time));
 			Dependencies.Register<IGenerator> (typeof(Generator));
-			Dependencies.RegisterInstance<IAnimationRequest> (this);
 			Dependencies.Register<ILogger> (typeof(Logger));
 			Dependencies.Register<IRandomGenerator> (typeof (RandomGenerator));
 			Dependencies.Register<ICharacterLibrary> (typeof (CharacterLibrary));

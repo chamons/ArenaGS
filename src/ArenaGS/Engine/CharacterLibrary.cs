@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using ArenaGS.Engine;
 using ArenaGS.Model;
+using ArenaGS.Platform;
 using ArenaGS.Utilities;
 
 namespace ArenaGS
@@ -19,9 +20,9 @@ namespace ArenaGS
 
 		IGenerator Generator;
 
-		public CharacterLibrary (IGenerator generator)
+		public CharacterLibrary ()
 		{
-			Generator = generator;
+			Generator = Dependencies.Get <IGenerator> ();
 
 			Character player = Generator.CreatePlayer (Point.Empty, new Health (3, 3), new Defense (1));
 			player = player.WithSkills (new Skill[] {
