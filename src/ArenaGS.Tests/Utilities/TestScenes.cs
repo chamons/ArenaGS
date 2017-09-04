@@ -75,7 +75,7 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static Skill CreateSkill (IGenerator generator)
 		{
-			return generator.CreateSkill ("Blast", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Point, 5, 0), SkillResources.None);
+			return generator.CreateSkill ("Blast", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Point (5), SkillResources.None);
 		}
 
 		internal static GameState AddTestSkill (IGenerator generator, GameState state, Character character = null)
@@ -88,25 +88,25 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddTestAOESkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Point, 5, 2), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("AOEBlast", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Point (5, 2), SkillResources.None);
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddTestConeSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Cone, 3), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("Cone", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Cone (3), SkillResources.None);
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddTestLineSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Line", Effect.Damage, new DamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Line, 3), SkillResources.None);
+			Skill testSkill = generator.CreateSkill ("Line", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Line (3), SkillResources.None);
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddDelayedDamageSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (1), new TargettingInfo (TargettingStyle.Point, 3), SkillResources.None);
+			Skill testSkill = new Skill (1, "Delayed Damage", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (1), TargettingInfo.Point (3), SkillResources.None);
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
@@ -121,25 +121,25 @@ namespace ArenaGS.Tests.Utilities
 
 		internal static GameState AddMovementSkill (IGenerator generator, GameState state, int range = 5)
 		{
-			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, new TargettingInfo (TargettingStyle.Point, range), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (range), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddKnockbackSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (2, knockback: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (2, knockback: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddStunSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Stun", Effect.Damage, new DamageSkillEffectInfo (2, stun: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Stun", Effect.Damage, new DamageSkillEffectInfo (2, stun: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddChargeSkill (IGenerator generator, GameState state)
 		{
-			Skill testSkill = generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (3, charge: true), new TargettingInfo (TargettingStyle.Point, 5), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (3, charge: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
 			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
 		}
 
@@ -147,7 +147,7 @@ namespace ArenaGS.Tests.Utilities
 		{
 			if (character == null)
 				character = state.Player;
-			Skill testSkill = generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), new TargettingInfo (TargettingStyle.Point, 1), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (3));
 			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
@@ -155,7 +155,7 @@ namespace ArenaGS.Tests.Utilities
 		{
 			if (character == null)
 				character = state.Player;
-			Skill testSkill = generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (3), new TargettingInfo (TargettingStyle.Point, 2, 2), SkillResources.WithCooldown (3));
+			Skill testSkill = generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (3), TargettingInfo.Point (2, 2), SkillResources.WithCooldown (3));
 			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 	}

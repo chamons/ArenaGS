@@ -27,7 +27,27 @@ namespace ArenaGS.Model
 		{
 		}
 
-		public TargettingInfo (TargettingStyle style, int range = 0, int area = 0)
+		public static TargettingInfo None ()
+		{
+			return new TargettingInfo (TargettingStyle.None, 0, 0);
+		}
+
+		public static TargettingInfo Point (int range = 0, int area = 0)
+		{
+			return new TargettingInfo (TargettingStyle.Point, range, area);
+		}
+
+		public static TargettingInfo Line (int range = 0)
+		{
+			return new TargettingInfo (TargettingStyle.Line, range, 0);
+		}
+
+		public static TargettingInfo Cone (int range = 0, int area = 0)
+		{
+			return new TargettingInfo (TargettingStyle.Cone, range, area);
+		}
+
+		TargettingInfo (TargettingStyle style, int range, int area)
 		{
 			TargettingStyle = style;
 			Range = range;
