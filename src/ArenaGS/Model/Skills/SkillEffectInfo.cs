@@ -32,7 +32,7 @@ namespace ArenaGS.Model
 		{
 		}
 
-		public DamageSkillEffectInfo (int power, bool knockback = false, bool stun = false, bool charge = false)
+		public DamageSkillEffectInfo (int power = 0, bool knockback = false, bool stun = false, bool charge = false)
 		{
 			Power = power;
 			Knockback = knockback;

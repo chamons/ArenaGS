@@ -20,10 +20,11 @@ namespace ArenaGS.Engine
 		{
 			Generator = Dependencies.Get<IGenerator> ();
 
+			AddToLibrary (Generator.CreateSkill ("Shot", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (5), SkillResources.None));
 			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (2), SkillResources.WithRechargingAmmo (2, 3)));
-			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (0, knockback: true, stun: true), TargettingInfo.Point (2), SkillResources.WithAmmo (1)));
+			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true, stun: true), TargettingInfo.Point (2), SkillResources.WithAmmo (1)));
 			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (1, charge: true), TargettingInfo.Point (2), SkillResources.WithCooldown (3)));
-			AddToLibrary (Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), TargettingInfo.Point (1), SkillResources.WithAmmo (4)));
+			AddToLibrary (Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2)));
 		}
 
 		void AddToLibrary (Skill s)
