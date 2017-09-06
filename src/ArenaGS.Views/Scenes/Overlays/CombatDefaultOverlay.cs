@@ -109,7 +109,6 @@ namespace ArenaGS.Views.Scenes.Overlays
 				Skill selectedSkill = skills [index];
 				if (selectedSkill.ReadyForUse)
 				{
-					// Given the skill, pick a sane "default target" if reasonable
 					switch (selectedSkill.TargetInfo.TargettingStyle)
 					{
 						case TargettingStyle.Point:
