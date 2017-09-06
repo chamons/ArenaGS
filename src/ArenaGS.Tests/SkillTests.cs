@@ -611,5 +611,15 @@ namespace ArenaGS.Tests
 			Assert.AreEqual (2, Combat.CharactersHealed.Count);
 			Assert.IsTrue (Combat.CharactersHealed.All (x => !x.Item1.IsPlayer));
 		}
+
+		[Test]
+		public void PointsSkillCanEffect_SmokeTest ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = TestScenes.AddTestSkill (Generator, state, state.Player);
+
+			var points = Skills.PointsSkillCanTarget (state, state.Player, state.Player.Skills [0]);
+			Assert.AreEqual (25, points.Count);
+		}
 	}
 }

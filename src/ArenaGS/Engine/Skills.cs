@@ -15,7 +15,7 @@ namespace ArenaGS.Engine
 		GameState Invoke (GameState state, Character invoker, Skill skill, Point target);
 		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
 		HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target);
-		HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill, Point target);
+		HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill);
 	}
 
 	public class Skills : ISkills
@@ -322,13 +322,13 @@ namespace ArenaGS.Engine
 			}
 		}
 
-		public HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill, Point target)
+		public HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill)
 		{
 			switch (skill.TargetInfo.TargettingStyle)
 			{
 				case TargettingStyle.Point:
 				{
-					var pointsInRange = UnblockedPointsInBurst (state, target, skill.TargetInfo.Range + 1);
+					var pointsInRange = UnblockedPointsInBurst (state, invoker.Position, skill.TargetInfo.Range + 1);
 					var validPointsInRange = pointsInRange.Where (x => IsValidTarget (state, invoker, skill, x));
 					return new HashSet<Point> (validPointsInRange);
 				}
