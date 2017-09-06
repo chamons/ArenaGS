@@ -113,6 +113,7 @@ namespace ArenaGS.Views.Scenes.Overlays
 
 		SKColor ValidTargetColor = SKColors.Yellow.WithAlpha (100);
 		SKColor ValidSecondaryTargetColor = SKColors.Yellow.WithAlpha (50);
+		SKColor ValidPotentialColor = SKColors.Yellow.WithAlpha (25);
 		SKColor InvalidTargetColor = SKColors.Red.WithAlpha (100);
 
 		public void Draw (MapView map)
@@ -136,6 +137,9 @@ namespace ArenaGS.Views.Scenes.Overlays
 			{
 				map.DrawOverlaySquare (CurrentTargettedPosition, InvalidCursorColor);
 			}
+
+			foreach (var tile in QueryGameState.PointsSkillCanTarget (State, Skill).Where (x => x != State.Player.Position))
+				map.DrawOverlaySquare (tile, ValidPotentialColor);
 		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using ArenaGS.Model;
+﻿using System.Linq;
+using ArenaGS.Model;
 using ArenaGS.Utilities;
 using ArenaGS.Views.Utilities;
 using ArenaGS.Views.Views;
@@ -108,12 +109,13 @@ namespace ArenaGS.Views.Scenes.Overlays
 				Skill selectedSkill = skills [index];
 				if (selectedSkill.ReadyForUse)
 				{
+					// Given the skill, pick a sane "default target" if reasonable
 					switch (selectedSkill.TargetInfo.TargettingStyle)
 					{
 						case TargettingStyle.Point:
 						case TargettingStyle.Cone:
 						case TargettingStyle.Line:
-							TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, state.Player.Position, p =>
+							TargettingOverlay overlay = new TargettingOverlay (Parent, Engine.QueryGameState, state, selectedSkill, GetSkillDefaultPoint (state, selectedSkill), p =>
 							{
 								Engine.AcceptCommand (Command.Skill, new SkillTarget () { Index = index, Position = p });
 							});
@@ -124,6 +126,25 @@ namespace ArenaGS.Views.Scenes.Overlays
 							return;
 					}
 				}
+			}
+		}
+
+		Point GetSkillDefaultPoint (GameState state, Skill skill)
+		{
+			switch (skill.Effect)
+			{
+				case Effect.Damage:
+				case Effect.DelayedDamage:
+					Character nearestEnemy = state.Enemies.OrderBy (x => x.Position.GridDistance (state.Player.Position)).FirstOrDefault ();
+					if (nearestEnemy != null)
+						return nearestEnemy.Position;
+					return state.Player.Position;
+				case Effect.MoveAndDamageClosest:
+				case Effect.Heal:
+				case Effect.Movement:
+				case Effect.None:
+				default:
+					return state.Player.Position;
 			}
 		}
 

@@ -15,6 +15,8 @@ namespace ArenaGS
 
 		bool HasSecondaryPointsForSkill (Skill skill);
 		HashSet<Point> AffectedSecondaryPointsForSkill (GameState state, Skill skill, Point target);
+
+		HashSet<Point> PointsSkillCanTarget (GameState state, Skill skill);
 	}
 
 	// Non-mutation calcuation requests on the current GameState
@@ -62,6 +64,11 @@ namespace ArenaGS
 				default:
 					return null;
 			}
+		}
+
+		public HashSet<Point> PointsSkillCanTarget (GameState state, Skill skill)
+		{
+			return Skills.PointsSkillCanTarget (state, state.Player, skill, state.Player.Position);
 		}
 	}
 }

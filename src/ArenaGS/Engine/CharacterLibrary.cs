@@ -29,7 +29,7 @@ namespace ArenaGS
 				Generator.CreateSkill ("Shot"),
 				Generator.CreateSkill ("Dash"),
 				Generator.CreateSkill ("Point Blank Shot"),
-				Generator.CreateSkill ("Move & Shoot")
+				Generator.CreateSkill ("Move & Shoot"),
 			}.ToImmutableList ());
 			AddToLibrary (player);
 		}
