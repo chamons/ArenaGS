@@ -68,7 +68,7 @@ namespace ArenaGS
 
 		public HashSet<Point> PointsSkillCanTarget (GameState state, Skill skill)
 		{
-			return Skills.PointsSkillCanTarget (state, state.Player, skill, state.Player.Position);
+			return Skills.PointsSkillCanTarget (state, state.Player, skill);
 		}
 	}
 }
