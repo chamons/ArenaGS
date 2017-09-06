@@ -61,8 +61,10 @@
     <Compile Include="Views\Map\MapThemePainter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\lorc\run.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\lorc\sprint.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="SkiaSharp, Version=1.57.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">

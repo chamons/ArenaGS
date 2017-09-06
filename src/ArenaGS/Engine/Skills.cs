@@ -15,6 +15,7 @@ namespace ArenaGS.Engine
 		GameState Invoke (GameState state, Character invoker, Skill skill, Point target);
 		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
 		HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target);
+		HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill, Point target);
 	}
 
 	public class Skills : ISkills
@@ -190,9 +191,14 @@ namespace ArenaGS.Engine
 			return state.WithReplaceCharacter (invoker.WithReplaceSkill (skill));
 		}
 
-		public HashSet<Point> UnblockedPointsInBurst (GameState state, Skill skill, Point target)
+		public HashSet<Point> UnblockedPointsInBurst (GameState state, Point target, int area)
 		{
-			return new HashSet<Point> (target.PointsInBurst (skill.TargetInfo.Area).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
+			return new HashSet<Point> (target.PointsInBurst (area).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
+		}
+
+		public HashSet<Point> UnblockedPointsNextToPoint (GameState state, Point target)
+		{
+			return new HashSet<Point> (target.PointsInBurst (1).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
 		}
 
 		public HashSet<Point> UnblockedPointsInCone (GameState state, Character invoker, Skill skill, Point target)
@@ -216,7 +222,7 @@ namespace ArenaGS.Engine
 			switch (skill.TargetInfo.TargettingStyle)
 			{
 				case TargettingStyle.Point:
-					return UnblockedPointsInBurst (state, skill, target);
+					return UnblockedPointsInBurst (state, target, skill.TargetInfo.Area);
 				case TargettingStyle.Cone:
 					return UnblockedPointsInCone (state, invoker, skill, target);
 				case TargettingStyle.Line:
@@ -254,8 +260,7 @@ namespace ArenaGS.Engine
 					if (!state.Map [target].Walkable)
 						return false;
 
-					int distance = invoker.Position.LatticeDistance (target);
-					if (distance == 1)
+					if (SkillInRange (invoker.Position, target, skill.TargetInfo))
 					{
 						Direction direction = invoker.Position.DirectionTo (target);
 						return direction == Direction.North || direction == Direction.South || direction == Direction.West || direction == Direction.East;
@@ -308,9 +313,35 @@ namespace ArenaGS.Engine
 			{
 				case TargettingStyle.Point:
 					return target.GridDistance (source) <= targetInfo.Range;
+				case TargettingStyle.Cone:
+					return target.LatticeDistance (source) == 1;
+				case TargettingStyle.Line:
 				case TargettingStyle.None:
 				default:
 					return true;
+			}
+		}
+
+		public HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill, Point target)
+		{
+			switch (skill.TargetInfo.TargettingStyle)
+			{
+				case TargettingStyle.Point:
+				{
+					var pointsInRange = UnblockedPointsInBurst (state, target, skill.TargetInfo.Range + 1);
+					var validPointsInRange = pointsInRange.Where (x => IsValidTarget (state, invoker, skill, x));
+					return new HashSet<Point> (validPointsInRange);
+				}
+				case TargettingStyle.Cone:
+				{
+					var pointsInRange = UnblockedPointsNextToPoint (state, invoker.Position);
+					var validPointsInRange = pointsInRange.Where (x => IsValidTarget (state, invoker, skill, x));
+					return new HashSet<Point> (validPointsInRange);
+				}
+				case TargettingStyle.Line:
+				case TargettingStyle.None:
+				default:
+					return null;
 			}
 		}
 	}

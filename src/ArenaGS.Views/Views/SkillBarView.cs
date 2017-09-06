@@ -22,14 +22,14 @@ namespace ArenaGS.Views.Views
 		{
 			switch (s.Name)
 			{
-				case "Fireball":
-					return "burning-meteor.png";
-				case "Grenade":
-					return "grenade.png";
-				case "Dragon's Breath":
-					return "fire-breath.png";
-				case "Delayed Blast":
-					return "cannister.png";
+				case "Shot":
+					return "lee-enfield.png";
+				case "Dash":
+					return "run.png";
+				case "Point Blank Shot":
+					return "blunderbuss.png";
+				case "Move & Shoot":
+					return "crossed-pistols.png";
 				default:
 					return "cog.png";
 			}			
