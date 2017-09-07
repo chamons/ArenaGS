@@ -51,8 +51,8 @@ namespace ArenaGS.Tests
 		GameState CreateTestState (int playerCT, int firstCT, int secondCT)
 		{
 			Character player = Generator.CreateTestPlayer (new Point (1, 1)).WithCT (playerCT);
-			Character firstEnemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 2)).WithCT (firstCT);
-			Character secondEnemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 2)).WithCT (secondCT);
+			Character firstEnemy = TestEnemyHelper.CreateTestEnemy (Generator, new Point (2, 2)).WithCT (firstCT);
+			Character secondEnemy = TestEnemyHelper.CreateTestEnemy (Generator, new Point (3, 3)).WithCT (secondCT);
 			return new GameState (null, player, (new Character [] { firstEnemy, secondEnemy }).ToImmutableList (),
 								  ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
@@ -70,7 +70,7 @@ namespace ArenaGS.Tests
 		GameState CreateTestStateWithScripts (int playerCT, int firstCT, int secondCT, int scriptCT)
 		{
 			GameState state = CreateTestState (playerCT, firstCT, secondCT);
-			state = state.WithScripts (new MapScript [] { Generator.CreateSpawner (new Point (0, 0), "Enemy").WithCT (scriptCT) }.ToImmutableList ());
+			state = state.WithScripts (new MapScript [] { Generator.CreateSpawner (new Point (0, 0), "TestEnemy").WithCT (scriptCT) }.ToImmutableList ());
 			return state;
 		}
 

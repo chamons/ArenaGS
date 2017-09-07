@@ -53,8 +53,7 @@ namespace ArenaGS
 			Time = Dependencies.Get<ITime> ();
 			Generator = Dependencies.Get<IGenerator> ();
 			Log = Dependencies.Get<ILogger> ();
-			Log.DiagnosticMask = LogMask.All;
-
+	
 			QueryGameState = new QueryGameState ();
 		}		
 

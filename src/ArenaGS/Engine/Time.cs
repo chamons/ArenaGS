@@ -74,7 +74,7 @@ namespace ArenaGS.Engine
 				
 				if (next != null)
 				{
-					Log.Log ($"Time is processing {next} with CT {next.CT}.", LogMask.Engine, Servarity.Diagnostic);
+					Log.Log (() => $"Time is processing {next} with CT {next.CT}.", LogMask.Engine, Servarity.Diagnostic);
 					if (next is Character activeCharacter) 
 					{
 						if (activeCharacter.IsPlayer)

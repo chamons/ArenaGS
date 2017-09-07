@@ -75,7 +75,7 @@ namespace ArenaGS.Tests
 		public void KilledEnemy_IsRemoved ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = state.WithEnemies (Generator.CreateCharacter ("TestEnemy", new Point (2, 2)).Yield ().ToImmutableList ());
+			state = state.WithTestEnemy (Generator, new Point (2, 2));
 
 			state = Combat.Damage (state, state.Enemies [0], 10);
 			Assert.Zero (state.Enemies.Count);
