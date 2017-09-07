@@ -2,7 +2,9 @@
 using ArenaGS.Engine;
 using ArenaGS.Engine.Behavior;
 using ArenaGS.Engine.Generators;
+using ArenaGS.Model;
 using ArenaGS.Platform;
+using ArenaGS.Utilities;
 
 namespace ArenaGS.Tests.Utilities
 {
@@ -42,8 +44,6 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<IAnimationRequest> (typeof(TestAnimation));
 			Dependencies.Register<ILogger>(typeof(TestLogger));
-			Dependencies.Register<ICharacterLibrary> (typeof (CharacterLibrary));
-			Dependencies.Register<ISkillLibrary> (typeof (SkillLibrary));
 
 			// At least individual test runs will be consistent
 			Dependencies.RegisterInstance<IRandomGenerator> (new RandomGenerator (42));

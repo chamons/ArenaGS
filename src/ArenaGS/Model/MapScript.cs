@@ -58,13 +58,17 @@ namespace ArenaGS.Model
 		[ProtoMember (7)]
 		public int SpawnCount { get; private set; }
 
-		public SpawnerScript (int id, int ct, Point position, int spawnCount, int cooldown) : base (id, ct)
+		[ProtoMember (8)]
+		public string SpawnName { get; private set; }
+
+		public SpawnerScript (int id, int ct, Point position, string spawnName, int spawnCount, int cooldown) : base (id, ct)
 		{
 			Position = position;
 			Cooldown = cooldown;
 			TotalToSpawn = spawnCount;
 			TimeToNextSpawn = Cooldown;
 			SpawnCount = 0;
+			SpawnName = spawnName;
 		}
 
 		SpawnerScript (SpawnerScript script) : base (script)
@@ -74,6 +78,7 @@ namespace ArenaGS.Model
 			TotalToSpawn = script.TotalToSpawn;
 			TimeToNextSpawn = script.TimeToNextSpawn;
 			SpawnCount = script.SpawnCount;
+			SpawnName = script.SpawnName;
 		}
 
 		public override MapScript WithCT (int ct)

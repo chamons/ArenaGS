@@ -22,7 +22,7 @@ namespace ArenaGS.Views.Views
 		{
 			switch (s.Name)
 			{
-				case "Shot":
+				case "Aimed Shot":
 					return "lee-enfield.png";
 				case "Dash":
 					return "run.png";

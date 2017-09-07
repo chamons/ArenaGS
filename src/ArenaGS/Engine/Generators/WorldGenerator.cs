@@ -13,8 +13,6 @@ namespace ArenaGS.Engine.Generators
 		{
 			switch (type)
 			{
-				case "Simple":
-					return new SimpleMapGenerator ();
 				case "OpenArenaMap":
 					return new OpenArenaMapGenerator ();
 				default:

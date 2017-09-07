@@ -10,19 +10,16 @@ namespace ArenaGS.Engine
 {
 	public interface IGenerator
 	{
-		Character CreateCharacter (Point position, Health health, Defense defense);
-		Character CreatePlayer (Point position, Health health, Defense defense);
+		Character CreateCharacter (string name, Point position);
+		Character CreatePlayer (Point position);
+		Character CreateTestPlayer (Point position);
 
-		SpawnerScript CreateSpawner (Point position);
+		SpawnerScript CreateSpawner (Point position, string spawnName);
 		ReduceCooldownScript CreateCooldownScript (int ct, Character character, Skill skill);
 		AreaDamageScript CreateDamageScript (int ct, int damage, ImmutableHashSet<Point> affectedPoints);
 
 		Skill CreateSkill (string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources);
 		Skill CreateSkill (string name);
-
-		Character CreateStubPlayer (Point position);
-		Character CreateStubEnemy (Point position);
-		ImmutableList<Character> CreateStubEnemies (IEnumerable<Point> positions);
 	}
 
 	public class Generator : IGenerator
@@ -30,10 +27,14 @@ namespace ArenaGS.Engine
 		const int CharacterOffset = 100;
 		const int ScriptOffset = 2000;
 		const int SkillOffset = 30000;
-		ISkillLibrary SkillLibrary;
+
+		SkillLibrary SkillLibrary;
+		CharacterLibrary CharacterLibrary;
 
 		public Generator ()
 		{
+			SkillLibrary = new SkillLibrary (this);
+			CharacterLibrary = new CharacterLibrary (this);
 		}
 
 		int CharacterCount = 0;
@@ -61,27 +62,38 @@ namespace ArenaGS.Engine
 			return next;
 		}
 
-		public Character CreateCharacter (Point position, Health health, Defense defense)
+		public Character CreateCharacter (string name, Point position)
 		{
-			return new Character (NextCharacterID (), "Enemy", position, 100, ImmutableList<Skill>.Empty, health, defense);
+			return CharacterLibrary.CreateCharacter (name).WithID (NextCharacterID ()).WithPosition (position);
 		}
 
-		public Character CreatePlayer (Point position, Health health, Defense defense)
+		public Character CreateTestPlayer (Point position)
+		{
+			return CharacterLibrary.CreateCharacter ("TestPlayer").WithPosition (position);
+		}
+
+		public Character CreatePlayer (Point position)
+		{
+			return CharacterLibrary.CreateCharacter ("Player").WithPosition (position);
+		}
+
+		internal Character CreateRawPlayer (Point position, Health health, Defense defense)
 		{
 			return new Character (Character.PlayerID, "Player", position, 100, ImmutableList<Skill>.Empty, health, defense);
 		}
 
-		public SpawnerScript CreateSpawner (Point position)
+		internal Character CreateRawCharacter (string name, Point position, Health health, Defense defense)
 		{
-			return new SpawnerScript (NextScriptID (), 100, position, 5, 3);
+			return new Character (NextCharacterID (), name, position, 100, ImmutableList<Skill>.Empty, health, defense);
+		}
+
+		public SpawnerScript CreateSpawner (Point position, string spawnName)
+		{
+			return new SpawnerScript (NextScriptID (), 100, position, spawnName, 5, 3);
 		}
 
 		public Skill CreateSkill (string name)
 		{
-			// This is a bit of a hack around the circular dep chain between IGenerator and ISkillLibrary
-			if (SkillLibrary == null)
-				SkillLibrary = Dependencies.Get<ISkillLibrary> ();
-
 			return SkillLibrary.CreateSkill (name);
 		}
 
@@ -99,21 +111,5 @@ namespace ArenaGS.Engine
 		{
 			return new AreaDamageScript (NextScriptID (), ct, damage, affectedPoints);
 		}
-
-		public Character CreateStubPlayer (Point position)
-		{
-			return CreatePlayer (position, new Health (1, 1), new Defense (0));
-		}
-
-		public Character CreateStubEnemy (Point position)
-		{
-			return CreateCharacter (position, new Health (1, 1), new Defense (0));
-		}
-
-		public ImmutableList<Character> CreateStubEnemies (IEnumerable<Point> positions)
-		{
-			return positions.Select (x => CreateCharacter (x, new Health (1,1), new Defense (0))).ToImmutableList ();
-		}
-
 	}
 }

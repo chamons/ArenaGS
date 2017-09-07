@@ -20,6 +20,12 @@ namespace ArenaGS.Model
 		{
 		}
 
+		public Health (int health)
+		{
+			Current = health;
+			Maximum = health;
+		}
+
 		public Health (int current, int max)
 		{
 			Current = current;

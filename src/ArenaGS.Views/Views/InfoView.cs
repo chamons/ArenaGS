@@ -34,10 +34,7 @@ namespace ArenaGS.Views.Views
 			{
 				if (Target is Character character)
 				{
-					if (character.IsPlayer)
-						Write ("Player");
-					else
-						Write ("Enemy");
+					Write (character.Name);
 					Write ($"Position: {character.Position}", 2);
 					Write ($"Health: {character.Health.Current}/{character.Health.Maximum}", 3);
 					Write ($"Defense: {character.Defense.StandardDefense}", 4);

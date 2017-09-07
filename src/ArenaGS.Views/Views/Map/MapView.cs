@@ -11,9 +11,6 @@ namespace ArenaGS.Views.Views
 {
 	class MapView : View
 	{
-		SKBitmap PlayerBitmap;
-		SKBitmap EnemyBitmap;
-
 		SKColor DarkTile = SKColors.Black.WithAlpha (196);
 		SKColor DelayedExplosionTile = SKColors.DarkRed.WithAlpha (196);
 
@@ -22,12 +19,11 @@ namespace ArenaGS.Views.Views
 		MapThemePainter Painter { get; } = new MapThemePainter ();
 		internal MapVisibility CurrentVisibility { get; private set; }
 		MapAnimationPainter AnimationPainter = new MapAnimationPainter ();
+		MapCharacterPainter CharacterPainter = new MapCharacterPainter ();
 
 		public MapView (IScene parent, Point position, Size size) : base (position, size)
 		{
 			Parent = parent;
-			PlayerBitmap = Resources.Get ("orc_knight.png");
-			EnemyBitmap = Resources.Get ("skeletal_warrior.png");
 		}
 
 		public override SKSurface Draw (GameState state)
@@ -59,13 +55,13 @@ namespace ArenaGS.Views.Views
 			}
 
 			foreach (var enemy in GameState.Enemies.Where (x => x.ID != characterToAnimate?.Item1 && CurrentVisibility.IsVisible (x.Position)))
-				DrawTile (TranslateModelToUIPosition (enemy.Position), EnemyBitmap);
+				DrawTile (TranslateModelToUIPosition (enemy.Position), CharacterPainter.GetImage (GameState, enemy));
 
 			if (characterToAnimate != null)
-				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), characterToAnimate.Item1 == Player.ID ? PlayerBitmap : EnemyBitmap);
+				DrawFloatingTile (TranslateFloatingModelToUIPosition (characterToAnimate.Item2), CharacterPainter.GetImage (GameState, characterToAnimate.Item1));
 
 			if (characterToAnimate == null || characterToAnimate.Item1 != Player.ID)
-				DrawTile (TranslateModelToUIPosition (GameState.Player.Position), PlayerBitmap);
+				DrawTile (TranslateModelToUIPosition (GameState.Player.Position), CharacterPainter.GetImage (GameState, GameState.Player));
 
 			DrawDelayedDamageAreas ();
 
