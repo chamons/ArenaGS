@@ -3,6 +3,7 @@ using ArenaGS.Utilities;
 using ArenaGS.Views.Scenes;
 using ArenaGS.Views.Utilities;
 using SkiaSharp;
+using ArenaGS.Platform;
 
 namespace ArenaGS.Views.Views
 {
@@ -24,11 +25,14 @@ namespace ArenaGS.Views.Views
 		LogView Log;
 		SkillBarView SkillBar;
 		InfoView Info;
+		ILogger Logger;
 
 		public object InfoTarget { get; set; }
 
 		public CombatView (IScene parent, Point position, Size size) : base (position, size)
 		{
+			Logger = Dependencies.Get<ILogger> ();
+
 			Map = new MapView (parent, MapOffset, MapSize);
 			Log = new LogView (LogOffset, LogSize);
 			SkillBar = new SkillBarView (SkillBarOffset, SkillBarSize);
@@ -56,6 +60,8 @@ namespace ArenaGS.Views.Views
 
 		public override HitTestResults HitTest (SKPointI point)
 		{
+			Logger.Log (() => $"Hit Test {point}", LogMask.UI, Servarity.Diagnostic);
+
 			HitTestResults results = Map.HitTest (point);
 			if (results != null)
 				return results;

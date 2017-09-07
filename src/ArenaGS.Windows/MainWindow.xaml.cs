@@ -21,10 +21,12 @@ namespace ArenaGS.Windows
 		public event EventHandler<ClickEventArgs> OnDetailPress;
 
 		public event EventHandler<EventArgs> OnQuit;
+		System.Windows.Media.Matrix Transform;
 
 		public MainWindow ()
 		{
 			InitializeComponent ();
+
 			Loaded += OnLoaded;
 			TextInput += OnPlatformTextEnter;
 			KeyDown += OnPlatformKeyDown;
@@ -43,6 +45,7 @@ namespace ArenaGS.Windows
 			
 		void OnLoaded (object sender, RoutedEventArgs e)
 		{
+			Transform = PresentationSource.FromVisual (this).CompositionTarget.TransformToDevice;
 			Controller = new GameController (this);
 			Controller.Startup (new FileStorage ());
 			SkiaView.InvalidateVisual ();
@@ -69,6 +72,8 @@ namespace ArenaGS.Windows
 			if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
 			{
 				Point p = e.GetPosition (null);
+				p = Transform.Transform (p);
+
 				ClickArgs.Position = new SKPointI ((int)p.X, (int)p.Y);
 				OnPress?.Invoke (this, ClickArgs);
 			}
