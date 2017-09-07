@@ -54,12 +54,12 @@ namespace ArenaGS.Tests
 		public void DefaultActorBehavior_BlockedEnemy_Waits ()
 		{
 			Map map = TestScenes.CreateBoxRoom (5, 5);
-			Character player = Generator.CreateStubPlayer (new Point (1, 1));
+			Character player = Generator.CreateTestPlayer (new Point (1, 1));
 			// W
 			//  P E E
 			//  E E E
 			//  E E E
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (3, 1), new Point (1, 2),
+			var enemies = TestEnemyHelper.CreateTestEnemies (Generator, new Point [] { new Point (2, 1), new Point (3, 1), new Point (1, 2),
 				new Point (2, 2), new Point (2, 3), new Point (1, 3), new Point (2, 3), new Point (3,3)});
 			GameState state = new GameState (map, player, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 

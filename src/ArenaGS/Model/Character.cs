@@ -57,7 +57,12 @@ namespace ArenaGS.Model
 			Defense = original.Defense;
 		}
 
-		public override string ToString () => $"{Name} - {Position} {CT} {Health}";
+		public override string ToString () => $"{Name} {ID} - {Position} {CT} {Health}";
+
+		internal Character WithID (int id)
+		{
+			return new Character (this) { ID = id };
+		}
 
 		internal Character WithPosition (Point position)
 		{
@@ -120,7 +125,7 @@ namespace ArenaGS.Model
 			return Skills.First (x => x.ID == oldSkill.ID);
 		}
 
-		internal const int PlayerID = 42;
+		public const int PlayerID = 42;
 		public bool IsPlayer => ID == PlayerID;
 	}
 }

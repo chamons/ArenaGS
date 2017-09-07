@@ -1,12 +1,12 @@
 ﻿using System.Collections.Immutable;
+using System.Linq;
 
 using ArenaGS.Engine;
 using ArenaGS.Model;
 using ArenaGS.Platform;
 using ArenaGS.Tests.Utilities;
-using NUnit.Framework;
 using ArenaGS.Utilities;
-using System;
+using NUnit.Framework;
 
 namespace ArenaGS.Tests
 {
@@ -35,11 +35,10 @@ namespace ArenaGS.Tests
 			PlayerDeathState = state;
 		}
 
-		[Test]
 		public void DamagedCharacter_HasFewerHP ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = state.WithEnemies (Generator.CreateCharacter (new Point (2, 2), new Health (10, 10), new Defense (0)).Yield ().ToImmutableList ());
+			state = state.WithTestEnemy (Generator, new Point (2, 2));
 
 			Character enemy = state.Enemies [0];
 			state = Combat.Damage (state, enemy, 1);
@@ -52,9 +51,11 @@ namespace ArenaGS.Tests
 		public void CharacterWithEnoughDefense_TakesZeroDamage ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = state.WithEnemies (Generator.CreateCharacter (new Point (2, 2), new Health (10, 10), new Defense (10)).Yield ().ToImmutableList ());
+			Character enemy = TestEnemyHelper.CreateTestEnemy (Generator, new Point (2, 2));
+			enemy = enemy.WithDefense (new Defense (10)).WithHealth (new Health (10));
+			state = state.WithEnemies (enemy.Yield ().ToImmutableList ());
 
-			Character enemy = state.Enemies [0];
+			enemy = state.UpdateCharacterReference (enemy);
 			state = Combat.Damage (state, enemy, 5);
 			enemy = state.UpdateCharacterReference (enemy);
 
@@ -74,7 +75,7 @@ namespace ArenaGS.Tests
 		public void KilledEnemy_IsRemoved ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = state.WithEnemies (Generator.CreateCharacter (new Point (2, 2), new Health (10, 10), new Defense (0)).Yield ().ToImmutableList ());
+			state = state.WithTestEnemy (Generator, new Point (2, 2));
 
 			state = Combat.Damage (state, state.Enemies [0], 10);
 			Assert.Zero (state.Enemies.Count);

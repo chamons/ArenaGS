@@ -53,7 +53,7 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 
-			SpawnerScript script = new SpawnerScript (1, 100, new Point (2, 3), 2, 2);
+			SpawnerScript script = new SpawnerScript (1, 100, new Point (2, 3), "TestEnemy", 2, 2);
 			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
 
 			// First enemy spawned Cooldown (2) turns away

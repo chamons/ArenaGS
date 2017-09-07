@@ -49,6 +49,7 @@
     <Compile Include="Views\InfoView.cs" />
     <Compile Include="Views\LogView.cs" />
     <Compile Include="Views\Map\MapAnimationPainter.cs" />
+    <Compile Include="Views\Map\MapCharacterPainter.cs" />
     <Compile Include="Views\SkillBarView.cs" />
     <Compile Include="Views\View.cs" />
     <Compile Include="Views\Map\MapView.cs" />
@@ -397,6 +398,8 @@
     <EmbeddedResource Include="Resources\dcss\floor\crystal_floor4.png" />
     <EmbeddedResource Include="Resources\dcss\floor\crystal_floor5.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\dcss\wolf.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

@@ -366,8 +366,7 @@ namespace ArenaGS.Tests
 		public void AOESkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.AddTestAOESkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 2), new Point (3, 2) });
-			state = state.WithEnemies (enemies.ToImmutableList ());
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (2, 2), new Point (3, 2) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
 			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
@@ -390,8 +389,7 @@ namespace ArenaGS.Tests
 		public void ConeSkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
-			state = state.WithEnemies (enemies.ToImmutableList ());
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (2, 1), new Point (2, 2), new Point (2, 3), new Point (3, 3), new Point (1, 5) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
 			Assert.AreEqual (3, Combat.CharactersDamaged.Count);
@@ -401,8 +399,7 @@ namespace ArenaGS.Tests
 		public void ConeSkills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.AddTestConeSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (4, 1) });
-			state = state.WithEnemies (enemies.ToImmutableList ());
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (4, 1) });
 
 			for (int i = 1; i <= 5; ++i)
 				state.Map.Set (new Point (3, i), TerrainType.Wall);
@@ -415,8 +412,7 @@ namespace ArenaGS.Tests
 		public void LineSkills_AffectMultipleCharacters ()
 		{
 			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (3, 1), new Point (3, 3), new Point (3, 2) });
-			state = state.WithEnemies (enemies.ToImmutableList ());
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (2, 1), new Point (3, 1), new Point (3, 3), new Point (3, 2) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 			Assert.AreEqual (2, Combat.CharactersDamaged.Count);
@@ -426,8 +422,7 @@ namespace ArenaGS.Tests
 		public void LineSkills_DoNotAffectThroughWalls ()
 		{
 			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			var enemies = Generator.CreateStubEnemies (new Point [] { new Point (3, 1) });
-			state = state.WithEnemies (enemies.ToImmutableList ());
+			state = state.WithTestEnemy (Generator, new Point (3, 1));
 
 			for (int i = 1; i <= 5; ++i)
 				state.Map.Set (new Point (2, i), TerrainType.Wall);
@@ -477,8 +472,7 @@ namespace ArenaGS.Tests
 		public void KnockbackSkills_DoesNotMoveTargetBackIfBlockedByCharacter ()
 		{
 			GameState state = TestScenes.AddKnockbackSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
-			state = state.WithAddedEnemy (Generator.CreateStubEnemy (new Point (4, 4)));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (3, 3), new Point (4, 4) });
 			state = state.WithEnemies (state.Enemies.Select (x => x.WithCT (-500)).ToImmutableList ());
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
@@ -532,7 +526,7 @@ namespace ArenaGS.Tests
 		public void MoveAndDamageClosest_MovesAndDamagesNearest ()
 		{
 			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (3, 3), new Point (3, 4) }));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (3, 3), new Point (3, 4) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 			Assert.AreEqual (new Point (2, 1), state.Player.Position);
@@ -547,7 +541,7 @@ namespace ArenaGS.Tests
 			state.Map.Set (new Point (2, 1), TerrainType.Wall);
 			state.Map.Set (new Point (2, 2), TerrainType.Wall);
 
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (3, 1), new Point (1, 5) }));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (3, 1), new Point (1, 5) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (1, 2));
 			Assert.AreEqual (new Point (1, 2), state.Player.Position);
@@ -559,7 +553,7 @@ namespace ArenaGS.Tests
 		public void MoveAndDamageClosest_MovesButNoDamageIfNoEnemiesClose ()
 		{
 			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (9, 9) }));
+			state = state.WithTestEnemy (Generator, new Point (9, 9));
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 1));
 
@@ -571,7 +565,7 @@ namespace ArenaGS.Tests
 		public void MoveAndDamageClosest_EnemyIgnoresOtherEnemiesWhenLookingForTarget ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (2, 1), new Point (3, 3) }));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (2, 1), new Point (3, 3) });
 			int skilledEnemyID = state.Enemies.First (x => x.Position == new Point (3, 3)).ID;
 			state = TestScenes.AddMoveAndDamageSkill (Generator, state, state.Enemies.First (x => x.ID == skilledEnemyID));
 
@@ -586,7 +580,7 @@ namespace ArenaGS.Tests
 		public void AreaHealSkills_HealOnlyCharactersOnSide ()
 		{
 			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));			
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (1, 2), new Point (2, 1) }));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (1, 2), new Point (2, 1) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], state.Player.Position);
 
@@ -598,7 +592,7 @@ namespace ArenaGS.Tests
 		public void AreaHealSkills_HealAllValidTargets ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);			
-			state = state.WithEnemies (Generator.CreateStubEnemies (new Point [] { new Point (1, 2), new Point (2, 1) }));
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (1, 2), new Point (2, 1) });
 
 			int idOfHealingCharacter = state.Enemies.First (x => x.Position == new Point (1, 2)).ID;
 			state = TestScenes.AddHealSkill (Generator, state, state.Enemies.First (x => x.ID == idOfHealingCharacter));

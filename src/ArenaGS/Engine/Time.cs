@@ -33,9 +33,11 @@ namespace ArenaGS.Engine
 	{
 		IActorBehavior ActorBehavior;
 		IScriptBehavior ScriptBehavior;
+		ILogger Log;
 
 		public Time ()
 		{
+			Log = Dependencies.Get<ILogger> ();
 		}
 
 		// We can not do this in Time constructor as we have a circular dependency
@@ -59,6 +61,12 @@ namespace ArenaGS.Engine
 		{
 			GetDependenciesIfNeeded ();
 
+#if DEBUG
+			ImmutableHashSet<int> ids = state.AllCharacters.Select (x => x.ID).ToImmutableHashSet ();
+			if (ids.Count != state.AllCharacters.Count ())
+				throw new InvalidOperationException ($"Duplicate IDs detected: {string.Join (" ", ids)} in length {state.AllCharacters.Count ()}." );
+#endif
+
 			// For as long as it takes
 			while (true)
 			{
@@ -66,6 +74,7 @@ namespace ArenaGS.Engine
 				
 				if (next != null)
 				{
+					Log.Log (() => $"Time is processing {next} with CT {next.CT}.", LogMask.Engine, Servarity.Diagnostic);
 					if (next is Character activeCharacter) 
 					{
 						if (activeCharacter.IsPlayer)

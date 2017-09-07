@@ -47,14 +47,13 @@ namespace ArenaGS
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<ILogger> (typeof(Logger));
 			Dependencies.Register<IRandomGenerator> (typeof (RandomGenerator));
-			Dependencies.Register<ICharacterLibrary> (typeof (CharacterLibrary));
-			Dependencies.Register<ISkillLibrary> (typeof (SkillLibrary));
-
+			
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
 			Time = Dependencies.Get<ITime> ();
 			Generator = Dependencies.Get<IGenerator> ();
 			Log = Dependencies.Get<ILogger> ();
+	
 			QueryGameState = new QueryGameState ();
 		}		
 
@@ -104,10 +103,9 @@ namespace ArenaGS
 			int hash = r.Next ();
 			GeneratedMapData mapData = mapGenerator.Generate (hash);
 
-			ICharacterLibrary characterLibrary = Dependencies.Get<ICharacterLibrary> ();
-			Character player = characterLibrary.CreateCharacter ("Player");
-			player = player.WithPosition (FindOpenSpot (mapData.Map, new Point (8, 8), new Point[] { }));
-
+			Point playerPosition = FindOpenSpot (mapData.Map, new Point (8, 8), new Point [] { });
+			Character player = Generator.CreatePlayer (playerPosition);
+			
 			List <Point> enemyPositions = new List<Point> ();
 			for (int i = 0; i < 10; ++i)
 			{
@@ -117,11 +115,13 @@ namespace ArenaGS
 					enemyPositions.Add (openSpot);
 			}
 
-			var enemies = Generator.CreateStubEnemies (enemyPositions);
+			var enemies = enemyPositions.Select (x => Generator.CreateCharacter ("Wolf", x)).ToImmutableList ();
 			ImmutableList<string> startingLog = ImmutableList.Create<string> ();
+
 #if DEBUG
 			startingLog = startingLog.Add ($"Map Hash: {hash}");
 #endif
+
 			return new GameState (mapData.Map, player, enemies, mapData.Scripts, startingLog);
 		}
 
