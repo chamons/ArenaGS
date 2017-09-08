@@ -289,6 +289,46 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void MovementSkills_DoNotAllowCollisionsWithEnemies ()
+		{
+			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+		}
+
+		[Test]
+		public void MovementSkills_DoNotAllowCollisionsWithPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithTestEnemy (Generator, new Point (3, 3));
+			state = TestScenes.AddMovementSkill (Generator, state, character: state.Enemies[0]);
+
+			var enemy = state.Enemies [0];
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, enemy, enemy.Skills [0], new Point (1, 1)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, enemy, enemy.Skills [0], new Point (1, 1)));
+		}
+
+		[Test]
+		public void MovementAndDamageSkills_DoNotAllowCollisionsWithEnemies ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithPlayer (state.Player.WithPosition (new Point (2, 2)));
+
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+		}
+
+		[Test]
 		public void HealSkillTargettingSelf_IncreasesHealthToMax ()
 		{
 			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
@@ -310,9 +350,9 @@ namespace ArenaGS.Tests
 		public void MoveSkill_DiagonalMove ()
 		{
 			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator), 2);
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
 
-			Assert.AreEqual (new Point (3, 3), state.Player.Position);
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
 		}
 	}
 

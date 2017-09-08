@@ -107,6 +107,9 @@ namespace ArenaGS.Engine
 
 		GameState HandleMovement (GameState state, Character invoker, Point target)
 		{
+			if (state.AllCharacters.Any (x => x.Position == target))
+				throw new InvalidOperationException ($"{invoker} tried to invoke movement skill to {target} but was invalid as it was already occupied.");
+
 			Animation.Request (state, new MovementAnimationInfo (invoker, target));
 			return state.WithReplaceCharacter (invoker.WithPosition (target));
 		}
@@ -234,6 +237,15 @@ namespace ArenaGS.Engine
 
 		public bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target)
 		{
+			switch (skill.Effect)
+			{
+				case Effect.Movement:
+				case Effect.MoveAndDamageClosest:
+					if (state.AllCharacters.Any (x => x.Position == target))
+						return false;
+					break;
+			}
+
 			switch (skill.TargetInfo.TargettingStyle)
 			{
 				case TargettingStyle.Point:

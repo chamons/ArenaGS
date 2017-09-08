@@ -44,7 +44,7 @@ namespace ArenaGS.Tests.Utilities
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<IAnimationRequest> (typeof(TestAnimation));
 			Dependencies.Register<ILogger>(typeof(TestLogger));
-
+			Dependencies.Register<IQueryGameState> (typeof (QueryGameState));
 			// At least individual test runs will be consistent
 			Dependencies.RegisterInstance<IRandomGenerator> (new RandomGenerator (42));
 		}

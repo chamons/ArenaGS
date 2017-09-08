@@ -119,10 +119,12 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithReplaceCharacter (character.WithReplaceSkill (character.Skills [0].WithResources (resources)));
 		}
 
-		internal static GameState AddMovementSkill (IGenerator generator, GameState state, int range = 5)
+		internal static GameState AddMovementSkill (IGenerator generator, GameState state, int range = 5, Character character = null)
 		{
+			if (character == null)
+				character = state.Player;
 			Skill testSkill = generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (range), SkillResources.WithCooldown (3));
-			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddKnockbackSkill (IGenerator generator, GameState state)

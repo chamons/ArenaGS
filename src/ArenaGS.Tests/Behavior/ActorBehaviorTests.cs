@@ -9,6 +9,7 @@ using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace ArenaGS.Tests
 {
@@ -76,11 +77,39 @@ namespace ArenaGS.Tests
 		public void DefaultActorBehavior_MultipleTurnMove_TowardsPlayer ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			var shortestPath = state.ShortestPath;
+
+			Dictionary<int, int> startingEnemyDistance = new Dictionary<int, int> ();
+			foreach (var enemy in state.Enemies)
+				startingEnemyDistance.Add (enemy.ID, shortestPath [enemy.Position.X, enemy.Position.Y]);
+
 			for (int i = 0; i < 10; ++i)
 			{
 				state = Physics.WaitPlayer (state);
 				state = Time.ProcessUntilPlayerReady (state);
 			}
+
+			foreach (var enemy in state.Enemies)
+				Assert.Less (shortestPath [enemy.Position.X, enemy.Position.Y], startingEnemyDistance [enemy.ID]);
+		}
+
+		[Test]
+		public void EnemyUsesMovementSkill_ToCloseGameWithPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.None);
+			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (4, 4)).WithSkills (movementSkill.Yield ().ToImmutableList ());
+			state = state.WithCharacters (enemy.Yield ());
+			enemy = state.UpdateCharacterReference (enemy);
+
+			var shortestPath = state.ShortestPath;
+			Assert.AreEqual (3, shortestPath [enemy.Position.X, enemy.Position.Y]);
+
+			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			state = behavior.Act (state, enemy);
+			enemy = state.UpdateCharacterReference (enemy);
+
+			Assert.AreEqual (1, shortestPath [enemy.Position.X, enemy.Position.Y]);
 		}
 	}
 }
