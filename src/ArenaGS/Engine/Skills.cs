@@ -101,6 +101,7 @@ namespace ArenaGS.Engine
 
 			invoker = state.UpdateCharacterReference (invoker);
 			state = ChargeSkillForResources (state, invoker, skill);
+			invoker = state.UpdateCharacterReference (invoker);
 
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}

@@ -176,6 +176,17 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void CooledBasedSkill_NonPlayer_SetsCooldownWhenUsed ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithTestEnemy (Generator, new Point (3, 3));
+			state = TestScenes.AddSkillWithResources (Generator, state, SkillResources.WithCooldown (3), character: state.Enemies[0]);
+
+			state = Skills.Invoke (state, state.Enemies[0], state.Enemies [0].Skills [0], new Point (3, 1));
+			Assert.AreEqual (3, state.Enemies[0].Skills [0].Resources.Cooldown);
+		}
+
+		[Test]
 		public void CooledBasedSkillUnderCooldown_ReducesEveryPlayerTurn ()
 		{
 			const int StartingCooldown = 3;

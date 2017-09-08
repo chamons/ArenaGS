@@ -97,7 +97,7 @@ namespace ArenaGS.Tests
 		public void EnemyUsesMovementSkill_ToCloseGameWithPlayer ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.None);
+			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (2));
 			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (4, 4)).WithSkills (movementSkill.Yield ().ToImmutableList ());
 			state = state.WithCharacters (enemy.Yield ());
 			enemy = state.UpdateCharacterReference (enemy);
@@ -110,6 +110,7 @@ namespace ArenaGS.Tests
 			enemy = state.UpdateCharacterReference (enemy);
 
 			Assert.AreEqual (1, shortestPath [enemy.Position.X, enemy.Position.Y]);
+			Assert.False (enemy.Skills [0].ReadyForUse);
 		}
 	}
 }
