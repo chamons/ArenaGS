@@ -20,13 +20,11 @@ namespace ArenaGS.Engine.Behavior
 	{		
 		IPhysics Physics;
 		ISkills Skills;
-		IQueryGameState QueryGameState;
 
 		public DefaultActorBehavior ()
 		{
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
-			QueryGameState = Dependencies.Get<IQueryGameState> ();
 		}
 
 		public GameState Act (GameState state, Character c)
@@ -72,7 +70,7 @@ namespace ArenaGS.Engine.Behavior
 
 			foreach (var skill in c.Skills.Where (x => x.Effect == Effect.Movement && x.ReadyForUse))
 			{
-				foreach (var targetablePoint in QueryGameState.PointsSkillCanTarget (state, skill))
+				foreach (var targetablePoint in Skills.PointsSkillCanTarget (state, c, skill))
 				{
 					int currentSkillDistance = shortestPath [targetablePoint.X, targetablePoint.Y];
 					if (currentSkillDistance < bestDistance)
