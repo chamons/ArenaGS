@@ -56,12 +56,6 @@ namespace ArenaGS.Engine.Behavior
 			return walkState.ValueOr (Physics.WaitEnemy (state, c));
 		}
 
-
-		Option<GameState> UseHealIfCan (GameState state, Character c)
-		{
-			return Option.None<GameState> ();
-		}
-
 		IEnumerable<Skill> OrderHigestPower (IEnumerable<Skill> skills) => skills.OrderBy (x => x.EffectInfo.Power);
 		Skill GetHigestPower (IEnumerable<Skill> skills) => OrderHigestPower (skills).LastOrDefault ();
 
@@ -106,35 +100,45 @@ namespace ArenaGS.Engine.Behavior
 		}
 
 		Option<GameState> UseAttackIfCan (GameState state, Character c)
-		{			
+		{
 			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.Damage && x.ReadyForUse);
-			// TODO - Instead of this we need to select targettable points which have AffectedPointsForSkill that hit player
+			var damageSkillsWhichCanTargetAndEffect = FilterDamageSkillsTargetting (state, c, damageSkillsAvailable);
 
-			var damageSkillsWhichCanTarget = damageSkillsAvailable.Where (x => Skills.IsValidTarget (state, c, x, state.Player.Position));
-
-			var stunDamageSkill = GetHigestPower (damageSkillsWhichCanTarget.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
+			var stunDamageSkill = GetHigestPower (damageSkillsWhichCanTargetAndEffect.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
 			if (stunDamageSkill != null)
 				return Skills.Invoke (state, c, stunDamageSkill, state.Player.Position).Some ();
 
-			var bestDamageSkill = GetHigestPower (damageSkillsWhichCanTarget);
+			var bestDamageSkill = GetHigestPower (damageSkillsWhichCanTargetAndEffect);
 			if (bestDamageSkill != null)
 				return Skills.Invoke (state, c, bestDamageSkill, state.Player.Position).Some ();
 
 			return Option.None<GameState> ();
 		}
 
+		IEnumerable<Skill> FilterDamageSkillsTargetting (GameState state, Character c, IEnumerable<Skill> damageSkillsAvailable)
+		{
+			var damageSkillsWhichCanTarget = damageSkillsAvailable.Where (x => Skills.IsValidTarget (state, c, x, state.Player.Position));
+
+			return damageSkillsWhichCanTarget.Where (s => {
+				switch (s.TargetInfo.TargettingStyle)
+				{
+					case TargettingStyle.Line:
+						return Skills.AffectedPointsForSkill (state, c, s, state.Player.Position).Contains (state.Player.Position);
+					default:
+						return true;
+				}
+			});
+		}
+
 		Option<GameState> UseDelayAttackIfCan (GameState state, Character c)
 		{
 			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.DelayedDamage && x.ReadyForUse);
+			var damageSkillsWhichCanTargetAndEffect = FilterDamageSkillsTargetting (state, c, damageSkillsAvailable);
 
-			//foreach (Skill s in damageSkillsAvailable)
-			//{
-			//	foreach (Point p in Skills.PointsSkillCanTarget ())
-			//	Skills.AffectedPointsForSkill (state, c, s, )
-			//}
-
+			var bestDamageSkill = GetHigestPower (damageSkillsWhichCanTargetAndEffect);
 			
-			
+			if (bestDamageSkill != null)
+				return Skills.Invoke (state, c, bestDamageSkill, state.Player.Position).Some ();
 
 			return Option.None<GameState> ();
 		}
@@ -181,6 +185,11 @@ namespace ArenaGS.Engine.Behavior
 				if (Physics.CouldCharacterWalk (state, c, c.Position.InDirection (direction)))
 					return Physics.MoveEnemy (state, c, direction).Some ();
 			}
+			return Option.None<GameState> ();
+		}
+
+		Option<GameState> UseHealIfCan (GameState state, Character c)
+		{
 			return Option.None<GameState> ();
 		}
 	}

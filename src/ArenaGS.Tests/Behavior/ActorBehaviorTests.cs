@@ -305,13 +305,14 @@ namespace ArenaGS.Tests
 
 			state = ActFirstEnemy (state);
 
-			AssertSkillUsed (state, "DelayedBlast");
+			AssertSkillUsed (state, "Delayed Blast");
+			state = Physics.Wait (state, state.Player);
 
 			for (int i = 0; i < 3; ++i)
 			{
+				state = Time.ProcessUntilPlayerReady (state);
 				state = Physics.Wait (state, state.Player);
 				state = Physics.Wait (state, state.Enemies[0]);
-				state = Time.ProcessUntilPlayerReady (state);
 			}
 			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
 			Assert.True (Combat.CharactersDamaged[0].Item1.IsPlayer);

@@ -104,15 +104,6 @@ namespace ArenaGS.Engine
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
-		public IEnumerable<Character> CharactersAffectedByMoveAndDamage (GameState state, Character invoker, Skill skill, Point position)
-		{
-			int range = ((MoveAndDamageSkillEffectInfo)skill.EffectInfo).Range;
-			var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (position.GridDistance (x.Position), x));
-			var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= range).OrderBy (x => x.Item1).Select (x => x.Item2);
-			var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
-			return targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, position, x.Position, false));
-		}
-
 		GameState HandleMovement (GameState state, Character invoker, Point target)
 		{
 			if (state.AllCharacters.Any (x => x.Position == target))
@@ -200,6 +191,15 @@ namespace ArenaGS.Engine
 			}
 
 			return state.WithReplaceCharacter (invoker.WithReplaceSkill (skill));
+		}
+
+		public IEnumerable<Character> CharactersAffectedByMoveAndDamage (GameState state, Character invoker, Skill skill, Point position)
+		{
+			int range = ((MoveAndDamageSkillEffectInfo)skill.EffectInfo).Range;
+			var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (position.GridDistance (x.Position), x));
+			var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= range).OrderBy (x => x.Item1).Select (x => x.Item2);
+			var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
+			return targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, position, x.Position, false));
 		}
 
 		public HashSet<Point> UnblockedPointsInBurst (GameState state, Point target, int area)
