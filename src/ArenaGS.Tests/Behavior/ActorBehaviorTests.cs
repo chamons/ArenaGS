@@ -152,7 +152,6 @@ namespace ArenaGS.Tests
 		Skill GetKnockback () => Generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
 		Skill GetHeal () => Generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
 
-
 		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills, Point position)
 		{
 			Character enemy = Generator.CreateCharacter ("TestEnemy", position).WithSkills (skills.ToImmutableList ());
@@ -266,7 +265,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable_Melee ()
+		public void UsesMovementAttackSkill_WhenAvailableAndRanged_Melee ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () }, new Point (3, 3));
@@ -278,6 +277,17 @@ namespace ArenaGS.Tests
 			int endingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
 			// Strongest skill is bite, so should move towards
 			Assert.Less (endingDistance, startingDistance);
+		}
+
+		[Test]
+		public void DoNotUseMovementAttack_WhenMelee_InMeleeRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestStrongBite");
 		}
 
 		[Test]
