@@ -108,6 +108,8 @@ namespace ArenaGS.Engine.Behavior
 		Option<GameState> UseAttackIfCan (GameState state, Character c)
 		{			
 			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.Damage && x.ReadyForUse);
+			// TODO - Instead of this we need to select targettable points which have AffectedPointsForSkill that hit player
+
 			var damageSkillsWhichCanTarget = damageSkillsAvailable.Where (x => Skills.IsValidTarget (state, c, x, state.Player.Position));
 
 			var stunDamageSkill = GetHigestPower (damageSkillsWhichCanTarget.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
@@ -123,6 +125,17 @@ namespace ArenaGS.Engine.Behavior
 
 		Option<GameState> UseDelayAttackIfCan (GameState state, Character c)
 		{
+			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.DelayedDamage && x.ReadyForUse);
+
+			//foreach (Skill s in damageSkillsAvailable)
+			//{
+			//	foreach (Point p in Skills.PointsSkillCanTarget ())
+			//	Skills.AffectedPointsForSkill (state, c, s, )
+			//}
+
+			
+			
+
 			return Option.None<GameState> ();
 		}
 

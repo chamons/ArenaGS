@@ -483,6 +483,17 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void LineSkills_RespectRange ()
+		{
+			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithTestEnemy (Generator, new Point (9, 9));
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (9, 9));
+
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
+		}
+
+		[Test]
 		public void DelayedDamage_DamagesAfterCT ()
 		{
 			GameState state = TestScenes.AddDelayedDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));

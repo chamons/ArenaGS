@@ -120,6 +120,7 @@ namespace ArenaGS.Tests
 		IGenerator Generator;
 		ISkills Skills;
 		ITime Time;
+		IPhysics Physics;
 
 		CombatStub Combat;
 
@@ -135,6 +136,7 @@ namespace ArenaGS.Tests
 			Generator = Dependencies.Get<IGenerator> ();
 			Skills = Dependencies.Get<ISkills> ();
 			Time = Dependencies.Get<ITime> ();
+			Physics = Dependencies.Get<IPhysics> ();
 		}
 
 		Skill GetTestBite () => Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
@@ -142,7 +144,12 @@ namespace ArenaGS.Tests
 		Skill GetTestShot () => Generator.CreateSkill ("TestShot", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
 		Skill GetStrongTestShot () => Generator.CreateSkill ("TestStrongShot", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
 		Skill GetStunBite () => Generator.CreateSkill ("StunBite", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetLineAttack () => Generator.CreateSkill ("Line Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Line (3), SkillResources.WithCooldown (2));
+		Skill GetAreaAttack () => Generator.CreateSkill ("Area Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (3, 1), SkillResources.WithCooldown (2));
+		Skill GetConeAttack () => Generator.CreateSkill ("Clone Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Cone (3), SkillResources.WithCooldown (2));
 		Skill GetMoveAndShoot () => Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (1, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetDelayedBlast () => Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (4), TargettingInfo.Line (4), SkillResources.WithCooldown (2));
+
 
 		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills, Point position)
 		{
@@ -180,6 +187,54 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void UsesLineAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetLineAttack () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
+			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void DoesNotUseLineAttackSkill_WhenNotInRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetLineAttack () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
+		public void UsesConeAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetConeAttack () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
+			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void DoesNotUseConeAttackSkill_WhenNotInRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetConeAttack () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
 		public void UsesStongestAttackSkill_WhenMultipleAvailable ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
@@ -188,15 +243,6 @@ namespace ArenaGS.Tests
 			state = ActFirstEnemy (state);
 
 			AssertSkillUsed (state, "TestStrongBite");
-		}
-		
-		[Test]
-		public void UsesMovementAttackSkill_WhenInRangeOfPlayer_AndKeepsDistance ()
-		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStunBite () });
-
-			state = ActFirstEnemy (state);
 		}
 
 		[Test]
@@ -241,7 +287,61 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void PreferNonDelayedAttackSkills_WhenBothAvailable ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetDelayedBlast () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestBite");
+		}
+
+		[Test]
 		public void UsesDelayedAttackSkill_WhenInRangeOfPlayer_WhenOnlyOption ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetDelayedBlast () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "DelayedBlast");
+
+			for (int i = 0; i < 3; ++i)
+			{
+				state = Physics.Wait (state, state.Player);
+				state = Physics.Wait (state, state.Enemies[0]);
+				state = Time.ProcessUntilPlayerReady (state);
+			}
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.True (Combat.CharactersDamaged[0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void DoesNotUsesDelayedAttackSkill_WhenNotInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetDelayedBlast () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
+		public void UsesAreaAttackSkill_WhenDirectlyInRangeOfPlayer ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesAreaAttackSkill_WhenSplashInRangeOfPlayer ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesAreaAttackSkill_ToNotHitOthersWhenPossible ()
 		{
 			//Assert.Fail ();
 		}
