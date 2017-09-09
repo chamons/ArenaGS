@@ -94,7 +94,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void EnemyUsesMovementSkill_ToCloseGameWithPlayer ()
+		public void UsesMovementSkill_ToCloseGameWithPlayer ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (2));
@@ -111,6 +111,77 @@ namespace ArenaGS.Tests
 
 			Assert.AreEqual (1, shortestPath [enemy.Position.X, enemy.Position.Y]);
 			Assert.False (enemy.Skills [0].ReadyForUse);
+		}
+	}
+
+	[TestFixture]
+	class CombatActorBehaviorTests
+	{
+		IGenerator Generator;
+		ISkills Skills;
+		ITime Time;
+
+		CombatStub Combat;
+
+		[SetUp]
+		public void Setup ()
+		{
+			TestDependencies.SetupTestDependencies ();
+
+			Dependencies.Unregister<ICombat> ();
+			Combat = new CombatStub ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
+
+			Generator = Dependencies.Get<IGenerator> ();
+			Skills = Dependencies.Get<ISkills> ();
+			Time = Dependencies.Get<ITime> ();
+		}
+
+		[Test]
+		public void UsesAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill damageSkill = Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 1)).WithSkills (damageSkill.Yield ().ToImmutableList ());
+			state = state.WithCharacters (enemy.Yield ());
+			enemy = state.UpdateCharacterReference (enemy);
+
+			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			state = behavior.Act (state, enemy);
+			enemy = state.UpdateCharacterReference (enemy);
+
+			Assert.IsFalse (enemy.Skills [0].ReadyForUse);
+			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
+			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void UsesMovementAttackSkill_WhenInRangeOfPlayer_AndKeepsDistance ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesStunAttackSkill_InPreference_WhenAvailable ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesDelayedAttackSkill_WhenInRangeOfPlayer_WhenOnlyOption ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesSelfHeal_OnlyWhenDamaged_AndAvailable ()
+		{
 		}
 	}
 }

@@ -53,7 +53,6 @@
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
     <Compile Include="TimeTests.cs" />
-    <Compile Include="DirectionTests.cs" />
     <Compile Include="Utilities\TestDependencies.cs" />
     <Compile Include="Utilities\TestExtensions.cs" />
     <Compile Include="Utilities\TestFileStorage.cs" />
