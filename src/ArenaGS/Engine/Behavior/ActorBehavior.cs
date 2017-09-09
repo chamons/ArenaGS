@@ -17,7 +17,7 @@ namespace ArenaGS.Engine.Behavior
 	}
 
 	public class DefaultActorBehavior : IActorBehavior
-	{		
+	{
 		IPhysics Physics;
 		ISkills Skills;
 
@@ -32,10 +32,18 @@ namespace ArenaGS.Engine.Behavior
 			Option<GameState> healState = UseHealIfCan (state, c);
 			if (healState.HasValue)
 				return healState.ValueOrFailure ();
-			
+
+			Option<GameState> movementAttack = UseMovementAttackIfCan (state, c);
+			if (movementAttack.HasValue)
+				return movementAttack.ValueOrFailure ();
+
 			Option<GameState> attackState = UseAttackIfCan (state, c);
 			if (attackState.HasValue)
 				return attackState.ValueOrFailure ();
+
+			Option<GameState> delayedAttackState = UseDelayAttackIfCan (state, c);
+			if (delayedAttackState.HasValue)
+				return delayedAttackState.ValueOrFailure ();
 
 			Option<GameState> movementState = UseMovementSkillIfCan (state, c);
 			if (movementState.HasValue)
@@ -54,7 +62,48 @@ namespace ArenaGS.Engine.Behavior
 			return Option.None<GameState> ();
 		}
 
-		Skill GetHigestPower (IEnumerable<Skill> skills) => skills.OrderBy (x => ((DamageSkillEffectInfo)x.EffectInfo).Power).LastOrDefault ();
+		IEnumerable<Skill> OrderHigestPower (IEnumerable<Skill> skills) => skills.OrderBy (x => x.EffectInfo.Power);
+		Skill GetHigestPower (IEnumerable<Skill> skills) => OrderHigestPower (skills).LastOrDefault ();
+
+		bool IsMeleeEnemy (Character c)
+		{
+			Skill strongestSkill = GetHigestPower (c.Skills);
+			if (strongestSkill != null)
+				return strongestSkill.TargetInfo.Range == 1;
+			return true;
+		}
+
+		bool IsRangedEnemy (Character c) => !IsMeleeEnemy (c);
+
+		Option<GameState> UseMovementAttackIfCan (GameState state, Character c)
+		{
+			int [,] shortestPath = state.ShortestPath;
+			bool isMelee = IsMeleeEnemy (c);
+
+			foreach (Skill skill in OrderHigestPower (c.Skills.Where (x => x.Effect == Effect.MoveAndDamageClosest && x.ReadyForUse)))
+			{
+				Point bestTarget = Point.Invalid;
+				int bestDistance = shortestPath [c.Position.X, c.Position.Y];
+
+				foreach (Point p in Skills.PointsSkillCanTarget (state, c, skill))
+				{
+					if (Skills.CharactersAffectedByMoveAndDamage (state, c, skill, p).Any (x => x.IsPlayer))
+					{
+						int currentDistance = shortestPath [p.X, p.Y];
+						if ((isMelee && currentDistance < bestDistance) || (!isMelee && currentDistance > bestDistance))
+						{
+							bestTarget = p;
+							bestDistance = currentDistance;
+						}
+					}
+				}
+
+				if (bestTarget != Point.Invalid)
+					return Skills.Invoke (state, c, skill, bestTarget).Some ();
+			}
+
+			return Option.None<GameState> ();
+		}
 
 		Option<GameState> UseAttackIfCan (GameState state, Character c)
 		{			
@@ -69,6 +118,11 @@ namespace ArenaGS.Engine.Behavior
 			if (bestDamageSkill != null)
 				return Skills.Invoke (state, c, bestDamageSkill, state.Player.Position).Some ();
 
+			return Option.None<GameState> ();
+		}
+
+		Option<GameState> UseDelayAttackIfCan (GameState state, Character c)
+		{
 			return Option.None<GameState> ();
 		}
 

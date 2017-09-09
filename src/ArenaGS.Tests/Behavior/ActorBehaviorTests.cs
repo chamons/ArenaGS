@@ -139,18 +139,31 @@ namespace ArenaGS.Tests
 
 		Skill GetTestBite () => Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
 		Skill GetStrongTestBite () => Generator.CreateSkill ("TestStrongBite", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetTestShot () => Generator.CreateSkill ("TestShot", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
+		Skill GetStrongTestShot () => Generator.CreateSkill ("TestStrongShot", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
 		Skill GetStunBite () => Generator.CreateSkill ("StunBite", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetMoveAndShoot () => Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (1, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+
+		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills, Point position)
+		{
+			Character enemy = Generator.CreateCharacter ("TestEnemy", position).WithSkills (skills.ToImmutableList ());
+			return state.WithCharacters (enemy.Yield ());
+		}
 
 		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills)
 		{
-			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 1)).WithSkills (skills.ToImmutableList ());
-			return state.WithCharacters (enemy.Yield ());
+			return AddEnemyWithSkills (state, skills, new Point (2, 1));
 		}
 
 		GameState ActFirstEnemy (GameState state)
 		{
 			DefaultActorBehavior behavior = new DefaultActorBehavior ();
 			return behavior.Act (state, state.Enemies [0]);
+		}
+
+		static void AssertSkillUsed (GameState state, string skillName)
+		{
+			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == skillName).ReadyForUse);
 		}
 
 		[Test]
@@ -174,19 +187,46 @@ namespace ArenaGS.Tests
 
 			state = ActFirstEnemy (state);
 
-			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == "TestStrongBite").ReadyForUse);
+			AssertSkillUsed (state, "TestStrongBite");
 		}
-
+		
 		[Test]
 		public void UsesMovementAttackSkill_WhenInRangeOfPlayer_AndKeepsDistance ()
 		{
-			//Assert.Fail ();
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStunBite () });
+
+			state = ActFirstEnemy (state);
 		}
 
 		[Test]
-		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable ()
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailableMovesAway ()
 		{
-			//Assert.Fail ();
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestShot (), GetMoveAndShoot () });
+			int startingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Move & Shoot");
+			int endingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+			// Strongest skill is shot, so should move away
+			Assert.Greater (endingDistance, startingDistance);
+		}
+
+		[Test]
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailableMovesTowards ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () }, new Point (3, 3));
+			int startingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Move & Shoot");
+			int endingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+			// Strongest skill is bite, so should move towards
+			Assert.Less (endingDistance, startingDistance);
 		}
 
 		[Test]
@@ -197,7 +237,7 @@ namespace ArenaGS.Tests
 
 			state = ActFirstEnemy (state);
 
-			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == "StunBite").ReadyForUse);
+			AssertSkillUsed (state, "StunBite");
 		}
 
 		[Test]
@@ -215,6 +255,13 @@ namespace ArenaGS.Tests
 		[Test]
 		public void UsesSelfHeal_OnlyWhenDamaged_AndAvailable ()
 		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void RangedEnemiesFallBack_OnlyIfMultipleEnemiesNearPlayer_AreAbleToMove ()
+		{
+			//Assert.Fail ();
 		}
 	}
 }

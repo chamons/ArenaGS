@@ -16,6 +16,7 @@ namespace ArenaGS.Engine
 		bool IsValidTarget (GameState state, Character invoker, Skill skill, Point target);
 		HashSet<Point> AffectedPointsForSkill (GameState state, Character invoker, Skill skill, Point target);
 		HashSet<Point> PointsSkillCanTarget (GameState state, Character invoker, Skill skill);
+		IEnumerable<Character> CharactersAffectedByMoveAndDamage (GameState state, Character invoker, Skill skill, Point position);
 	}
 
 	public class Skills : ISkills
@@ -65,26 +66,23 @@ namespace ArenaGS.Engine
 					break;
 				}
 				case Effect.MoveAndDamageClosest:
-				{
-					MoveAndDamageSkillEffectInfo effectInfo = (MoveAndDamageSkillEffectInfo)skill.EffectInfo;
-					state = HandleMovement (state, invoker, target);
-					invoker = state.UpdateCharacterReference (invoker);
-
-					var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (invoker.Position.GridDistance (x.Position), x));
-					var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= effectInfo.Range).OrderBy (x => x.Item1).Select (x => x.Item2);
-					var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
-					var targetsWithClearPath = targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, invoker.Position, x.Position, false));
-					var finalTarget = targetsWithClearPath.FirstOrDefault ();
-
-					if (finalTarget != null)
 					{
-						List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, finalTarget.Position);
-						if (path.Count > 0)
-							Animation.Request (state, new ProjectileAnimationInfo (path));
-						state = Combat.Damage (state, finalTarget, effectInfo.Power);
+						MoveAndDamageSkillEffectInfo effectInfo = (MoveAndDamageSkillEffectInfo)skill.EffectInfo;
+						state = HandleMovement (state, invoker, target);
+						invoker = state.UpdateCharacterReference (invoker);
+
+						IEnumerable<Character> potentialTargets = CharactersAffectedByMoveAndDamage (state, invoker, skill, invoker.Position);
+						var finalTarget = potentialTargets.FirstOrDefault ();
+
+						if (finalTarget != null)
+						{
+							List<Point> path = BresenhamLine.PointsOnLine (invoker.Position, finalTarget.Position);
+							if (path.Count > 0)
+								Animation.Request (state, new ProjectileAnimationInfo (path));
+							state = Combat.Damage (state, finalTarget, effectInfo.Power);
+						}
+						break;
 					}
-					break;
-				}
 				case Effect.Heal:
 				{
 					HealEffectInfo effectInfo = (HealEffectInfo)skill.EffectInfo;
@@ -104,6 +102,15 @@ namespace ArenaGS.Engine
 			invoker = state.UpdateCharacterReference (invoker);
 
 			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+		}
+
+		public IEnumerable<Character> CharactersAffectedByMoveAndDamage (GameState state, Character invoker, Skill skill, Point position)
+		{
+			int range = ((MoveAndDamageSkillEffectInfo)skill.EffectInfo).Range;
+			var orderedCharactersByDistance = state.AllCharacters.Select (x => new Tuple<double, Character> (position.GridDistance (x.Position), x));
+			var potentialTargets = orderedCharactersByDistance.Where (x => x.Item1 <= range).OrderBy (x => x.Item1).Select (x => x.Item2);
+			var targetsOfCorrectSide = potentialTargets.Where (x => x.ID != invoker.ID).Where (x => x.IsPlayer != invoker.IsPlayer); // #105
+			return targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, position, x.Position, false));
 		}
 
 		GameState HandleMovement (GameState state, Character invoker, Point target)
