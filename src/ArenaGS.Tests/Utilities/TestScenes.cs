@@ -127,22 +127,28 @@ namespace ArenaGS.Tests.Utilities
 			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState AddKnockbackSkill (IGenerator generator, GameState state)
+		internal static GameState AddKnockbackSkill (IGenerator generator, GameState state, Character character = null)
 		{
+			if (character == null)
+				character = state.Player;
 			Skill testSkill = generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (2, knockback: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
-			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState AddStunSkill (IGenerator generator, GameState state)
+		internal static GameState AddStunSkill (IGenerator generator, GameState state, Character character = null)
 		{
+			if (character == null)
+				character = state.Player;
 			Skill testSkill = generator.CreateSkill ("Stun", Effect.Damage, new DamageSkillEffectInfo (2, stun: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
-			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
-		internal static GameState AddChargeSkill (IGenerator generator, GameState state)
+		internal static GameState AddChargeSkill (IGenerator generator, GameState state, Character character = null)
 		{
+			if (character == null)
+				character = state.Player;
 			Skill testSkill = generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (3, charge: true), TargettingInfo.Point (5), SkillResources.WithCooldown (3));
-			return state.WithPlayer (state.Player.WithAdditionalSkill (testSkill));
+			return state.WithReplaceCharacter (character.WithAdditionalSkill (testSkill));
 		}
 
 		internal static GameState AddMoveAndDamageSkill (IGenerator generator, GameState state, Character character = null)

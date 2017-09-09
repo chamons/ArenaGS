@@ -54,8 +54,21 @@ namespace ArenaGS.Engine.Behavior
 			return Option.None<GameState> ();
 		}
 
+		Skill GetHigestPower (IEnumerable<Skill> skills) => skills.OrderBy (x => ((DamageSkillEffectInfo)x.EffectInfo).Power).LastOrDefault ();
+
 		Option<GameState> UseAttackIfCan (GameState state, Character c)
-		{
+		{			
+			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.Damage && x.ReadyForUse);
+			var damageSkillsWhichCanTarget = damageSkillsAvailable.Where (x => Skills.IsValidTarget (state, c, x, state.Player.Position));
+
+			var stunDamageSkill = GetHigestPower (damageSkillsWhichCanTarget.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
+			if (stunDamageSkill != null)
+				return Skills.Invoke (state, c, stunDamageSkill, state.Player.Position).Some ();
+
+			var bestDamageSkill = GetHigestPower (damageSkillsWhichCanTarget);
+			if (bestDamageSkill != null)
+				return Skills.Invoke (state, c, bestDamageSkill, state.Player.Position).Some ();
+
 			return Option.None<GameState> ();
 		}
 

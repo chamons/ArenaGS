@@ -54,7 +54,7 @@ namespace ArenaGS.Tests
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 
 			SpawnerScript script = new SpawnerScript (1, 100, new Point (2, 3), "TestEnemy", 2, 2);
-			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
+			state = state.WithScripts (script.YieldList<MapScript> ());
 
 			// First enemy spawned Cooldown (2) turns away
 			ScriptBehavior behavior = new ScriptBehavior ();
@@ -77,7 +77,7 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (-1, -1, Cooldown, Cooldown, false));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			ReduceCooldownScript script = new ReduceCooldownScript (1, 0, state.Player.ID, state.Player.Skills [0].ID);
-			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
+			state = state.WithScripts (script.YieldList<MapScript> ());
 
 			ScriptBehavior behavior = new ScriptBehavior ();
 			for (int i = 0; i < Cooldown; ++i)
@@ -96,7 +96,7 @@ namespace ArenaGS.Tests
 			GameState state = TestScenes.AddSkillWithResources (Generator, TestScenes.CreateBoxRoomState (Generator), new SkillResources (1, 2, Cooldown, Cooldown, true));
 			state = state.WithEnemies (ImmutableList<Character>.Empty);
 			ReduceCooldownScript script = new ReduceCooldownScript (1, 0, state.Player.ID, state.Player.Skills [0].ID);
-			state = state.WithScripts (script.Yield ().ToImmutableList<MapScript> ());
+			state = state.WithScripts (script.YieldList<MapScript> ());
 
 			ScriptBehavior behavior = new ScriptBehavior ();
 			for (int i = 0; i < Cooldown; ++i)
@@ -145,7 +145,7 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateTinyRoomState (Generator);
 			AreaDamageScript damageScript = new AreaDamageScript (1, 100, 1, new Point [] { new  Point (1, 1) }.ToImmutableHashSet ());
-			state = state.WithScripts (damageScript.Yield ().ToImmutableList <MapScript> ());
+			state = state.WithScripts (damageScript.YieldList<MapScript> ());
 
 			ScriptBehavior behavior = new ScriptBehavior ();
 

@@ -533,26 +533,48 @@ namespace ArenaGS.Tests
 		[Test]
 		public void StunSkills_ReduceCTOfTarget ()
 		{
-			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = TestStunCore (state);
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = TestScenes.AddStunSkill (Generator, state).WithTestEnemy (Generator, new Point (3, 3));
+			TestStunsEnemy (state);
 		}
 
 		[Test]
 		public void StunSkillsWithKnockback_ReduceCTOfTarget ()
 		{
-			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithEffectInfo (new DamageSkillEffectInfo (1, knockback: true, stun: true)).Yield ().ToImmutableList ()));
-			state = TestStunCore (state);
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = TestScenes.AddStunSkill (Generator, state).WithTestEnemy (Generator, new Point (3, 3));
+			state = state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithEffectInfo (new DamageSkillEffectInfo (1, knockback: true, stun: true)).YieldList ()));
+			TestStunsEnemy (state);
 		}
 
-		private GameState TestStunCore (GameState state)
+		void TestStunsEnemy (GameState state)
 		{
-			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
-
 			Assert.AreEqual (100, state.Enemies [0].CT);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 			Assert.Less (state.Enemies [0].CT, 100);
-			return state;
+		}
+
+		[Test]
+		public void StunSkillUsedByEnemy_LowersPlayerCT ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator).WithTestEnemy (Generator, new Point (2, 2));
+			state = TestScenes.AddStunSkill (Generator, state, state.Enemies[0]);
+			TestStunsPlayer (state);
+		}
+
+		[Test]
+		public void KnockbackSkillUsedByEnemy_MovesPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator).WithTestEnemy (Generator, new Point (2, 2));
+			state = TestScenes.AddStunSkill (Generator, state, state.Enemies [0]);
+			TestStunsPlayer (state);
+		}
+
+		void TestStunsPlayer (GameState state)
+		{
+			Assert.AreEqual (100, state.Player.CT);
+			state = Skills.Invoke (state, state.Enemies[0], state.Enemies[0].Skills [0], new Point (1, 1));
+			Assert.Less (state.Player.CT, 100);
 		}
 
 		[Test]

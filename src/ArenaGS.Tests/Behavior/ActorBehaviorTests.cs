@@ -98,7 +98,7 @@ namespace ArenaGS.Tests
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (2));
-			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (4, 4)).WithSkills (movementSkill.Yield ().ToImmutableList ());
+			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (4, 4)).WithSkills (movementSkill.YieldList ());
 			state = state.WithCharacters (enemy.Yield ());
 			enemy = state.UpdateCharacterReference (enemy);
 
@@ -137,22 +137,44 @@ namespace ArenaGS.Tests
 			Time = Dependencies.Get<ITime> ();
 		}
 
+		Skill GetTestBite () => Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetStrongTestBite () => Generator.CreateSkill ("TestStrongBite", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetStunBite () => Generator.CreateSkill ("StunBite", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+
+		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills)
+		{
+			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 1)).WithSkills (skills.ToImmutableList ());
+			return state.WithCharacters (enemy.Yield ());
+		}
+
+		GameState ActFirstEnemy (GameState state)
+		{
+			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			return behavior.Act (state, state.Enemies [0]);
+		}
+
 		[Test]
 		public void UsesAttackSkill_WhenInRangeOfPlayer ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
-			Skill damageSkill = Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
-			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (2, 1)).WithSkills (damageSkill.Yield ().ToImmutableList ());
-			state = state.WithCharacters (enemy.Yield ());
-			enemy = state.UpdateCharacterReference (enemy);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite () });
 
-			DefaultActorBehavior behavior = new DefaultActorBehavior ();
-			state = behavior.Act (state, enemy);
-			enemy = state.UpdateCharacterReference (enemy);
+			state = ActFirstEnemy (state);
 
-			Assert.IsFalse (enemy.Skills [0].ReadyForUse);
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
 			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
 			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void UsesStongestAttackSkill_WhenMultipleAvailable ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStrongTestBite () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == "TestStrongBite").ReadyForUse);
 		}
 
 		[Test]
@@ -170,11 +192,22 @@ namespace ArenaGS.Tests
 		[Test]
 		public void UsesStunAttackSkill_InPreference_WhenAvailable ()
 		{
-			//Assert.Fail ();
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStunBite () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == "StunBite").ReadyForUse);
 		}
 
 		[Test]
 		public void UsesDelayedAttackSkill_WhenInRangeOfPlayer_WhenOnlyOption ()
+		{
+			//Assert.Fail ();
+		}
+
+		[Test]
+		public void UsesKnockbackSkill_WhenRanged_AndAvailable ()
 		{
 			//Assert.Fail ();
 		}

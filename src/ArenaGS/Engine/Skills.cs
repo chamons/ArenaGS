@@ -160,7 +160,7 @@ namespace ArenaGS.Engine
 			if (effectInfo.Stun)
 			{
 				foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
-					state = state.WithReplaceEnemy (enemy.WithAdditionalCT (-200));
+					state = state.WithReplaceCharacter (enemy.WithAdditionalCT (-200));
 			}
 			if (effectInfo.Knockback)
 			{
@@ -171,7 +171,7 @@ namespace ArenaGS.Engine
 					if (IsPointClear (state, knockbackTarget))
 					{
 						Animation.Request (state, new MovementAnimationInfo (enemy, knockbackTarget));
-						state = state.WithReplaceEnemy (enemy.WithPosition (knockbackTarget));
+						state = state.WithReplaceCharacter (enemy.WithPosition (knockbackTarget));
 					}
 				}
 			}
