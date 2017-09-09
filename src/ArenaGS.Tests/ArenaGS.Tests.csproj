@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CombatTests.cs" />
+    <Compile Include="DirectionTests.cs" />
     <Compile Include="Model\DiceTests.cs" />
     <Compile Include="PhysicsTests.cs" />
     <Compile Include="SaveLoadTests.cs" />
