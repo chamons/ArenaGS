@@ -176,6 +176,17 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void CooledBasedSkill_NonPlayer_SetsCooldownWhenUsed ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithTestEnemy (Generator, new Point (3, 3));
+			state = TestScenes.AddSkillWithResources (Generator, state, SkillResources.WithCooldown (3), character: state.Enemies[0]);
+
+			state = Skills.Invoke (state, state.Enemies[0], state.Enemies [0].Skills [0], new Point (3, 1));
+			Assert.AreEqual (3, state.Enemies[0].Skills [0].Resources.Cooldown);
+		}
+
+		[Test]
 		public void CooledBasedSkillUnderCooldown_ReducesEveryPlayerTurn ()
 		{
 			const int StartingCooldown = 3;
@@ -289,6 +300,46 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void MovementSkills_DoNotAllowCollisionsWithEnemies ()
+		{
+			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+		}
+
+		[Test]
+		public void MovementSkills_DoNotAllowCollisionsWithPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithTestEnemy (Generator, new Point (3, 3));
+			state = TestScenes.AddMovementSkill (Generator, state, character: state.Enemies[0]);
+
+			var enemy = state.Enemies [0];
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, enemy, enemy.Skills [0], new Point (1, 1)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, enemy, enemy.Skills [0], new Point (1, 1)));
+		}
+
+		[Test]
+		public void MovementAndDamageSkills_DoNotAllowCollisionsWithEnemies ()
+		{
+			GameState state = TestScenes.AddMoveAndDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithPlayer (state.Player.WithPosition (new Point (2, 2)));
+
+			// Should not be valid
+			Assert.IsFalse (Skills.IsValidTarget (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+
+			// And throw if you try
+			Assert.Throws<InvalidOperationException> (() => Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3)));
+		}
+
+		[Test]
 		public void HealSkillTargettingSelf_IncreasesHealthToMax ()
 		{
 			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
@@ -310,9 +361,9 @@ namespace ArenaGS.Tests
 		public void MoveSkill_DiagonalMove ()
 		{
 			GameState state = TestScenes.AddMovementSkill (Generator, TestScenes.CreateBoxRoomState (Generator), 2);
-			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (2, 2));
 
-			Assert.AreEqual (new Point (3, 3), state.Player.Position);
+			Assert.AreEqual (new Point (2, 2), state.Player.Position);
 		}
 	}
 
@@ -432,6 +483,17 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
+		public void LineSkills_RespectRange ()
+		{
+			GameState state = TestScenes.AddTestLineSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
+			state = state.WithTestEnemy (Generator, new Point (9, 9));
+
+			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (9, 9));
+
+			Assert.AreEqual (0, Combat.CharactersDamaged.Count);
+		}
+
+		[Test]
 		public void DelayedDamage_DamagesAfterCT ()
 		{
 			GameState state = TestScenes.AddDelayedDamageSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
@@ -482,26 +544,48 @@ namespace ArenaGS.Tests
 		[Test]
 		public void StunSkills_ReduceCTOfTarget ()
 		{
-			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = TestStunCore (state);
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = TestScenes.AddStunSkill (Generator, state).WithTestEnemy (Generator, new Point (3, 3));
+			TestStunsEnemy (state);
 		}
 
 		[Test]
 		public void StunSkillsWithKnockback_ReduceCTOfTarget ()
 		{
-			GameState state = TestScenes.AddStunSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
-			state = state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithEffectInfo (new DamageSkillEffectInfo (1, knockback: true, stun: true)).Yield ().ToImmutableList ()));
-			state = TestStunCore (state);
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = TestScenes.AddStunSkill (Generator, state).WithTestEnemy (Generator, new Point (3, 3));
+			state = state.WithPlayer (state.Player.WithSkills (state.Player.Skills [0].WithEffectInfo (new DamageSkillEffectInfo (1, knockback: true, stun: true)).YieldList ()));
+			TestStunsEnemy (state);
 		}
 
-		private GameState TestStunCore (GameState state)
+		void TestStunsEnemy (GameState state)
 		{
-			state = state.WithEnemies (state.Enemies.Where (x => x.Position == new Point (3, 3)).ToImmutableList ());
-
 			Assert.AreEqual (100, state.Enemies [0].CT);
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], new Point (3, 3));
 			Assert.Less (state.Enemies [0].CT, 100);
-			return state;
+		}
+
+		[Test]
+		public void StunSkillUsedByEnemy_LowersPlayerCT ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator).WithTestEnemy (Generator, new Point (2, 2));
+			state = TestScenes.AddStunSkill (Generator, state, state.Enemies[0]);
+			TestStunsPlayer (state);
+		}
+
+		[Test]
+		public void KnockbackSkillUsedByEnemy_MovesPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator).WithTestEnemy (Generator, new Point (2, 2));
+			state = TestScenes.AddStunSkill (Generator, state, state.Enemies [0]);
+			TestStunsPlayer (state);
+		}
+
+		void TestStunsPlayer (GameState state)
+		{
+			Assert.AreEqual (100, state.Player.CT);
+			state = Skills.Invoke (state, state.Enemies[0], state.Enemies[0].Skills [0], new Point (1, 1));
+			Assert.Less (state.Player.CT, 100);
 		}
 
 		[Test]

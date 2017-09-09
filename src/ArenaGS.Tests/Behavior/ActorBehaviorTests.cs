@@ -9,6 +9,7 @@ using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace ArenaGS.Tests
 {
@@ -76,11 +77,342 @@ namespace ArenaGS.Tests
 		public void DefaultActorBehavior_MultipleTurnMove_TowardsPlayer ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			var shortestPath = state.ShortestPath;
+
+			Dictionary<int, int> startingEnemyDistance = new Dictionary<int, int> ();
+			foreach (var enemy in state.Enemies)
+				startingEnemyDistance.Add (enemy.ID, shortestPath [enemy.Position.X, enemy.Position.Y]);
+
 			for (int i = 0; i < 10; ++i)
 			{
 				state = Physics.WaitPlayer (state);
 				state = Time.ProcessUntilPlayerReady (state);
 			}
+
+			foreach (var enemy in state.Enemies)
+				Assert.Less (shortestPath [enemy.Position.X, enemy.Position.Y], startingEnemyDistance [enemy.ID]);
+		}
+
+		[Test]
+		public void UsesMovementSkill_ToCloseGameWithPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			Skill movementSkill = Generator.CreateSkill ("TestDash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (2));
+			Character enemy = Generator.CreateCharacter ("TestEnemy", new Point (4, 4)).WithSkills (movementSkill.YieldList ());
+			state = state.WithCharacters (enemy.Yield ());
+			enemy = state.UpdateCharacterReference (enemy);
+
+			var shortestPath = state.ShortestPath;
+			Assert.AreEqual (3, shortestPath [enemy.Position.X, enemy.Position.Y]);
+
+			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			state = behavior.Act (state, enemy);
+			enemy = state.UpdateCharacterReference (enemy);
+
+			Assert.AreEqual (1, shortestPath [enemy.Position.X, enemy.Position.Y]);
+			Assert.False (enemy.Skills [0].ReadyForUse);
+		}
+	}
+
+	[TestFixture]
+	class CombatActorBehaviorTests
+	{
+		IGenerator Generator;
+		ISkills Skills;
+		ITime Time;
+		IPhysics Physics;
+
+		CombatStub Combat;
+
+		[SetUp]
+		public void Setup ()
+		{
+			TestDependencies.SetupTestDependencies ();
+
+			Dependencies.Unregister<ICombat> ();
+			Combat = new CombatStub ();
+			Dependencies.RegisterInstance<ICombat> (Combat);
+
+			Generator = Dependencies.Get<IGenerator> ();
+			Skills = Dependencies.Get<ISkills> ();
+			Time = Dependencies.Get<ITime> ();
+			Physics = Dependencies.Get<IPhysics> ();
+		}
+
+		Skill GetTestBite () => Generator.CreateSkill ("TestBite", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetStrongTestBite () => Generator.CreateSkill ("TestStrongBite", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetTestShot () => Generator.CreateSkill ("TestShot", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
+		Skill GetStrongTestShot () => Generator.CreateSkill ("TestStrongShot", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (3), SkillResources.WithCooldown (2));
+		Skill GetStunBite () => Generator.CreateSkill ("StunBite", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetLineAttack () => Generator.CreateSkill ("Line Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Line (3), SkillResources.WithCooldown (2));
+		Skill GetAreaAttack () => Generator.CreateSkill ("Area Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (3, 1), SkillResources.WithCooldown (2));
+		Skill GetConeAttack () => Generator.CreateSkill ("Clone Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Cone (3), SkillResources.WithCooldown (2));
+		Skill GetMoveAndShoot () => Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (1, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetDelayedBlast () => Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (4), TargettingInfo.Line (4), SkillResources.WithCooldown (2));
+		Skill GetKnockback () => Generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetHeal () => Generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+
+		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills, Point position)
+		{
+			Character enemy = Generator.CreateCharacter ("TestEnemy", position).WithSkills (skills.ToImmutableList ());
+			return state.WithCharacters (enemy.Yield ());
+		}
+
+		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills)
+		{
+			return AddEnemyWithSkills (state, skills, new Point (2, 1));
+		}
+
+		GameState ActFirstEnemy (GameState state)
+		{
+			DefaultActorBehavior behavior = new DefaultActorBehavior ();
+			return behavior.Act (state, state.Enemies [0]);
+		}
+
+		static void AssertSkillUsed (GameState state, string skillName)
+		{
+			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == skillName).ReadyForUse);
+		}
+
+		void AssertPlayerDamaged ()
+		{
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.True (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
+		[Test]
+		public void UsesAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
+			AssertPlayerDamaged ();
+		}
+
+		[Test]
+		public void UsesLineAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetLineAttack () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
+			AssertPlayerDamaged ();			
+		}
+
+		[Test]
+		public void DoesNotUseLineAttackSkill_WhenNotInRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetLineAttack () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
+		public void UsesConeAttackSkill_WhenInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetConeAttack () });
+
+			state = ActFirstEnemy (state);
+
+			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
+			AssertPlayerDamaged ();
+		}
+
+		[Test]
+		public void DoesNotUseConeAttackSkill_WhenNotInRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetConeAttack () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
+		public void UsesStongestAttackSkill_WhenMultipleAvailable ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStrongTestBite () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestStrongBite");
+		}
+
+		[Test]
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable_Ranged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestShot (), GetMoveAndShoot () });
+			int startingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Move & Shoot");
+			int endingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+			// Strongest skill is shot, so should move away
+			Assert.Greater (endingDistance, startingDistance);
+		}
+
+		[Test]
+		public void UsesMovementAttackSkill_WhenAvailableAndRanged_Melee ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () }, new Point (3, 3));
+			int startingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Move & Shoot");
+			int endingDistance = state.ShortestPath [state.Enemies [0].Position.X, state.Enemies [0].Position.Y];
+			// Strongest skill is bite, so should move towards
+			Assert.Less (endingDistance, startingDistance);
+		}
+
+		[Test]
+		public void DoNotUseMovementAttack_WhenMelee_InMeleeRange ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestStrongBite");
+		}
+
+		[Test]
+		public void UsesStunAttackSkill_InPreference_WhenAvailable ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetStunBite () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "StunBite");
+		}
+
+		[Test]
+		public void PreferNonDelayedAttackSkills_WhenBothAvailable ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetDelayedBlast () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestBite");
+		}
+
+		[Test]
+		public void UsesDelayedAttackSkill_WhenInRangeOfPlayer_WhenOnlyOption ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetDelayedBlast () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Delayed Blast");
+			state = Physics.Wait (state, state.Player);
+
+			for (int i = 0; i < 3; ++i)
+			{
+				state = Time.ProcessUntilPlayerReady (state);
+				state = Physics.Wait (state, state.Player);
+				state = Physics.Wait (state, state.Enemies [0]);
+			}
+			AssertPlayerDamaged ();
+		}
+
+		[Test]
+		public void DoesNotUsesDelayedAttackSkill_WhenNotInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetDelayedBlast () }, new Point (10, 10));
+
+			state = ActFirstEnemy (state);
+
+			Assert.True (state.Enemies [0].Skills [0].ReadyForUse);
+		}
+
+		[Test]
+		public void UsesAreaAttackSkill_WhenDirectlyInRangeOfPlayer ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetAreaAttack () }, new Point (3, 3));
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Area Attack");
+			AssertPlayerDamaged ();
+		}
+
+		[Test]
+		public void UsesKnockbackSkillInPreference_WhenRanged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestShot (), GetKnockback () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Knockback");
+		}
+
+		[Test]
+		public void DoesNotPreferKnockback_WhenMelee ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetKnockback () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestStrongBite");
+		}
+
+
+		[Test]
+		public void DoesNotUseSelfHeal_WhenNotDamaged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetHeal () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestBite");
+		}
+
+		[Test]
+		public void UsesSelfHeal_WhenDamaged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetHeal () });
+			state = state.WithReplaceEnemy (state.Enemies [0].WithHealth (new Health (1, 2)));
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Heal");
+		}
+
+		//[Test] #119
+		public void UsesAreaAttackSkill_WhenSplashInRangeOfPlayer ()
+		{			
+		}
+
+		//[Test] #119
+		public void UsesAreaAttackSkill_ToNotHitOthersWhenPossible ()
+		{
+		}
+
+		//[Test] #119
+		public void RangedEnemiesFallBack_OnlyIfMultipleEnemiesNearPlayer_AreAbleToMove ()
+		{			
 		}
 	}
 }

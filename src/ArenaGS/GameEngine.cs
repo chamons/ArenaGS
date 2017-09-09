@@ -47,7 +47,7 @@ namespace ArenaGS
 			Dependencies.Register<IGenerator> (typeof(Generator));
 			Dependencies.Register<ILogger> (typeof(Logger));
 			Dependencies.Register<IRandomGenerator> (typeof (RandomGenerator));
-			
+
 			Physics = Dependencies.Get<IPhysics> ();
 			Skills = Dependencies.Get<ISkills> ();
 			Time = Dependencies.Get<ITime> ();
