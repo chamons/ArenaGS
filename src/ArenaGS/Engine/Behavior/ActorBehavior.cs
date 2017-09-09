@@ -102,13 +102,20 @@ namespace ArenaGS.Engine.Behavior
 		Option<GameState> UseAttackIfCan (GameState state, Character c)
 		{
 			var damageSkillsAvailable = c.Skills.Where (x => x.Effect == Effect.Damage && x.ReadyForUse);
-			var damageSkillsWhichCanTargetAndEffect = FilterDamageSkillsTargetting (state, c, damageSkillsAvailable);
+			var validDamageSkills = FilterDamageSkillsTargetting (state, c, damageSkillsAvailable);
 
-			var stunDamageSkill = GetHigestPower (damageSkillsWhichCanTargetAndEffect.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
+			var stunDamageSkill = GetHigestPower (validDamageSkills.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Stun));
 			if (stunDamageSkill != null)
 				return Skills.Invoke (state, c, stunDamageSkill, state.Player.Position).Some ();
 
-			var bestDamageSkill = GetHigestPower (damageSkillsWhichCanTargetAndEffect);
+			if (IsRangedEnemy (c))
+			{
+				var knockbackSkill = GetHigestPower (validDamageSkills.Where (x => ((DamageSkillEffectInfo)x.EffectInfo).Knockback));
+				if (knockbackSkill != null)
+					return Skills.Invoke (state, c, knockbackSkill, state.Player.Position).Some ();
+			}
+
+			var bestDamageSkill = GetHigestPower (validDamageSkills);
 			if (bestDamageSkill != null)
 				return Skills.Invoke (state, c, bestDamageSkill, state.Player.Position).Some ();
 
@@ -190,6 +197,14 @@ namespace ArenaGS.Engine.Behavior
 
 		Option<GameState> UseHealIfCan (GameState state, Character c)
 		{
+			if (c.Health.Current < c.Health.Maximum)
+			{
+				var healingSkills = c.Skills.Where (x => x.Effect == Effect.Heal && x.ReadyForUse);
+				var bestHealing = GetHigestPower (healingSkills);
+				if (bestHealing != null)
+					return Skills.Invoke (state, c, bestHealing, c.Position).Some ();
+			}
+
 			return Option.None<GameState> ();
 		}
 	}

@@ -149,6 +149,8 @@ namespace ArenaGS.Tests
 		Skill GetConeAttack () => Generator.CreateSkill ("Clone Attack", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Cone (3), SkillResources.WithCooldown (2));
 		Skill GetMoveAndShoot () => Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (1, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
 		Skill GetDelayedBlast () => Generator.CreateSkill ("Delayed Blast", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (4), TargettingInfo.Line (4), SkillResources.WithCooldown (2));
+		Skill GetKnockback () => Generator.CreateSkill ("Knockback", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
+		Skill GetHeal () => Generator.CreateSkill ("Heal", Effect.Heal, new HealEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2));
 
 
 		GameState AddEnemyWithSkills (GameState state, IEnumerable<Skill> skills, Point position)
@@ -173,6 +175,12 @@ namespace ArenaGS.Tests
 			Assert.IsFalse (state.Enemies [0].Skills.First (x => x.Name == skillName).ReadyForUse);
 		}
 
+		void AssertPlayerDamaged ()
+		{
+			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
+			Assert.True (Combat.CharactersDamaged [0].Item1.IsPlayer);
+		}
+
 		[Test]
 		public void UsesAttackSkill_WhenInRangeOfPlayer ()
 		{
@@ -182,8 +190,7 @@ namespace ArenaGS.Tests
 			state = ActFirstEnemy (state);
 
 			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
-			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
-			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+			AssertPlayerDamaged ();
 		}
 
 		[Test]
@@ -195,8 +202,7 @@ namespace ArenaGS.Tests
 			state = ActFirstEnemy (state);
 
 			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
-			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
-			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+			AssertPlayerDamaged ();			
 		}
 
 		[Test]
@@ -219,8 +225,7 @@ namespace ArenaGS.Tests
 			state = ActFirstEnemy (state);
 
 			Assert.IsFalse (state.Enemies [0].Skills [0].ReadyForUse);
-			Assert.AreEqual (Combat.CharactersDamaged.Count, 1);
-			Assert.IsTrue (Combat.CharactersDamaged [0].Item1.IsPlayer);
+			AssertPlayerDamaged ();
 		}
 
 		[Test]
@@ -246,7 +251,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailableMovesAway ()
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable_Ranged ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestShot (), GetMoveAndShoot () });
@@ -261,7 +266,7 @@ namespace ArenaGS.Tests
 		}
 
 		[Test]
-		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailableMovesTowards ()
+		public void UsesMovementAttackSkill_InPreferenceToRegular_WhenAvailable_Melee ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetMoveAndShoot () }, new Point (3, 3));
@@ -312,10 +317,9 @@ namespace ArenaGS.Tests
 			{
 				state = Time.ProcessUntilPlayerReady (state);
 				state = Physics.Wait (state, state.Player);
-				state = Physics.Wait (state, state.Enemies[0]);
+				state = Physics.Wait (state, state.Enemies [0]);
 			}
-			Assert.AreEqual (1, Combat.CharactersDamaged.Count);
-			Assert.True (Combat.CharactersDamaged[0].Item1.IsPlayer);
+			AssertPlayerDamaged ();
 		}
 
 		[Test]
@@ -332,37 +336,73 @@ namespace ArenaGS.Tests
 		[Test]
 		public void UsesAreaAttackSkill_WhenDirectlyInRangeOfPlayer ()
 		{
-			//Assert.Fail ();
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetAreaAttack () }, new Point (3, 3));
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Area Attack");
+			AssertPlayerDamaged ();
 		}
 
 		[Test]
-		public void UsesAreaAttackSkill_WhenSplashInRangeOfPlayer ()
+		public void UsesKnockbackSkillInPreference_WhenRanged ()
 		{
-			//Assert.Fail ();
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestShot (), GetKnockback () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Knockback");
 		}
 
 		[Test]
+		public void DoesNotPreferKnockback_WhenMelee ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetStrongTestBite (), GetKnockback () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestStrongBite");
+		}
+
+
+		[Test]
+		public void DoesNotUseSelfHeal_WhenNotDamaged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetHeal () });
+
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "TestBite");
+		}
+
+		[Test]
+		public void UsesSelfHeal_WhenDamaged ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = AddEnemyWithSkills (state, new Skill [] { GetTestBite (), GetHeal () });
+			state = state.WithReplaceEnemy (state.Enemies [0].WithHealth (new Health (1, 2)));
+			state = ActFirstEnemy (state);
+
+			AssertSkillUsed (state, "Heal");
+		}
+
+		//[Test] #119
+		public void UsesAreaAttackSkill_WhenSplashInRangeOfPlayer ()
+		{			
+		}
+
+		//[Test] #119
 		public void UsesAreaAttackSkill_ToNotHitOthersWhenPossible ()
 		{
-			//Assert.Fail ();
 		}
 
-		[Test]
-		public void UsesKnockbackSkill_WhenRanged_AndAvailable ()
-		{
-			//Assert.Fail ();
-		}
-
-		[Test]
-		public void UsesSelfHeal_OnlyWhenDamaged_AndAvailable ()
-		{
-			//Assert.Fail ();
-		}
-
-		[Test]
+		//[Test] #119
 		public void RangedEnemiesFallBack_OnlyIfMultipleEnemiesNearPlayer_AreAbleToMove ()
-		{
-			//Assert.Fail ();
+		{			
 		}
 	}
 }
