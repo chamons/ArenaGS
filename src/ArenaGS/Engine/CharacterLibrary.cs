@@ -38,6 +38,7 @@ namespace ArenaGS
 			Character skeleton = Generator.CreateRawCharacter ("Skeleton", Point.Empty, new Health (15), new Defense (1));
 			skeleton = skeleton.WithSkills (new Skill [] {
 				Generator.CreateSkill ("Attack", "Slash"),
+				Generator.CreateSkill ("Stunning Strike"),
 			}.ToImmutableList ());
 			AddToLibrary (skeleton);
 
