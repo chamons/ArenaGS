@@ -25,7 +25,6 @@ namespace ArenaGS.Engine
 
 			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (6)));
 			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (2, charge: true), TargettingInfo.Point (2), SkillResources.WithCooldown (3)));
-			
 		}
 
 		void AddToLibrary (Skill s)
