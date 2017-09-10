@@ -137,5 +137,10 @@ namespace ArenaGS.Views.Scenes
 		{
 			SetOverlay (new DeathOverlay (Engine, this, Controller.GameWindow));
 		}
+
+		public void HandleNewRound (NewRoundEventArgs args)
+		{
+			SetOverlay (new NewRoundOverlay (Engine, this, Controller.GameWindow, args.Round));
+		}
 	}
 }

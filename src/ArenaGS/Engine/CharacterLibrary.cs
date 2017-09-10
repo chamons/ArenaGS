@@ -50,7 +50,7 @@ namespace ArenaGS
 
 			Character golem = Generator.CreateRawCharacter ("Golem", Point.Empty, new Health (24), new Defense (0));
 			golem = golem.WithSkills (new Skill [] {
-				Generator.CreateSkill ("Attack", 1, "Slam"),
+				Generator.CreateSkill ("Slam"),
 				Generator.CreateSkill ("Power Slam"),
 			}.ToImmutableList ());
 			AddToLibrary (golem);

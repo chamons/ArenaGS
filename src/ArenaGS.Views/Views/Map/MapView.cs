@@ -194,11 +194,22 @@ namespace ArenaGS.Views.Views
 			return new HitTestResults(this, TranslateUIToModelPosition (new Point (x, y)));
 		}
 
-		public void DrawDeathNotice ()
+		void DrawNotificationBackground ()
 		{
 			Canvas.DrawRect (VisualRect, new SKPaint () { Color = SKColors.Black.WithAlpha (225) });
+		}
+
+		public void DrawDeathNotice ()
+		{
+			DrawNotificationBackground ();
 			Canvas.DrawText ("You died.", VisualRect.Width / 2, VisualRect.Height / 2, new SKPaint () { Color = SKColors.White, TextSize = 20, IsAntialias = true, TextAlign = SKTextAlign.Center });
-			Canvas.DrawText ("Press 'q' to quit or 'n' to start a new game.", VisualRect.Width / 2, (VisualRect.Height / 2) + 25, new SKPaint () { Color = SKColors.White, TextSize = 20, IsAntialias = true, TextAlign = SKTextAlign.Center });	
+			Canvas.DrawText ("Press 'q' to quit or 'n' to start a new game.", VisualRect.Width / 2, (VisualRect.Height / 2) + 25, new SKPaint () { Color = SKColors.White, TextSize = 20, IsAntialias = true, TextAlign = SKTextAlign.Center });
+		}
+
+		public void DrawNewRound (int round)
+		{
+			DrawNotificationBackground ();
+			Canvas.DrawText ($"Starting Round {round}", VisualRect.Width / 2, VisualRect.Height / 2, new SKPaint () { Color = SKColors.White, TextSize = 16, IsAntialias = true, TextAlign = SKTextAlign.Center });
 		}
 	}
 }

@@ -13,6 +13,8 @@ namespace ArenaGS.Tests.Utilities
 		public void RequestPlayerDead (GameState state) => throw new InvalidOperationException ();
 
 		public void Request (GameState state, AnimationInfo info) { }
+
+		public void RequestNewRound (GameState state, int round) { }
 	}
 
 	class TestLogger : ILogger

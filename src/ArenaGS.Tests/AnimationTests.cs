@@ -24,6 +24,7 @@ namespace ArenaGS.Tests
 		}
 
 		public void RequestPlayerDead (GameState state) { }
+		public void RequestNewRound (GameState state, int round) { }
 
 		[SetUp]
 		public void Setup ()

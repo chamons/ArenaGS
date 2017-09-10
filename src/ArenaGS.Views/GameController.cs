@@ -55,7 +55,13 @@ namespace ArenaGS
 			GameEngine.StateChanged += OnGameEngineStateChanged;
 			GameEngine.AnimationRequested += OnGameAnimation;
 			GameEngine.PlayerDeath += OnPlayerDead;
+			GameEngine.NewRound += OnNewRound;
 			GameEngine.Load ();
+		}
+
+		private void OnNewRound (object sender, NewRoundEventArgs args)
+		{
+			CurrentScene.HandleNewRound (args);
 		}
 
 		private void OnPlayerDead (object sender, GameState e)

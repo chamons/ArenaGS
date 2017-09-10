@@ -44,6 +44,7 @@
     <Compile Include="Scenes\CombatScene.cs" />
     <Compile Include="Scenes\IScene.cs" />
     <Compile Include="Scenes\Overlays\DeathOverlay.cs" />
+    <Compile Include="Scenes\Overlays\NewRoundOverlay.cs" />
     <Compile Include="Utilities\KeyboardBindings.cs" />
     <Compile Include="Views\CombatView.cs" />
     <Compile Include="Views\InfoView.cs" />
