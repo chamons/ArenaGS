@@ -44,7 +44,7 @@ namespace ArenaGS
 
 			Character skeletonArcher = Generator.CreateRawCharacter ("Skeleton Archer", Point.Empty, new Health (8), new Defense (0));
 			skeletonArcher = skeletonArcher.WithSkills (new Skill [] {
-				Generator.CreateSkill ("Aimed Shot"),
+				Generator.CreateSkill ("Aimed Shot", 2),
 			}.ToImmutableList ());
 			AddToLibrary (skeletonArcher);
 

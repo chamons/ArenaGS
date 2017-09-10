@@ -14,7 +14,7 @@ namespace ArenaGS.Tests.Utilities
 			var character = generator.CreateTestPlayer (new Point (1, 1));
 			var map = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("TinyTest").Generate (0).Map;
 			var enemies = TestEnemyHelper.CreateTestEnemies (generator, new Point [] { new Point (2, 2) });
-			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			return new GameState (0, map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 		
 		internal static GameState CreateTinyRoomState (IGenerator generator)
@@ -22,7 +22,7 @@ namespace ArenaGS.Tests.Utilities
 			var character = generator.CreateTestPlayer (new Point (1, 1));
 			var map = CreateTinyRoom ();
 			var enemies = TestEnemyHelper.CreateTestEnemies (generator, new Point [] { new Point (2, 2) });
-			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			return new GameState (0, map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static GameState CreateBoxRoomState (IGenerator generator)
@@ -31,7 +31,7 @@ namespace ArenaGS.Tests.Utilities
 			var map = CreateBoxRoom (50, 50);
 			var enemies = TestEnemyHelper.CreateTestEnemies (generator, (new Point [] { new Point (3, 3), new Point (20, 20), new Point (20, 20),
 				new Point (40, 20)}));
-			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			return new GameState (0, map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static GameState CreateWallRoomState (IGenerator generator)
@@ -41,7 +41,7 @@ namespace ArenaGS.Tests.Utilities
 			for (int i = 0 ; i < 5 ; ++i)
 				map.Set (new Point(2, i), TerrainType.Wall);
 			var enemies = TestEnemyHelper.CreateTestEnemies (generator, (new Point [] { new Point (3, 1) }));
-			return new GameState (map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			return new GameState (0, map, character, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
 		internal static Map CreateTinyRoom ()

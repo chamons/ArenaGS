@@ -29,6 +29,9 @@ namespace ArenaGS
 		[ProtoMember (5)]
 		public ImmutableList<MapScript> Scripts { get; private set; }
 
+		[ProtoMember (6)]
+		public int CurrentRound { get; private set; }
+
 		public IEnumerable<Character> AllCharacters
 		{
 			get
@@ -56,8 +59,9 @@ namespace ArenaGS
 		{
 		}
 
-		public GameState (Map map, Character player, ImmutableList<Character> enemies, ImmutableList<MapScript> scripts, ImmutableList<string> logEntries)
+		public GameState (int currentRound, Map map, Character player, ImmutableList<Character> enemies, ImmutableList<MapScript> scripts, ImmutableList<string> logEntries)
 		{
+			CurrentRound = currentRound;
 			Map = map;
 			Player = player;
 			Enemies = enemies;
@@ -67,6 +71,7 @@ namespace ArenaGS
 
 		GameState (GameState original)
 		{
+			CurrentRound = original.CurrentRound;
 			Map = original.Map;
 			Player = original.Player;
 			Enemies = original.Enemies;

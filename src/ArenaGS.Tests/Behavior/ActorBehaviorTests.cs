@@ -62,7 +62,7 @@ namespace ArenaGS.Tests
 			//  E E E
 			var enemies = TestEnemyHelper.CreateTestEnemies (Generator, new Point [] { new Point (2, 1), new Point (3, 1), new Point (1, 2),
 				new Point (2, 2), new Point (2, 3), new Point (1, 3), new Point (2, 3), new Point (3,3)});
-			GameState state = new GameState (map, player, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
+			GameState state = new GameState (0, map, player, enemies, ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 
 			Character blockedCharacter = enemies.First (x => x.Position == new Point (3, 3));
 			DefaultActorBehavior behavior = new DefaultActorBehavior ();
