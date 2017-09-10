@@ -13,6 +13,11 @@ namespace ArenaGS.Model
 		[ProtoMember (1)]
 		public int Power { get; protected set; }
 
+		public virtual SkillEffectInfo WithPower (int power)
+		{
+			return new SkillEffectInfo () { Power = power };
+		}
+
 		public static SkillEffectInfo None { get; } = new SkillEffectInfo();
 	}
 
@@ -39,6 +44,11 @@ namespace ArenaGS.Model
 			Stun = stun;
 			Charge = charge;
 		}
+
+		public override SkillEffectInfo WithPower (int power)
+		{
+			return new DamageSkillEffectInfo (power, this.Knockback, this.Stun, this.Charge);
+		}
 	}
 
 	[ProtoContract]
@@ -51,6 +61,11 @@ namespace ArenaGS.Model
 		public DelayedDamageSkillEffectInfo (int power)
 		{
 			Power = power;
+		}
+
+		public override SkillEffectInfo WithPower (int power)
+		{
+			return new DelayedDamageSkillEffectInfo (power);
 		}
 	}
 
@@ -69,6 +84,11 @@ namespace ArenaGS.Model
 			Power = power;
 			Range = range;
 		}
+
+		public override SkillEffectInfo WithPower (int power)
+		{
+			return new MoveAndDamageSkillEffectInfo (power, this.Range);
+		}
 	}
 
 	[ProtoContract]
@@ -81,6 +101,11 @@ namespace ArenaGS.Model
 		public HealEffectInfo (int power)
 		{
 			Power = power;
+		}
+
+		public override SkillEffectInfo WithPower (int power)
+		{
+			return new HealEffectInfo (power);
 		}
 	}
 }

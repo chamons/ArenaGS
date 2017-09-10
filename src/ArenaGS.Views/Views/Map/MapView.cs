@@ -12,7 +12,7 @@ namespace ArenaGS.Views.Views
 	class MapView : View
 	{
 		SKColor DarkTile = SKColors.Black.WithAlpha (196);
-		SKColor DelayedExplosionTile = SKColors.DarkRed.WithAlpha (196);
+		SKColor DelayedExplosionTile = SKColors.DarkRed.WithAlpha (64);
 
 		IScene Parent;
 		public Point CenterPosition { get; set; }
@@ -91,10 +91,22 @@ namespace ArenaGS.Views.Views
 				Canvas.DrawRect (DrawRectForUIPosition (uiPosition), new SKPaint () { Color = color });
 		}
 
-		void DrawFloatingTile (SKPoint currentUIPosition, SKBitmap image)
+		void DrawFloatingTile (SKPoint currentUIPosition, IEnumerable<SKBitmap> images)
 		{
 			if (IsUIDrawnTile (currentUIPosition))
-				Canvas.DrawBitmap (image, DrawRectForFloatingUIPosition (currentUIPosition));
+			{
+				foreach (SKBitmap image in images)
+					Canvas.DrawBitmap (image, DrawRectForFloatingUIPosition (currentUIPosition));
+			}
+		}
+
+		void DrawTile (Point currentUIPosition, IEnumerable<SKBitmap> images)
+		{
+			if (IsUIDrawnTile (currentUIPosition))
+			{
+				foreach (SKBitmap image in images)
+					Canvas.DrawBitmap (image, DrawRectForUIPosition (currentUIPosition));
+			}
 		}
 
 		public void DrawTile (Point currentUIPosition, SKBitmap image)

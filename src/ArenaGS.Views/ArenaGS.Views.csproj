@@ -401,5 +401,14 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\dcss\wolf.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\dcss\hands\bow_two.png" />
+    <EmbeddedResource Include="Resources\dcss\hands\shield_kite1.png" />
+    <EmbeddedResource Include="Resources\dcss\hands\sword_two.png" />
+    <EmbeddedResource Include="Resources\dcss\hands\war_axe.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\dcss\earth_elemental.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

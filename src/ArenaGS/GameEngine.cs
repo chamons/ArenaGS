@@ -115,7 +115,7 @@ namespace ArenaGS
 					enemyPositions.Add (openSpot);
 			}
 
-			var enemies = enemyPositions.Select (x => Generator.CreateCharacter ("Wolf", x)).ToImmutableList ();
+			var enemies = enemyPositions.Select (x => Generator.CreateCharacter ("Golem", x)).ToImmutableList ();
 			ImmutableList<string> startingLog = ImmutableList.Create<string> ();
 
 #if DEBUG
