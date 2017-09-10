@@ -5,12 +5,12 @@ namespace ArenaGS.Model
 {
 	[ProtoContract]
 	[ProtoInclude (500, typeof (DamageSkillEffectInfo))]
-	[ProtoInclude (500, typeof (DelayedDamageSkillEffectInfo))]
-	[ProtoInclude (500, typeof (MoveAndDamageSkillEffectInfo))]
-	[ProtoInclude (500, typeof (HealEffectInfo))]
+	[ProtoInclude (600, typeof (DelayedDamageSkillEffectInfo))]
+	[ProtoInclude (700, typeof (MoveAndDamageSkillEffectInfo))]
+	[ProtoInclude (800, typeof (HealEffectInfo))]
 	public class SkillEffectInfo
 	{
-		[ProtoMember (1)]
+		[ProtoMember (10)]
 		public int Power { get; protected set; }
 
 		public virtual SkillEffectInfo WithPower (int power)
@@ -24,13 +24,13 @@ namespace ArenaGS.Model
 	[ProtoContract]
 	public class DamageSkillEffectInfo : SkillEffectInfo
 	{
-		[ProtoMember(2)]
+		[ProtoMember(20)]
 		public bool Knockback { get; private set; }
 
-		[ProtoMember(3)]
+		[ProtoMember(21)]
 		public bool Stun { get; private set; }
 
-		[ProtoMember(3)]
+		[ProtoMember(22)]
 		public bool Charge { get; private set; }
 
 		public DamageSkillEffectInfo ()
@@ -72,7 +72,7 @@ namespace ArenaGS.Model
 	[ProtoContract]
 	public class MoveAndDamageSkillEffectInfo : SkillEffectInfo
 	{
-		[ProtoMember(2)]
+		[ProtoMember(30)]
 		public int Range { get; private set; }
 
 		public MoveAndDamageSkillEffectInfo ()

@@ -24,6 +24,7 @@ namespace ArenaGS.Tests
 			Assert.IsFalse (Serialization.SaveGameExists);
 
 			GameState state = TestScenes.CreateRoomFromMapgen (Generator);
+			state = TestScenes.AddTestSkill (Generator, state, state.Player);
 
 			Serialization.Save (state);
 			Assert.IsTrue(Serialization.SaveGameExists);
