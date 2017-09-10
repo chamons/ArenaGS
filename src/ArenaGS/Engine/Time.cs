@@ -42,7 +42,7 @@ namespace ArenaGS.Engine
 
 		// We can not do this in Time constructor as we have a circular dependency
 		// Time uses behaviors to process, and they may need Time to act
-		public void GetDependenciesIfNeeded ()
+		void GetDependenciesIfNeeded ()
 		{
 			if (ActorBehavior == null)
 				ActorBehavior = Dependencies.Get<IActorBehavior> ();
