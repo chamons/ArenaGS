@@ -45,6 +45,8 @@ namespace ArenaGS.Engine
 			if (!skill.ReadyForUse)
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} but was not ready for use: {skill.Resources}.");
 
+			int timeSpent = TimeConstants.CTPerBasicAction;
+
 			switch (skill.Effect)
 			{
 				case Effect.Damage:
@@ -57,7 +59,8 @@ namespace ArenaGS.Engine
 					DelayedDamageSkillEffectInfo effectInfo = (DelayedDamageSkillEffectInfo)skill.EffectInfo;
 
 					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
-					state = state.WithAddedScript (Generator.CreateDamageScript (-100, effectInfo.Power, areaAffected.ToImmutableHashSet ()));
+					state = state.WithAddedScript (Generator.CreateDamageScript (-10, effectInfo.Power, areaAffected.ToImmutableHashSet ()));
+					timeSpent += TimeConstants.CTPerBasicAction + 10;
 					break;
 				}
 				case Effect.Movement:
@@ -101,7 +104,7 @@ namespace ArenaGS.Engine
 			state = ChargeSkillForResources (state, invoker, skill);
 			invoker = state.UpdateCharacterReference (invoker);
 
-			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+			return state.WithReplaceCharacter (invoker.WithReducedCT (timeSpent)).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
 		GameState HandleMovement (GameState state, Character invoker, Point target)

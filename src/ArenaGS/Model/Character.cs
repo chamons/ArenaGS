@@ -74,6 +74,11 @@ namespace ArenaGS.Model
 			return new Character (this) { Position = position, CT = ct };
 		}
 
+		internal Character WithReducedCT (int ct)
+		{
+			return WithCT (CT - ct);
+		}
+
 		internal Character WithAdditionalCT (int additionalCT)
 		{
 			return WithCT (CT + additionalCT);
