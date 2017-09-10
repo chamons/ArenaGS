@@ -15,12 +15,16 @@ namespace ArenaGS.Engine
 		{
 			Generator = generator;
 
-			AddToLibrary (Generator.CreateSkill ("Aimed Shot", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (5), SkillResources.None));
-			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (2), SkillResources.WithRechargingAmmo (2, 3)));
+			AddToLibrary (Generator.CreateSkill ("Aimed Shot", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (5), SkillResources.None));
 			AddToLibrary (Generator.CreateSkill ("Point Blank Shot", Effect.Damage, new DamageSkillEffectInfo (1, knockback: true, stun: true), TargettingInfo.Point (2), SkillResources.WithAmmo (1)));
-			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (1, charge: true), TargettingInfo.Point (2), SkillResources.WithCooldown (3)));
-			AddToLibrary (Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (3, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2)));
-			AddToLibrary (Generator.CreateSkill ("Bite", Effect.Damage, new DamageSkillEffectInfo (1), TargettingInfo.Point (1), SkillResources.None));
+			AddToLibrary (Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (2, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2)));
+
+			AddToLibrary (Generator.CreateSkill ("Attack", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (1), SkillResources.None));
+			AddToLibrary (Generator.CreateSkill ("Stunning Strike", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.None));
+			AddToLibrary (Generator.CreateSkill ("Power Slam", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (4), TargettingInfo.Line (4), SkillResources.WithCooldown (2)));
+
+			AddToLibrary (Generator.CreateSkill ("Dash", Effect.Movement, SkillEffectInfo.None, TargettingInfo.Point (3), SkillResources.WithCooldown (6)));
+			AddToLibrary (Generator.CreateSkill ("Charge", Effect.Damage, new DamageSkillEffectInfo (2, charge: true), TargettingInfo.Point (2), SkillResources.WithCooldown (3)));
 		}
 
 		void AddToLibrary (Skill s)

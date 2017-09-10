@@ -60,6 +60,11 @@ namespace ArenaGS.Model
 			Resources = original.Resources;
 		}
 
+		internal Skill WithID (int id)
+		{
+			return new Skill (this) { ID = id };
+		}
+
 		public Skill WithEffectInfo (SkillEffectInfo newEfectInfo)
 		{
 			return new Skill (this) { EffectInfo = newEfectInfo };

@@ -124,6 +124,7 @@ namespace ArenaGS.Engine.Behavior
 
 		IEnumerable<Skill> FilterDamageSkillsTargetting (GameState state, Character c, IEnumerable<Skill> damageSkillsAvailable)
 		{
+			// #119 - This does not work at all for Cone skills, nor splash damage for AoE
 			var damageSkillsWhichCanTarget = damageSkillsAvailable.Where (x => Skills.IsValidTarget (state, c, x, state.Player.Position));
 
 			return damageSkillsWhichCanTarget.Where (s => {

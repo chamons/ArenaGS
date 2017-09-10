@@ -20,6 +20,9 @@ namespace ArenaGS.Engine
 
 		Skill CreateSkill (string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources);
 		Skill CreateSkill (string name);
+		Skill CreateSkill (string name, int power);
+		Skill CreateSkill (string name, int power, string newName);
+		Skill CreateSkill (string name, string newName);
 	}
 
 	public class Generator : IGenerator
@@ -94,7 +97,25 @@ namespace ArenaGS.Engine
 
 		public Skill CreateSkill (string name)
 		{
-			return SkillLibrary.CreateSkill (name);
+			return SkillLibrary.CreateSkill (name).WithID (NextSkillID ());
+		}
+
+		public Skill CreateSkill (string name, int power)
+		{
+			Skill ts = SkillLibrary.CreateSkill (name);
+			return new Skill (NextSkillID (), ts.Name, ts.Effect, ts.EffectInfo.WithPower (power), ts.TargetInfo, ts.Resources);
+		}
+
+		public Skill CreateSkill (string name, string newName)
+		{
+			Skill ts = SkillLibrary.CreateSkill (name);
+			return new Skill (NextSkillID (), newName, ts.Effect, ts.EffectInfo, ts.TargetInfo, ts.Resources);
+		}
+
+		public Skill CreateSkill (string name, int power, string newName)
+		{
+			Skill ts = SkillLibrary.CreateSkill (name);
+			return new Skill (NextSkillID (), newName, ts.Effect, ts.EffectInfo.WithPower (power), ts.TargetInfo, ts.Resources);
 		}
 
 		public Skill CreateSkill (string name, Effect effect, SkillEffectInfo effectInfo, TargettingInfo targetInfo, SkillResources resources)
