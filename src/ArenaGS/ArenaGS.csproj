@@ -41,6 +41,7 @@
     <Compile Include="Model\Character.cs" />
     <Compile Include="Model\Defense.cs" />
     <Compile Include="Model\Dice.cs" />
+    <Compile Include="Model\EffectResistance.cs" />
     <Compile Include="Model\Health.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />

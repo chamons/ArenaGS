@@ -591,7 +591,7 @@ namespace ArenaGS.Tests
 		public void StunSkillUsedByEnemy_LowersPlayerCT ()
 		{
 			GameState state = TestScenes.CreateBoxRoomState (Generator).WithTestEnemy (Generator, new Point (2, 2));
-			state = TestScenes.AddStunSkill (Generator, state, state.Enemies[0]);
+			state = TestScenes.AddStunSkill (Generator, state, state.Enemies [0]);
 			TestStunsPlayer (state);
 		}
 
@@ -606,7 +606,7 @@ namespace ArenaGS.Tests
 		void TestStunsPlayer (GameState state)
 		{
 			Assert.AreEqual (100, state.Player.CT);
-			state = Skills.Invoke (state, state.Enemies[0], state.Enemies[0].Skills [0], new Point (1, 1));
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
 			Assert.Less (state.Player.CT, 100);
 		}
 
@@ -685,19 +685,19 @@ namespace ArenaGS.Tests
 		[Test]
 		public void AreaHealSkills_HealOnlyCharactersOnSide ()
 		{
-			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));			
+			GameState state = TestScenes.AddHealSkill (Generator, TestScenes.CreateBoxRoomState (Generator));
 			state = state.WithTestEnemies (Generator, new Point [] { new Point (1, 2), new Point (2, 1) });
 
 			state = Skills.Invoke (state, state.Player, state.Player.Skills [0], state.Player.Position);
 
 			Assert.AreEqual (1, Combat.CharactersHealed.Count);
-			Assert.IsTrue (Combat.CharactersHealed[0].Item1.IsPlayer);
+			Assert.IsTrue (Combat.CharactersHealed [0].Item1.IsPlayer);
 		}
 
 		[Test]
 		public void AreaHealSkills_HealAllValidTargets ()
 		{
-			GameState state = TestScenes.CreateBoxRoomState (Generator);			
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
 			state = state.WithTestEnemies (Generator, new Point [] { new Point (1, 2), new Point (2, 1) });
 
 			int idOfHealingCharacter = state.Enemies.First (x => x.Position == new Point (1, 2)).ID;
@@ -710,6 +710,63 @@ namespace ArenaGS.Tests
 
 			Assert.AreEqual (2, Combat.CharactersHealed.Count);
 			Assert.IsTrue (Combat.CharactersHealed.All (x => !x.Item1.IsPlayer));
+		}
+
+		[Test]
+		public void StunLock_CTTest ()
+		{
+			GameState state = CreateStunTestState ();
+			state = state.WithReplaceCharacter (state.Player.WithCT (0));
+
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
+			state = state.WithReplaceCharacter (state.Enemies [0].WithCT (100));
+			Assert.AreEqual (-150, state.Player.CT);
+
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
+			state = state.WithReplaceCharacter (state.Enemies [0].WithCT (100));
+			Assert.AreEqual (-200, state.Player.CT);
+
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
+			state = state.WithReplaceCharacter (state.Enemies [0].WithCT (100));
+			Assert.AreEqual (-200, state.Player.CT);
+		}
+
+		[Test]
+		public void StunLocks_CanNotGoForever ()
+		{
+			GameState state = CreateStunTestState ();
+
+			for (int i = 0; i < 10; ++i)
+			{
+				state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
+				state = state.WithReplaceCharacter (state.Enemies [0].WithCT (100));
+			}
+
+			Assert.Less (-200, state.Player.CT);
+		}
+
+		[Test]
+		public void StunResistance_ClearsAfterAction ()
+		{
+			GameState state = CreateStunTestState ();
+
+			state = Skills.Invoke (state, state.Enemies [0], state.Enemies [0].Skills [0], new Point (1, 1));
+			state = state.WithReplaceCharacter (state.Player.WithCT (100));
+
+			Assert.AreEqual (1, state.Player.EffectResistance ["Stun"]);
+
+			state = Time.ProcessUntilPlayerReady (state);
+
+			Assert.AreEqual (0, state.Player.EffectResistance ["Stun"]);
+		}
+
+		GameState CreateStunTestState ()
+		{
+			GameState state = TestScenes.CreateBoxRoomState (Generator);
+			state = state.WithTestEnemies (Generator, new Point [] { new Point (1, 2) });
+
+			Skill testSkill = Generator.CreateSkill ("Stun", Effect.Damage, new DamageSkillEffectInfo (0, stun: true), TargettingInfo.Point (5), SkillResources.None);
+			return state.WithReplaceCharacter (state.Enemies [0].WithAdditionalSkill (testSkill));
 		}
 	}
 }
