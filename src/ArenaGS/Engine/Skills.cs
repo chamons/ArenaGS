@@ -202,6 +202,11 @@ namespace ArenaGS.Engine
 			return targetsOfCorrectSide.Where (x => IsPathBetweenPointsClear (state, position, x.Position, false));
 		}
 
+		public HashSet<Point> UnblockedPointsInGrid (GameState state, Point target, int radius)
+		{
+			return new HashSet<Point> (target.PointsInGrid (radius).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
+		}
+
 		public HashSet<Point> UnblockedPointsInBurst (GameState state, Point target, int area)
 		{
 			return new HashSet<Point> (target.PointsInBurst (area).Where (x => IsPathBetweenPointsClear (state, target, x, true)));
@@ -348,7 +353,7 @@ namespace ArenaGS.Engine
 			{
 				case TargettingStyle.Point:
 				{
-					var pointsInRange = UnblockedPointsInBurst (state, invoker.Position, skill.TargetInfo.Range + 1);
+					var pointsInRange = UnblockedPointsInGrid (state, invoker.Position, skill.TargetInfo.Range);
 					var validPointsInRange = pointsInRange.Where (x => IsValidTarget (state, invoker, skill, x));
 					return new HashSet<Point> (validPointsInRange);
 				}

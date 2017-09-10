@@ -98,6 +98,15 @@ namespace ArenaGS.Utilities
 			return points;
 		}
 
+		public static IEnumerable<Point> PointsInGrid (this Point center, int radius)
+		{
+			List<Point> points = new List<Point> ();
+			for (int i = -radius; i <= radius; ++i)
+				for (int j = -radius; j <= radius; ++j)
+					points.Add (new Point (center.X + i, center.Y + j));
+			return points;
+		}
+
 		public static IEnumerable<Point> PointsInCone (this Point center, Direction direction, int coneLength)
 		{
 			if (direction == Direction.None)
