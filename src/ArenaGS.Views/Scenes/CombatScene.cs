@@ -133,9 +133,14 @@ namespace ArenaGS.Views.Scenes
 			return CombatView.HitTest (point);
 		}
 
-		public void HandlePlayerDeath (GameState state)
+		public void HandlePlayerDeath ()
 		{
 			SetOverlay (new DeathOverlay (Engine, this, Controller.GameWindow));
+		}
+
+		public void HandleNewRound (int round)
+		{
+			SetOverlay (new NewRoundOverlay (Engine, this, Controller.GameWindow, round));
 		}
 	}
 }

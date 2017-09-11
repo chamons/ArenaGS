@@ -82,12 +82,12 @@ namespace ArenaGS.Engine
 
 		internal Character CreateRawPlayer (Point position, Health health, Defense defense)
 		{
-			return new Character (Character.PlayerID, "Player", position, 100, ImmutableList<Skill>.Empty, health, defense);
+			return new Character (Character.PlayerID, "Player", position, 100, ImmutableList<Skill>.Empty, health, defense, new EffectResistance ());
 		}
 
 		internal Character CreateRawCharacter (string name, Point position, Health health, Defense defense)
 		{
-			return new Character (NextCharacterID (), name, position, 100, ImmutableList<Skill>.Empty, health, defense);
+			return new Character (NextCharacterID (), name, position, 100, ImmutableList<Skill>.Empty, health, defense, new EffectResistance ());
 		}
 
 		public SpawnerScript CreateSpawner (Point position, string spawnName)

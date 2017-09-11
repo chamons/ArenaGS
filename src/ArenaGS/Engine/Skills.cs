@@ -45,6 +45,8 @@ namespace ArenaGS.Engine
 			if (!skill.ReadyForUse)
 				throw new InvalidOperationException ($"{invoker} tried to invoke {skill.Name} but was not ready for use: {skill.Resources}.");
 
+			int timeSpent = TimeConstants.CTPerBasicAction;
+
 			switch (skill.Effect)
 			{
 				case Effect.Damage:
@@ -57,7 +59,8 @@ namespace ArenaGS.Engine
 					DelayedDamageSkillEffectInfo effectInfo = (DelayedDamageSkillEffectInfo)skill.EffectInfo;
 
 					HashSet<Point> areaAffected = AffectedPointsForSkill (state, invoker, skill, target);
-					state = state.WithAddedScript (Generator.CreateDamageScript (-100, effectInfo.Power, areaAffected.ToImmutableHashSet ()));
+					state = state.WithAddedScript (Generator.CreateDamageScript (-10, effectInfo.Power, areaAffected.ToImmutableHashSet ()));
+					timeSpent += TimeConstants.CTPerBasicAction + 10;
 					break;
 				}
 				case Effect.Movement:
@@ -101,7 +104,7 @@ namespace ArenaGS.Engine
 			state = ChargeSkillForResources (state, invoker, skill);
 			invoker = state.UpdateCharacterReference (invoker);
 
-			return Physics.Wait (state, invoker).WithNewLogLine ($"Skill: {skill.Name} at {target}");
+			return state.WithReplaceCharacter (invoker.WithReducedCT (timeSpent)).WithNewLogLine ($"Skill: {skill.Name} at {target}");
 		}
 
 		GameState HandleMovement (GameState state, Character invoker, Point target)
@@ -157,21 +160,14 @@ namespace ArenaGS.Engine
 
 			if (effectInfo.Stun)
 			{
-				foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
-					state = state.WithReplaceCharacter (enemy.WithAdditionalCT (-200));
+				foreach (var c in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+					state = Physics.Stun (state, c);
 			}
 			if (effectInfo.Knockback)
 			{
 				Direction directionOfFire = invoker.Position.DirectionTo (target);
-				foreach (var enemy in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
-				{
-					Point knockbackTarget = enemy.Position.InDirection (directionOfFire);
-					if (IsPointClear (state, knockbackTarget))
-					{
-						Animation.Request (state, new MovementAnimationInfo (enemy, knockbackTarget));
-						state = state.WithReplaceCharacter (enemy.WithPosition (knockbackTarget));
-					}
-				}
+				foreach (var c in state.AllCharacters.Where (x => areaAffected.Contains (x.Position)).ToList ())
+					state = Physics.KnockBack (state, c, directionOfFire);
 			}
 			return state;
 		}
@@ -304,7 +300,7 @@ namespace ArenaGS.Engine
 			}
 		}
 
-		static bool IsPathBetweenPointsClear (GameState state, Point source, Point target, bool pierceCharacters)
+		bool IsPathBetweenPointsClear (GameState state, Point source, Point target, bool pierceCharacters)
 		{
 			if (!state.Map.IsOnMap (target))
 				return false;
@@ -317,18 +313,9 @@ namespace ArenaGS.Engine
 					return false;
 				if (p == target)
 					return true;
-				if (!IsPointClear (state, p, pierceCharacters))
+				if (!Physics.IsPointClear (state, p, pierceCharacters))
 					return false;
 			}
-			return true;
-		}
-
-		static bool IsPointClear (GameState state, Point p, bool pierceCharacters = false)
-		{
-			if (state.Map [p].Terrain != TerrainType.Floor)
-				return false;
-			if (!pierceCharacters && state.AllCharacters.Any (x => x.Position == p))
-				return false;
 			return true;
 		}
 

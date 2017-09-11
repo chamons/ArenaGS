@@ -20,6 +20,7 @@ namespace ArenaGS.Engine
 			AddToLibrary (Generator.CreateSkill ("Move & Shoot", Effect.MoveAndDamageClosest, new MoveAndDamageSkillEffectInfo (2, 3), TargettingInfo.Point (1), SkillResources.WithCooldown (2)));
 
 			AddToLibrary (Generator.CreateSkill ("Attack", Effect.Damage, new DamageSkillEffectInfo (3), TargettingInfo.Point (1), SkillResources.None));
+			AddToLibrary (Generator.CreateSkill ("Slam", Effect.Damage, new DamageSkillEffectInfo (2), TargettingInfo.Point (1), SkillResources.WithCooldown (2)));
 			AddToLibrary (Generator.CreateSkill ("Stunning Strike", Effect.Damage, new DamageSkillEffectInfo (1, stun: true), TargettingInfo.Point (1), SkillResources.None));
 			AddToLibrary (Generator.CreateSkill ("Power Slam", Effect.DelayedDamage, new DelayedDamageSkillEffectInfo (4), TargettingInfo.Line (4), SkillResources.WithCooldown (2)));
 

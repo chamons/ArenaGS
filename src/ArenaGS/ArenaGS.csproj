@@ -33,6 +33,7 @@
     <Compile Include="Engine\Combat.cs" />
     <Compile Include="Engine\Physics.cs" />
     <Compile Include="Engine\Random.cs" />
+    <Compile Include="Engine\RoundCoordinator.cs" />
     <Compile Include="Engine\SkillLibrary.cs" />
     <Compile Include="Engine\Skills.cs" />
     <Compile Include="Engine\Time.cs" />
@@ -41,6 +42,7 @@
     <Compile Include="Model\Character.cs" />
     <Compile Include="Model\Defense.cs" />
     <Compile Include="Model\Dice.cs" />
+    <Compile Include="Model\EffectResistance.cs" />
     <Compile Include="Model\Health.cs" />
     <Compile Include="Utilities\Direction.cs" />
     <Compile Include="Model\Map.cs" />
@@ -98,8 +100,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Folder Include="Model\Skills\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

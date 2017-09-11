@@ -28,6 +28,8 @@ namespace ArenaGS.Tests
 		}
 
 		public void Request (GameState state, AnimationInfo info) { }
+		public void RequestNewRound (GameState state, int round) { }
+		public void RequestNewGame () { }
 
 		GameState PlayerDeathState;
 		public void RequestPlayerDead (GameState state)

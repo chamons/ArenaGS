@@ -134,7 +134,8 @@ namespace ArenaGS.Views.Scenes.Overlays
 			{
 				case Effect.Damage:
 				case Effect.DelayedDamage:
-					Character nearestEnemy = state.Enemies.OrderBy (x => x.Position.GridDistance (state.Player.Position)).FirstOrDefault ();
+					var possibileEnemies = state.Enemies.Where (x => Engine.QueryGameState.IsValidTargetForSkill (state, skill, x.Position));
+					Character nearestEnemy = possibileEnemies.OrderBy (x => x.Position.GridDistance (state.Player.Position)).FirstOrDefault ();
 					if (nearestEnemy != null)
 						return nearestEnemy.Position;
 					return state.Player.Position;

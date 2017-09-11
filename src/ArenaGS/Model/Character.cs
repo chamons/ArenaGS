@@ -31,11 +31,14 @@ namespace ArenaGS.Model
 		[ProtoMember (7)]
 		public Defense Defense { get; private set; }
 
+		[ProtoMember (8)]
+		public EffectResistance EffectResistance { get; private set; }
+
 		public Character ()
 		{
 		}
 
-		public Character (int id, string name, Point position, int ct, ImmutableList<Skill> skills, Health health, Defense defense)
+		public Character (int id, string name, Point position, int ct, ImmutableList<Skill> skills, Health health, Defense defense, EffectResistance effectResistance)
 		{
 			ID = id;
 			Name = name;
@@ -44,6 +47,7 @@ namespace ArenaGS.Model
 			Skills = skills;
 			Health = health;
 			Defense = defense;
+			EffectResistance = effectResistance;
 		}
 
 		Character (Character original)
@@ -55,6 +59,7 @@ namespace ArenaGS.Model
 			Skills = original.Skills;
 			Health = original.Health;
 			Defense = original.Defense;
+			EffectResistance = original.EffectResistance;
 		}
 
 		public override string ToString () => $"{Name} {ID} - {Position} {CT} {Health}";
@@ -72,6 +77,11 @@ namespace ArenaGS.Model
 		internal Character WithPosition (Point position, int ct)
 		{
 			return new Character (this) { Position = position, CT = ct };
+		}
+
+		internal Character WithReducedCT (int ct)
+		{
+			return WithCT (CT - ct);
 		}
 
 		internal Character WithAdditionalCT (int additionalCT)
@@ -112,6 +122,11 @@ namespace ArenaGS.Model
 		internal Character WithDefense (Defense defense)
 		{
 			return new Character (this) { Defense = defense };
+		}
+
+		internal Character WithEffectResistance (EffectResistance effectResistance)
+		{
+			return new Character (this) { EffectResistance = effectResistance };
 		}
 
 		internal Character WithReplaceSkill (Skill newSkill)

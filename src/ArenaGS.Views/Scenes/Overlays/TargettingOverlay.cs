@@ -106,6 +106,15 @@ namespace ArenaGS.Views.Scenes.Overlays
 				else
 					MoveTo (position);
 			}
+			else if (hitTest != null && hitTest.View is SkillBarView)
+			{
+				int skillIndex = (int)hitTest.Data;
+				if (skillIndex < State.Player.Skills.Count)
+				{
+					if (State.Player.Skills [skillIndex].ID == Skill.ID)
+						Select ();
+				}
+			}
 		}
 
 		SKColor CursorColor = SKColors.Yellow.WithAlpha (50);

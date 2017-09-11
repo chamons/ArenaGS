@@ -90,7 +90,9 @@ namespace ArenaGS
 	public interface IAnimationRequest
 	{
 		void Request (GameState state, AnimationInfo info);
+		void RequestNewGame ();
 		void RequestPlayerDead (GameState state);
+		void RequestNewRound (GameState state, int round);
 	}
 
 	public class AnimationEventArgs : EventArgs
@@ -102,6 +104,18 @@ namespace ArenaGS
 		{
 			State = state;
 			Info = info;
+		}
+	}
+
+	public class NewRoundEventArgs : EventArgs
+	{
+		public GameState State { get; }
+		public int Round { get; }
+
+		public NewRoundEventArgs (GameState state, int round)
+		{
+			State = state;
+			Round = round;
 		}
 	}
 }

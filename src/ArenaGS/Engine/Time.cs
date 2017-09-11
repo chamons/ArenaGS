@@ -42,7 +42,7 @@ namespace ArenaGS.Engine
 
 		// We can not do this in Time constructor as we have a circular dependency
 		// Time uses behaviors to process, and they may need Time to act
-		public void GetDependenciesIfNeeded ()
+		void GetDependenciesIfNeeded ()
 		{
 			if (ActorBehavior == null)
 				ActorBehavior = Dependencies.Get<IActorBehavior> ();
@@ -57,6 +57,11 @@ namespace ArenaGS.Engine
 			return c.CT - amount;
 		}
 
+		GameState ProcessCharacterBeforeTurn (GameState state, Character c)
+		{
+			return state.WithReplaceCharacter (c.WithEffectResistance (c.EffectResistance.Clear ()));
+		}
+
 		public GameState ProcessUntilPlayerReady (GameState state)
 		{
 			GetDependenciesIfNeeded ();
@@ -67,8 +72,11 @@ namespace ArenaGS.Engine
 				throw new InvalidOperationException ($"Duplicate IDs detected: {string.Join (" ", ids)} in length {state.AllCharacters.Count ()}." );
 #endif
 
-			// For as long as it takes
-			while (true)
+			// For effectively as long as it takes. 
+			// This should take N cycles, where N is number of characters on the map before returning
+			// Bugs (stunlock forever, duplicate IDs) sometimes cause this to loop forever
+			// So set a limit and scream if we hit it
+			for (int i = 0; i < 2000; ++i)
 			{
 				ITimedElement next = state.AllActors.Where (x => x.CT >= TimeConstants.CTNededForAction).OrderByDescending (x => x.CT).FirstOrDefault ();
 				
@@ -77,6 +85,9 @@ namespace ArenaGS.Engine
 					Log.Log (() => $"Time is processing {next} with CT {next.CT}.", LogMask.Engine, Servarity.Diagnostic);
 					if (next is Character activeCharacter) 
 					{
+						state = ProcessCharacterBeforeTurn (state, activeCharacter);
+						next = state.UpdateCharacterReference (activeCharacter);
+
 						if (activeCharacter.IsPlayer)
 							return state;
 						else
@@ -102,6 +113,7 @@ namespace ArenaGS.Engine
 					state = state.WithActors (state.AllActors.Select (x => x.WithAdditionalCT (additionalTicks)));
 				}
 			}
+			throw new InvalidOperationException ($"ProcessUntilPlayerReady cycled effectively forever: {string.Join (" ", state.AllCharacters.Select (x => $"{x.ID}:{x.CT}"))}");
 		}
 	}
 }

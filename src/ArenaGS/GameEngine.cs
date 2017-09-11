@@ -60,9 +60,9 @@ namespace ArenaGS
 		public void Load ()
 		{
 			if (Serialization.SaveGameExists)
-				SetNewState (Serialization.Load ());
+				LoadGame ();
 			else
-				SetNewState (CreateNewGameState ());
+				StartNewGame ();
 		}
 
 		public void SaveGame ()
@@ -72,15 +72,28 @@ namespace ArenaGS
 
 		public void LoadGame ()
 		{
+			RequestNewGame ();
 			SetNewState (Serialization.Load ());
 		}
-	
+
+		void StartNewGame ()
+		{
+			RequestNewGame ();
+			SetNewState (RoundCoordinator.Create (Generator, 1));
+		}
+
 		public event EventHandler<GameStateChangedEventArgs> StateChanged;
 
 		void SetNewState (GameState state)
 		{
 			CurrentState = state;
 			StateChanged?.Invoke (this, new GameStateChangedEventArgs (CurrentState));
+
+			if (state.Enemies.Count == 0)
+			{
+				RequestNewRound (state, state.CurrentRound + 1);
+				SetNewState (RoundCoordinator.Create (Generator, state.CurrentRound + 1));
+			}
 		}
 
 		public event EventHandler<AnimationEventArgs> AnimationRequested;
@@ -90,55 +103,21 @@ namespace ArenaGS
 		}
 
 		public event EventHandler<GameState> PlayerDeath;
-
 		public void RequestPlayerDead (GameState state)
 		{
 			PlayerDeath?.Invoke (this, state);
 		}
 
-		GameState CreateNewGameState ()
+		public event EventHandler NewGame;
+		public void RequestNewGame ()
 		{
-			IMapGenerator mapGenerator = Dependencies.Get<IWorldGenerator> ().GetMapGenerator ("OpenArenaMap");
-			Random r = new Random ();
-			int hash = r.Next ();
-			GeneratedMapData mapData = mapGenerator.Generate (hash);
-
-			Point playerPosition = FindOpenSpot (mapData.Map, new Point (8, 8), new Point [] { });
-			Character player = Generator.CreatePlayer (playerPosition);
-			
-			List <Point> enemyPositions = new List<Point> ();
-			for (int i = 0; i < 10; ++i)
-			{
-				Point position = new Point (r.Next (1, mapData.Map.Width), r.Next (1, mapData.Map.Height));
-				Point openSpot = FindOpenSpot (mapData.Map, position, enemyPositions.Concat (player.Position.Yield ()));
-				if (openSpot != Point.Invalid)
-					enemyPositions.Add (openSpot);
-			}
-
-			var enemies = enemyPositions.Select (x => Generator.CreateCharacter ("Golem", x)).ToImmutableList ();
-			ImmutableList<string> startingLog = ImmutableList.Create<string> ();
-
-#if DEBUG
-			startingLog = startingLog.Add ($"Map Hash: {hash}");
-#endif
-
-			return new GameState (mapData.Map, player, enemies, mapData.Scripts, startingLog);
+			NewGame?.Invoke (this, EventArgs.Empty);
 		}
 
-		Point FindOpenSpot (Map map, Point target, IEnumerable<Point> pointsToAvoid)
+		public event EventHandler<NewRoundEventArgs> NewRound;
+		public void RequestNewRound (GameState state, int round)
 		{
-			if (map[target].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (target))
-				return target;
-
-			for (int i = 0 ; i < 3 ; ++i)
-			{
-				foreach (var point in target.PointsInBurst (i))
-				{
-					if (map.IsOnMap (point) && map [point].Terrain == TerrainType.Floor && !pointsToAvoid.Contains (point))
-						return point;
-				}
-	         }
-			return Point.Invalid;
+			NewRound?.Invoke (this, new NewRoundEventArgs (state, round));
 		}
 
 		public void AcceptCommand (Command c, object data)
@@ -149,7 +128,7 @@ namespace ArenaGS
 				{
 					case Command.NewGame:
 					{
-						SetNewState (CreateNewGameState ());
+						StartNewGame ();
 						break;
 					}
 					case Command.PlayerMove:

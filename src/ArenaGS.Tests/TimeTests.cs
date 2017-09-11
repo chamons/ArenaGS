@@ -53,18 +53,8 @@ namespace ArenaGS.Tests
 			Character player = Generator.CreateTestPlayer (new Point (1, 1)).WithCT (playerCT);
 			Character firstEnemy = TestEnemyHelper.CreateTestEnemy (Generator, new Point (2, 2)).WithCT (firstCT);
 			Character secondEnemy = TestEnemyHelper.CreateTestEnemy (Generator, new Point (3, 3)).WithCT (secondCT);
-			return new GameState (null, player, (new Character [] { firstEnemy, secondEnemy }).ToImmutableList (),
+			return new GameState (0, null, player, (new Character [] { firstEnemy, secondEnemy }).ToImmutableList (),
 								  ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
-		}
-
-		class TestScript : MapScript
-		{
-			public TestScript (Point position) : base (100, 100)
-			{
-			}
-
-			public override MapScript WithAdditionalCT (int additionalCT) => this;
-			public override MapScript WithCT (int ct) => this;
 		}
 
 		GameState CreateTestStateWithScripts (int playerCT, int firstCT, int secondCT, int scriptCT)
