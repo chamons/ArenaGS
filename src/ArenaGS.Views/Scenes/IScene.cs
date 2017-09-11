@@ -19,7 +19,7 @@ namespace ArenaGS.Views.Scenes
 		void Invalidate ();
 		IOverlay Overlay { get; }
 		HitTestResults HitTestScene (SKPointI point);
-		void HandlePlayerDeath (GameState state);
-		void HandleNewRound (NewRoundEventArgs args);
+		void HandlePlayerDeath ();
+		void HandleNewRound (int round);
 	}
 }

@@ -90,6 +90,7 @@ namespace ArenaGS
 	public interface IAnimationRequest
 	{
 		void Request (GameState state, AnimationInfo info);
+		void RequestNewGame ();
 		void RequestPlayerDead (GameState state);
 		void RequestNewRound (GameState state, int round);
 	}

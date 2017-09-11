@@ -14,7 +14,8 @@ namespace ArenaGS.Tests.Utilities
 
 		public void Request (GameState state, AnimationInfo info) { }
 
-		public void RequestNewRound (GameState state, int round) { }
+		public void RequestNewGame () { }
+		public void RequestNewRound (GameState state, int round) { }		
 	}
 
 	class TestLogger : ILogger

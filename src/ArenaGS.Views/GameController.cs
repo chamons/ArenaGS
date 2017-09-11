@@ -30,6 +30,9 @@ namespace ArenaGS
 		public GameState CurrentState { get; private set; }
 
 		Queue <QueuedUpdate> QueuedStates = new Queue<QueuedUpdate> ();
+		bool QueuedDeath;
+		bool QueuedNewRound;
+		int QueuedRoundNumber;
 
 		public GameController (IGameWindow gameWindow)
 		{
@@ -56,17 +59,36 @@ namespace ArenaGS
 			GameEngine.AnimationRequested += OnGameAnimation;
 			GameEngine.PlayerDeath += OnPlayerDead;
 			GameEngine.NewRound += OnNewRound;
+			GameEngine.NewGame += OnNewGame;
 			GameEngine.Load ();
 		}
 
-		private void OnNewRound (object sender, NewRoundEventArgs args)
+		private void OnNewGame (object sender, EventArgs e)
 		{
-			CurrentScene.HandleNewRound (args);
+			QueuedDeath = false;
+			QueuedNewRound = false;
+			QueuedRoundNumber = 0;
 		}
 
-		private void OnPlayerDead (object sender, GameState e)
+		void OnNewRound (object sender, NewRoundEventArgs args)
 		{
-			CurrentScene.HandlePlayerDeath (e);
+			if (CurrentScene.AnimationInProgress)
+			{
+				QueuedNewRound = true;
+				QueuedRoundNumber = args.Round;
+			}
+			else
+			{
+				CurrentScene.HandleNewRound (args.Round);
+			}
+		}
+
+		void OnPlayerDead (object sender, GameState e)
+		{
+			if (CurrentScene.AnimationInProgress)
+				QueuedDeath = true;
+			else
+				CurrentScene.HandlePlayerDeath ();
 		}
 
 		void OnGameEngineStateChanged (object sender, GameStateChangedEventArgs e)
@@ -112,6 +134,17 @@ namespace ArenaGS
 				else
 				{
 					Log.Log ($"OnAnimationComplete It has no queued states.", LogMask.Animation);
+
+					if (QueuedDeath)
+					{
+						QueuedDeath = false;
+						CurrentScene.HandlePlayerDeath ();
+					}
+					else if (QueuedNewRound)
+					{
+						QueuedNewRound = false;
+						CurrentScene.HandleNewRound (QueuedRoundNumber);
+					}
 				}
 			});
 		}

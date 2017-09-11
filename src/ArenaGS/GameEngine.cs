@@ -60,9 +60,9 @@ namespace ArenaGS
 		public void Load ()
 		{
 			if (Serialization.SaveGameExists)
-				SetNewState (Serialization.Load ());
+				LoadGame ();
 			else
-				SetNewState (CreateNewGameState (1));
+				StartNewGame ();
 		}
 
 		public void SaveGame ()
@@ -72,9 +72,16 @@ namespace ArenaGS
 
 		public void LoadGame ()
 		{
+			RequestNewGame ();
 			SetNewState (Serialization.Load ());
 		}
-	
+
+		void StartNewGame ()
+		{
+			RequestNewGame ();
+			SetNewState (RoundCoordinator.Create (Generator, 1));
+		}
+
 		public event EventHandler<GameStateChangedEventArgs> StateChanged;
 
 		void SetNewState (GameState state)
@@ -85,7 +92,7 @@ namespace ArenaGS
 			if (state.Enemies.Count == 0)
 			{
 				RequestNewRound (state, state.CurrentRound + 1);
-				SetNewState (CreateNewGameState (state.CurrentRound + 1));
+				SetNewState (RoundCoordinator.Create (Generator, state.CurrentRound + 1));
 			}
 		}
 
@@ -101,15 +108,16 @@ namespace ArenaGS
 			PlayerDeath?.Invoke (this, state);
 		}
 
+		public event EventHandler NewGame;
+		public void RequestNewGame ()
+		{
+			NewGame?.Invoke (this, EventArgs.Empty);
+		}
+
 		public event EventHandler<NewRoundEventArgs> NewRound;
 		public void RequestNewRound (GameState state, int round)
 		{
 			NewRound?.Invoke (this, new NewRoundEventArgs (state, round));
-		}
-
-		GameState CreateNewGameState (int round)
-		{
-			return RoundCoordinator.Create (Generator, round);
 		}
 
 		public void AcceptCommand (Command c, object data)
@@ -120,7 +128,7 @@ namespace ArenaGS
 				{
 					case Command.NewGame:
 					{
-						SetNewState (CreateNewGameState (1));
+						StartNewGame ();
 						break;
 					}
 					case Command.PlayerMove:
