@@ -9,15 +9,20 @@ namespace ArenaGS.Model
 {
 	[ProtoContract]
 	[ProtoInclude (500, typeof (SpawnerScript))]
-	[ProtoInclude (500, typeof (ReduceCooldownScript))]
-	[ProtoInclude (500, typeof (AreaDamageScript))]
-	public abstract class MapScript : ITimedElement
+	[ProtoInclude (600, typeof (ReduceCooldownScript))]
+	[ProtoInclude (700, typeof (AreaDamageScript))]
+	[ProtoInclude (800, typeof (TestScript))]
+	public class MapScript : ITimedElement
 	{
-		[ProtoMember (1)]
+		[ProtoMember (10)]
 		public int ID { get; private set; }
 
-		[ProtoMember (2)]
+		[ProtoMember (11)]
 		public int CT { get; protected set; }
+
+		public MapScript ()
+		{
+		}
 
 		public MapScript (int id, int ct)
 		{
@@ -31,8 +36,8 @@ namespace ArenaGS.Model
 			CT = script.CT;
 		}
 
-		public abstract MapScript WithCT (int ct);
-		public abstract MapScript WithAdditionalCT (int additionalCT);
+		public virtual MapScript WithCT (int ct) { return this;  }
+		public virtual MapScript WithAdditionalCT (int additionalCT) { return this; }
 
 		ITimedElement ITimedElement.WithAdditionalCT (int additionalCT)
 		{
@@ -43,23 +48,27 @@ namespace ArenaGS.Model
 	[ProtoContract]
 	public sealed class SpawnerScript : MapScript
 	{
-		[ProtoMember (3)]
+		[ProtoMember (20)]
 		public Point Position { get; private set; }
 
-		[ProtoMember (4)]
+		[ProtoMember (21)]
 		public int Cooldown { get; private set; }
 
-		[ProtoMember (5)]
+		[ProtoMember (22)]
 		public int TotalToSpawn { get; private set; }
 
-		[ProtoMember (6)]
+		[ProtoMember (23)]
 		public int TimeToNextSpawn { get; private set; }
 
-		[ProtoMember (7)]
+		[ProtoMember (24)]
 		public int SpawnCount { get; private set; }
 
-		[ProtoMember (8)]
+		[ProtoMember (25)]
 		public string SpawnName { get; private set; }
+
+		public SpawnerScript ()
+		{
+		}
 
 		public SpawnerScript (int id, int ct, Point position, string spawnName, int spawnCount, int cooldown) : base (id, ct)
 		{
@@ -109,11 +118,15 @@ namespace ArenaGS.Model
 
 	public sealed class ReduceCooldownScript : MapScript
 	{
-		[ProtoMember (3)]
+		[ProtoMember (30)]
 		public int CharacterID { get; private set; }
 
-		[ProtoMember (4)]
+		[ProtoMember (31)]
 		public int SkillID { get; private set; }
+
+		public ReduceCooldownScript ()
+		{
+		}
 
 		public ReduceCooldownScript (int id, int ct, int characterID, int skillID) : base (id, ct)
 		{
@@ -141,11 +154,15 @@ namespace ArenaGS.Model
 	// Don't stand in fire...
 	public sealed class AreaDamageScript : MapScript
 	{
-		[ProtoMember (3)]
+		[ProtoMember (40)]
 		public int Damage { get; private set; }
 
-		[ProtoMember (4)]
+		[ProtoMember (41)]
 		public ImmutableHashSet <Point> Area { get; private set; }
+
+		public AreaDamageScript ()
+		{
+		}
 
 		public AreaDamageScript (int id, int ct, int damage, ImmutableHashSet<Point> area) : base (id, ct)
 		{
@@ -168,5 +185,24 @@ namespace ArenaGS.Model
 		{
 			return WithCT (CT + additionalCT);
 		}
+	}
+
+	[ProtoContract]
+	public class TestScript : MapScript
+	{
+		public TestScript () : base ()
+		{
+		}
+
+		public TestScript (int id, int ct) : base (id, ct)
+		{
+		}
+
+		protected TestScript (MapScript script) : base (script)
+		{
+		}
+
+		public override MapScript WithCT (int ct) => new TestScript (this) { CT = ct };
+		public override MapScript WithAdditionalCT (int additionalCT) => WithCT (CT + additionalCT);
 	}
 }

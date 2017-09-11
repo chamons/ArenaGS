@@ -1,4 +1,5 @@
 ﻿using ArenaGS.Engine;
+using ArenaGS.Model;
 using ArenaGS.Platform;
 using ArenaGS.Tests.Utilities;
 using ArenaGS.Utilities;
@@ -25,6 +26,7 @@ namespace ArenaGS.Tests
 
 			GameState state = TestScenes.CreateRoomFromMapgen (Generator);
 			state = TestScenes.AddTestSkill (Generator, state, state.Player);
+			state = state.WithScripts (new TestScript (0, 0).YieldList<MapScript> ());
 
 			Serialization.Save (state);
 			Assert.IsTrue(Serialization.SaveGameExists);

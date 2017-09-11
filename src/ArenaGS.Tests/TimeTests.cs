@@ -57,16 +57,6 @@ namespace ArenaGS.Tests
 								  ImmutableList<MapScript>.Empty, ImmutableList<string>.Empty);
 		}
 
-		class TestScript : MapScript
-		{
-			public TestScript (Point position) : base (100, 100)
-			{
-			}
-
-			public override MapScript WithAdditionalCT (int additionalCT) => this;
-			public override MapScript WithCT (int ct) => this;
-		}
-
 		GameState CreateTestStateWithScripts (int playerCT, int firstCT, int secondCT, int scriptCT)
 		{
 			GameState state = CreateTestState (playerCT, firstCT, secondCT);

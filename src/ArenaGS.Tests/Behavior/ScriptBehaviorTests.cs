@@ -13,20 +13,6 @@ namespace ArenaGS.Tests
 	[TestFixture]
 	public class ScriptBehaviorTests
 	{
-		class TestScript : MapScript
-		{
-			public TestScript (int id, int ct) : base (id, ct)
-			{
-			}
-
-			protected TestScript (MapScript script) : base (script)
-			{
-			}
-
-			public override MapScript WithCT (int ct) => new TestScript (this) { CT = ct };
-			public override MapScript WithAdditionalCT (int additionalCT) => WithCT (CT + additionalCT);
-		}
-
 		IGenerator Generator;
 
 		[SetUp]
