@@ -1,5 +1,5 @@
 [package]
-name = "ArenaGS"
+name = "arena_gunpowder_and_sorcery"
 version = "0.1.0"
 authors = ["Chris Hamons <chris.hamons@gmail.com>"]
 edition = "2018"
