@@ -28,9 +28,9 @@ impl RenderContext {
         let event_pump = sdl_context.event_pump()?;
 
         Ok(RenderContext {
-            _image_context: _image_context,
-            canvas: canvas,
-            event_pump: event_pump,
+            _image_context,
+            canvas,
+            event_pump,
         })
     }
 }
