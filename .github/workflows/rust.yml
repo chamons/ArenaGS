@@ -13,7 +13,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: install_dependencies
         run: | 
-          brew install SDL2
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            brew install SDL2
+          else 
+            echo "$RUNNER_OS"
+          fi
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
