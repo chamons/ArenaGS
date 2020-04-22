@@ -12,12 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: install_dependencies
+      - if: matrix.os == 'macos-latest'
         run: | 
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            brew install SDL2
-          else 
-            echo "$RUNNER_OS"
-          fi
+          brew install SDL2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
