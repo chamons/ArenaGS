@@ -12,7 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: install_dependencies
-      - if: matrix.os == 'macos-latest'
         run: | 
           brew install SDL2
       - uses: actions-rs/toolchain@v1
