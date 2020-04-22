@@ -31,15 +31,12 @@ fn copy_all_with_extension(src: &str, dest: &str, extension: &str) -> Result<(),
 
 fn main() {
     let platform = env::var("CARGO_CFG_TARGET_OS").expect("No Target OS?");
-    match platform.as_str() {
-        "windows" => {
-            let lib_dir = format!("{}\\lib\\win", env!("CARGO_MANIFEST_DIR"));
+    if let "windows" = platform.as_str() {
+        let lib_dir = format!("{}\\lib\\win", env!("CARGO_MANIFEST_DIR"));
 
-            let out_dir = env::var("OUT_DIR").unwrap();
-            copy_all_with_extension(&lib_dir, &out_dir, "dll").expect("Unable to copy native libraries");
+        let out_dir = env::var("OUT_DIR").unwrap();
+        copy_all_with_extension(&lib_dir, &out_dir, "dll").expect("Unable to copy native libraries");
 
-            println!("{}", format!("cargo:rustc-link-search={}", lib_dir));
-        }
-        _ => {}
+        println!("{}", format!("cargo:rustc-link-search={}", lib_dir));
     }
 }
