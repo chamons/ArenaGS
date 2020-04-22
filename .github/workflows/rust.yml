@@ -11,6 +11,9 @@ jobs:
         os: [macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
+      - name: install_dependencies
+        run: | 
+        brew install SDL2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
