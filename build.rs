@@ -40,6 +40,6 @@ fn main() {
 
             println!("{}", format!("cargo:rustc-link-search={}", lib_dir));
         }
-        o => panic!("unknown target os {:?}!", o),
+        _ => {}
     }
 }
