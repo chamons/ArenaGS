@@ -1,5 +1,6 @@
 // Disable annoying black terminal
 #![windows_subsystem = "windows"]
+use std::time::Instant;
 
 mod after_image;
 
@@ -34,6 +35,25 @@ fn render(canvas: &mut WindowCanvas, color: Color, texture: &Texture, character:
     Ok(())
 }
 
+enum EventStatus {
+    Quit,
+    Continue,
+}
+
+fn handle_events(render_context: &mut RenderContext) -> EventStatus {
+    for event in render_context.event_pump.poll_iter() {
+        match event {
+            Event::Quit { .. }
+            | Event::KeyDown {
+                keycode: Some(Keycode::Escape),
+                ..
+            } => return EventStatus::Quit,
+            _ => {}
+        }
+    }
+    EventStatus::Continue
+}
+
 pub fn main() -> Result<(), String> {
     let mut render_context = RenderContext::initialize()?;
 
@@ -46,26 +66,21 @@ pub fn main() -> Result<(), String> {
 
     let mut i = 0;
     'running: loop {
-        // Handle events
-        for event in render_context.event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'running,
-                _ => {}
-            }
+        let start_frame = Instant::now();
+
+        if let EventStatus::Quit = handle_events(&mut render_context) {
+            break 'running;
         }
 
-        //TODO: Update
-
-        // Render
         i = (i + 1) % 255;
         render(&mut render_context.canvas, Color::RGB(i, 64, 255 - i), &texture, &character)?;
 
-        // Time management!
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        let end_frame = Instant::now();
+
+        if let Some(duration) = end_frame.checked_duration_since(start_frame) {
+            let ms = duration.as_millis() as u64;
+            ::std::thread::sleep(Duration::from_millis(16 - ms));
+        }
     }
     Ok(())
 }
