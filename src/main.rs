@@ -1,14 +1,11 @@
 // Disable annoying black terminal
 #![windows_subsystem = "windows"]
 
-extern crate sdl2;
+mod after_image;
 
-mod render;
-
-use render::RenderContext;
+use after_image::{load_image, RenderContext};
 
 use sdl2::event::Event;
-use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
@@ -40,9 +37,7 @@ fn render(canvas: &mut WindowCanvas, color: Color, texture: &Texture, character:
 pub fn main() -> Result<(), String> {
     let mut render_context = RenderContext::initialize()?;
 
-    let data_path = format!("{}\\..\\ArenaGS-Data", env!("CARGO_MANIFEST_DIR"));
-    let texture_creator = render_context.canvas.texture_creator();
-    let texture = texture_creator.load_texture(format!("{}{}", data_path, r#"\images\battle\set1\1\1_1_idle1 (1).png"#))?;
+    let texture = load_image(r#"\images\battle\set1\1\1_1_idle1 (1).png"#, &render_context).unwrap();
 
     let character = Character {
         position: Point::new(0, 0),

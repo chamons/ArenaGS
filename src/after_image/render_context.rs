@@ -1,4 +1,3 @@
-// "self" imports the "image" module itself as well as everything else we listed
 use sdl2::image::{self, InitFlag};
 
 pub struct RenderContext {
@@ -23,7 +22,7 @@ impl RenderContext {
             .build()
             .expect("could not initialize video subsystem");
 
-        let canvas = window.into_canvas().build().expect("could not make a canvas");
+        let canvas = window.into_canvas().target_texture().present_vsync().build().expect("could not make a canvas");
 
         let event_pump = sdl_context.event_pump()?;
 
