@@ -4,7 +4,7 @@ use std::time::Instant;
 
 mod after_image;
 
-use after_image::{load_image, RenderContext};
+use after_image::{load_image, pump_messages, EventStatus, RenderContext};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -35,21 +35,14 @@ fn render(canvas: &mut WindowCanvas, color: Color, texture: &Texture, character:
     Ok(())
 }
 
-enum EventStatus {
-    Quit,
-    Continue,
-}
-
-fn handle_events(render_context: &mut RenderContext) -> EventStatus {
-    for event in render_context.event_pump.poll_iter() {
-        match event {
-            Event::Quit { .. }
-            | Event::KeyDown {
-                keycode: Some(Keycode::Escape),
-                ..
-            } => return EventStatus::Quit,
-            _ => {}
-        }
+fn handle_event(event: sdl2::event::Event) -> EventStatus {
+    match event {
+        Event::Quit { .. }
+        | Event::KeyDown {
+            keycode: Some(Keycode::Escape),
+            ..
+        } => return EventStatus::Quit,
+        _ => {}
     }
     EventStatus::Continue
 }
@@ -68,7 +61,7 @@ pub fn main() -> Result<(), String> {
     'running: loop {
         let start_frame = Instant::now();
 
-        if let EventStatus::Quit = handle_events(&mut render_context) {
+        if let EventStatus::Quit = pump_messages(&mut render_context, handle_event) {
             break 'running;
         }
 
