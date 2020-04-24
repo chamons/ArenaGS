@@ -1,12 +1,16 @@
 use super::RenderContext;
-use sdl2::render::Texture;
 
 use sdl2::image::LoadTexture;
+use sdl2::render::Texture;
+
+fn get_exe_folder() -> Option<std::path::PathBuf> {
+    let exe_path = std::env::current_exe().unwrap();
+    Some(exe_path.parent()?.to_path_buf())
+}
 
 pub fn load_image<'r>(path: &str, render_context: &RenderContext) -> Result<Texture, String> {
-    // HACK
-    let data_path = format!("{}\\..\\ArenaGS-Data", env!("CARGO_MANIFEST_DIR"));
+    let dest_path = get_exe_folder().unwrap().join(path);
 
     let texture_creator = render_context.canvas.texture_creator();
-    Ok(texture_creator.load_texture(format!("{}{}", data_path, path))?)
+    Ok(texture_creator.load_texture(dest_path)?)
 }

@@ -1,5 +1,6 @@
 // Disable annoying black terminal
 #![windows_subsystem = "windows"]
+
 use std::time::Instant;
 
 mod after_image;
@@ -50,7 +51,7 @@ fn handle_event(event: sdl2::event::Event) -> EventStatus {
 pub fn main() -> Result<(), String> {
     let mut render_context = RenderContext::initialize()?;
 
-    let texture = load_image(r#"\images\battle\set1\1\1_1_idle1 (1).png"#, &render_context).unwrap();
+    let texture = load_image(r#"images\battle\set1\1\1_1_idle1 (1).png"#, &render_context).unwrap();
 
     let character = Character {
         position: Point::new(0, 0),
