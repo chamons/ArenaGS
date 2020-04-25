@@ -60,7 +60,7 @@ impl Scene for BattleScene {
 
 #[cfg(target_os = "windows")]
 fn open_url(url: &str) -> bool {
-    if let Ok(mut child) = std::process::Command::new("cmd.exe").arg("/C").arg("start").arg("").arg(&url).spawn() {
+    if let Ok(mut child) = std::process::Command::new("cmd.exe").arg("/C").arg("code").arg("").arg(&url).spawn() {
         std::thread::sleep(std::time::Duration::new(1, 0));
         if let Ok(status) = child.wait() {
             return status.success();
@@ -71,6 +71,8 @@ fn open_url(url: &str) -> bool {
 
 pub fn main() -> Result<(), String> {
     std::env::set_var("RUST_BACKTRACE", "1");
+
+    #[cfg(debug_assertions)]
     panic::set_hook(Box::new(|panic_info| {
         let mut debug_spew = String::new();
         if let Some(location) = panic_info.location() {
