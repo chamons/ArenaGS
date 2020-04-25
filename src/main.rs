@@ -1,8 +1,13 @@
 // Disable annoying black terminal
 #![windows_subsystem = "windows"]
 
+use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::panic;
+
 mod after_image;
-use after_image::{load_image, BoxResult, RenderContext};
+use after_image::{load_image, BoxResult, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
 
 mod conductor;
 use conductor::{Director, EventStatus, Scene};
@@ -19,13 +24,13 @@ struct Character {
 }
 
 struct BattleScene {
-    texture: sdl2::render::Texture,
+    character: DetailedCharacterSprite,
 }
 
 impl BattleScene {
     pub fn init(render_context: &mut RenderContext) -> BoxResult<BattleScene> {
-        let texture = load_image(r#"images\battle\set1\1\1_1_idle1 (1).png"#, &render_context)?;
-        Ok(BattleScene { texture })
+        let character = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "2"))?;
+        Ok(BattleScene { character })
     }
 }
 
@@ -50,7 +55,7 @@ impl Scene for BattleScene {
         let sprite = Rect::new(0, 0, 96, 96);
         let screen_position = Point::new(0, 0) + Point::new(width as i32 / 2, height as i32 / 2);
         let screen_rect = Rect::from_center(screen_position, sprite.width(), sprite.height());
-        canvas.copy(&self.texture, sprite, screen_rect)?;
+        canvas.copy(self.character.get_texture(), sprite, screen_rect)?;
 
         canvas.present();
 

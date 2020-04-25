@@ -14,7 +14,6 @@
             "windows": {
                 "type": "cppvsdbg",
                 "stopAtEntry": false,
-                "environment": [],
                 "externalConsole": true,
                 "program": "target\\debug\\arena_gunpowder_and_sorcery.exe",
             },

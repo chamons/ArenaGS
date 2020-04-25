@@ -40,7 +40,9 @@ impl Director {
             let end_frame = Instant::now();
             if let Some(duration) = end_frame.checked_duration_since(start_frame) {
                 let ms = duration.as_millis() as u64;
-                ::std::thread::sleep(Duration::from_millis(16 - ms));
+                if (ms < 16) {
+                    ::std::thread::sleep(Duration::from_millis(16 - ms));
+                }
             }
         }
     }
