@@ -9,7 +9,7 @@ fn get_exe_folder() -> BoxResult<std::path::PathBuf> {
     Ok(exe_folder.to_path_buf())
 }
 
-pub fn load_image<'r>(path: &str, render_context: &RenderContext) -> BoxResult<Texture> {
+pub fn load_image(path: &str, render_context: &RenderContext) -> BoxResult<Texture> {
     let dest_path = get_exe_folder()?.join(path);
 
     let texture_creator = render_context.canvas.texture_creator();
