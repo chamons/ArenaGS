@@ -5,11 +5,13 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 
+use super::BattleState;
 use crate::after_image::{CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
+    state: BattleState,
     character_one: DetailedCharacterSprite,
     character_two: DetailedCharacterSprite,
 }
@@ -19,7 +21,11 @@ impl BattleScene {
         let folder = Path::new("images").join("battle");
         let character_one = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init(&folder, "1", "1"))?;
         let character_two = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init(&folder, "1", "2"))?;
-        Ok(BattleScene { character_one, character_two })
+        Ok(BattleScene {
+            state: BattleState::init(),
+            character_one,
+            character_two,
+        })
     }
 }
 
