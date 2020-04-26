@@ -59,5 +59,7 @@ fn main() {
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir));
     }
     let data_path = format!("{}\\..\\ArenaGS-Data", env!("CARGO_MANIFEST_DIR"));
-    copy_all_with_extension(&data_path, &dest_dir.to_str().unwrap(), "png").expect("Unable to copy images");
+    if Path::new(&data_path).exists() {
+        copy_all_with_extension(&data_path, &dest_dir.to_str().unwrap(), "png").expect("Unable to copy images");
+    }
 }
