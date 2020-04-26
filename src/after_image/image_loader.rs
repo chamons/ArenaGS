@@ -1,4 +1,5 @@
-use super::{BoxResult, RenderContext};
+use super::RenderContext;
+use crate::atlas::BoxResult;
 
 use std::path::PathBuf;
 use std::path::MAIN_SEPARATOR;

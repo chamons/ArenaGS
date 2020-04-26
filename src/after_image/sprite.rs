@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use super::{load_image, BoxResult, RenderContext};
+use super::{load_image, RenderContext};
+use crate::atlas::BoxResult;
 
 use sdl2::render::Texture;
 

@@ -2,7 +2,9 @@ use std::time::Duration;
 use std::time::Instant;
 
 use super::Scene;
-use crate::after_image::{BoxResult, RenderContext};
+
+use crate::after_image::RenderContext;
+use crate::atlas::BoxResult;
 
 #[allow(dead_code)]
 pub enum EventStatus {
