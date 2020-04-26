@@ -12,9 +12,9 @@ pub struct SpriteDeepFolderDescription {
 }
 
 impl SpriteDeepFolderDescription {
-    pub fn init(base_folder: &str, set: &str, character: &str) -> SpriteDeepFolderDescription {
+    pub fn init(base_folder: &Path, set: &str, character: &str) -> SpriteDeepFolderDescription {
         SpriteDeepFolderDescription {
-            base_folder: base_folder.to_string(),
+            base_folder: base_folder.to_str().unwrap().to_string(),
             set: set.to_string(),
             character: character.to_string(),
         }
