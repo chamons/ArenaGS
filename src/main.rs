@@ -4,7 +4,7 @@
 use std::panic;
 
 mod after_image;
-use after_image::{BoxResult, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
+use after_image::{BoxResult, CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
 
 mod conductor;
 use conductor::{Director, EventStatus, Scene};
@@ -23,13 +23,15 @@ struct Character {
 }
 
 struct BattleScene {
-    character: DetailedCharacterSprite,
+    character_one: DetailedCharacterSprite,
+    character_two: DetailedCharacterSprite,
 }
 
 impl BattleScene {
     pub fn init(render_context: &mut RenderContext) -> BoxResult<BattleScene> {
-        let character = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "2"))?;
-        Ok(BattleScene { character })
+        let character_one = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "1"))?;
+        let character_two = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "2"))?;
+        Ok(BattleScene { character_one, character_two })
     }
 }
 
@@ -46,7 +48,7 @@ impl Scene for BattleScene {
         EventStatus::Continue
     }
 
-    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
@@ -54,7 +56,11 @@ impl Scene for BattleScene {
         let sprite = Rect::new(0, 0, 96, 96);
         let screen_position = Point::new(0, 0) + Point::new(width as i32 / 2, height as i32 / 2);
         let screen_rect = Rect::from_center(screen_position, sprite.width(), sprite.height());
-        canvas.copy(self.character.get_texture(), sprite, screen_rect)?;
+        canvas.copy(self.character_one.get_texture(CharacterAnimationState::Idle, frame), sprite, screen_rect)?;
+
+        let screen_position = Point::new(0, 90) + Point::new(width as i32 / 2, height as i32 / 2);
+        let screen_rect = Rect::from_center(screen_position, sprite.width(), sprite.height());
+        canvas.copy(self.character_two.get_texture(CharacterAnimationState::Idle, frame), sprite, screen_rect)?;
 
         canvas.present();
 

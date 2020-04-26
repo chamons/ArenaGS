@@ -25,6 +25,7 @@ impl Director {
     }
 
     pub fn run(&mut self, render_context: &mut RenderContext) -> BoxResult<()> {
+        let mut frame = 0;
         loop {
             let start_frame = Instant::now();
             for event in render_context.event_pump.poll_iter() {
@@ -35,15 +36,17 @@ impl Director {
                 }
             }
 
-            self.scene.render(&mut render_context.canvas)?;
+            self.scene.render(&mut render_context.canvas, frame)?;
 
             let end_frame = Instant::now();
             if let Some(duration) = end_frame.checked_duration_since(start_frame) {
                 let ms = duration.as_millis() as u64;
-                if (ms < 16) {
+                if ms < 16 {
                     ::std::thread::sleep(Duration::from_millis(16 - ms));
                 }
             }
+
+            frame += 1;
         }
     }
 }

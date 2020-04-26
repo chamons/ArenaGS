@@ -17,7 +17,7 @@ pub trait Scene {
         EventStatus::Continue
     }
 
-    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, _frame: u64) -> BoxResult<()> {
         canvas.clear();
         Ok(())
     }
