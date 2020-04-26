@@ -1,0 +1,2 @@
+- Sprite get for each state
+- Add frame number for rotating between
