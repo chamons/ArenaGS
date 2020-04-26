@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -14,8 +16,9 @@ pub struct BattleScene {
 
 impl BattleScene {
     pub fn init(render_context: &mut RenderContext) -> BoxResult<BattleScene> {
-        let character_one = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "1"))?;
-        let character_two = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init("images\\battle", "1", "2"))?;
+        let folder = Path::new("images").join("battle");
+        let character_one = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init(&folder, "1", "1"))?;
+        let character_two = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init(&folder, "1", "2"))?;
         Ok(BattleScene { character_one, character_two })
     }
 }

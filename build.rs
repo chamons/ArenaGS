@@ -7,7 +7,7 @@ fn print<S: Into<String>>(message: S) {
     println!("{}", format!("cargo:warning={}", message.into()));
 }
 
-fn copy_all_with_extension(src: &str, dest: &str, extension: &str) -> Result<(), std::io::Error> {
+fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<(), std::io::Error> {
     let mut created_folder = false;
 
     for entry in fs::read_dir(src)? {
@@ -15,11 +15,7 @@ fn copy_all_with_extension(src: &str, dest: &str, extension: &str) -> Result<(),
         let path = entry.path();
 
         if path.is_dir() {
-            copy_all_with_extension(
-                &path.to_str().unwrap(),
-                Path::new(&dest).join(path.file_name().unwrap()).to_str().unwrap(),
-                extension,
-            )?;
+            copy_all_with_extension(&path, Path::new(&dest).join(path.file_name().unwrap()).to_str().unwrap(), extension)?;
         } else if let Some(file_name) = path.file_name() {
             if let Some(file_extension) = path.extension() {
                 if file_extension == extension {
@@ -50,14 +46,14 @@ fn main() {
 
     let platform = env::var("CARGO_CFG_TARGET_OS").expect("No Target OS?");
     if let "windows" = platform.as_str() {
-        let lib_dir = format!("{}\\lib\\win", env!("CARGO_MANIFEST_DIR"));
+        let lib_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("lib").join("win");
 
         copy_all_with_extension(&lib_dir, &dest_dir.to_str().unwrap(), "dll").expect("Unable to copy native libraries");
 
-        println!("{}", format!("cargo:rustc-link-search={}", lib_dir));
+        println!("{}", format!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap()));
     }
-    let data_path = format!("{}\\..\\ArenaGS-Data", env!("CARGO_MANIFEST_DIR"));
-    if Path::new(&data_path).exists() {
+    let data_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data");
+    if data_path.exists() {
         copy_all_with_extension(&data_path, &dest_dir.to_str().unwrap(), "png").expect("Unable to copy images");
     }
 }
