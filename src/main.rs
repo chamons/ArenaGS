@@ -23,10 +23,7 @@ pub fn main() -> Result<(), String> {
 
     let mut render_context = RenderContext::initialize()?;
 
-    let scene = BattleScene::init(&mut render_context).unwrap();
-
-    let scene = Box::new(scene);
-
+    let scene = Box::new(BattleScene::init(&mut render_context).unwrap());
     let mut director = Director::init(scene);
     director.run(&mut render_context).unwrap();
 
