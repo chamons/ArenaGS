@@ -10,7 +10,7 @@ use sdl2::rect::Rect as SDLRect;
 use super::super::{BattleState, Character, CharacterStyle};
 
 use crate::after_image::{CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
@@ -44,6 +44,26 @@ impl BattleScene {
             CharacterStyle::MaleBlueHairRedBody => ("1", "2"),
         }
     }
+
+    fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
+        let (width, height) = canvas.output_size()?;
+
+        let corner = Point::init(32, 32);
+
+        for x in 0..12 {
+            for y in 0..12 {
+                canvas.set_draw_color(Color::from((255, 255, 255)));
+                canvas.draw_rect(SDLRect::from((corner.x as i32 + x * 48, corner.y as i32 + y * 48, 48, 48)))?;
+            }
+        }
+
+        for c in &self.state.party {
+            let sprite = &self.sprite[&c.id];
+            sprite.draw(canvas, SDLPoint::new(0, 0), CharacterAnimationState::Idle, frame)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Scene for BattleScene {
@@ -63,19 +83,7 @@ impl Scene for BattleScene {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        let (width, height) = canvas.output_size()?;
-
-        for c in &self.state.party {
-            let sprite_rect = SDLRect::new(0, 0, 96, 96);
-            let screen_position = SDLPoint::new(0, 0) + SDLPoint::new(width as i32 / 2, height as i32 / 2);
-            let screen_rect = SDLRect::from_center(screen_position, sprite_rect.width(), sprite_rect.height());
-            let sprite = &self.sprite[&c.id];
-            canvas.copy(sprite.get_texture(CharacterAnimationState::Idle, frame), sprite_rect, screen_rect)?;
-        }
-
-        // let screen_position = Point::new(0, 90) + Point::new(width as i32 / 2, height as i32 / 2);
-        // let screen_rect = Rect::from_center(screen_position, sprite.width(), sprite.height());
-        // canvas.copy(self.character_two.get_texture(CharacterAnimationState::Idle, frame), sprite, screen_rect)?;
+        self.draw_field(canvas, frame)?;
 
         canvas.present();
 

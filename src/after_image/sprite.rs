@@ -3,6 +3,8 @@ use std::path::Path;
 use super::{load_image, RenderContext};
 use crate::atlas::BoxResult;
 
+use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 pub struct SpriteDeepFolderDescription {
@@ -77,7 +79,7 @@ impl DetailedCharacterSprite {
         })
     }
 
-    pub fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
+    fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
         const ANIMATION_LENGTH: usize = 55;
         let frame: usize = frame as usize % ANIMATION_LENGTH;
         let offset = if frame > ((2 * ANIMATION_LENGTH) / 3) {
@@ -102,6 +104,19 @@ impl DetailedCharacterSprite {
             CharacterAnimationState::Status => &self.status[offset],
             CharacterAnimationState::Walk => &self.walk[offset],
         }
+    }
+
+    pub fn draw(
+        &self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        screen_position: SDLPoint,
+        state: CharacterAnimationState,
+        frame: u64,
+    ) -> BoxResult<()> {
+        let screen_rect = SDLRect::from_center(screen_position, 96, 96);
+        canvas.copy(self.get_texture(CharacterAnimationState::Idle, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
+
+        Ok(())
     }
 }
 
