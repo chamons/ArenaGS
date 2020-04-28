@@ -114,7 +114,7 @@ impl DetailedCharacterSprite {
         frame: u64,
     ) -> BoxResult<()> {
         let screen_rect = SDLRect::from_center(screen_position, 96, 96);
-        canvas.copy(self.get_texture(CharacterAnimationState::Idle, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
+        canvas.copy(self.get_texture(state, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
 
         Ok(())
     }

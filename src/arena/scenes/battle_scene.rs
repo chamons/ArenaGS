@@ -7,7 +7,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::super::{BattleState, Character, CharacterStyle};
+use super::super::{BattleState, CharacterStyle};
 
 use crate::after_image::{CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
 use crate::atlas::{BoxResult, Point};
@@ -46,20 +46,19 @@ impl BattleScene {
     }
 
     fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
-        let (width, height) = canvas.output_size()?;
-
-        let corner = Point::init(32, 32);
+        let map_corner = Point::init(32, 32);
 
         for x in 0..12 {
             for y in 0..12 {
-                canvas.set_draw_color(Color::from((255, 255, 255)));
-                canvas.draw_rect(SDLRect::from((corner.x as i32 + x * 48, corner.y as i32 + y * 48, 48, 48)))?;
+                canvas.set_draw_color(Color::from((196, 196, 196)));
+                canvas.draw_rect(SDLRect::from((map_corner.x as i32 + x * 48, map_corner.y as i32 + y * 48, 48, 48)))?;
             }
         }
 
         for c in &self.state.party {
             let sprite = &self.sprite[&c.id];
-            sprite.draw(canvas, SDLPoint::new(0, 0), CharacterAnimationState::Idle, frame)?;
+            let offset = SDLPoint::new(((c.position.x * 48) + map_corner.x + 24) as i32, ((c.position.y * 48) + map_corner.y) as i32);
+            sprite.draw(canvas, offset, CharacterAnimationState::Idle, frame)?;
         }
 
         Ok(())
