@@ -9,13 +9,14 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::{BattleState, CharacterStyle};
 
-use crate::after_image::{CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
+use crate::after_image::{Background, CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
 use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
     state: BattleState,
     sprite: HashMap<u32, DetailedCharacterSprite>,
+    background: Background,
 }
 
 impl BattleScene {
@@ -23,6 +24,7 @@ impl BattleScene {
         Ok(BattleScene {
             sprite: BattleScene::load_sprites(&render_context, &state)?,
             state,
+            background: Background::init("beach", render_context)?,
         })
     }
 
@@ -43,6 +45,13 @@ impl BattleScene {
             CharacterStyle::MaleBrownHairBlueBody => ("1", "1"),
             CharacterStyle::MaleBlueHairRedBody => ("1", "2"),
         }
+    }
+
+    fn draw_background(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+        let map_corner = SDLPoint::new(0, 0);
+        self.background.draw(canvas, map_corner)?;
+
+        Ok(())
     }
 
     fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
@@ -82,7 +91,8 @@ impl Scene for BattleScene {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        self.draw_field(canvas, frame)?;
+        self.draw_background(canvas)?;
+        //self.draw_field(canvas, frame)?;
 
         canvas.present();
 
