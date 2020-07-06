@@ -48,17 +48,16 @@ impl BattleScene {
     }
 
     fn draw_background(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
-        let map_corner = SDLPoint::new(200, 200);
-        self.background.draw(canvas, map_corner)?;
+        self.background.draw(canvas)?;
 
         Ok(())
     }
 
     fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
-        let map_corner = Point::init(32, 32);
+        let map_corner = Point::init(100, 100);
 
-        for x in 0..12 {
-            for y in 0..12 {
+        for x in 0..13 {
+            for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
                 canvas.draw_rect(SDLRect::from((map_corner.x as i32 + x * 48, map_corner.y as i32 + y * 48, 48, 48)))?;
             }

@@ -4,6 +4,8 @@ use std::path::Path;
 
 use super::{load_image, RenderContext};
 
+use std::cmp;
+
 use crate::atlas::{get_exe_folder, BoxResult};
 
 use sdl2::rect::Point as SDLPoint;
@@ -21,9 +23,11 @@ impl Background {
         Ok(Background { image })
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint) -> BoxResult<()> {
-        let image_rect = SDLRect::new(screen_position.x, screen_position.y, 300, 300);
-        let screen_rect = SDLRect::new(0, 0, 600, 600);
+    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+        let (screen_x, screen_y) = canvas.viewport().size();
+        let map_box = cmp::min(screen_x, screen_y);
+        let image_rect = SDLRect::new(50, 50, 540, 540);
+        let screen_rect = SDLRect::new(0, 0, map_box, map_box);
 
         canvas.copy(&self.image, image_rect, screen_rect)?;
 
