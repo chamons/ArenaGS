@@ -48,7 +48,7 @@ impl BattleScene {
     }
 
     fn draw_background(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
-        let map_corner = SDLPoint::new(0, 0);
+        let map_corner = SDLPoint::new(200, 200);
         self.background.draw(canvas, map_corner)?;
 
         Ok(())
@@ -92,7 +92,7 @@ impl Scene for BattleScene {
         canvas.clear();
 
         self.draw_background(canvas)?;
-        //self.draw_field(canvas, frame)?;
+        self.draw_field(canvas, frame)?;
 
         canvas.present();
 

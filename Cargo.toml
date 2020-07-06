@@ -6,7 +6,6 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-tiled = "0.9.1"
 
 [dependencies.sdl2]
 version = "0.32.1"
