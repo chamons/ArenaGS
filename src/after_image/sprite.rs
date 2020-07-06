@@ -7,15 +7,15 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
-pub struct SpriteDeepFolderDescription {
+pub struct SpriteFolderDescription {
     base_folder: String,
     set: String,
     character: String,
 }
 
-impl SpriteDeepFolderDescription {
-    pub fn init(base_folder: &Path, set: &str, character: &str) -> SpriteDeepFolderDescription {
-        SpriteDeepFolderDescription {
+impl SpriteFolderDescription {
+    pub fn init(base_folder: &Path, set: &str, character: &str) -> SpriteFolderDescription {
+        SpriteFolderDescription {
             base_folder: base_folder.to_str().unwrap().to_string(),
             set: set.to_string(),
             character: character.to_string(),
@@ -55,7 +55,7 @@ pub struct DetailedCharacterSprite {
 }
 
 impl DetailedCharacterSprite {
-    pub fn init(render_context: &RenderContext, description: &SpriteDeepFolderDescription) -> BoxResult<DetailedCharacterSprite> {
+    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacterSprite> {
         let folder = Path::new(&description.base_folder)
             .join(format!("set{}", &description.set))
             .join(&description.character)
@@ -120,14 +120,14 @@ impl DetailedCharacterSprite {
     }
 }
 
-fn load_set(folder: &str, description: &SpriteDeepFolderDescription, action: &str, render_context: &RenderContext) -> BoxResult<[Texture; 3]> {
+fn load_set(folder: &str, description: &SpriteFolderDescription, action: &str, render_context: &RenderContext) -> BoxResult<[Texture; 3]> {
     let first = load_image(&get_set_name(folder, description, action, "1"), render_context)?;
     let second = load_image(&get_set_name(folder, description, action, "2"), render_context)?;
     let third = load_image(&get_set_name(folder, description, action, "3"), render_context)?;
     Ok([first, second, third])
 }
 
-fn get_single_name(folder: &str, description: &SpriteDeepFolderDescription) -> String {
+fn get_single_name(folder: &str, description: &SpriteFolderDescription) -> String {
     Path::new(&folder)
         .join(format!("{}_{}_down.png", description.set, description.character))
         .to_str()
@@ -135,7 +135,7 @@ fn get_single_name(folder: &str, description: &SpriteDeepFolderDescription) -> S
         .to_string()
 }
 
-fn get_set_name(folder: &str, description: &SpriteDeepFolderDescription, action: &str, index: &str) -> String {
+fn get_set_name(folder: &str, description: &SpriteFolderDescription, action: &str, index: &str) -> String {
     Path::new(&folder)
         .join(format!("{}_{}_{} ({}).png", description.set, description.character, action, index))
         .to_str()

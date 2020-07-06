@@ -9,7 +9,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::{BattleState, CharacterStyle};
 
-use crate::after_image::{Background, CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteDeepFolderDescription};
+use crate::after_image::{Background, CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteFolderDescription};
 use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
@@ -34,7 +34,7 @@ impl BattleScene {
         let mut sprites = HashMap::new();
         for character in &state.party {
             let (set, character_index) = BattleScene::sprite_index(&character.style);
-            let sprite = DetailedCharacterSprite::init(render_context, &SpriteDeepFolderDescription::init(&folder, set, character_index))?;
+            let sprite = DetailedCharacterSprite::init(render_context, &SpriteFolderDescription::init(&folder, set, character_index))?;
             sprites.insert(character.id, sprite);
         }
         Ok(sprites)
