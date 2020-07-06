@@ -1,5 +1,3 @@
-use std::fs::File;
-use std::io::BufReader;
 use std::path::Path;
 
 use super::{load_image, RenderContext};
@@ -8,7 +6,6 @@ use std::cmp;
 
 use crate::atlas::{get_exe_folder, BoxResult};
 
-use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
