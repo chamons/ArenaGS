@@ -9,13 +9,15 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::{BattleState, CharacterStyle};
 
-use crate::after_image::{Background, CharacterAnimationState, DetailedCharacterSprite, RenderContext, SpriteFolderDescription};
+use crate::after_image::{
+    Background, CharacterAnimationState, DetailedCharacterSprite, LargeEnemySprite, RenderContext, Sprite, SpriteFolderDescription, SpriteState,
+};
 use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
     state: BattleState,
-    sprite: HashMap<u32, DetailedCharacterSprite>,
+    sprite: HashMap<u32, Box<dyn Sprite>>,
     background: Background,
 }
 
@@ -28,15 +30,19 @@ impl BattleScene {
         })
     }
 
-    fn load_sprites(render_context: &RenderContext, state: &BattleState) -> BoxResult<HashMap<u32, DetailedCharacterSprite>> {
-        let folder = Path::new("images").join("battle");
+    fn load_sprites(render_context: &RenderContext, state: &BattleState) -> BoxResult<HashMap<u32, Box<dyn Sprite>>> {
+        let folder = Path::new("images");
 
-        let mut sprites = HashMap::new();
+        let mut sprites: HashMap<u32, Box<dyn Sprite>> = HashMap::new();
         for character in &state.party {
             let (set, character_index) = BattleScene::sprite_index(&character.style);
             let sprite = DetailedCharacterSprite::init(render_context, &SpriteFolderDescription::init(&folder, set, character_index))?;
-            sprites.insert(character.id, sprite);
+            sprites.insert(character.id, Box::from(sprite));
         }
+
+        let (_, file_name) = BattleScene::sprite_index(&state.enemy.style);
+        let sprite = LargeEnemySprite::init(render_context, &SpriteFolderDescription::init_without_set(&folder, file_name))?;
+        sprites.insert(state.enemy.id, Box::from(sprite));
         Ok(sprites)
     }
 
@@ -44,6 +50,9 @@ impl BattleScene {
         match style {
             CharacterStyle::MaleBrownHairBlueBody => ("1", "1"),
             CharacterStyle::MaleBlueHairRedBody => ("1", "2"),
+            CharacterStyle::MonsterBirdBrown => ("", "$monster_bird1"),
+            CharacterStyle::MonsterBirdBlue => ("", "$monster_bird2"),
+            CharacterStyle::MonsterBirdRed => ("", "$monster_bird3"),
         }
     }
 
@@ -53,22 +62,44 @@ impl BattleScene {
         Ok(())
     }
 
-    fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
-        let map_corner = Point::init(100, 100);
+    const MAP_CORNER: Point = Point::init(100, 100);
 
+    fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
         for x in 0..13 {
             for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
-                canvas.draw_rect(SDLRect::from((map_corner.x as i32 + x * 48, map_corner.y as i32 + y * 48, 48, 48)))?;
+                canvas.draw_rect(SDLRect::from((
+                    BattleScene::MAP_CORNER.x as i32 + x * 48,
+                    BattleScene::MAP_CORNER.y as i32 + y * 48,
+                    48,
+                    48,
+                )))?;
             }
         }
 
         for c in &self.state.party {
-            let sprite = &self.sprite[&c.id];
-            let offset = SDLPoint::new(((c.position.x * 48) + map_corner.x + 24) as i32, ((c.position.y * 48) + map_corner.y) as i32);
-            sprite.draw(canvas, offset, CharacterAnimationState::Idle, frame)?;
+            self.draw_character(c.id, &c.position, SpriteState::DetailedCharacter(CharacterAnimationState::Idle), canvas, frame)?;
         }
 
+        self.draw_character(self.state.enemy.id, &self.state.enemy.position, SpriteState::LargeEnemy(), canvas, frame)?;
+
+        Ok(())
+    }
+
+    fn draw_character(
+        &self,
+        id: u32,
+        position: &Point,
+        state: SpriteState,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        frame: u64,
+    ) -> BoxResult<()> {
+        let sprite = &self.sprite[&id];
+        let offset = SDLPoint::new(
+            ((position.x * 48) + BattleScene::MAP_CORNER.x + 24) as i32,
+            ((position.y * 48) + BattleScene::MAP_CORNER.y) as i32,
+        );
+        sprite.draw(canvas, offset, state, frame)?;
         Ok(())
     }
 }

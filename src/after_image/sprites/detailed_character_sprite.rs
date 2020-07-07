@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use super::{load_image, sprite::load_set, RenderContext, SpriteFolderDescription};
+use super::{sprite::load_set, SpriteFolderDescription, SpriteState};
+use crate::after_image::{load_image, RenderContext, Sprite};
+
 use crate::atlas::BoxResult;
 
 use sdl2::rect::Point as SDLPoint;
@@ -41,6 +43,7 @@ pub struct DetailedCharacterSprite {
 impl DetailedCharacterSprite {
     pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacterSprite> {
         let folder = Path::new(&description.base_folder)
+            .join("battle")
             .join(format!("set{}", &description.set))
             .join(&description.character)
             .to_str()
@@ -64,15 +67,7 @@ impl DetailedCharacterSprite {
     }
 
     fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
-        const ANIMATION_LENGTH: usize = 55;
-        let frame: usize = frame as usize % ANIMATION_LENGTH;
-        let offset = if frame > ((2 * ANIMATION_LENGTH) / 3) {
-            2
-        } else if frame > (ANIMATION_LENGTH / 3) {
-            1
-        } else {
-            0
-        };
+        let offset = super::sprite::get_animation_frame(frame);
 
         match state {
             CharacterAnimationState::AttackOne => &self.attack_one[offset],
@@ -89,14 +84,14 @@ impl DetailedCharacterSprite {
             CharacterAnimationState::Walk => &self.walk[offset],
         }
     }
+}
 
-    pub fn draw(
-        &self,
-        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-        screen_position: SDLPoint,
-        state: CharacterAnimationState,
-        frame: u64,
-    ) -> BoxResult<()> {
+impl Sprite for DetailedCharacterSprite {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: SpriteState, frame: u64) -> BoxResult<()> {
+        let state = match state {
+            SpriteState::DetailedCharacter(s) => Ok(s),
+            _ => Err("Wrong SpriteState type"),
+        }?;
         let screen_rect = SDLRect::from_center(screen_position, 96, 96);
         canvas.copy(self.get_texture(state, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
 

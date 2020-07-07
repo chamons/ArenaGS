@@ -1,9 +1,14 @@
 use crate::atlas::Point;
 
 #[derive(Hash, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum CharacterStyle {
     MaleBrownHairBlueBody,
     MaleBlueHairRedBody,
+
+    MonsterBirdBrown,
+    MonsterBirdBlue,
+    MonsterBirdRed,
 }
 
 #[derive(Hash, PartialEq, Eq)]

@@ -1,9 +1,19 @@
 use std::path::Path;
 
-use super::{load_image, RenderContext};
+use crate::after_image::{load_image, RenderContext};
 use crate::atlas::BoxResult;
 
+use sdl2::rect::Point as SDLPoint;
 use sdl2::render::Texture;
+
+pub enum SpriteState {
+    DetailedCharacter(super::CharacterAnimationState),
+    LargeEnemy(),
+}
+
+pub trait Sprite {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: SpriteState, frame: u64) -> BoxResult<()>;
+}
 
 pub struct SpriteFolderDescription {
     pub base_folder: String,
@@ -18,6 +28,10 @@ impl SpriteFolderDescription {
             set: set.to_string(),
             character: character.to_string(),
         }
+    }
+
+    pub fn init_without_set(base_folder: &Path, character: &str) -> SpriteFolderDescription {
+        SpriteFolderDescription::init(base_folder, "", character)
     }
 }
 
@@ -34,4 +48,16 @@ fn get_set_name(folder: &str, description: &SpriteFolderDescription, action: &st
         .to_str()
         .unwrap()
         .to_string()
+}
+
+pub fn get_animation_frame(frame: u64) -> usize {
+    const ANIMATION_LENGTH: usize = 55;
+    let frame: usize = frame as usize % ANIMATION_LENGTH;
+    if frame > ((2 * ANIMATION_LENGTH) / 3) {
+        2
+    } else if frame > (ANIMATION_LENGTH / 3) {
+        1
+    } else {
+        0
+    }
 }

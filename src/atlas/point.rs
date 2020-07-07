@@ -5,7 +5,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn init(x: u32, y: u32) -> Point {
+    pub const fn init(x: u32, y: u32) -> Point {
         Point { x, y }
     }
 }
