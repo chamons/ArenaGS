@@ -1,25 +1,13 @@
 use std::path::Path;
 
-use super::{load_image, RenderContext};
+use super::{sprite::load_set, SpriteFolderDescription, SpriteState};
+use crate::after_image::{load_image, RenderContext, Sprite};
+
 use crate::atlas::BoxResult;
 
+use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
-
-pub struct SpriteDeepFolderDescription {
-    base_folder: String,
-    set: String,
-    character: String,
-}
-
-impl SpriteDeepFolderDescription {
-    pub fn init(base_folder: &Path, set: &str, character: &str) -> SpriteDeepFolderDescription {
-        SpriteDeepFolderDescription {
-            base_folder: base_folder.to_str().unwrap().to_string(),
-            set: set.to_string(),
-            character: character.to_string(),
-        }
-    }
-}
 
 #[allow(dead_code)]
 pub enum CharacterAnimationState {
@@ -53,8 +41,9 @@ pub struct DetailedCharacterSprite {
 }
 
 impl DetailedCharacterSprite {
-    pub fn init(render_context: &RenderContext, description: &SpriteDeepFolderDescription) -> BoxResult<DetailedCharacterSprite> {
+    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacterSprite> {
         let folder = Path::new(&description.base_folder)
+            .join("battle")
             .join(format!("set{}", &description.set))
             .join(&description.character)
             .to_str()
@@ -77,16 +66,8 @@ impl DetailedCharacterSprite {
         })
     }
 
-    pub fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
-        const ANIMATION_LENGTH: usize = 55;
-        let frame: usize = frame as usize % ANIMATION_LENGTH;
-        let offset = if frame > ((2 * ANIMATION_LENGTH) / 3) {
-            2
-        } else if frame > (ANIMATION_LENGTH / 3) {
-            1
-        } else {
-            0
-        };
+    fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
+        let offset = super::sprite::get_animation_frame(frame);
 
         match state {
             CharacterAnimationState::AttackOne => &self.attack_one[offset],
@@ -105,24 +86,22 @@ impl DetailedCharacterSprite {
     }
 }
 
-fn load_set(folder: &str, description: &SpriteDeepFolderDescription, action: &str, render_context: &RenderContext) -> BoxResult<[Texture; 3]> {
-    let first = load_image(&get_set_name(folder, description, action, "1"), render_context)?;
-    let second = load_image(&get_set_name(folder, description, action, "2"), render_context)?;
-    let third = load_image(&get_set_name(folder, description, action, "3"), render_context)?;
-    Ok([first, second, third])
+impl Sprite for DetailedCharacterSprite {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: SpriteState, frame: u64) -> BoxResult<()> {
+        let state = match state {
+            SpriteState::DetailedCharacter(s) => Ok(s),
+            _ => Err("Wrong SpriteState type"),
+        }?;
+        let screen_rect = SDLRect::from_center(screen_position, 96, 96);
+        canvas.copy(self.get_texture(state, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
+
+        Ok(())
+    }
 }
 
-fn get_single_name(folder: &str, description: &SpriteDeepFolderDescription) -> String {
+pub fn get_single_name(folder: &str, description: &SpriteFolderDescription) -> String {
     Path::new(&folder)
         .join(format!("{}_{}_down.png", description.set, description.character))
-        .to_str()
-        .unwrap()
-        .to_string()
-}
-
-fn get_set_name(folder: &str, description: &SpriteDeepFolderDescription, action: &str, index: &str) -> String {
-    Path::new(&folder)
-        .join(format!("{}_{}_{} ({}).png", description.set, description.character, action, index))
         .to_str()
         .unwrap()
         .to_string()

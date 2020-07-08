@@ -1,3 +1,7 @@
-mod battle_scene;
+mod battle_state;
+mod character;
+mod scenes;
 
-pub use battle_scene::BattleScene;
+pub use battle_state::BattleState;
+pub use character::{Character, CharacterStyle};
+pub use scenes::BattleScene;
