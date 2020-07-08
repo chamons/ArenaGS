@@ -38,6 +38,8 @@ impl Director {
                 }
             }
 
+            self.scene.tick()?;
+
             self.scene.render(&mut render_context.canvas, frame)?;
 
             let end_frame = Instant::now();

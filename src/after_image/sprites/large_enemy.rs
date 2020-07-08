@@ -8,12 +8,12 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
-pub struct LargeEnemySprite {
+pub struct LargeEnemy {
     texture: Texture,
 }
 
-impl LargeEnemySprite {
-    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<LargeEnemySprite> {
+impl LargeEnemy {
+    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<LargeEnemy> {
         let folder = Path::new(&description.base_folder)
             .join("monsters")
             .join(format!("{}{}", &description.character, ".png"))
@@ -21,14 +21,14 @@ impl LargeEnemySprite {
             .unwrap()
             .to_string();
 
-        Ok(LargeEnemySprite {
+        Ok(LargeEnemy {
             texture: load_image(&folder, render_context)?,
         })
     }
 }
 
-impl Sprite for LargeEnemySprite {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, _: SpriteState, frame: u64) -> BoxResult<()> {
+impl Sprite for LargeEnemy {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, _: &SpriteState, frame: u64) -> BoxResult<()> {
         let offset = super::sprite::get_animation_frame(frame);
 
         let mut screen_rect = SDLRect::from_center(screen_position, 122, 96);

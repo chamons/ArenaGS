@@ -1,105 +1,96 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use enum_iterator::IntoEnumIterator;
+use specs::prelude::*;
+
+use super::RenderComponent;
+use crate::clash::PositionComponent;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::{BattleState, CharacterStyle};
+use super::SpriteKinds;
 
-use crate::after_image::{
-    Background, CharacterAnimationState, DetailedCharacterSprite, LargeEnemySprite, RenderContext, Sprite, SpriteFolderDescription, SpriteState,
-};
-use crate::atlas::{BoxResult, Point};
+use crate::after_image::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, RenderContext, Sprite, SpriteFolderDescription, SpriteState};
+use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
-    state: BattleState,
-    sprite: HashMap<u32, Box<dyn Sprite>>,
-    background: Background,
+    ecs: World,
+    sprite_cache: HashMap<u32, Box<dyn Sprite>>,
 }
 
 impl BattleScene {
-    pub fn init(render_context: &RenderContext, state: BattleState) -> BoxResult<BattleScene> {
-        Ok(BattleScene {
-            sprite: BattleScene::load_sprites(&render_context, &state)?,
-            state,
-            background: Background::init("beach", render_context)?,
-        })
+    pub fn init(render_context: &RenderContext) -> BoxResult<BattleScene> {
+        let mut ecs = World::new();
+        ecs.register::<PositionComponent>();
+        ecs.register::<RenderComponent>();
+
+        let sprite_cache = BattleScene::load_sprites(&render_context)?;
+
+        ecs.create_entity()
+            .with(RenderComponent {
+                sprite_id: SpriteKinds::MaleBrownHairBlueBody.into(),
+                sprite_state: SpriteState::DetailedCharacter(CharacterAnimationState::Idle),
+                z_order: 0,
+            })
+            .with(PositionComponent::init(2, 2))
+            .build();
+
+        Ok(BattleScene { ecs, sprite_cache })
     }
 
-    fn load_sprites(render_context: &RenderContext, state: &BattleState) -> BoxResult<HashMap<u32, Box<dyn Sprite>>> {
+    pub fn run(&mut self) {
+        self.ecs.maintain();
+    }
+
+    fn load_sprites(render_context: &RenderContext) -> BoxResult<HashMap<u32, Box<dyn Sprite>>> {
         let folder = Path::new("images");
 
         let mut sprites: HashMap<u32, Box<dyn Sprite>> = HashMap::new();
-        for character in &state.party {
-            let (set, character_index) = BattleScene::sprite_index(&character.style);
-            let sprite = DetailedCharacterSprite::init(render_context, &SpriteFolderDescription::init(&folder, set, character_index))?;
-            sprites.insert(character.id, Box::from(sprite));
+        for s in SpriteKinds::into_enum_iter() {
+            let sprite: Box<dyn Sprite> = match s {
+                SpriteKinds::BeachBackground => Box::new(Background::init(render_context, "beach")?),
+                SpriteKinds::MaleBrownHairBlueBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
+                SpriteKinds::MaleBlueHairRedBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
+                SpriteKinds::MonsterBirdBrown => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
+                )?),
+                SpriteKinds::MonsterBirdBlue => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
+                )?),
+                SpriteKinds::MonsterBirdRed => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
+                )?),
+            };
+            sprites.insert(s.into(), sprite);
         }
-
-        let (_, file_name) = BattleScene::sprite_index(&state.enemy.style);
-        let sprite = LargeEnemySprite::init(render_context, &SpriteFolderDescription::init_without_set(&folder, file_name))?;
-        sprites.insert(state.enemy.id, Box::from(sprite));
         Ok(sprites)
     }
 
-    fn sprite_index(style: &CharacterStyle) -> (&'static str, &'static str) {
-        match style {
-            CharacterStyle::MaleBrownHairBlueBody => ("1", "1"),
-            CharacterStyle::MaleBlueHairRedBody => ("1", "2"),
-            CharacterStyle::MonsterBirdBrown => ("", "$monster_bird1"),
-            CharacterStyle::MonsterBirdBlue => ("", "$monster_bird2"),
-            CharacterStyle::MonsterBirdRed => ("", "$monster_bird3"),
-        }
-    }
+    const MAP_CORNER_X: u32 = 100;
+    const MAP_CORNER_Y: u32 = 100;
 
-    fn draw_background(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
-        self.background.draw(canvas)?;
-
-        Ok(())
-    }
-
-    const MAP_CORNER: Point = Point::init(100, 100);
-
-    fn draw_field(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
+    fn draw_field_overlay(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
         for x in 0..13 {
             for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
                 canvas.draw_rect(SDLRect::from((
-                    BattleScene::MAP_CORNER.x as i32 + x * 48,
-                    BattleScene::MAP_CORNER.y as i32 + y * 48,
+                    BattleScene::MAP_CORNER_X as i32 + x * 48,
+                    BattleScene::MAP_CORNER_Y as i32 + y * 48,
                     48,
                     48,
                 )))?;
             }
         }
 
-        for c in &self.state.party {
-            self.draw_character(c.id, &c.position, SpriteState::DetailedCharacter(CharacterAnimationState::Idle), canvas, frame)?;
-        }
-
-        self.draw_character(self.state.enemy.id, &self.state.enemy.position, SpriteState::LargeEnemy(), canvas, frame)?;
-
-        Ok(())
-    }
-
-    fn draw_character(
-        &self,
-        id: u32,
-        position: &Point,
-        state: SpriteState,
-        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-        frame: u64,
-    ) -> BoxResult<()> {
-        let sprite = &self.sprite[&id];
-        let offset = SDLPoint::new(
-            ((position.x * 48) + BattleScene::MAP_CORNER.x + 24) as i32,
-            ((position.y * 48) + BattleScene::MAP_CORNER.y) as i32,
-        );
-        sprite.draw(canvas, offset, state, frame)?;
         Ok(())
     }
 }
@@ -121,11 +112,26 @@ impl Scene for BattleScene {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        self.draw_background(canvas)?;
-        self.draw_field(canvas, frame)?;
+        let positions = self.ecs.read_storage::<PositionComponent>();
+        let renderables = self.ecs.read_storage::<RenderComponent>();
 
+        for (position, render) in (&positions, &renderables).join() {
+            let id = render.sprite_id;
+            let sprite = &self.sprite_cache[&id];
+            let offset = SDLPoint::new(
+                ((position.x * 48) + BattleScene::MAP_CORNER_X + 24) as i32,
+                ((position.y * 48) + BattleScene::MAP_CORNER_Y) as i32,
+            );
+            sprite.draw(canvas, offset, &render.sprite_state, frame)?;
+        }
+
+        self.draw_field_overlay(canvas)?;
         canvas.present();
 
+        Ok(())
+    }
+
+    fn tick(&mut self) -> BoxResult<()> {
         Ok(())
     }
 }

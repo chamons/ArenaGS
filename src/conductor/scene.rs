@@ -21,4 +21,8 @@ pub trait Scene {
         canvas.clear();
         Ok(())
     }
+
+    fn tick(&mut self) -> BoxResult<()> {
+        Ok(())
+    }
 }

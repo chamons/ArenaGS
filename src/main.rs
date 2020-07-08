@@ -3,17 +3,19 @@
 
 use std::panic;
 
+mod atlas;
+use atlas::on_crash;
+
 mod after_image;
 use after_image::RenderContext;
 
 mod conductor;
 use conductor::Director;
 
-mod atlas;
-use atlas::on_crash;
+mod clash;
 
 mod arena;
-use arena::{BattleScene, BattleState};
+use arena::BattleScene;
 
 pub fn main() -> Result<(), String> {
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -23,8 +25,7 @@ pub fn main() -> Result<(), String> {
 
     let mut render_context = RenderContext::initialize()?;
 
-    let state = BattleState::test_state();
-    let scene = Box::new(BattleScene::init(&render_context, state).unwrap());
+    let scene = Box::new(BattleScene::init(&render_context).unwrap());
     let mut director = Director::init(scene);
     director.run(&mut render_context).unwrap();
 
