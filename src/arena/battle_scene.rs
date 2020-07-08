@@ -7,7 +7,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::super::{BattleState, CharacterStyle};
+use super::{BattleState, CharacterStyle};
 
 use crate::after_image::{
     Background, CharacterAnimationState, DetailedCharacterSprite, LargeEnemySprite, RenderContext, Sprite, SpriteFolderDescription, SpriteState,
