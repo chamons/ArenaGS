@@ -13,7 +13,7 @@ mod atlas;
 use atlas::on_crash;
 
 mod arena;
-use arena::BattleScene;
+use arena::{BattleScene, BattleState};
 
 pub fn main() -> Result<(), String> {
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -23,7 +23,7 @@ pub fn main() -> Result<(), String> {
 
     let mut render_context = RenderContext::initialize()?;
 
-    let state = arena::BattleState::test_state();
+    let state = BattleState::test_state();
     let scene = Box::new(BattleScene::init(&render_context, state).unwrap());
     let mut director = Director::init(scene);
     director.run(&mut render_context).unwrap();
