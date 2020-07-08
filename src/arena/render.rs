@@ -25,3 +25,17 @@ pub struct RenderComponent {
     pub sprite_state: SpriteState,
     pub z_order: i32,
 }
+
+impl RenderComponent {
+    pub fn init(sprite_kind: SpriteKinds) -> RenderComponent {
+        RenderComponent::init_with_order(sprite_kind, 0)
+    }
+
+    pub fn init_with_order(sprite_kind: SpriteKinds, z_order: i32) -> RenderComponent {
+        RenderComponent {
+            sprite_id: sprite_kind.into(),
+            sprite_state: SpriteState::None(),
+            z_order,
+        }
+    }
+}

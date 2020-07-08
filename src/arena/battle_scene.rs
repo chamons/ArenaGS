@@ -33,12 +33,21 @@ impl BattleScene {
         let sprite_cache = BattleScene::load_sprites(&render_context)?;
 
         ecs.create_entity()
+            .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, -1))
+            .build();
+
+        ecs.create_entity()
             .with(RenderComponent {
                 sprite_id: SpriteKinds::MaleBrownHairBlueBody.into(),
                 sprite_state: SpriteState::DetailedCharacter(CharacterAnimationState::Idle),
                 z_order: 0,
             })
             .with(PositionComponent::init(2, 2))
+            .build();
+
+        ecs.create_entity()
+            .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
+            .with(PositionComponent::init(5, 5))
             .build();
 
         Ok(BattleScene { ecs, sprite_cache })
@@ -115,14 +124,18 @@ impl Scene for BattleScene {
         let positions = self.ecs.read_storage::<PositionComponent>();
         let renderables = self.ecs.read_storage::<RenderComponent>();
 
-        for (position, render) in (&positions, &renderables).join() {
+        for (render, position) in (&renderables, (&positions).maybe()).join() {
             let id = render.sprite_id;
             let sprite = &self.sprite_cache[&id];
-            let offset = SDLPoint::new(
-                ((position.x * 48) + BattleScene::MAP_CORNER_X + 24) as i32,
-                ((position.y * 48) + BattleScene::MAP_CORNER_Y) as i32,
-            );
-            sprite.draw(canvas, offset, &render.sprite_state, frame)?;
+            if let Some(position) = position {
+                let offset = SDLPoint::new(
+                    ((position.x * 48) + BattleScene::MAP_CORNER_X + 24) as i32,
+                    ((position.y * 48) + BattleScene::MAP_CORNER_Y) as i32,
+                );
+                sprite.draw(canvas, offset, &render.sprite_state, frame)?;
+            } else {
+                sprite.draw(canvas, SDLPoint::new(0, 0), &SpriteState::None(), frame)?;
+            }
         }
 
         self.draw_field_overlay(canvas)?;
