@@ -1,6 +1,7 @@
+use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
-use super::RenderComponent;
+use super::{RenderComponent, RenderOrder};
 use crate::clash::PositionComponent;
 
 use sdl2::event::Event;
@@ -33,21 +34,20 @@ impl BattleScene {
         let sprites = SpriteLoader::init(render_context)?;
 
         ecs.create_entity()
-            .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, -1))
-            .build();
-
-        ecs.create_entity()
-            .with(RenderComponent {
-                sprite_id: SpriteKinds::MaleBrownHairBlueBody.into(),
-                sprite_state: CharacterAnimationState::Idle.into(),
-                z_order: 0,
-            })
+            .with(RenderComponent::init_with_char_state(
+                SpriteKinds::MaleBrownHairBlueBody,
+                CharacterAnimationState::Idle,
+            ))
             .with(PositionComponent::init(2, 2))
             .build();
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init(5, 5))
+            .build();
+
+        ecs.create_entity()
+            .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
             .build();
 
         Ok(BattleScene { ecs, sprites })
@@ -73,19 +73,25 @@ impl BattleScene {
         let positions = self.ecs.read_storage::<PositionComponent>();
         let renderables = self.ecs.read_storage::<RenderComponent>();
 
-        for (render, position) in (&renderables, (&positions).maybe()).join() {
-            let id = render.sprite_id;
-            let sprite = &self.sprites.get(id);
-            if let Some(position) = position {
-                let offset = SDLPoint::new(
-                    ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
-                    ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
-                );
-                sprite.draw(canvas, offset, render.sprite_state, frame)?;
-            } else {
-                sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
+        // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
+        for order in RenderOrder::into_enum_iter() {
+            for (render, position) in (&renderables, (&positions).maybe()).join() {
+                if render.order == order {
+                    let id = render.sprite_id;
+                    let sprite = &self.sprites.get(id);
+                    if let Some(position) = position {
+                        let offset = SDLPoint::new(
+                            ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
+                            ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
+                        );
+                        sprite.draw(canvas, offset, render.sprite_state, frame)?;
+                    } else {
+                        sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
+                    }
+                }
             }
         }
+
         Ok(())
     }
 }
