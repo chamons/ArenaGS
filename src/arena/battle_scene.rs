@@ -15,6 +15,10 @@ use crate::after_image::{CharacterAnimationState, RenderContext, SpriteState};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
+const MAP_CORNER_X: u32 = 100;
+const MAP_CORNER_Y: u32 = 100;
+const TILE_SIZE: u32 = 48;
+
 pub struct BattleScene {
     ecs: World,
     sprites: SpriteLoader,
@@ -49,26 +53,39 @@ impl BattleScene {
         Ok(BattleScene { ecs, sprites })
     }
 
-    pub fn run(&mut self) {
-        self.ecs.maintain();
-    }
-
-    const MAP_CORNER_X: u32 = 100;
-    const MAP_CORNER_Y: u32 = 100;
-
     fn draw_field_overlay(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
         for x in 0..13 {
             for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
                 canvas.draw_rect(SDLRect::from((
-                    BattleScene::MAP_CORNER_X as i32 + x * 48,
-                    BattleScene::MAP_CORNER_Y as i32 + y * 48,
-                    48,
-                    48,
+                    (MAP_CORNER_X + x * TILE_SIZE) as i32,
+                    (MAP_CORNER_Y + y * TILE_SIZE) as i32,
+                    TILE_SIZE as u32,
+                    TILE_SIZE as u32,
                 )))?;
             }
         }
 
+        Ok(())
+    }
+
+    fn render_entities(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
+        let positions = self.ecs.read_storage::<PositionComponent>();
+        let renderables = self.ecs.read_storage::<RenderComponent>();
+
+        for (render, position) in (&renderables, (&positions).maybe()).join() {
+            let id = render.sprite_id;
+            let sprite = &self.sprites.get(id);
+            if let Some(position) = position {
+                let offset = SDLPoint::new(
+                    ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
+                    ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
+                );
+                sprite.draw(canvas, offset, &render.sprite_state, frame)?;
+            } else {
+                sprite.draw(canvas, SDLPoint::new(0, 0), &SpriteState::None(), frame)?;
+            }
+        }
         Ok(())
     }
 }
@@ -90,30 +107,16 @@ impl Scene for BattleScene {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        let positions = self.ecs.read_storage::<PositionComponent>();
-        let renderables = self.ecs.read_storage::<RenderComponent>();
-
-        for (render, position) in (&renderables, (&positions).maybe()).join() {
-            let id = render.sprite_id;
-            let sprite = &self.sprites.get(id);
-            if let Some(position) = position {
-                let offset = SDLPoint::new(
-                    ((position.x * 48) + BattleScene::MAP_CORNER_X + 24) as i32,
-                    ((position.y * 48) + BattleScene::MAP_CORNER_Y) as i32,
-                );
-                sprite.draw(canvas, offset, &render.sprite_state, frame)?;
-            } else {
-                sprite.draw(canvas, SDLPoint::new(0, 0), &SpriteState::None(), frame)?;
-            }
-        }
-
+        self.render_entities(canvas, frame)?;
         self.draw_field_overlay(canvas)?;
-        canvas.present();
 
+        canvas.present();
         Ok(())
     }
 
     fn tick(&mut self) -> BoxResult<()> {
+        self.ecs.maintain();
+
         Ok(())
     }
 }

@@ -18,8 +18,9 @@ impl SpriteLoader {
         })
     }
 
-    pub fn get(&self, id: u32) -> &Box<dyn Sprite> {
-        &self.sprite_cache[&id]
+    pub fn get(&self, id: u32) -> &dyn Sprite {
+        // Done so we don't borrow a Box<dyn Sprite>
+        &*self.sprite_cache[&id]
     }
 
     fn load_sprites(render_context: &RenderContext) -> BoxResult<HashMap<u32, Box<dyn Sprite>>> {
