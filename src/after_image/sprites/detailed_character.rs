@@ -25,7 +25,7 @@ pub enum CharacterAnimationState {
     Walk,
 }
 
-pub struct DetailedCharacterSprite {
+pub struct DetailedCharacter {
     attack_one: [Texture; 3],
     attack_two: [Texture; 3],
     bow: [Texture; 3],
@@ -40,8 +40,8 @@ pub struct DetailedCharacterSprite {
     walk: [Texture; 3],
 }
 
-impl DetailedCharacterSprite {
-    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacterSprite> {
+impl DetailedCharacter {
+    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacter> {
         let folder = Path::new(&description.base_folder)
             .join("battle")
             .join(format!("set{}", &description.set))
@@ -50,7 +50,7 @@ impl DetailedCharacterSprite {
             .unwrap()
             .to_string();
 
-        Ok(DetailedCharacterSprite {
+        Ok(DetailedCharacter {
             attack_one: load_set(&folder, description, "atk1", render_context)?,
             attack_two: load_set(&folder, description, "atk2", render_context)?,
             bow: load_set(&folder, description, "bow", render_context)?,
@@ -66,7 +66,7 @@ impl DetailedCharacterSprite {
         })
     }
 
-    fn get_texture(&self, state: CharacterAnimationState, frame: u64) -> &Texture {
+    fn get_texture(&self, state: &CharacterAnimationState, frame: u64) -> &Texture {
         let offset = super::sprite::get_animation_frame(frame);
 
         match state {
@@ -86,8 +86,8 @@ impl DetailedCharacterSprite {
     }
 }
 
-impl Sprite for DetailedCharacterSprite {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: SpriteState, frame: u64) -> BoxResult<()> {
+impl Sprite for DetailedCharacter {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: &SpriteState, frame: u64) -> BoxResult<()> {
         let state = match state {
             SpriteState::DetailedCharacter(s) => Ok(s),
             _ => Err("Wrong SpriteState type"),

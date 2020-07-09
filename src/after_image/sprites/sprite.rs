@@ -8,11 +8,11 @@ use sdl2::render::Texture;
 
 pub enum SpriteState {
     DetailedCharacter(super::CharacterAnimationState),
-    LargeEnemy(),
+    None(),
 }
 
 pub trait Sprite {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: SpriteState, frame: u64) -> BoxResult<()>;
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: &SpriteState, frame: u64) -> BoxResult<()>;
 }
 
 pub struct SpriteFolderDescription {
