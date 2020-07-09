@@ -9,4 +9,4 @@ mod sprites;
 
 pub use image_loader::load_image;
 pub use render_context::RenderContext;
-pub use sprites::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription, SpriteState};
+pub use sprites::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription};

@@ -11,7 +11,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::{SpriteKinds, SpriteLoader};
 
-use crate::after_image::{CharacterAnimationState, RenderContext, SpriteState};
+use crate::after_image::{CharacterAnimationState, RenderContext};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
@@ -39,7 +39,7 @@ impl BattleScene {
         ecs.create_entity()
             .with(RenderComponent {
                 sprite_id: SpriteKinds::MaleBrownHairBlueBody.into(),
-                sprite_state: SpriteState::DetailedCharacter(CharacterAnimationState::Idle),
+                sprite_state: CharacterAnimationState::Idle.into(),
                 z_order: 0,
             })
             .with(PositionComponent::init(2, 2))
@@ -81,9 +81,9 @@ impl BattleScene {
                     ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
                     ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
                 );
-                sprite.draw(canvas, offset, &render.sprite_state, frame)?;
+                sprite.draw(canvas, offset, render.sprite_state, frame)?;
             } else {
-                sprite.draw(canvas, SDLPoint::new(0, 0), &SpriteState::None(), frame)?;
+                sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
             }
         }
         Ok(())
