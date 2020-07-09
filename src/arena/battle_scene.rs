@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-use std::path::Path;
-
-use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
 use super::RenderComponent;
@@ -13,15 +9,15 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::SpriteKinds;
+use super::{SpriteKinds, SpriteLoader};
 
-use crate::after_image::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, RenderContext, Sprite, SpriteFolderDescription, SpriteState};
+use crate::after_image::{CharacterAnimationState, RenderContext, SpriteState};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
     ecs: World,
-    sprite_cache: HashMap<u32, Box<dyn Sprite>>,
+    sprites: SpriteLoader,
 }
 
 impl BattleScene {
@@ -30,7 +26,7 @@ impl BattleScene {
         ecs.register::<PositionComponent>();
         ecs.register::<RenderComponent>();
 
-        let sprite_cache = BattleScene::load_sprites(&render_context)?;
+        let sprites = SpriteLoader::init(render_context)?;
 
         ecs.create_entity()
             .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, -1))
@@ -50,38 +46,11 @@ impl BattleScene {
             .with(PositionComponent::init(5, 5))
             .build();
 
-        Ok(BattleScene { ecs, sprite_cache })
+        Ok(BattleScene { ecs, sprites })
     }
 
     pub fn run(&mut self) {
         self.ecs.maintain();
-    }
-
-    fn load_sprites(render_context: &RenderContext) -> BoxResult<HashMap<u32, Box<dyn Sprite>>> {
-        let folder = Path::new("images");
-
-        let mut sprites: HashMap<u32, Box<dyn Sprite>> = HashMap::new();
-        for s in SpriteKinds::into_enum_iter() {
-            let sprite: Box<dyn Sprite> = match s {
-                SpriteKinds::BeachBackground => Box::new(Background::init(render_context, "beach")?),
-                SpriteKinds::MaleBrownHairBlueBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
-                SpriteKinds::MaleBlueHairRedBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
-                SpriteKinds::MonsterBirdBrown => Box::new(LargeEnemy::init(
-                    render_context,
-                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
-                )?),
-                SpriteKinds::MonsterBirdBlue => Box::new(LargeEnemy::init(
-                    render_context,
-                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
-                )?),
-                SpriteKinds::MonsterBirdRed => Box::new(LargeEnemy::init(
-                    render_context,
-                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
-                )?),
-            };
-            sprites.insert(s.into(), sprite);
-        }
-        Ok(sprites)
     }
 
     const MAP_CORNER_X: u32 = 100;
@@ -126,7 +95,7 @@ impl Scene for BattleScene {
 
         for (render, position) in (&renderables, (&positions).maybe()).join() {
             let id = render.sprite_id;
-            let sprite = &self.sprite_cache[&id];
+            let sprite = &self.sprites.get(id);
             if let Some(position) = position {
                 let offset = SDLPoint::new(
                     ((position.x * 48) + BattleScene::MAP_CORNER_X + 24) as i32,
