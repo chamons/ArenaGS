@@ -24,12 +24,12 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
 
                     if !dest_file.exists() {
                         if !created_folder {
-                            print(format!("Creating {}", dest));
+                            //print(format!("Creating {}", dest));
                             fs::create_dir_all(dest).expect("Unable to create output dir");
                             created_folder = true;
                         }
                         // Joys, no way to do this easily: https://github.com/rust-lang/cargo/issues/5305
-                        print(format!("Copy to {}", dest_file.to_str().unwrap()));
+                        //print(format!("Copy to {}", dest_file.to_str().unwrap()));
                         fs::copy(path, dest_file)?;
                     }
                 }
