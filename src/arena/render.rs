@@ -3,8 +3,6 @@ use num_enum::IntoPrimitive;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use crate::after_image::SpriteState;
-
 #[allow(dead_code)]
 #[derive(Hash, PartialEq, Eq, IntoEnumIterator, IntoPrimitive)]
 #[repr(u32)]
@@ -22,7 +20,7 @@ pub enum SpriteKinds {
 #[derive(Component)]
 pub struct RenderComponent {
     pub sprite_id: u32,
-    pub sprite_state: SpriteState,
+    pub sprite_state: u32,
     pub z_order: i32,
 }
 
@@ -34,7 +32,7 @@ impl RenderComponent {
     pub fn init_with_order(sprite_kind: SpriteKinds, z_order: i32) -> RenderComponent {
         RenderComponent {
             sprite_id: sprite_kind.into(),
-            sprite_state: SpriteState::None(),
+            sprite_state: 0,
             z_order,
         }
     }

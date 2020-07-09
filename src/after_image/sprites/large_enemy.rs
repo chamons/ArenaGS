@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::{Sprite, SpriteFolderDescription, SpriteState};
+use super::{Sprite, SpriteFolderDescription};
 use crate::after_image::{load_image, RenderContext};
 use crate::atlas::BoxResult;
 
@@ -28,7 +28,7 @@ impl LargeEnemy {
 }
 
 impl Sprite for LargeEnemy {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, _: &SpriteState, frame: u64) -> BoxResult<()> {
+    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, _: u32, frame: u64) -> BoxResult<()> {
         let offset = super::sprite::get_animation_frame(frame);
 
         let mut screen_rect = SDLRect::from_center(screen_position, 122, 96);
