@@ -14,7 +14,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 #[allow(dead_code)]
-#[derive(IntoPrimitive, FromPrimitive)]
+#[derive(Clone, Copy, IntoPrimitive, FromPrimitive)]
 #[repr(u32)]
 pub enum CharacterAnimationState {
     AttackOne,

@@ -1,6 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
+use crate::after_image::CharacterAnimationState;
 use crate::clash::Point;
 
 #[derive(PartialEq)]
@@ -16,7 +17,14 @@ impl FPoint {
 }
 
 pub enum Animation {
-    Position { start: Point, end: Point },
+    Position {
+        start: Point,
+        end: Point,
+    },
+    CharacterState {
+        now: CharacterAnimationState,
+        done: CharacterAnimationState,
+    },
 }
 
 #[derive(Component)]
@@ -38,6 +46,14 @@ impl AnimationComponent {
         }
     }
 
+    pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, ending: u64) -> AnimationComponent {
+        AnimationComponent {
+            animation: Animation::CharacterState { now, done },
+            beginning,
+            ending,
+        }
+    }
+
     pub fn is_complete(&self, current: u64) -> bool {
         current > self.ending
     }
@@ -54,6 +70,14 @@ impl AnimationComponent {
                     Some(FPoint::init(x, y))
                 }
             }
+            _ => None,
+        }
+    }
+
+    pub fn current_character_state(&self) -> Option<&CharacterAnimationState> {
+        match &self.animation {
+            Animation::CharacterState { now, done: _ } => Some(now),
+            _ => None,
         }
     }
 }

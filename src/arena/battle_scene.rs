@@ -41,6 +41,12 @@ impl BattleScene {
             ))
             .with(PositionComponent::init(2, 2))
             .with(AnimationComponent::movement(Point::init(2, 2), Point::init(3, 3), 0, 80))
+            .with(AnimationComponent::sprite_state(
+                CharacterAnimationState::Bow,
+                CharacterAnimationState::Idle,
+                0,
+                40,
+            ))
             .build();
 
         ecs.create_entity()
@@ -85,7 +91,8 @@ impl BattleScene {
                     let sprite = &self.sprites.get(id);
                     if let Some(position) = position {
                         let offset = get_render_position(position, animation, frame);
-                        sprite.draw(canvas, offset, render.sprite_state, frame)?;
+                        let state = get_render_sprite_state(render, animation);
+                        sprite.draw(canvas, offset, state, frame)?;
                     } else {
                         sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
                     }
@@ -95,6 +102,15 @@ impl BattleScene {
 
         Ok(())
     }
+}
+
+fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
+    if let Some(animation) = animation {
+        if let Some(state) = animation.current_character_state() {
+            return (*state).into();
+        }
+    }
+    render.sprite_state
 }
 
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
@@ -155,6 +171,7 @@ impl Scene for BattleScene {
                         position.y = end.y;
                     }
                 }
+                _ => {}
             }
         }
         for c in completed {
