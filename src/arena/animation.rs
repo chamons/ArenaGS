@@ -15,15 +15,15 @@ impl FPoint {
     }
 }
 
-enum Animation {
+pub enum Animation {
     Position { start: Point, end: Point },
 }
 
 #[derive(Component)]
 pub struct AnimationComponent {
-    animation: Animation,
-    beginning: u64,
-    ending: u64,
+    pub animation: Animation,
+    pub beginning: u64,
+    pub ending: u64,
 }
 
 impl AnimationComponent {

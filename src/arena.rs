@@ -5,7 +5,8 @@ mod battle_scene;
 mod render;
 mod sprite_loader;
 
-use animation::AnimationComponent;
-pub use battle_scene::BattleScene;
+use animation::{Animation, AnimationComponent};
 use render::{RenderComponent, RenderOrder, SpriteKinds};
 use sprite_loader::SpriteLoader;
+
+pub use battle_scene::BattleScene;

@@ -1,7 +1,7 @@
 use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
-use super::{AnimationComponent, RenderComponent, RenderOrder};
+use super::{Animation, AnimationComponent, RenderComponent, RenderOrder};
 use crate::clash::{Point, PositionComponent};
 
 use sdl2::event::Event;
@@ -140,12 +140,21 @@ impl Scene for BattleScene {
         self.ecs.maintain();
         let entities = self.ecs.read_resource::<specs::world::EntitiesRes>();
         let mut animations = self.ecs.write_storage::<AnimationComponent>();
+        let mut positions = self.ecs.write_storage::<PositionComponent>();
 
-        // Remove completed animations
+        // Remove completed animations, applying their change
         let mut completed = vec![];
-        for (entity, animation) in (&entities, &animations).join() {
+        for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
             if animation.is_complete(frame) {
                 completed.push(entity);
+            }
+            match &animation.animation {
+                Animation::Position { start: _, end } => {
+                    if let Some(position) = position {
+                        position.x = end.x;
+                        position.y = end.y;
+                    }
+                }
             }
         }
         for c in completed {
