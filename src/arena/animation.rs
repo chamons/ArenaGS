@@ -77,7 +77,8 @@ impl AnimationComponent {
     pub fn current_character_state(&self) -> Option<&CharacterAnimationState> {
         match &self.animation {
             Animation::CharacterState { now, done: _ } => Some(now),
-            _ => None,
+            // Bit of a hack since we can't have multiple animations stacked
+            Animation::Position { start: _, end: _ } => Some(&CharacterAnimationState::Walk),
         }
     }
 }

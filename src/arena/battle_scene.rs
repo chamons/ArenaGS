@@ -1,12 +1,14 @@
 use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
-use super::{Animation, AnimationComponent, RenderComponent, RenderOrder};
+use super::{Animation, AnimationComponent, FieldComponent, RenderComponent, RenderOrder};
 use crate::clash::{Point, PositionComponent};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
+use sdl2::render::BlendMode;
+
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
@@ -31,6 +33,7 @@ impl BattleScene {
         ecs.register::<PositionComponent>();
         ecs.register::<RenderComponent>();
         ecs.register::<AnimationComponent>();
+        ecs.register::<FieldComponent>();
 
         let sprites = SpriteLoader::init(render_context)?;
 
@@ -59,10 +62,19 @@ impl BattleScene {
             .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
             .build();
 
+        ecs.create_entity()
+            .with(PositionComponent::init(4, 7))
+            .with(FieldComponent::init(255, 0, 0))
+            .build();
+        ecs.create_entity()
+            .with(PositionComponent::init(2, 2))
+            .with(FieldComponent::init(0, 0, 255))
+            .build();
+
         Ok(BattleScene { ecs, sprites })
     }
 
-    fn draw_field_overlay(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+    fn draw_grid(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
         for x in 0..13 {
             for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
@@ -98,6 +110,25 @@ impl BattleScene {
                     }
                 }
             }
+        }
+
+        Ok(())
+    }
+
+    fn render_fields(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+        let positions = self.ecs.read_storage::<PositionComponent>();
+        let fields = self.ecs.read_storage::<FieldComponent>();
+
+        for (position, field) in (&positions, &fields).join() {
+            let field_rect = SDLRect::new(
+                ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + 1) as i32,
+                ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y + 1) as i32,
+                TILE_SIZE - 2,
+                TILE_SIZE - 2,
+            );
+            canvas.set_draw_color(field.color);
+            canvas.set_blend_mode(BlendMode::Blend);
+            canvas.fill_rect(field_rect)?;
         }
 
         Ok(())
@@ -146,7 +177,8 @@ impl Scene for BattleScene {
         canvas.clear();
 
         self.render_entities(canvas, frame)?;
-        self.draw_field_overlay(canvas)?;
+        self.draw_grid(canvas)?;
+        self.render_fields(canvas)?;
 
         canvas.present();
         Ok(())
