@@ -2,13 +2,15 @@
 // The scene and UX
 mod animation;
 mod battle_scene;
+mod components;
 mod field;
 mod render;
 mod sprite_loader;
 
 use animation::{Animation, AnimationComponent};
+use components::{CharacterInfoComponent, PlayerComponent, PositionComponent};
+use field::FieldComponent;
 use render::{RenderComponent, RenderOrder, SpriteKinds};
 use sprite_loader::SpriteLoader;
-use field::FieldComponent;
 
 pub use battle_scene::BattleScene;

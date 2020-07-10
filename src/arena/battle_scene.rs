@@ -1,8 +1,8 @@
 use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
-use super::{Animation, AnimationComponent, FieldComponent, RenderComponent, RenderOrder};
-use crate::clash::{Point, PositionComponent};
+use super::{Animation, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder};
+use crate::clash::{Character, Point};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -14,7 +14,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::{SpriteKinds, SpriteLoader};
 
-use crate::after_image::{CharacterAnimationState, RenderContext};
+use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
@@ -34,6 +34,8 @@ impl BattleScene {
         ecs.register::<RenderComponent>();
         ecs.register::<AnimationComponent>();
         ecs.register::<FieldComponent>();
+        ecs.register::<PlayerComponent>();
+        ecs.register::<CharacterInfoComponent>();
 
         let sprites = SpriteLoader::init(render_context)?;
 
@@ -43,13 +45,14 @@ impl BattleScene {
                 CharacterAnimationState::Idle,
             ))
             .with(PositionComponent::init(2, 2))
-            .with(AnimationComponent::movement(Point::init(2, 2), Point::init(3, 3), 0, 80))
             .with(AnimationComponent::sprite_state(
                 CharacterAnimationState::Bow,
                 CharacterAnimationState::Idle,
                 0,
                 40,
             ))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .with(PlayerComponent {})
             .build();
 
         ecs.create_entity()
@@ -74,7 +77,7 @@ impl BattleScene {
         Ok(BattleScene { ecs, sprites })
     }
 
-    fn draw_grid(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+    fn draw_grid(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
         for x in 0..13 {
             for y in 0..13 {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
@@ -90,7 +93,7 @@ impl BattleScene {
         Ok(())
     }
 
-    fn render_entities(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
+    fn render_entities(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         let positions = self.ecs.read_storage::<PositionComponent>();
         let renderables = self.ecs.read_storage::<RenderComponent>();
         let animations = self.ecs.read_storage::<AnimationComponent>();
@@ -115,7 +118,7 @@ impl BattleScene {
         Ok(())
     }
 
-    fn render_fields(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) -> BoxResult<()> {
+    fn render_fields(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let positions = self.ecs.read_storage::<PositionComponent>();
         let fields = self.ecs.read_storage::<FieldComponent>();
 
@@ -159,6 +162,8 @@ fn get_render_position(position: &PositionComponent, animation: Option<&Animatio
     )
 }
 
+fn render_character_info(canvas: &mut RenderCanvas) {}
+
 impl Scene for BattleScene {
     fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
         match event {
@@ -172,13 +177,14 @@ impl Scene for BattleScene {
         EventStatus::Continue
     }
 
-    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
+    fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
+        self.render_fields(canvas)?;
         self.render_entities(canvas, frame)?;
         self.draw_grid(canvas)?;
-        self.render_fields(canvas)?;
+        render_character_info(canvas);
 
         canvas.present();
         Ok(())

@@ -1,13 +1,13 @@
 use std::path::Path;
 
-use crate::after_image::{load_image, RenderContext};
+use crate::after_image::{load_image, RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::render::Texture;
 
 pub trait Sprite {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()>;
+    fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()>;
 }
 
 pub struct SpriteFolderDescription {

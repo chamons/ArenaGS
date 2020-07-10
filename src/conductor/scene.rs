@@ -3,6 +3,7 @@ use sdl2::keyboard::Keycode;
 
 use super::EventStatus;
 use crate::atlas::BoxResult;
+use crate::after_image::RenderCanvas;
 
 pub trait Scene {
     fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
@@ -17,7 +18,7 @@ pub trait Scene {
         EventStatus::Continue
     }
 
-    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, _frame: u64) -> BoxResult<()> {
+    fn render(&self, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.clear();
         Ok(())
     }
