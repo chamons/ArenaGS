@@ -22,7 +22,7 @@ pub trait Scene {
         Ok(())
     }
 
-    fn tick(&mut self) -> BoxResult<()> {
+    fn tick(&mut self, _frame: u64) -> BoxResult<()> {
         Ok(())
     }
 }

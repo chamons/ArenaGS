@@ -1,8 +1,8 @@
 use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
-use super::{RenderComponent, RenderOrder};
-use crate::clash::PositionComponent;
+use super::{AnimationComponent, RenderComponent, RenderOrder};
+use crate::clash::{Point, PositionComponent};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -30,6 +30,7 @@ impl BattleScene {
         let mut ecs = World::new();
         ecs.register::<PositionComponent>();
         ecs.register::<RenderComponent>();
+        ecs.register::<AnimationComponent>();
 
         let sprites = SpriteLoader::init(render_context)?;
 
@@ -39,11 +40,13 @@ impl BattleScene {
                 CharacterAnimationState::Idle,
             ))
             .with(PositionComponent::init(2, 2))
+            .with(AnimationComponent::movement(Point::init(2, 2), Point::init(3, 3), 0, 80))
             .build();
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init(5, 5))
+            .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
             .build();
 
         ecs.create_entity()
@@ -72,18 +75,16 @@ impl BattleScene {
     fn render_entities(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, frame: u64) -> BoxResult<()> {
         let positions = self.ecs.read_storage::<PositionComponent>();
         let renderables = self.ecs.read_storage::<RenderComponent>();
+        let animations = self.ecs.read_storage::<AnimationComponent>();
 
         // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
         for order in RenderOrder::into_enum_iter() {
-            for (render, position) in (&renderables, (&positions).maybe()).join() {
+            for (render, position, animation) in (&renderables, (&positions).maybe(), (&animations).maybe()).join() {
                 if render.order == order {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
                     if let Some(position) = position {
-                        let offset = SDLPoint::new(
-                            ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
-                            ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
-                        );
+                        let offset = get_render_position(position, animation, frame);
                         sprite.draw(canvas, offset, render.sprite_state, frame)?;
                     } else {
                         sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
@@ -94,6 +95,21 @@ impl BattleScene {
 
         Ok(())
     }
+}
+
+fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
+    if let Some(animation) = animation {
+        if let Some(animation_point) = animation.current_position(frame) {
+            return SDLPoint::new(
+                ((animation_point.x * TILE_SIZE as f32) + MAP_CORNER_X as f32 + (TILE_SIZE as u32 / 2) as f32) as i32,
+                ((animation_point.y * TILE_SIZE as f32) + MAP_CORNER_Y as f32) as i32,
+            );
+        }
+    }
+    SDLPoint::new(
+        ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
+        ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
+    )
 }
 
 impl Scene for BattleScene {
@@ -120,9 +136,21 @@ impl Scene for BattleScene {
         Ok(())
     }
 
-    fn tick(&mut self) -> BoxResult<()> {
+    fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
+        let entities = self.ecs.read_resource::<specs::world::EntitiesRes>();
+        let mut animations = self.ecs.write_storage::<AnimationComponent>();
 
+        // Remove completed animations
+        let mut completed = vec![];
+        for (entity, animation) in (&entities, &animations).join() {
+            if animation.is_complete(frame) {
+                completed.push(entity);
+            }
+        }
+        for c in completed {
+            animations.remove(c);
+        }
         Ok(())
     }
 }

@@ -38,7 +38,7 @@ impl Director {
                 }
             }
 
-            self.scene.tick()?;
+            self.scene.tick(frame)?;
 
             self.scene.render(&mut render_context.canvas, frame)?;
 
