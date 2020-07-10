@@ -1,5 +1,16 @@
 use sdl2::image::{self, InitFlag};
 
+pub struct FontContext {
+    pub ttf_context: sdl2::ttf::Sdl2TtfContext,
+}
+
+impl FontContext {
+    pub fn initialize() -> Result<FontContext, String> {
+        let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
+        Ok(FontContext { ttf_context })
+    }
+}
+
 pub struct RenderContext {
     _image_context: sdl2::image::Sdl2ImageContext,
     pub canvas: sdl2::render::Canvas<sdl2::video::Window>,

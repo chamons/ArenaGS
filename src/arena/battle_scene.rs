@@ -14,7 +14,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::{SpriteKinds, SpriteLoader};
 
-use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext};
+use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene};
 
@@ -22,13 +22,14 @@ const MAP_CORNER_X: u32 = 100;
 const MAP_CORNER_Y: u32 = 100;
 const TILE_SIZE: u32 = 48;
 
-pub struct BattleScene {
+pub struct BattleScene<'a> {
     ecs: World,
     sprites: SpriteLoader,
+    text: &'a TextRenderer<'a>,
 }
 
-impl BattleScene {
-    pub fn init(render_context: &RenderContext) -> BoxResult<BattleScene> {
+impl<'a> BattleScene<'a> {
+    pub fn init(render_context: &RenderContext, text: &'a TextRenderer<'a>) -> BoxResult<BattleScene<'a>> {
         let mut ecs = World::new();
         ecs.register::<PositionComponent>();
         ecs.register::<RenderComponent>();
@@ -74,7 +75,7 @@ impl BattleScene {
             .with(FieldComponent::init(0, 0, 255))
             .build();
 
-        Ok(BattleScene { ecs, sprites })
+        Ok(BattleScene { ecs, sprites, text })
     }
 
     fn draw_grid(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
@@ -136,6 +137,12 @@ impl BattleScene {
 
         Ok(())
     }
+
+    fn render_character_info(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
+        self.text.render_text("Hello World", 800, 100, canvas)?;
+
+        Ok(())
+    }
 }
 
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
@@ -162,9 +169,7 @@ fn get_render_position(position: &PositionComponent, animation: Option<&Animatio
     )
 }
 
-fn render_character_info(canvas: &mut RenderCanvas) {}
-
-impl Scene for BattleScene {
+impl<'a> Scene for BattleScene<'a> {
     fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
         match event {
             Event::Quit { .. }
@@ -184,7 +189,7 @@ impl Scene for BattleScene {
         self.render_fields(canvas)?;
         self.render_entities(canvas, frame)?;
         self.draw_grid(canvas)?;
-        render_character_info(canvas);
+        self.render_character_info(canvas)?;
 
         canvas.present();
         Ok(())

@@ -61,4 +61,8 @@ fn main() {
     if map_path.exists() {
         copy_all_with_extension(&map_path, &dest_dir.join("maps").to_str().unwrap(), "*").expect("Unable to copy maps");
     }
+    let font_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join("fonts");
+    if map_path.exists() {
+        copy_all_with_extension(&font_path, &dest_dir.join("fonts").to_str().unwrap(), "*").expect("Unable to copy fonts");
+    }
 }

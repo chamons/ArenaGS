@@ -8,7 +8,9 @@ pub type RenderCanvas = sdl2::render::Canvas<sdl2::video::Window>;
 mod image_loader;
 mod render_context;
 mod sprites;
+mod text_renderer;
 
 pub use image_loader::load_image;
-pub use render_context::RenderContext;
+pub use render_context::{FontContext, RenderContext};
 pub use sprites::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription};
+pub use text_renderer::TextRenderer;

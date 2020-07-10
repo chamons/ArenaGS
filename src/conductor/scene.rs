@@ -2,8 +2,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
 use super::EventStatus;
-use crate::atlas::BoxResult;
 use crate::after_image::RenderCanvas;
+use crate::atlas::BoxResult;
 
 pub trait Scene {
     fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
