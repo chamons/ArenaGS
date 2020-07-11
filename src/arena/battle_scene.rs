@@ -186,9 +186,9 @@ impl<'a> Scene for BattleScene<'a> {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        self.render_fields(canvas)?;
         self.render_entities(canvas, frame)?;
         self.draw_grid(canvas)?;
+        self.render_fields(canvas)?;
         self.render_character_info(canvas)?;
 
         canvas.present();
