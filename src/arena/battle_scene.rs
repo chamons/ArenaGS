@@ -9,7 +9,7 @@ use sdl2::pixels::Color;
 
 use sdl2::rect::Point as SDLPoint;
 
-use super::views::{InfoBarView, LogView, MapView, SkillBarView, View};
+use super::views::{InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
 use super::SpriteKinds;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -30,6 +30,9 @@ impl<'a> BattleScene<'a> {
         ecs.register::<FieldComponent>();
         ecs.register::<PlayerComponent>();
         ecs.register::<CharacterInfoComponent>();
+        ecs.register::<LogComponent>();
+
+        ecs.insert(LogComponent::init());
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
@@ -75,6 +78,11 @@ impl<'a> BattleScene<'a> {
                 1i32 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32,
             ))?),
         ];
+
+        {
+            let mut log = ecs.write_resource::<LogComponent>();
+            log.add("Hello World");
+        }
 
         Ok(BattleScene { ecs, views })
     }

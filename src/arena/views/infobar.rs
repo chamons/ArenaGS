@@ -17,7 +17,7 @@ impl<'a> InfoBarView<'a> {
         Ok(InfoBarView { position, text })
     }
     fn render_character_info(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        self.text.render_text("Hello World", self.position.x, self.position.y, canvas)?;
+        self.text.render_text("Info Bar", self.position.x, self.position.y, canvas)?;
 
         Ok(())
     }

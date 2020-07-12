@@ -13,6 +13,6 @@ pub trait View {
 }
 
 pub use infobar::InfoBarView;
-pub use log::LogView;
+pub use log::{LogComponent, LogView};
 pub use map::{MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;
