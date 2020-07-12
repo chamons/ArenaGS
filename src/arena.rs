@@ -6,8 +6,9 @@ mod components;
 mod field;
 mod render;
 mod sprite_loader;
+mod views;
 
-use animation::{Animation, AnimationComponent};
+use animation::{tick_animations, AnimationComponent};
 use components::{CharacterInfoComponent, PlayerComponent, PositionComponent};
 use field::FieldComponent;
 use render::{RenderComponent, RenderOrder, SpriteKinds};
