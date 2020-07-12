@@ -101,14 +101,11 @@ pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
         if animation.is_complete(frame) {
             completed.push(entity);
         }
-        match &animation.animation {
-            Animation::Position { start: _, end } => {
-                if let Some(position) = position {
-                    position.x = end.x;
-                    position.y = end.y;
-                }
+        if let Animation::Position { start: _, end } = &animation.animation {
+            if let Some(position) = position {
+                position.x = end.x;
+                position.y = end.y;
             }
-            _ => {}
         }
     }
     for c in completed {
