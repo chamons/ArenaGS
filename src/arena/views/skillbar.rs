@@ -1,5 +1,4 @@
 use sdl2::rect::Point as SDLPoint;
-use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::View;

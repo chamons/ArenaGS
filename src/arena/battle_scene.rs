@@ -9,7 +9,7 @@ use sdl2::pixels::Color;
 
 use sdl2::rect::Point as SDLPoint;
 
-use super::views::{MapView, SkillBarView, View};
+use super::views::{InfoBarView, MapView, SkillBarView, View};
 use super::SpriteKinds;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -18,12 +18,11 @@ use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
     ecs: World,
-    text: &'a TextRenderer<'a>,
-    views: Vec<Box<dyn View>>,
+    views: Vec<Box<dyn View + 'a>>,
 }
 
 impl<'a> BattleScene<'a> {
-    pub fn init(render_context: &RenderContext, text: &'a TextRenderer<'a>) -> BoxResult<BattleScene<'a>> {
+    pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
         let mut ecs = World::new();
         ecs.register::<PositionComponent>();
         ecs.register::<RenderComponent>();
@@ -69,16 +68,11 @@ impl<'a> BattleScene<'a> {
 
         let views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(render_context)?),
+            Box::from(InfoBarView::init(SDLPoint::new(800, 100), text)?),
             Box::from(SkillBarView::init(SDLPoint::new(0, 1i32 + super::views::TILE_SIZE as i32 * 13i32))?),
         ];
 
-        Ok(BattleScene { ecs, text, views })
-    }
-
-    fn render_character_info(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        self.text.render_text("Hello World", 800, 100, canvas)?;
-
-        Ok(())
+        Ok(BattleScene { ecs, views })
     }
 }
 
@@ -99,7 +93,6 @@ impl<'a> Scene for BattleScene<'a> {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        self.render_character_info(canvas)?;
         for view in self.views.iter() {
             view.render(&self.ecs, canvas, frame)?;
         }
