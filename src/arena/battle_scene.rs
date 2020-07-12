@@ -69,7 +69,10 @@ impl<'a> BattleScene<'a> {
         let views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(render_context)?),
             Box::from(InfoBarView::init(SDLPoint::new(800, 100), text)?),
-            Box::from(SkillBarView::init(SDLPoint::new(0, 1i32 + super::views::TILE_SIZE as i32 * 13i32))?),
+            Box::from(SkillBarView::init(SDLPoint::new(
+                0,
+                1i32 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32,
+            ))?),
         ];
 
         Ok(BattleScene { ecs, views })

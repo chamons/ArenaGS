@@ -12,5 +12,5 @@ pub trait View {
 }
 
 pub use infobar::InfoBarView;
-pub use map::{MapView, TILE_SIZE};
+pub use map::{MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;

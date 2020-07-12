@@ -22,7 +22,7 @@ impl<'a> InfoBarView<'a> {
 }
 
 impl<'a> View for InfoBarView<'a> {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         self.render_character_info(canvas)?;
         Ok(())
     }

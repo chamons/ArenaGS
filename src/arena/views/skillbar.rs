@@ -1,4 +1,5 @@
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::View;
@@ -16,7 +17,8 @@ impl SkillBarView {
 }
 
 impl View for SkillBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 800, 44))?;
         Ok(())
     }
 }
