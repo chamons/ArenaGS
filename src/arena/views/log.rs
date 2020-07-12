@@ -71,6 +71,22 @@ impl LogComponent {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn normal_get() {
+        let component = LogComponent {
+            logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+        };
+        let output = component.get(0, 5);
+        assert_eq!(output.len(), 2);
+        let output = component.get(2, 1);
+        assert_eq!(output.len(), 1);
+        assert_eq!(output[0], "3".to_string());
+        let output = component.get(1, 2);
+        assert_eq!(output.len(), 2);
+        assert_eq!(output[1], "3".to_string());
+    }
+
     #[test]
     fn get_zero() {
         let component = LogComponent {
@@ -78,28 +94,6 @@ mod tests {
         };
         let output = component.get(2, 0);
         assert_eq!(output.len(), 0);
-    }
-
-    #[test]
-    fn bunch_from_zero() {
-        let component = LogComponent {
-            logs: vec!["1".to_string(), "2".to_string()],
-        };
-        let output = component.get(0, 5);
-        assert_eq!(output.len(), 2);
-    }
-
-    #[test]
-    fn normal_get() {
-        let component = LogComponent {
-            logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
-        };
-        let output = component.get(2, 1);
-        assert_eq!(output.len(), 1);
-        assert_eq!(output[0], "3".to_string());
-        let output = component.get(1, 2);
-        assert_eq!(output.len(), 2);
-        assert_eq!(output[1], "3".to_string());
     }
 
     #[test]
