@@ -18,7 +18,7 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
             copy_all_with_extension(&path, Path::new(&dest).join(path.file_name().unwrap()).to_str().unwrap(), extension)?;
         } else if let Some(file_name) = path.file_name() {
             if let Some(file_extension) = path.extension() {
-                if file_extension == extension || extension == "*" {
+                if file_extension.to_str().unwrap().to_ascii_lowercase() == extension || extension == "*" {
                     let dest_file = Path::new(&dest).join(file_name);
                     //println!("{}", format!("cargo:rerun-if-changed={}", path.to_str().unwrap()));
 
@@ -53,7 +53,7 @@ fn main() {
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap()));
     }
 
-    for (folder, extension) in vec![("images", "png"), ("maps", "*"), ("fonts", "*)"), ("icons", "png")] {
+    for (folder, extension) in vec![("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png")] {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join(folder);
         if path.exists() {
             copy_all_with_extension(&path, &dest_dir.join(folder).to_str().unwrap(), extension).expect(&format!("Unable to copy {}", folder).to_string());

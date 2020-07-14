@@ -1,6 +1,7 @@
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
+use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::super::IconLoader;
@@ -11,27 +12,59 @@ use crate::atlas::BoxResult;
 pub struct SkillBarView {
     position: SDLPoint,
     views: Vec<Box<dyn View>>,
-    icons: IconLoader,
 }
+
+const BORDER_WIDTH: i32 = 5;
+const ICON_SIZE: i32 = 44;
+const ICON_COUNT: i32 = 15;
 
 impl SkillBarView {
     pub fn init(render_context: &RenderContext, position: SDLPoint) -> BoxResult<SkillBarView> {
         let mut views: Vec<Box<dyn View>> = Vec::with_capacity(15);
-        for i in 0..15 {
-            let view = SkillBarItemView::init(SDLPoint::new(6 + position.x + 50 * i, position.y + SKILL_BAR_BORDER_Y as i32), i as u32)?;
+        let icons = IconLoader::init(render_context, "spell")?;
+        for i in 0..ICON_COUNT {
+            let image = icons.get(render_context, test_skill_name(i))?;
+            let view = SkillBarItemView::init(
+                SDLPoint::new(BORDER_WIDTH + position.x + (ICON_SIZE + BORDER_WIDTH) * i, position.y + BORDER_WIDTH + 1),
+                i as u32,
+                image,
+            )?;
             views.push(Box::from(view));
         }
-        let icons = IconLoader::init(render_context)?;
-        Ok(SkillBarView { position, views, icons })
+        Ok(SkillBarView { position, views })
     }
 }
 
-const SKILL_BAR_BORDER_Y: u32 = 5;
+fn test_skill_name(i: i32) -> &'static str {
+    match i {
+        0 => "SpellBook01_26.png",
+        1 => "SpellBook01_07.png",
+        2 => "SpellBook06_22.png",
+        3 => "SpellBook06_118.png",
+        4 => "SpellBookPage09_41.png",
+        5 => "SpellBookPage09_06.png",
+        6 => "SpellBook03_59.png",
+        7 => "SpellBook06_05.png",
+        8 => "SpellBookPage09_79.png",
+        9 => "SpellBookPage09_112.png",
+        10 => "SpellBookPage09_95.PNG",
+        11 => "SpellBook06_92.png",
+        12 => "SpellBook03_41.png",
+        13 => "SpellBook03_46.png",
+        14 => "SpellBook03_55.png",
+        _ => "en_craft_80.png",
+    }
+}
 
 impl View for SkillBarView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
-        canvas.set_draw_color(Color::from((35, 35, 35)));
-        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 50 * 15 + 6, 44 + SKILL_BAR_BORDER_Y * 2))?;
+        canvas.set_draw_color(Color::from((22, 22, 22)));
+        canvas.fill_rect(SDLRect::new(
+            self.position.x,
+            self.position.y,
+            ((ICON_SIZE + BORDER_WIDTH) * ICON_COUNT + BORDER_WIDTH) as u32,
+            (ICON_SIZE + BORDER_WIDTH * 2) as u32,
+        ))?;
 
         for v in self.views.iter() {
             v.render(ecs, canvas, frame)?;
@@ -42,20 +75,21 @@ impl View for SkillBarView {
 }
 
 pub struct SkillBarItemView {
-    position: SDLPoint,
+    rect: SDLRect,
     index: u32,
+    image: Texture,
 }
 
 impl SkillBarItemView {
-    pub fn init(position: SDLPoint, index: u32) -> BoxResult<SkillBarItemView> {
-        Ok(SkillBarItemView { position, index })
+    pub fn init(position: SDLPoint, index: u32, image: Texture) -> BoxResult<SkillBarItemView> {
+        let rect = SDLRect::new(position.x, position.y, 44, 44);
+        Ok(SkillBarItemView { rect, index, image })
     }
 }
 
 impl View for SkillBarItemView {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
-        canvas.set_draw_color(Color::from((196, 0, 0)));
-        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 44, 44))?;
+        canvas.copy(&self.image, SDLRect::new(0, 0, 256, 256), self.rect)?;
         Ok(())
     }
 }
