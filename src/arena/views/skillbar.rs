@@ -76,14 +76,14 @@ impl View for SkillBarView {
 
 pub struct SkillBarItemView {
     rect: SDLRect,
-    index: u32,
+    _index: u32,
     image: Texture,
 }
 
 impl SkillBarItemView {
-    pub fn init(position: SDLPoint, index: u32, image: Texture) -> BoxResult<SkillBarItemView> {
+    pub fn init(position: SDLPoint, _index: u32, image: Texture) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
-        Ok(SkillBarItemView { rect, index, image })
+        Ok(SkillBarItemView { rect, _index, image })
     }
 }
 
