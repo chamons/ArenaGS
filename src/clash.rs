@@ -1,15 +1,15 @@
 // The game rules and logic for the games
-use specs::prelude::*;
-use specs_derive::Component;
+mod character;
+pub use character::Character;
 
-#[derive(Hash, PartialEq, Eq, Component)]
-pub struct PositionComponent {
+#[derive(Hash, PartialEq, Eq)]
+pub struct Point {
     pub x: u32,
     pub y: u32,
 }
 
-impl PositionComponent {
-    pub const fn init(x: u32, y: u32) -> PositionComponent {
-        PositionComponent { x, y }
+impl Point {
+    pub const fn init(x: u32, y: u32) -> Point {
+        Point { x, y }
     }
 }

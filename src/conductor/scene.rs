@@ -2,6 +2,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
 use super::EventStatus;
+use crate::after_image::RenderCanvas;
 use crate::atlas::BoxResult;
 
 pub trait Scene {
@@ -17,12 +18,12 @@ pub trait Scene {
         EventStatus::Continue
     }
 
-    fn render(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, _frame: u64) -> BoxResult<()> {
+    fn render(&self, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.clear();
         Ok(())
     }
 
-    fn tick(&mut self) -> BoxResult<()> {
+    fn tick(&mut self, _frame: u64) -> BoxResult<()> {
         Ok(())
     }
 }

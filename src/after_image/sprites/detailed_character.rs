@@ -5,7 +5,7 @@ use num_enum::IntoPrimitive;
 use num_traits::FromPrimitive;
 
 use super::{sprite::load_set, SpriteFolderDescription};
-use crate::after_image::{load_image, RenderContext, Sprite};
+use crate::after_image::{load_image, RenderCanvas, RenderContext, Sprite};
 
 use crate::atlas::BoxResult;
 
@@ -14,7 +14,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 #[allow(dead_code)]
-#[derive(IntoPrimitive, FromPrimitive)]
+#[derive(Clone, Copy, IntoPrimitive, FromPrimitive)]
 #[repr(u32)]
 pub enum CharacterAnimationState {
     AttackOne,
@@ -93,7 +93,7 @@ impl DetailedCharacter {
 }
 
 impl Sprite for DetailedCharacter {
-    fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()> {
+    fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()> {
         if let Some(state) = CharacterAnimationState::from_u32(state) {
             let screen_rect = SDLRect::from_center(screen_position, 96, 96);
             canvas.copy(self.get_texture(&state, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;

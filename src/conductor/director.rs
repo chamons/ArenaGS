@@ -13,20 +13,20 @@ pub enum EventStatus {
     NewScene(Box<dyn Scene>),
 }
 
-pub struct Director {
-    scene: Box<dyn Scene>,
+pub struct Director<'a> {
+    scene: Box<dyn Scene + 'a>,
 }
 
-impl Director {
-    pub fn init(scene: Box<dyn Scene>) -> Director {
+impl<'a> Director<'a> {
+    pub fn init(scene: Box<dyn Scene + 'a>) -> Director {
         Director { scene }
     }
 
-    pub fn change_scene(&mut self, scene: Box<dyn Scene>) {
+    pub fn change_scene(&mut self, scene: Box<dyn Scene + 'a>) {
         self.scene = scene;
     }
 
-    pub fn run(&mut self, render_context: &mut RenderContext) -> BoxResult<()> {
+    pub fn run(&mut self, render_context: &'a mut RenderContext) -> BoxResult<()> {
         let mut frame = 0;
         loop {
             let start_frame = Instant::now();
@@ -38,7 +38,7 @@ impl Director {
                 }
             }
 
-            self.scene.tick()?;
+            self.scene.tick(frame)?;
 
             self.scene.render(&mut render_context.canvas, frame)?;
 
