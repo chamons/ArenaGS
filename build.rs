@@ -52,17 +52,11 @@ fn main() {
 
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap()));
     }
-    let data_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join("images");
-    if data_path.exists() {
-        copy_all_with_extension(&data_path, &dest_dir.join("images").to_str().unwrap(), "png").expect("Unable to copy images");
-    }
 
-    let map_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join("maps");
-    if map_path.exists() {
-        copy_all_with_extension(&map_path, &dest_dir.join("maps").to_str().unwrap(), "*").expect("Unable to copy maps");
-    }
-    let font_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join("fonts");
-    if map_path.exists() {
-        copy_all_with_extension(&font_path, &dest_dir.join("fonts").to_str().unwrap(), "*").expect("Unable to copy fonts");
+    for (folder, extension) in vec![("images", "png"), ("maps", "*"), ("fonts", "*)"), ("icons", "png")] {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join(folder);
+        if path.exists() {
+            copy_all_with_extension(&path, &dest_dir.join(folder).to_str().unwrap(), extension).expect(&format!("Unable to copy {}", folder).to_string());
+        }
     }
 }
