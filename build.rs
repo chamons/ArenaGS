@@ -56,7 +56,8 @@ fn main() {
     for (folder, extension) in &[("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png")] {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join(folder);
         if path.exists() {
-            copy_all_with_extension(&path, &dest_dir.join(folder).to_str().unwrap(), extension).unwrap_or_else(|_| { panic!(format!("Unable to copy {}", folder).to_string()) });
+            copy_all_with_extension(&path, &dest_dir.join(folder).to_str().unwrap(), extension)
+                .unwrap_or_else(|_| panic!(format!("Unable to copy {}", folder)));
         }
     }
 }
