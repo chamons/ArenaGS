@@ -16,8 +16,7 @@ impl PositionComponent {
 }
 
 #[derive(Component)]
-pub struct PlayerComponent {
-}
+pub struct PlayerComponent {}
 
 #[derive(Component)]
 pub struct CharacterInfoComponent {
