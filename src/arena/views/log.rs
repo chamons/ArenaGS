@@ -78,7 +78,7 @@ mod tests {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
         };
         let output = component.get(0, 5);
-        assert_eq!(output.len(), 2);
+        assert_eq!(output.len(), 3);
         let output = component.get(2, 1);
         assert_eq!(output.len(), 1);
         assert_eq!(output[0], "3".to_string());
