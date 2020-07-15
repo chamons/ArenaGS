@@ -10,7 +10,7 @@ use super::View;
 use crate::after_image::{RenderCanvas, TextRenderer};
 use crate::atlas::BoxResult;
 
-const LOG_COUNT: usize = 5;
+const LOG_COUNT: usize = 10;
 
 pub struct LogView<'a> {
     position: SDLPoint,
