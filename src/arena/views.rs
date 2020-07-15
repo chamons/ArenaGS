@@ -10,6 +10,9 @@ mod skillbar;
 
 pub trait View {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()>;
+    fn get_tooltip(&self, _ecs: &World, _x: i32, _y: i32) -> Option<String> {
+        None
+    }
 }
 
 pub use infobar::InfoBarView;

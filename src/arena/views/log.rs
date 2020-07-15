@@ -7,7 +7,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::View;
-use crate::after_image::{RenderCanvas, TextRenderer};
+use crate::after_image::{FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::BoxResult;
 
 const LOG_COUNT: usize = 10;
@@ -25,7 +25,8 @@ impl<'a> LogView<'a> {
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let log = ecs.read_resource::<LogComponent>();
         for (i, entry) in log.get(log.index, LOG_COUNT).iter().enumerate() {
-            self.text.render_text(entry, self.position.x, self.position.y + (i as i32 * 30), canvas)?;
+            self.text
+                .render_text(entry, self.position.x, self.position.y + (i as i32 * 30), canvas, FontSize::Small)?;
         }
 
         Ok(())

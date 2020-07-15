@@ -13,4 +13,4 @@ mod text_renderer;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext};
 pub use sprites::{Background, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription};
-pub use text_renderer::TextRenderer;
+pub use text_renderer::{FontSize, TextRenderer};

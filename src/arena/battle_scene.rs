@@ -106,9 +106,15 @@ impl<'a> Scene for BattleScene<'a> {
             Event::MouseButtonDown {
                 x,
                 y,
-                mouse_btn: MouseButton::Left,
+                mouse_btn: MouseButton::Middle,
                 ..
-            } => {}
+            } => {
+                for view in self.views.iter() {
+                    if let Some(description) = view.get_tooltip(&self.ecs, *x, *y) {
+                        self.ecs.log(&description);
+                    }
+                }
+            }
 
             _ => {}
         }

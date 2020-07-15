@@ -6,21 +6,35 @@ use sdl2::rect::Rect as SDLRect;
 use super::{FontContext, RenderCanvas};
 use crate::atlas::{get_exe_folder, BoxResult};
 
+pub enum FontSize {
+    Small,
+    Large,
+}
+
 pub struct TextRenderer<'a> {
-    font: sdl2::ttf::Font<'a, 'a>,
+    small_font: sdl2::ttf::Font<'a, 'a>,
+    large_font: sdl2::ttf::Font<'a, 'a>,
 }
 
 impl<'a> TextRenderer<'a> {
     pub fn init(font_context: &'a FontContext) -> BoxResult<TextRenderer> {
         let font_path = PathBuf::from(get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        let mut font = font_context.ttf_context.load_font(font_path, 20)?;
-        font.set_style(sdl2::ttf::FontStyle::NORMAL);
 
-        Ok(TextRenderer { font })
+        let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
+        small_font.set_style(sdl2::ttf::FontStyle::NORMAL);
+        let mut large_font = font_context.ttf_context.load_font(font_path, 20)?;
+        large_font.set_style(sdl2::ttf::FontStyle::NORMAL);
+
+        Ok(TextRenderer { small_font, large_font })
     }
 
-    pub fn render_text(&self, text: &str, x: i32, y: i32, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        let surface = self.font.render(text).blended(Color::RGBA(0, 0, 0, 255)).map_err(|e| e.to_string())?;
+    pub fn render_text(&self, text: &str, x: i32, y: i32, canvas: &mut RenderCanvas, size: FontSize) -> BoxResult<()> {
+        let font = match size {
+            FontSize::Small => &self.small_font,
+            FontSize::Large => &self.large_font,
+        };
+
+        let surface = font.render(text).blended(Color::RGBA(0, 0, 0, 255)).map_err(|e| e.to_string())?;
         let texture_creator = canvas.texture_creator();
 
         let texture = texture_creator.create_texture_from_surface(&surface).map_err(|e| e.to_string())?;
