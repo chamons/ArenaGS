@@ -68,7 +68,19 @@ impl LogComponent {
 
     pub fn add(&mut self, entry: &str) {
         self.logs.push(entry.to_string());
-        self.index = cmp::max(self.logs.len() as i64 - LOG_COUNT as i64, 0) as usize;
+        self.index = self.clamp_index(self.logs.len() as i64 - LOG_COUNT as i64);
+    }
+
+    pub fn scroll_back(&mut self) {
+        self.index = self.clamp_index(self.index as i64 - LOG_COUNT as i64);
+    }
+
+    pub fn scroll_forward(&mut self) {
+        self.index = self.clamp_index(self.index as i64 + LOG_COUNT as i64);
+    }
+
+    fn clamp_index(&self, index: i64) -> usize {
+        cmp::min(cmp::max(index, 0) as usize, self.logs.len() - 1)
     }
 }
 
@@ -135,6 +147,38 @@ mod tests {
         log.add("Test");
         assert_eq!(log.index, 2);
     }
+
+    #[test]
+    fn scroll_forward() {
+        let mut log = LogComponent::init();
+        for i in 0..15 {
+            log.add("Test");
+        }
+        log.index = 0;
+        log.scroll_forward();
+        assert_eq!(log.index, LOG_COUNT);
+
+        for i in 0..5 {
+            log.scroll_forward();
+        }
+        assert_eq!(log.index, log.logs.len() - 1);
+    }
+
+    #[test]
+    fn scroll_back() {
+        let mut log = LogComponent::init();
+        for i in 0..15 {
+            log.add("Test");
+        }
+        log.index = 14;
+        log.scroll_back();
+        assert_eq!(log.index, 14 - LOG_COUNT);
+
+        for i in 0..5 {
+            log.scroll_back();
+        }
+        assert_eq!(log.index, 0);
+    }
 }
 
 use crate::atlas::Logger;
@@ -143,5 +187,13 @@ impl Logger for World {
     fn log(&mut self, message: &str) {
         let mut log = self.write_resource::<LogComponent>();
         log.add(message);
+    }
+    fn log_scroll_forward(&mut self) {
+        let mut log = self.write_resource::<LogComponent>();
+        log.scroll_forward();
+    }
+    fn log_scroll_back(&mut self) {
+        let mut log = self.write_resource::<LogComponent>();
+        log.scroll_back();
     }
 }
