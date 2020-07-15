@@ -10,6 +10,8 @@ use super::View;
 use crate::after_image::{RenderCanvas, TextRenderer};
 use crate::atlas::BoxResult;
 
+const LOG_COUNT: usize = 5;
+
 pub struct LogView<'a> {
     position: SDLPoint,
     text: &'a TextRenderer<'a>,
@@ -22,7 +24,7 @@ impl<'a> LogView<'a> {
 
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let log = ecs.read_resource::<LogComponent>();
-        for (i, entry) in log.get(0, 5).iter().enumerate() {
+        for (i, entry) in log.get(log.index, LOG_COUNT).iter().enumerate() {
             self.text.render_text(entry, self.position.x, self.position.y + (i as i32 * 30), canvas)?;
         }
 
@@ -42,12 +44,13 @@ impl<'a> View for LogView<'a> {
 
 #[derive(Component)]
 pub struct LogComponent {
-    pub logs: Vec<String>,
+    logs: Vec<String>,
+    pub index: usize,
 }
 
 impl LogComponent {
     pub fn init() -> LogComponent {
-        LogComponent { logs: vec![] }
+        LogComponent { logs: vec![], index: 0 }
     }
 
     pub fn get(&self, index: usize, length: usize) -> &[String] {
@@ -65,6 +68,7 @@ impl LogComponent {
 
     pub fn add(&mut self, entry: &str) {
         self.logs.push(entry.to_string());
+        self.index = cmp::max(self.logs.len() as i64 - LOG_COUNT as i64, 0) as usize;
     }
 }
 
@@ -74,43 +78,70 @@ mod tests {
 
     #[test]
     fn normal_get() {
-        let component = LogComponent {
+        let log = LogComponent {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+            index: 0,
         };
-        let output = component.get(0, 5);
+        let output = log.get(0, 5);
         assert_eq!(output.len(), 3);
-        let output = component.get(2, 1);
+        let output = log.get(2, 1);
         assert_eq!(output.len(), 1);
         assert_eq!(output[0], "3".to_string());
-        let output = component.get(1, 2);
+        let output = log.get(1, 2);
         assert_eq!(output.len(), 2);
         assert_eq!(output[1], "3".to_string());
     }
 
     #[test]
     fn get_zero() {
-        let component = LogComponent {
+        let log = LogComponent {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+            index: 0,
         };
-        let output = component.get(2, 0);
+        let output = log.get(2, 0);
         assert_eq!(output.len(), 0);
     }
 
     #[test]
     fn out_of_range() {
-        let component = LogComponent {
+        let log = LogComponent {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+            index: 0,
         };
-        let output = component.get(4, 1);
+        let output = log.get(4, 1);
         assert_eq!(output.len(), 0);
     }
 
     #[test]
     fn get_too_far() {
-        let component = LogComponent {
+        let log = LogComponent {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+            index: 0,
         };
-        let output = component.get(2, 3);
+        let output = log.get(2, 3);
         assert_eq!(output.len(), 1);
+    }
+
+    #[test]
+    fn add_can_bump_index() {
+        let mut log = LogComponent::init();
+        for i in 0..5 {
+            log.add("Test");
+            assert_eq!(log.index, 0);
+        }
+        log.add("Test");
+        assert_eq!(log.index, 1);
+        log.index = 0;
+        log.add("Test");
+        assert_eq!(log.index, 2);
+    }
+}
+
+use crate::atlas::Logger;
+
+impl Logger for World {
+    fn log(&mut self, message: &str) {
+        let mut log = self.write_resource::<LogComponent>();
+        log.add(message);
     }
 }
