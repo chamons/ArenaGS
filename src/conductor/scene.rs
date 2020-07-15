@@ -6,7 +6,7 @@ use crate::after_image::RenderCanvas;
 use crate::atlas::BoxResult;
 
 pub trait Scene {
-    fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
+    fn handle_event(&mut self, event: &sdl2::event::Event) -> EventStatus {
         match event {
             Event::Quit { .. }
             | Event::KeyDown {

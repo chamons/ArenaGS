@@ -4,6 +4,8 @@ use super::{tick_animations, AnimationComponent, CharacterInfoComponent, FieldCo
 use crate::clash::{Character, Point};
 
 use sdl2::event::Event;
+use sdl2::mouse::MouseButton;
+
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 
@@ -13,7 +15,7 @@ use super::views::{InfoBarView, LogComponent, LogView, MapView, SkillBarView, Vi
 use super::SpriteKinds;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -79,23 +81,35 @@ impl<'a> BattleScene<'a> {
             )?),
         ];
 
-        {
-            let mut log = ecs.write_resource::<LogComponent>();
-            log.add("Hello World");
-        }
-
         Ok(BattleScene { ecs, views })
     }
 }
 
 impl<'a> Scene for BattleScene<'a> {
-    fn handle_event(&self, event: &sdl2::event::Event) -> EventStatus {
+    fn handle_event(&mut self, event: &sdl2::event::Event) -> EventStatus {
         match event {
-            Event::Quit { .. }
-            | Event::KeyDown {
-                keycode: Some(Keycode::Escape),
+            Event::Quit { .. } => return EventStatus::Quit,
+            Event::KeyDown { keycode, repeat: false, .. } => {
+                if let Some(keycode) = keycode {
+                    match keycode {
+                        Keycode::Escape => return EventStatus::Quit,
+                        Keycode::Left => {}
+                        Keycode::Right => {}
+                        Keycode::Up => {}
+                        Keycode::Down => {}
+                        Keycode::PageUp => self.ecs.log_scroll_back(),
+                        Keycode::PageDown => self.ecs.log_scroll_forward(),
+                        _ => {}
+                    }
+                }
+            }
+            Event::MouseButtonDown {
+                x,
+                y,
+                mouse_btn: MouseButton::Left,
                 ..
-            } => return EventStatus::Quit,
+            } => {}
+
             _ => {}
         }
         EventStatus::Continue
