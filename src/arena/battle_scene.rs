@@ -83,6 +83,28 @@ impl<'a> BattleScene<'a> {
 
         Ok(BattleScene { ecs, views })
     }
+
+    fn handle_key(&mut self, keycode: &Keycode) {
+        match keycode {
+            Keycode::Left => {}
+            Keycode::Right => {}
+            Keycode::Up => {}
+            Keycode::Down => {}
+            Keycode::PageUp => self.ecs.log_scroll_back(),
+            Keycode::PageDown => self.ecs.log_scroll_forward(),
+            _ => {}
+        }
+    }
+
+    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) {
+        if *button == MouseButton::Middle {
+            for view in self.views.iter() {
+                if let Some(description) = view.get_tooltip(&self.ecs, x, y) {
+                    self.ecs.log(&description);
+                }
+            }
+        }
+    }
 }
 
 impl<'a> Scene for BattleScene<'a> {
@@ -93,28 +115,11 @@ impl<'a> Scene for BattleScene<'a> {
                 if let Some(keycode) = keycode {
                     match keycode {
                         Keycode::Escape => return EventStatus::Quit,
-                        Keycode::Left => {}
-                        Keycode::Right => {}
-                        Keycode::Up => {}
-                        Keycode::Down => {}
-                        Keycode::PageUp => self.ecs.log_scroll_back(),
-                        Keycode::PageDown => self.ecs.log_scroll_forward(),
-                        _ => {}
+                        _ => self.handle_key(keycode),
                     }
                 }
             }
-            Event::MouseButtonDown {
-                x,
-                y,
-                mouse_btn: MouseButton::Middle,
-                ..
-            } => {
-                for view in self.views.iter() {
-                    if let Some(description) = view.get_tooltip(&self.ecs, *x, *y) {
-                        self.ecs.log(&description);
-                    }
-                }
-            }
+            Event::MouseButtonDown { x, y, mouse_btn, .. } => self.handle_mouse(*x, *y, mouse_btn),
 
             _ => {}
         }
