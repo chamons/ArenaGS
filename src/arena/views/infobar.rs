@@ -4,7 +4,7 @@ use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::View;
-use crate::after_image::{FontSize, RenderCanvas, TextRenderer};
+use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::BoxResult;
 
 pub struct InfoBarView<'a> {
@@ -17,7 +17,8 @@ impl<'a> InfoBarView<'a> {
         Ok(InfoBarView { position, text })
     }
     fn render_character_info(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        self.text.render_text("Info Bar", self.position.x, self.position.y, canvas, FontSize::Large)?;
+        self.text
+            .render_text("Info Bar", self.position.x, self.position.y, canvas, FontSize::Large, FontColor::Black)?;
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{Animation, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder};
+use super::components::*;
 use crate::clash::{Character, Point};
 
 use sdl2::mouse::MouseButton;
@@ -11,16 +11,10 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 
 use super::views::{InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
-use super::SpriteKinds;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
-
-trait SceneController {
-    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton);
-    fn handle_key(&mut self, keycode: &Keycode);
-}
 
 pub struct BattleScene<'a> {
     ecs: World,
@@ -37,8 +31,10 @@ impl<'a> BattleScene<'a> {
         ecs.register::<PlayerComponent>();
         ecs.register::<CharacterInfoComponent>();
         ecs.register::<LogComponent>();
+        ecs.register::<BattleSceneStateComponent>();
 
         ecs.insert(LogComponent::init());
+        ecs.insert(BattleSceneStateComponent::init());
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
@@ -81,7 +77,8 @@ impl<'a> BattleScene<'a> {
             Box::from(LogView::init(SDLPoint::new(780, 450), text)?),
             Box::from(SkillBarView::init(
                 render_context,
-                SDLPoint::new(5, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
+                SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
+                text,
             )?),
         ];
 

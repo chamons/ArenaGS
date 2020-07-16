@@ -6,7 +6,7 @@ use specs::prelude::*;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::super::{AnimationComponent, FieldComponent, PositionComponent, RenderComponent, RenderOrder};
+use super::super::components::*;
 use super::View;
 
 use super::super::SpriteLoader;
@@ -137,8 +137,12 @@ impl MapView {
 
 impl View for MapView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        let state = &ecs.read_resource::<BattleSceneStateComponent>().state;
+
         self.render_entities(ecs, canvas, frame)?;
-        self.draw_grid(canvas)?;
+        if state.is_targeting() {
+            self.draw_grid(canvas)?;
+        }
         self.render_fields(ecs, canvas)?;
         Ok(())
     }

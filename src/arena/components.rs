@@ -48,3 +48,26 @@ impl FieldComponent {
         }
     }
 }
+
+pub enum BattleTargetSource {
+    Skill(String),
+}
+
+#[derive(is_enum_variant)]
+pub enum BattleSceneState {
+    Default(),
+    Targeting(BattleTargetSource),
+}
+
+#[derive(Component)]
+pub struct BattleSceneStateComponent {
+    pub state: BattleSceneState,
+}
+
+impl BattleSceneStateComponent {
+    pub fn init() -> BattleSceneStateComponent {
+        BattleSceneStateComponent {
+            state: BattleSceneState::Default(),
+        }
+    }
+}

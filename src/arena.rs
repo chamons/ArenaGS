@@ -6,7 +6,6 @@ mod icon_loader;
 mod sprite_loader;
 mod views;
 
-use components::{AnimationComponent, Animation, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder, SpriteKinds};
 use icon_loader::IconLoader;
 use sprite_loader::SpriteLoader;
 
