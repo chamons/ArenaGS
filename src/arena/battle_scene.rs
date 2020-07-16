@@ -3,7 +3,6 @@ use specs::prelude::*;
 use super::{tick_animations, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder};
 use crate::clash::{Character, Point};
 
-use sdl2::event::Event;
 use sdl2::mouse::MouseButton;
 
 use sdl2::keyboard::Keycode;
@@ -83,8 +82,10 @@ impl<'a> BattleScene<'a> {
 
         Ok(BattleScene { ecs, views })
     }
+}
 
-    fn handle_key(&mut self, keycode: &Keycode) {
+impl<'a> Scene for BattleScene<'a> {
+    fn handle_key(&mut self, keycode: &Keycode) -> EventStatus {
         match keycode {
             Keycode::Left => {}
             Keycode::Right => {}
@@ -94,34 +95,16 @@ impl<'a> BattleScene<'a> {
             Keycode::PageDown => self.ecs.log_scroll_forward(),
             _ => {}
         }
+        EventStatus::Continue
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) {
+    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
         if *button == MouseButton::Middle {
             for view in self.views.iter() {
                 if let Some(description) = view.get_tooltip(&self.ecs, x, y) {
                     self.ecs.log(&description);
                 }
             }
-        }
-    }
-}
-
-impl<'a> Scene for BattleScene<'a> {
-    fn handle_event(&mut self, event: &sdl2::event::Event) -> EventStatus {
-        match event {
-            Event::Quit { .. } => return EventStatus::Quit,
-            Event::KeyDown { keycode, repeat: false, .. } => {
-                if let Some(keycode) = keycode {
-                    match keycode {
-                        Keycode::Escape => return EventStatus::Quit,
-                        _ => self.handle_key(keycode),
-                    }
-                }
-            }
-            Event::MouseButtonDown { x, y, mouse_btn, .. } => self.handle_mouse(*x, *y, mouse_btn),
-
-            _ => {}
         }
         EventStatus::Continue
     }
