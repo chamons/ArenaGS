@@ -10,7 +10,7 @@ use sdl2::pixels::Color;
 
 use sdl2::rect::Point as SDLPoint;
 
-use super::views::{InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
+use super::views::{HitTestResult, InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, Logger};
@@ -115,8 +115,10 @@ impl<'a> Scene for BattleScene<'a> {
     fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
         if *button == MouseButton::Middle {
             for view in self.views.iter() {
-                if let Some(description) = view.get_tooltip(&self.ecs, x, y) {
-                    self.ecs.log(&description);
+                match view.hit_test(&self.ecs, x, y) {
+                    HitTestResult::Skill(name) => self.ecs.log(&name),
+                    HitTestResult::Tile(position) => self.ecs.log(&position.to_string()),
+                    _ => {}
                 }
             }
         }

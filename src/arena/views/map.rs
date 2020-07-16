@@ -7,7 +7,7 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
-use super::View;
+use super::{HitTestResult, View};
 
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
@@ -147,11 +147,11 @@ impl View for MapView {
         Ok(())
     }
 
-    fn get_tooltip(&self, _: &World, x: i32, y: i32) -> Option<String> {
+    fn hit_test(&self, _: &World, x: i32, y: i32) -> HitTestResult {
         if let Some(point) = self.screen_to_map_position(x, y) {
-            Some(format!("({},{})", point.x, point.y))
+            HitTestResult::Tile(point)
         } else {
-            None
+            HitTestResult::None
         }
     }
 }

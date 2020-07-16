@@ -5,7 +5,7 @@ use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::super::IconLoader;
-use super::View;
+use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 
@@ -70,13 +70,13 @@ impl View for SkillBarView {
         Ok(())
     }
 
-    fn get_tooltip(&self, ecs: &World, x: i32, y: i32) -> Option<String> {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> HitTestResult {
         for view in self.views.iter() {
             if view.rect.contains_point(SDLPoint::new(x, y)) {
-                return view.get_tooltip(ecs, x, y);
+                return view.hit_test(ecs, x, y);
             }
         }
-        None
+        HitTestResult::None
     }
 }
 
@@ -106,7 +106,7 @@ impl View for SkillBarItemView {
         Ok(())
     }
 
-    fn get_tooltip(&self, _: &World, _: i32, _: i32) -> Option<String> {
-        Some(test_skill_name(self.index).to_string())
+    fn hit_test(&self, _: &World, _: i32, _: i32) -> HitTestResult {
+        HitTestResult::Skill(test_skill_name(self.index).to_string())
     }
 }

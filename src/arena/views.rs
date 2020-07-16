@@ -2,16 +2,23 @@ use specs::prelude::*;
 
 use crate::after_image::RenderCanvas;
 use crate::atlas::BoxResult;
+use crate::clash::Point;
 
 mod infobar;
 mod log;
 mod map;
 mod skillbar;
 
+pub enum HitTestResult {
+    None,
+    Skill(String),
+    Tile(Point),
+}
+
 pub trait View {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()>;
-    fn get_tooltip(&self, _ecs: &World, _x: i32, _y: i32) -> Option<String> {
-        None
+    fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> HitTestResult {
+        HitTestResult::None
     }
 }
 
