@@ -84,20 +84,32 @@ impl<'a> BattleScene<'a> {
 
         Ok(BattleScene { ecs, views })
     }
+    fn handle_default_key(&mut self, keycode: &Keycode) -> EventStatus {
+        let name = keycode.name();
+        let chars: Vec<char> = name.chars().collect();
+        if chars.len() == 1 {
+            match chars[0] {
+                '0'..='9' => self.ecs.log(&chars[0].to_string()),
+                _ => {}
+            }
+        }
+        EventStatus::Continue
+    }
 }
 
 impl<'a> Scene for BattleScene<'a> {
     fn handle_key(&mut self, keycode: &Keycode) -> EventStatus {
         match keycode {
-            Keycode::Left => {}
-            Keycode::Right => {}
-            Keycode::Up => {}
-            Keycode::Down => {}
             Keycode::PageUp => self.ecs.log_scroll_back(),
             Keycode::PageDown => self.ecs.log_scroll_forward(),
             _ => {}
         }
-        EventStatus::Continue
+
+        let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
+        match state {
+            BattleSceneState::Default() => self.handle_default_key(keycode),
+            BattleSceneState::Targeting(_) => EventStatus::Continue,
+        }
     }
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {

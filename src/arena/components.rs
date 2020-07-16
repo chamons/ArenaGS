@@ -49,11 +49,12 @@ impl FieldComponent {
     }
 }
 
+#[derive(Clone)]
 pub enum BattleTargetSource {
     Skill(String),
 }
 
-#[derive(is_enum_variant)]
+#[derive(is_enum_variant, Clone)]
 pub enum BattleSceneState {
     Default(),
     Targeting(BattleTargetSource),
