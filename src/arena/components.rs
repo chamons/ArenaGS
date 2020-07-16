@@ -2,7 +2,9 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 mod animation;
-pub use animation::{tick_animations, AnimationComponent};
+pub use animation::{Animation, AnimationComponent};
+mod render;
+pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
 use sdl2::pixels::Color;
 

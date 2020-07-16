@@ -3,13 +3,11 @@
 mod battle_scene;
 mod components;
 mod icon_loader;
-mod render;
 mod sprite_loader;
 mod views;
 
-use components::{tick_animations, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+use components::{AnimationComponent, Animation, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder, SpriteKinds};
 use icon_loader::IconLoader;
-use render::{RenderComponent, RenderOrder, SpriteKinds};
 use sprite_loader::SpriteLoader;
 
 pub use battle_scene::BattleScene;

@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{tick_animations, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder};
+use super::{Animation, AnimationComponent, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent, RenderComponent, RenderOrder};
 use crate::clash::{Character, Point};
 
 use sdl2::mouse::MouseButton;
@@ -131,4 +131,29 @@ impl<'a> Scene for BattleScene<'a> {
         tick_animations(&self.ecs, frame)?;
         Ok(())
     }
+}
+
+pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let mut animations = ecs.write_storage::<AnimationComponent>();
+    let mut positions = ecs.write_storage::<PositionComponent>();
+
+    // Remove completed animations, applying their change
+    let mut completed = vec![];
+    for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
+        if animation.is_complete(frame) {
+            completed.push(entity);
+        }
+        if let Animation::Position { start: _, end } = &animation.animation {
+            if let Some(position) = position {
+                position.x = end.x;
+                position.y = end.y;
+            }
+        }
+    }
+    for c in completed {
+        animations.remove(c);
+    }
+
+    Ok(())
 }
