@@ -17,6 +17,11 @@ use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, T
 use crate::atlas::{BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
 
+trait SceneController {
+    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton);
+    fn handle_key(&mut self, keycode: &Keycode);
+}
+
 pub struct BattleScene<'a> {
     ecs: World,
     views: Vec<Box<dyn View + 'a>>,
