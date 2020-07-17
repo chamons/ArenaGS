@@ -3,7 +3,8 @@ use specs::prelude::*;
 use super::Point;
 use crate::atlas::Logger;
 
-#[derive(is_enum_variant)]
+#[allow(dead_code)]
+#[derive(is_enum_variant, Clone)]
 pub enum TargetType {
     None,
     Tile,
@@ -23,7 +24,7 @@ pub fn get_target_for_skill(_name: &str) -> TargetType {
         }
     }
 
-    TargetType::None
+    TargetType::Tile
 }
 
 fn assert_correct_targeting(name: &str, target: Option<Point>) {

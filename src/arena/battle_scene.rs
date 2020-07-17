@@ -115,7 +115,25 @@ impl<'a> BattleScene<'a> {
         let target_required = get_target_for_skill(name);
         if target_required.is_none() {
             invoke_skill(&mut self.ecs, name, None);
+        } else {
+            let mut state = self.ecs.write_resource::<BattleSceneStateComponent>();
+
+            match target_required {
+                TargetType::Enemy | TargetType::Tile => state.state = BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required),
+                TargetType::None => {}
+            }
         }
+    }
+
+    fn default_handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+        if *button == MouseButton::Left {
+            match &hit {
+                Some(HitTestResult::Skill(name)) => self.invoke_skill(&name),
+                _ => {}
+            }
+        }
+        EventStatus::Continue
     }
 }
 
@@ -130,7 +148,7 @@ impl<'a> Scene for BattleScene<'a> {
         let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
         match state {
             BattleSceneState::Default() => self.handle_default_key(keycode),
-            BattleSceneState::Targeting(_) => EventStatus::Continue,
+            BattleSceneState::Targeting(_, _) => EventStatus::Continue,
         }
     }
 
@@ -144,13 +162,12 @@ impl<'a> Scene for BattleScene<'a> {
                 _ => {}
             }
         }
-        if *button == MouseButton::Left {
-            match &hit {
-                Some(HitTestResult::Skill(name)) => self.invoke_skill(&name),
-                _ => {}
-            }
+
+        let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
+        match state {
+            BattleSceneState::Default() => self.default_handle_mouse(x, y, button),
+            BattleSceneState::Targeting(_, _) => EventStatus::Continue,
         }
-        EventStatus::Continue
     }
 
     fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {

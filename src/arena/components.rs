@@ -6,6 +6,8 @@ pub use animation::{Animation, AnimationComponent};
 mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
+use crate::clash::TargetType;
+
 #[derive(Clone)]
 pub enum BattleTargetSource {
     Skill(String),
@@ -14,7 +16,7 @@ pub enum BattleTargetSource {
 #[derive(is_enum_variant, Clone)]
 pub enum BattleSceneState {
     Default(),
-    Targeting(BattleTargetSource),
+    Targeting(BattleTargetSource, TargetType),
 }
 
 #[derive(Component)]
