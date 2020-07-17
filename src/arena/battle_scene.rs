@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
-use crate::clash::{Character, Point};
+use crate::clash::*;
 
 use sdl2::mouse::MouseButton;
 
@@ -23,13 +23,9 @@ pub struct BattleScene<'a> {
 
 impl<'a> BattleScene<'a> {
     pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
-        let mut ecs = World::new();
-        ecs.register::<PositionComponent>();
+        let mut ecs = create_world();
         ecs.register::<RenderComponent>();
         ecs.register::<AnimationComponent>();
-        ecs.register::<FieldComponent>();
-        ecs.register::<PlayerComponent>();
-        ecs.register::<CharacterInfoComponent>();
         ecs.register::<LogComponent>();
         ecs.register::<BattleSceneStateComponent>();
 
@@ -84,16 +80,42 @@ impl<'a> BattleScene<'a> {
 
         Ok(BattleScene { ecs, views })
     }
+
     fn handle_default_key(&mut self, keycode: &Keycode) -> EventStatus {
         let name = keycode.name();
         let chars: Vec<char> = name.chars().collect();
+
         if chars.len() == 1 {
             match chars[0] {
-                '0'..='9' => self.ecs.log(&chars[0].to_string()),
+                // HACK
+                '0'..='9' => self.invoke_skill(super::views::test_skill_name(chars[0].to_string().parse().unwrap())),
                 _ => {}
             }
         }
         EventStatus::Continue
+    }
+
+    fn player_can_act(&self) -> bool {
+        let animations = self.ecs.read_storage::<AnimationComponent>();
+        for a in (&animations).join() {
+            match &a.animation {
+                Animation::Position { .. } => {
+                    return false;
+                }
+                Animation::CharacterState { .. } => {}
+            }
+        }
+        true
+    }
+
+    fn invoke_skill(&mut self, name: &str) {
+        if !self.player_can_act() {
+            return;
+        }
+        let target_required = get_target_for_skill(name);
+        if target_required.is_none() {
+            invoke_skill(&mut self.ecs, name, None);
+        }
     }
 }
 
@@ -113,13 +135,19 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+
         if *button == MouseButton::Middle {
-            for view in self.views.iter() {
-                match view.hit_test(&self.ecs, x, y) {
-                    HitTestResult::Skill(name) => self.ecs.log(&name),
-                    HitTestResult::Tile(position) => self.ecs.log(&position.to_string()),
-                    _ => {}
-                }
+            match &hit {
+                Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
+                Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
+                _ => {}
+            }
+        }
+        if *button == MouseButton::Left {
+            match &hit {
+                Some(HitTestResult::Skill(name)) => self.invoke_skill(&name),
+                _ => {}
             }
         }
         EventStatus::Continue

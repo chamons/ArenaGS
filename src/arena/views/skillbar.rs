@@ -37,7 +37,7 @@ impl SkillBarView {
     }
 }
 
-fn test_skill_name(i: u32) -> &'static str {
+pub fn test_skill_name(i: u32) -> &'static str {
     match i {
         0 => "SpellBook01_26.png",
         1 => "SpellBook01_07.png",
@@ -70,13 +70,13 @@ impl View for SkillBarView {
         Ok(())
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> HitTestResult {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         for view in self.views.iter() {
             if view.rect.contains_point(SDLPoint::new(x, y)) {
                 return view.hit_test(ecs, x, y);
             }
         }
-        HitTestResult::None
+        None
     }
 }
 
@@ -106,7 +106,7 @@ impl View for SkillBarItemView {
         Ok(())
     }
 
-    fn hit_test(&self, _: &World, _: i32, _: i32) -> HitTestResult {
-        HitTestResult::Skill(test_skill_name(self.index).to_string())
+    fn hit_test(&self, _: &World, _: i32, _: i32) -> Option<HitTestResult> {
+        Some(HitTestResult::Skill(test_skill_name(self.index).to_string()))
     }
 }

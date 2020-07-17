@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn add_can_bump_index() {
         let mut log = LogComponent::init();
-        for i in 0..5 {
+        for i in 0..10 {
             log.add("Test");
             assert_eq!(log.index, 0);
         }

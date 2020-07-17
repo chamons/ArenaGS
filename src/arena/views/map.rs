@@ -8,6 +8,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
 use super::{HitTestResult, View};
+use crate::clash::{FieldComponent, PositionComponent};
 
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
@@ -147,11 +148,11 @@ impl View for MapView {
         Ok(())
     }
 
-    fn hit_test(&self, _: &World, x: i32, y: i32) -> HitTestResult {
+    fn hit_test(&self, _: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(point) = self.screen_to_map_position(x, y) {
-            HitTestResult::Tile(point)
+            Some(HitTestResult::Tile(point))
         } else {
-            HitTestResult::None
+            None
         }
     }
 }
