@@ -11,7 +11,7 @@ mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
 
 mod map;
-pub use map::{element_at_location, MapHitTestResult};
+pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct Point {

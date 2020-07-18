@@ -25,16 +25,22 @@ pub fn select_skill(ecs: &mut World, name: &str) {
     if target_required.is_none() {
         invoke_skill(ecs, name, None);
     } else {
-        let mut state = ecs.write_resource::<BattleSceneStateComponent>();
-
         match target_required {
-            TargetType::Enemy | TargetType::Tile => state.state = BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required),
+            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required)),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
     }
 }
 
-pub fn reset_targeting(ecs: &mut World) {
+pub fn read_state(ecs: &World) -> BattleSceneState {
+    ecs.read_resource::<BattleSceneStateComponent>().state.clone()
+}
+
+pub fn set_state(ecs: &mut World, state: BattleSceneState) {
+    ecs.write_resource::<BattleSceneStateComponent>().state = state;
+}
+
+pub fn reset_state(ecs: &mut World) {
     let mut state = ecs.write_resource::<BattleSceneStateComponent>();
     state.state = BattleSceneState::Default();
 }
@@ -45,7 +51,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     }
 
     // Selection has been made, drop out of targeting state
-    reset_targeting(ecs);
+    reset_state(ecs);
 
     let target_required = get_target_for_skill(name);
 

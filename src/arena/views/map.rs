@@ -13,7 +13,7 @@ use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, Positi
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
-use crate::clash::Point;
+use crate::clash::{Point, MAX_MAP_TILES};
 
 pub struct MapView {
     sprites: SpriteLoader,
@@ -22,7 +22,6 @@ pub struct MapView {
 pub const MAP_CORNER_X: u32 = 50;
 pub const MAP_CORNER_Y: u32 = 50;
 pub const TILE_SIZE: u32 = 48;
-pub const MAX_MAP_TILES: u32 = 13;
 
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
     if let Some(animation) = animation {

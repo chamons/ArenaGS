@@ -1,6 +1,42 @@
 use specs::prelude::*;
+use specs_derive::Component;
 
 use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, Point, PositionComponent};
+
+pub const MAX_MAP_TILES: u32 = 13;
+pub const TOTAL_TILES: usize = (MAX_MAP_TILES * MAX_MAP_TILES) as usize;
+
+#[derive(Copy, Clone)]
+pub struct MapTile {
+    walkable: bool,
+}
+
+pub struct Map {
+    tiles: [MapTile; TOTAL_TILES],
+}
+
+impl Map {
+    pub const fn init_empty() -> Map {
+        Map {
+            tiles: [MapTile { walkable: false }; TOTAL_TILES],
+        }
+    }
+
+    pub fn is_walkable(&self, position: Point) -> bool {
+        self.tiles[(position.x + (MAX_MAP_TILES * position.y)) as usize].walkable
+    }
+}
+
+#[derive(Component)]
+pub struct MapComponent {
+    map: Map,
+}
+
+impl MapComponent {
+    pub const fn init(map: Map) -> MapComponent {
+        MapComponent { map }
+    }
+}
 
 pub enum MapHitTestResult {
     None(),

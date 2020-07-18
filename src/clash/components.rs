@@ -50,5 +50,6 @@ pub fn create_world() -> World {
     ecs.register::<FieldComponent>();
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
+    ecs.register::<super::MapComponent>();
     ecs
 }
