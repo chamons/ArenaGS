@@ -8,7 +8,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
 use super::{HitTestResult, View};
-use crate::clash::{CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, PositionComponent};
 
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
@@ -150,25 +150,10 @@ impl View for MapView {
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(map_position) = self.screen_to_map_position(x, y) {
-            // Belongs in clash as "What is at map x,y"
-            // Need to handle escape
-            let positions = ecs.read_storage::<PositionComponent>();
-            let fields = ecs.read_storage::<FieldComponent>();
-            let character_infos = ecs.read_storage::<CharacterInfoComponent>();
-            let player = ecs.read_storage::<PlayerComponent>();
-
-            for (position, field, character, player) in (&positions, (&fields).maybe(), (&character_infos).maybe(), (&player).maybe()).join() {
-                if position.x == map_position.x as u32 && position.y == map_position.y as u32 {
-                    if let Some(_character) = character {
-                        if player.is_none() {
-                            return Some(HitTestResult::Enemy(map_position));
-                        }
-                    } else if let Some(_field) = field {
-                        return Some(HitTestResult::Tile(map_position));
-                    }
-                }
+            match element_at_location(ecs, &map_position) {
+                MapHitTestResult::Enemy() => Some(HitTestResult::Enemy(map_position)),
+                MapHitTestResult::Player() | MapHitTestResult::Field() | MapHitTestResult::None() => Some(HitTestResult::Tile(map_position)),
             }
-            Some(HitTestResult::Tile(map_position))
         } else {
             None
         }

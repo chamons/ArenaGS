@@ -1,18 +1,15 @@
 use specs::prelude::*;
 
-use super::components::*;
-use crate::clash::*;
-
-use sdl2::mouse::MouseButton;
-
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-
 use sdl2::rect::Point as SDLPoint;
 
-use super::views::{HitTestResult, InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
+use super::components::*;
+use super::views::*;
+use super::*;
+use crate::clash::*;
 
-use super::{select_skill, select_skill_with_target};
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
@@ -104,6 +101,10 @@ impl<'a> BattleScene<'a> {
     }
 
     fn handle_target_key(&mut self, keycode: &Keycode) -> EventStatus {
+        if *keycode == Keycode::Escape {
+            reset_targeting(&mut self.ecs)
+        }
+
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
             // HACK - should get name from model, not test data
@@ -114,6 +115,11 @@ impl<'a> BattleScene<'a> {
     }
 
     fn handle_target_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+        if *button == MouseButton::Right {
+            reset_targeting(&mut self.ecs);
+            return EventStatus::Continue;
+        }
+
         // Copy the target/type out so we can modify
         let target_info = match &self.ecs.read_resource::<BattleSceneStateComponent>().state {
             BattleSceneState::Targeting(target_source, target_type) => Some((target_source.clone(), target_type.clone())),

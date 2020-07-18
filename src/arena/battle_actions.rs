@@ -34,16 +34,18 @@ pub fn select_skill(ecs: &mut World, name: &str) {
     }
 }
 
+pub fn reset_targeting(ecs: &mut World) {
+    let mut state = ecs.write_resource::<BattleSceneStateComponent>();
+    state.state = BattleSceneState::Default();
+}
+
 pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     if !player_can_act(ecs) {
         return;
     }
 
     // Selection has been made, drop out of targeting state
-    {
-        let mut state = ecs.write_resource::<BattleSceneStateComponent>();
-        state.state = BattleSceneState::Default();
-    }
+    reset_targeting(ecs);
 
     let target_required = get_target_for_skill(name);
 

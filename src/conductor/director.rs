@@ -2,7 +2,6 @@ use std::time::Duration;
 use std::time::Instant;
 
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 
 use super::Scene;
 
@@ -38,10 +37,7 @@ impl<'a> Director<'a> {
                     Event::Quit { .. } => EventStatus::Quit,
                     Event::KeyDown { keycode, repeat: false, .. } => {
                         if let Some(keycode) = keycode {
-                            match keycode {
-                                Keycode::Escape => EventStatus::Quit,
-                                _ => self.scene.handle_key(&keycode),
-                            }
+                            self.scene.handle_key(&keycode)
                         } else {
                             EventStatus::Continue
                         }

@@ -10,6 +10,9 @@ pub use skills::{get_target_for_skill, invoke_skill, TargetType};
 mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
 
+mod map;
+pub use map::{element_at_location, MapHitTestResult};
+
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct Point {
     pub x: u32,
