@@ -12,6 +12,7 @@ use sdl2::rect::Point as SDLPoint;
 
 use super::views::{HitTestResult, InfoBarView, LogComponent, LogView, MapView, SkillBarView, View};
 
+use super::{select_skill, select_skill_with_target};
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
@@ -52,6 +53,7 @@ impl<'a> BattleScene<'a> {
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init(5, 5))
             .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
+            .with(CharacterInfoComponent::init(Character::init()))
             .build();
 
         ecs.create_entity()
@@ -82,57 +84,58 @@ impl<'a> BattleScene<'a> {
     }
 
     fn handle_default_key(&mut self, keycode: &Keycode) -> EventStatus {
-        let name = keycode.name();
-        let chars: Vec<char> = name.chars().collect();
+        if let Some(i) = is_keystroke_skill(keycode) {
+            // HACK - should get name from model, not test data
+            let name = super::views::test_skill_name(i);
+            select_skill(&mut self.ecs, &name);
+        }
+        EventStatus::Continue
+    }
 
-        if chars.len() == 1 {
-            match chars[0] {
-                // HACK
-                '0'..='9' => self.invoke_skill(super::views::test_skill_name(chars[0].to_string().parse().unwrap())),
+    fn handle_default_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+        if *button == MouseButton::Left {
+            match &hit {
+                Some(HitTestResult::Skill(name)) => select_skill(&mut self.ecs, &name),
                 _ => {}
             }
         }
         EventStatus::Continue
     }
 
-    fn player_can_act(&self) -> bool {
-        let animations = self.ecs.read_storage::<AnimationComponent>();
-        for a in (&animations).join() {
-            match &a.animation {
-                Animation::Position { .. } => {
-                    return false;
+    fn handle_target_key(&mut self, keycode: &Keycode) -> EventStatus {
+        // If they select a skill, start a new target session just like
+        if let Some(i) = is_keystroke_skill(keycode) {
+            // HACK - should get name from model, not test data
+            let name = super::views::test_skill_name(i);
+            select_skill(&mut self.ecs, &name);
+        }
+        EventStatus::Continue
+    }
+
+    fn handle_target_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+        // Copy the target/type out so we can modify
+        let target_info = match &self.ecs.read_resource::<BattleSceneStateComponent>().state {
+            BattleSceneState::Targeting(target_source, target_type) => Some((target_source.clone(), target_type.clone())),
+            _ => None,
+        };
+
+        if let Some((target_source, required_type)) = target_info {
+            let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+            if *button == MouseButton::Left {
+                let position = match &hit {
+                    Some(HitTestResult::Tile(position)) if required_type.is_tile() => Some(position),
+                    Some(HitTestResult::Enemy(position)) if required_type.is_enemy() => Some(position),
+                    _ => None,
+                };
+                if let Some(position) = position {
+                    match target_source {
+                        BattleTargetSource::Skill(skill_name) => select_skill_with_target(&mut self.ecs, &skill_name, position),
+                    }
                 }
-                Animation::CharacterState { .. } => {}
             }
         }
-        true
-    }
 
-    fn invoke_skill(&mut self, name: &str) {
-        if !self.player_can_act() {
-            return;
-        }
-        let target_required = get_target_for_skill(name);
-        if target_required.is_none() {
-            invoke_skill(&mut self.ecs, name, None);
-        } else {
-            let mut state = self.ecs.write_resource::<BattleSceneStateComponent>();
-
-            match target_required {
-                TargetType::Enemy | TargetType::Tile => state.state = BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required),
-                TargetType::None => {}
-            }
-        }
-    }
-
-    fn default_handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
-        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-        if *button == MouseButton::Left {
-            match &hit {
-                Some(HitTestResult::Skill(name)) => self.invoke_skill(&name),
-                _ => {}
-            }
-        }
         EventStatus::Continue
     }
 }
@@ -148,7 +151,7 @@ impl<'a> Scene for BattleScene<'a> {
         let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
         match state {
             BattleSceneState::Default() => self.handle_default_key(keycode),
-            BattleSceneState::Targeting(_, _) => EventStatus::Continue,
+            BattleSceneState::Targeting(_, _) => self.handle_target_key(keycode),
         }
     }
 
@@ -165,8 +168,8 @@ impl<'a> Scene for BattleScene<'a> {
 
         let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
         match state {
-            BattleSceneState::Default() => self.default_handle_mouse(x, y, button),
-            BattleSceneState::Targeting(_, _) => EventStatus::Continue,
+            BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
+            BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),
         }
     }
 
@@ -186,6 +189,21 @@ impl<'a> Scene for BattleScene<'a> {
         self.ecs.maintain();
         tick_animations(&self.ecs, frame)?;
         Ok(())
+    }
+}
+
+fn is_keystroke_skill(keycode: &Keycode) -> Option<u32> {
+    let name = keycode.name();
+    let chars: Vec<char> = name.chars().collect();
+
+    if chars.len() == 1 {
+        match chars[0] {
+            // HACK - should get name from model, not test data
+            '0'..='9' => Some(chars[0].to_string().parse().unwrap()),
+            _ => None,
+        }
+    } else {
+        None
     }
 }
 

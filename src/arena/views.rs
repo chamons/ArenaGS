@@ -9,9 +9,13 @@ mod log;
 mod map;
 mod skillbar;
 
+#[allow(dead_code)]
+#[derive(is_enum_variant, Clone)]
 pub enum HitTestResult {
     Skill(String),
     Tile(Point),
+    Enemy(Point),
+    Field(Point),
 }
 
 pub trait View {

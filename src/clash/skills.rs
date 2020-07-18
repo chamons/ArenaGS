@@ -24,10 +24,10 @@ pub fn get_target_for_skill(_name: &str) -> TargetType {
         }
     }
 
-    TargetType::Tile
+    TargetType::Enemy
 }
 
-fn assert_correct_targeting(name: &str, target: Option<Point>) {
+fn assert_correct_targeting(name: &str, target: Option<&Point>) {
     let requires_point = match get_target_for_skill(name) {
         TargetType::None => false,
         TargetType::Tile => true,
@@ -39,7 +39,7 @@ fn assert_correct_targeting(name: &str, target: Option<Point>) {
     }
 }
 
-pub fn invoke_skill(ecs: &mut World, name: &str, target: Option<Point>) {
+pub fn invoke_skill(ecs: &mut World, name: &str, target: Option<&Point>) {
     assert_correct_targeting(name, target);
     ecs.log(&format!("Invoking {}", name));
 }
@@ -53,7 +53,7 @@ mod tests {
     #[should_panic]
     fn panic_if_wrong_targeting() {
         let mut ecs = create_world();
-        invoke_skill(&mut ecs, "TestNone", Some(Point::init(2, 2)));
+        invoke_skill(&mut ecs, "TestNone", Some(&Point::init(2, 2)));
     }
 
     #[test]
