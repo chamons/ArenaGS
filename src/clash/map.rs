@@ -28,5 +28,5 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
             }
         }
     }
-    return MapHitTestResult::None();
+    MapHitTestResult::None()
 }

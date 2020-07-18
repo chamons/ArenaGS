@@ -37,12 +37,12 @@ impl<'a> Director<'a> {
                     Event::Quit { .. } => EventStatus::Quit,
                     Event::KeyDown { keycode, repeat: false, .. } => {
                         if let Some(keycode) = keycode {
-                            self.scene.handle_key(&keycode)
+                            self.scene.handle_key(keycode)
                         } else {
                             EventStatus::Continue
                         }
                     }
-                    Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, &mouse_btn),
+                    Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, mouse_btn),
                     _ => EventStatus::Continue,
                 };
 

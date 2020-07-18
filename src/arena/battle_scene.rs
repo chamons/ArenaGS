@@ -80,7 +80,7 @@ impl<'a> BattleScene<'a> {
         Ok(BattleScene { ecs, views })
     }
 
-    fn handle_default_key(&mut self, keycode: &Keycode) -> EventStatus {
+    fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
         if let Some(i) = is_keystroke_skill(keycode) {
             // HACK - should get name from model, not test data
             let name = super::views::test_skill_name(i);
@@ -89,19 +89,18 @@ impl<'a> BattleScene<'a> {
         EventStatus::Continue
     }
 
-    fn handle_default_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-        if *button == MouseButton::Left {
-            match &hit {
-                Some(HitTestResult::Skill(name)) => select_skill(&mut self.ecs, &name),
-                _ => {}
+        if button == MouseButton::Left {
+            if let Some(HitTestResult::Skill(name)) = &hit {
+                select_skill(&mut self.ecs, &name)
             }
         }
         EventStatus::Continue
     }
 
-    fn handle_target_key(&mut self, keycode: &Keycode) -> EventStatus {
-        if *keycode == Keycode::Escape {
+    fn handle_target_key(&mut self, keycode: Keycode) -> EventStatus {
+        if keycode == Keycode::Escape {
             reset_targeting(&mut self.ecs)
         }
 
@@ -114,8 +113,8 @@ impl<'a> BattleScene<'a> {
         EventStatus::Continue
     }
 
-    fn handle_target_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
-        if *button == MouseButton::Right {
+    fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+        if button == MouseButton::Right {
             reset_targeting(&mut self.ecs);
             return EventStatus::Continue;
         }
@@ -128,7 +127,7 @@ impl<'a> BattleScene<'a> {
 
         if let Some((target_source, required_type)) = target_info {
             let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-            if *button == MouseButton::Left {
+            if button == MouseButton::Left {
                 let position = match &hit {
                     Some(HitTestResult::Tile(position)) if required_type.is_tile() => Some(position),
                     Some(HitTestResult::Enemy(position)) if required_type.is_enemy() => Some(position),
@@ -147,7 +146,7 @@ impl<'a> BattleScene<'a> {
 }
 
 impl<'a> Scene for BattleScene<'a> {
-    fn handle_key(&mut self, keycode: &Keycode) -> EventStatus {
+    fn handle_key(&mut self, keycode: Keycode) -> EventStatus {
         match keycode {
             Keycode::PageUp => self.ecs.log_scroll_back(),
             Keycode::PageDown => self.ecs.log_scroll_forward(),
@@ -161,10 +160,10 @@ impl<'a> Scene for BattleScene<'a> {
         }
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: &MouseButton) -> EventStatus {
+    fn handle_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
 
-        if *button == MouseButton::Middle {
+        if button == MouseButton::Middle {
             match &hit {
                 Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
                 Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
@@ -198,7 +197,7 @@ impl<'a> Scene for BattleScene<'a> {
     }
 }
 
-fn is_keystroke_skill(keycode: &Keycode) -> Option<u32> {
+fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
     let name = keycode.name();
     let chars: Vec<char> = name.chars().collect();
 
