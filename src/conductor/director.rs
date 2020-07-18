@@ -1,6 +1,8 @@
 use std::time::Duration;
 use std::time::Instant;
 
+use sdl2::event::Event;
+
 use super::Scene;
 
 use crate::after_image::RenderContext;
@@ -31,7 +33,20 @@ impl<'a> Director<'a> {
         loop {
             let start_frame = Instant::now();
             for event in render_context.event_pump.poll_iter() {
-                match self.scene.handle_event(&event) {
+                let status = match event {
+                    Event::Quit { .. } => EventStatus::Quit,
+                    Event::KeyDown { keycode, repeat: false, .. } => {
+                        if let Some(keycode) = keycode {
+                            self.scene.handle_key(keycode)
+                        } else {
+                            EventStatus::Continue
+                        }
+                    }
+                    Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, mouse_btn),
+                    _ => EventStatus::Continue,
+                };
+
+                match status {
                     EventStatus::Quit => return Ok(()),
                     EventStatus::NewScene(s) => self.change_scene(s),
                     EventStatus::Continue => {}

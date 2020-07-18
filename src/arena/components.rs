@@ -1,30 +1,33 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use crate::clash::Character;
+mod animation;
+pub use animation::{Animation, AnimationComponent};
+mod render;
+pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
-#[derive(Hash, PartialEq, Eq, Component)]
-pub struct PositionComponent {
-    pub x: u32,
-    pub y: u32,
+use crate::clash::TargetType;
+
+#[derive(Clone)]
+pub enum BattleTargetSource {
+    Skill(String),
 }
 
-impl PositionComponent {
-    pub const fn init(x: u32, y: u32) -> PositionComponent {
-        PositionComponent { x, y }
-    }
+#[derive(is_enum_variant, Clone)]
+pub enum BattleSceneState {
+    Default(),
+    Targeting(BattleTargetSource, TargetType),
 }
 
 #[derive(Component)]
-pub struct PlayerComponent {}
-
-#[derive(Component)]
-pub struct CharacterInfoComponent {
-    pub character: Character,
+pub struct BattleSceneStateComponent {
+    pub state: BattleSceneState,
 }
 
-impl CharacterInfoComponent {
-    pub const fn init(character: Character) -> CharacterInfoComponent {
-        CharacterInfoComponent { character }
+impl BattleSceneStateComponent {
+    pub fn init() -> BattleSceneStateComponent {
+        BattleSceneStateComponent {
+            state: BattleSceneState::Default(),
+        }
     }
 }

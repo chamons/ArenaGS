@@ -1,5 +1,7 @@
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
+#[macro_use]
+extern crate derive_is_enum_variant;
 
 use std::panic;
 

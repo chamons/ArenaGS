@@ -6,12 +6,14 @@ use specs::prelude::*;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::super::{AnimationComponent, FieldComponent, PositionComponent, RenderComponent, RenderOrder};
-use super::View;
+use super::super::components::*;
+use super::{HitTestResult, View};
+use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, PositionComponent};
 
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
+use crate::clash::Point;
 
 pub struct MapView {
     sprites: SpriteLoader,
@@ -20,6 +22,7 @@ pub struct MapView {
 pub const MAP_CORNER_X: u32 = 50;
 pub const MAP_CORNER_Y: u32 = 50;
 pub const TILE_SIZE: u32 = 48;
+pub const MAX_MAP_TILES: u32 = 13;
 
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
     if let Some(animation) = animation {
@@ -53,8 +56,8 @@ impl MapView {
     }
 
     fn draw_grid(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        for x in 0..13 {
-            for y in 0..13 {
+        for x in 0..MAX_MAP_TILES {
+            for y in 0..MAX_MAP_TILES {
                 canvas.set_draw_color(Color::from((196, 196, 196)));
                 canvas.draw_rect(SDLRect::from((
                     (MAP_CORNER_X + x * TILE_SIZE) as i32,
@@ -111,13 +114,48 @@ impl MapView {
 
         Ok(())
     }
+
+    fn screen_to_map_position(&self, x: i32, y: i32) -> Option<Point> {
+        // First remove map offset
+        let x = x - MAP_CORNER_X as i32;
+        let y = y - MAP_CORNER_Y as i32;
+
+        if x < 0 || y < 0 {
+            return None;
+        }
+
+        // Now divide by grid position
+        let x = x as u32 / TILE_SIZE;
+        let y = y as u32 / TILE_SIZE;
+
+        // Don't go off map
+        if x >= MAX_MAP_TILES || y >= MAX_MAP_TILES {
+            return None;
+        }
+        Some(Point::init(x, y))
+    }
 }
 
 impl View for MapView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        let state = &ecs.read_resource::<BattleSceneStateComponent>().state;
+
         self.render_entities(ecs, canvas, frame)?;
-        self.draw_grid(canvas)?;
+        if state.is_targeting() {
+            self.draw_grid(canvas)?;
+        }
         self.render_fields(ecs, canvas)?;
         Ok(())
+    }
+
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if let Some(map_position) = self.screen_to_map_position(x, y) {
+            match element_at_location(ecs, &map_position) {
+                MapHitTestResult::Enemy() => Some(HitTestResult::Enemy(map_position)),
+                MapHitTestResult::Player() | MapHitTestResult::Field() | MapHitTestResult::None() => Some(HitTestResult::Tile(map_position)),
+            }
+        } else {
+            None
+        }
     }
 }

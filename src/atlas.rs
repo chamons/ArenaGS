@@ -9,3 +9,9 @@ pub use crash::on_crash;
 pub use paths::get_exe_folder;
 
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
+
+pub trait Logger {
+    fn log(&mut self, message: &str);
+    fn log_scroll_forward(&mut self);
+    fn log_scroll_back(&mut self);
+}

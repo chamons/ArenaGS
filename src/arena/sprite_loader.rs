@@ -3,7 +3,7 @@ use std::path::Path;
 
 use enum_iterator::IntoEnumIterator;
 
-use super::SpriteKinds;
+use super::components::*;
 use crate::after_image::{Background, DetailedCharacter, LargeEnemy, RenderContext, Sprite, SpriteFolderDescription};
 use crate::atlas::BoxResult;
 

@@ -1,10 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::PositionComponent;
-
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::BoxResult;
 use crate::clash::Point;
 
 #[derive(PartialEq)]
@@ -88,29 +85,4 @@ impl AnimationComponent {
 
 fn lerp(start: f32, end: f32, t: f64) -> f32 {
     (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
-}
-
-pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
-    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let mut positions = ecs.write_storage::<PositionComponent>();
-
-    // Remove completed animations, applying their change
-    let mut completed = vec![];
-    for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
-        if animation.is_complete(frame) {
-            completed.push(entity);
-        }
-        if let Animation::Position { start: _, end } = &animation.animation {
-            if let Some(position) = position {
-                position.x = end.x;
-                position.y = end.y;
-            }
-        }
-    }
-    for c in completed {
-        animations.remove(c);
-    }
-
-    Ok(())
 }
