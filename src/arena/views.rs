@@ -29,7 +29,7 @@ pub trait View {
 pub use debug::DebugView;
 pub use infobar::InfoBarView;
 pub use log::{LogComponent, LogView};
-pub use map::{MapView, MAP_CORNER_Y, TILE_SIZE};
+pub use map::{MapView, MAP_CORNER_Y, TILE_SIZE, screen_rect_for_map_grid};
 pub use skillbar::SkillBarView;
 
 // HACK

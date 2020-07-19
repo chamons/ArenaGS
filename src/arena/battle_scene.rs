@@ -139,8 +139,8 @@ impl<'a> BattleScene<'a> {
         }
 
         // Copy the target/type out so we can modify
-        let target_info = match &self.ecs.read_resource::<BattleSceneStateComponent>().state {
-            BattleSceneState::Targeting(target_source, target_type) => Some((target_source.clone(), target_type.clone())),
+        let target_info = match read_state(&self.ecs) {
+            BattleSceneState::Targeting(target_source, target_type) => Some((target_source, target_type)),
             _ => None,
         };
 
@@ -195,7 +195,7 @@ impl<'a> Scene for BattleScene<'a> {
             }
         }
 
-        let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
+        let state = read_state(&self.ecs);
         match state {
             BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
             BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),

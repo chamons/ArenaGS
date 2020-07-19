@@ -1,11 +1,16 @@
+use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
+use sdl2::render::BlendMode;
 use specs::prelude::*;
 
-use super::View;
+use super::{screen_rect_for_map_grid, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
-use crate::arena::components::BattleSceneState;
+use crate::arena::components::*;
 use crate::arena::read_state;
 use crate::atlas::BoxResult;
+
+use crate::clash::MAX_MAP_TILES;
 
 pub struct DebugView<'a> {
     position: SDLPoint,
@@ -24,7 +29,22 @@ impl<'a> View for DebugView<'a> {
             let state = format!("Debug: {}", kind.to_string());
             self.text
                 .render_text(&state, self.position.x, self.position.y, canvas, FontSize::Small, FontColor::Red)?;
+
+            match kind {
+                DebugKind::MapOverlay() => {
+                    canvas.set_draw_color(Color::from((196, 0, 0, 196)));
+                    canvas.set_blend_mode(BlendMode::Blend);
+                    for x in 0..MAX_MAP_TILES {
+                        for y in 0..MAX_MAP_TILES {
+                            let grid_rect = screen_rect_for_map_grid(x, y);
+                            let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
+                            canvas.fill_rect(field_rect)?;
+                        }
+                    }
+                }
+            }
         }
+
         Ok(())
     }
 }

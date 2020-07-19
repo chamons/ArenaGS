@@ -14,7 +14,7 @@ pub enum BattleTargetSource {
     Skill(String),
 }
 
-#[derive(Clone, Debug)]
+#[derive(is_enum_variant, Clone, Debug)]
 pub enum DebugKind {
     MapOverlay(),
 }
