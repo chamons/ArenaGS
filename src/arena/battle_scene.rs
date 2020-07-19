@@ -1,9 +1,10 @@
-use specs::prelude::*;
+use std::path::Path;
 
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
+use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
@@ -11,7 +12,7 @@ use super::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{BoxResult, Logger};
+use crate::atlas::{get_exe_folder, BoxResult, Logger};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -29,7 +30,6 @@ impl<'a> BattleScene<'a> {
 
         ecs.insert(LogComponent::init());
         ecs.insert(BattleSceneStateComponent::init());
-        ecs.insert(MapComponent::init(Map::init_empty()));
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
@@ -53,6 +53,10 @@ impl<'a> BattleScene<'a> {
             .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
+
+        let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
+        let map_data_path = map_data_path.to_str().unwrap();
+        ecs.insert(MapComponent::init(Map::init(map_data_path)?));
 
         ecs.create_entity()
             .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
@@ -100,16 +104,6 @@ impl<'a> BattleScene<'a> {
         EventStatus::Continue
     }
 
-    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
-        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-        if button == MouseButton::Left {
-            if let Some(HitTestResult::Skill(name)) = &hit {
-                select_skill(&mut self.ecs, &name)
-            }
-        }
-        EventStatus::Continue
-    }
-
     fn handle_target_key(&mut self, keycode: Keycode) -> EventStatus {
         if keycode == Keycode::Escape {
             reset_state(&mut self.ecs)
@@ -129,6 +123,22 @@ impl<'a> BattleScene<'a> {
             reset_state(&mut self.ecs);
             return EventStatus::Continue;
         }
+        if kind.is_map_overlay() {
+            if keycode == Keycode::S {
+                let map = &self.ecs.read_resource::<MapComponent>().map;
+                map.write_to_file().unwrap();
+            }
+        }
+        EventStatus::Continue
+    }
+
+    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+        if button == MouseButton::Left {
+            if let Some(HitTestResult::Skill(name)) = &hit {
+                select_skill(&mut self.ecs, &name)
+            }
+        }
         EventStatus::Continue
     }
 
@@ -138,15 +148,14 @@ impl<'a> BattleScene<'a> {
             return EventStatus::Continue;
         }
 
-        // Copy the target/type out so we can modify
         let target_info = match read_state(&self.ecs) {
             BattleSceneState::Targeting(target_source, target_type) => Some((target_source, target_type)),
             _ => None,
         };
 
         if let Some((target_source, required_type)) = target_info {
-            let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
             if button == MouseButton::Left {
+                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
                 let position = match &hit {
                     Some(HitTestResult::Tile(position)) if required_type.is_tile() => Some(position),
                     Some(HitTestResult::Enemy(position)) if required_type.is_enemy() => Some(position),
@@ -164,6 +173,14 @@ impl<'a> BattleScene<'a> {
     }
 
     fn handle_debug_mouse(&mut self, kind: DebugKind, x: i32, y: i32, button: MouseButton) -> EventStatus {
+        if button == MouseButton::Left {
+            if kind.is_map_overlay() {
+                if let Some(map_position) = screen_to_map_position(x, y) {
+                    let map = &mut self.ecs.write_resource::<MapComponent>().map;
+                    map.set_walkable(&map_position, !map.is_walkable(&map_position));
+                }
+            }
+        }
         EventStatus::Continue
     }
 }
@@ -185,9 +202,8 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
-        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-
         if button == MouseButton::Middle {
+            let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
             match &hit {
                 Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
                 Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),

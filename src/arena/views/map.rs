@@ -138,7 +138,7 @@ pub fn screen_rect_for_map_grid(x: u32, y: u32) -> SDLRect {
     ))
 }
 
-fn screen_to_map_position(x: i32, y: i32) -> Option<Point> {
+pub fn screen_to_map_position(x: i32, y: i32) -> Option<Point> {
     // First remove map offset
     let x = x - MAP_CORNER_X as i32;
     let y = y - MAP_CORNER_Y as i32;

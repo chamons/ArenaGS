@@ -9,6 +9,7 @@ use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::arena::components::*;
 use crate::arena::read_state;
 use crate::atlas::BoxResult;
+use crate::clash::{MapComponent, Point};
 
 use crate::clash::MAX_MAP_TILES;
 
@@ -32,12 +33,19 @@ impl<'a> View for DebugView<'a> {
 
             match kind {
                 DebugKind::MapOverlay() => {
-                    canvas.set_draw_color(Color::from((196, 0, 0, 196)));
+                    let map = &ecs.read_resource::<MapComponent>().map;
+
                     canvas.set_blend_mode(BlendMode::Blend);
                     for x in 0..MAX_MAP_TILES {
                         for y in 0..MAX_MAP_TILES {
                             let grid_rect = screen_rect_for_map_grid(x, y);
                             let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
+
+                            if map.is_walkable(&Point::init(x, y)) {
+                                canvas.set_draw_color(Color::from((0, 0, 196, 196)));
+                            } else {
+                                canvas.set_draw_color(Color::from((196, 0, 0, 196)));
+                            }
                             canvas.fill_rect(field_rect)?;
                         }
                     }
