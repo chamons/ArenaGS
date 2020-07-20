@@ -13,6 +13,9 @@ pub use components::{create_world, CharacterInfoComponent, FieldComponent, Playe
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
+mod physics;
+pub use physics::move_character;
+
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct Point {
     pub x: u32,

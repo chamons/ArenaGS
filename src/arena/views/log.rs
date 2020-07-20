@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn add_can_bump_index() {
         let mut log = LogComponent::init();
-        for i in 0..10 {
+        for _ in 0..10 {
             log.add("Test");
             assert_eq!(log.index, 0);
         }
@@ -158,14 +158,14 @@ mod tests {
     #[test]
     fn scroll_forward() {
         let mut log = LogComponent::init();
-        for i in 0..15 {
+        for _ in 0..15 {
             log.add("Test");
         }
         log.index = 0;
         log.scroll_forward();
         assert_eq!(log.index, LOG_COUNT);
 
-        for i in 0..5 {
+        for _ in 0..5 {
             log.scroll_forward();
         }
         assert_eq!(log.index, log.logs.len() - 1);
@@ -174,14 +174,14 @@ mod tests {
     #[test]
     fn scroll_back() {
         let mut log = LogComponent::init();
-        for i in 0..15 {
+        for _ in 0..15 {
             log.add("Test");
         }
         log.index = 14;
         log.scroll_back();
         assert_eq!(log.index, 14 - LOG_COUNT);
 
-        for i in 0..5 {
+        for _ in 0..5 {
             log.scroll_back();
         }
         assert_eq!(log.index, 0);
