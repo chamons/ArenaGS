@@ -16,7 +16,7 @@ pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile,
 mod physics;
 pub use physics::move_character;
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub struct Point {
     pub x: u32,
     pub y: u32,

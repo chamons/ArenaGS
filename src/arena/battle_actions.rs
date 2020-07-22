@@ -60,3 +60,66 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
         TargetType::None => panic!("TargetType::None should not have reached select_skill_with_target"),
     }
 }
+
+pub enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+fn find_player(ecs: &World) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let players = ecs.read_storage::<PlayerComponent>();
+
+    for (entity, _) in (&entities, &players).join() {
+        return Some(entity);
+    }
+    None
+}
+
+fn point_in_direction(initial: &Point, direction: Direction) -> Option<Point> {
+    let is_valid = match direction {
+        Direction::North => initial.y > 0,
+        Direction::South => initial.y < MAX_MAP_TILES - 1,
+        Direction::East => initial.x < MAX_MAP_TILES - 1,
+        Direction::West => initial.x > 0,
+    };
+
+    if is_valid {
+        match direction {
+            Direction::North => Some(Point::init(initial.x, initial.y - 1)),
+            Direction::South => Some(Point::init(initial.x, initial.y + 1)),
+            Direction::East => Some(Point::init(initial.x + 1, initial.y)),
+            Direction::West => Some(Point::init(initial.x - 1, initial.y)),
+        }
+    } else {
+        None
+    }
+}
+
+pub fn move_player(ecs: &mut World, direction: Direction) {
+    if !player_can_act(ecs) {
+        return;
+    }
+    let player = find_player(ecs).unwrap();
+    let new_position = {
+        let positions = ecs.read_storage::<PositionComponent>();
+        point_in_direction(&positions.get(player).unwrap().position, direction)
+    };
+    if let Some(new_position) = new_position {
+        move_character(ecs, player, new_position);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn point_off_map() {
+        assert_eq!(None, point_in_direction(&Point::init(5, 0), Direction::North));
+        assert_eq!(None, point_in_direction(&Point::init(5, 12), Direction::South));
+        assert_eq!(None, point_in_direction(&Point::init(0, 5), Direction::West));
+        assert_eq!(None, point_in_direction(&Point::init(12, 5), Direction::East));
+    }
+}

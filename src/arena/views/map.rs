@@ -43,8 +43,8 @@ fn get_render_position(position: &PositionComponent, animation: Option<&Animatio
         }
     }
     SDLPoint::new(
-        ((position.x * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
-        ((position.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
+        ((position.x() * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
+        ((position.y() * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
     )
 }
 
@@ -97,7 +97,7 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            let grid_rect = screen_rect_for_map_grid(position.x, position.y);
+            let grid_rect = screen_rect_for_map_grid(position.x(), position.y());
             let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
             canvas.set_draw_color(field.color);
             canvas.fill_rect(field_rect)?;

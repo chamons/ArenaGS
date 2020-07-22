@@ -36,7 +36,7 @@ impl<'a> BattleScene<'a> {
                 SpriteKinds::MaleBrownHairBlueBody,
                 CharacterAnimationState::Idle,
             ))
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(4, 4))
             .with(AnimationComponent::sprite_state(
                 CharacterAnimationState::Bow,
                 CharacterAnimationState::Idle,
@@ -100,6 +100,13 @@ impl<'a> BattleScene<'a> {
             // HACK - should get name from model, not test data
             let name = super::views::test_skill_name(i);
             select_skill(&mut self.ecs, &name);
+        }
+        match keycode {
+            Keycode::Up => move_player(&mut self.ecs, Direction::North),
+            Keycode::Down => move_player(&mut self.ecs, Direction::South),
+            Keycode::Left => move_player(&mut self.ecs, Direction::West),
+            Keycode::Right => move_player(&mut self.ecs, Direction::East),
+            _ => {}
         }
         EventStatus::Continue
     }
@@ -266,8 +273,7 @@ pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
         }
         if let Animation::Position { start: _, end } = &animation.animation {
             if let Some(position) = position {
-                position.x = end.x;
-                position.y = end.y;
+                position.position = end.clone();
             }
         }
     }

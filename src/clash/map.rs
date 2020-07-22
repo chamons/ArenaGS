@@ -34,8 +34,12 @@ impl Map {
     #[allow(dead_code)]
     pub const fn init_empty() -> Map {
         Map {
-            tiles: [[MapTile { walkable: false }; MAX_MAP_TILES_SIZED]; MAX_MAP_TILES_SIZED],
+            tiles: [[MapTile { walkable: true }; MAX_MAP_TILES_SIZED]; MAX_MAP_TILES_SIZED],
         }
+    }
+
+    pub fn is_in_bounds(&self, position: &Point) -> bool {
+        position.x < MAX_MAP_TILES && position.y < MAX_MAP_TILES
     }
 
     pub fn is_walkable(&self, position: &Point) -> bool {
@@ -49,7 +53,7 @@ impl Map {
     pub fn write_to_file(&self) -> BoxResult<()> {
         let mut file = File::create("map.dat")?;
         let data = bincode::serialize(&self.tiles)?;
-        file.write(&data)?;
+        file.write_all(&data)?;
         Ok(())
     }
 }
@@ -79,7 +83,7 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
     let player = ecs.read_storage::<PlayerComponent>();
 
     for (position, field, character, player) in (&positions, (&fields).maybe(), (&character_infos).maybe(), (&player).maybe()).join() {
-        if position.x == map_position.x as u32 && position.y == map_position.y as u32 {
+        if position.position == *map_position {
             if let Some(_character) = character {
                 if player.is_none() {
                     return MapHitTestResult::Enemy();

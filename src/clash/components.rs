@@ -3,20 +3,26 @@ use specs_derive::Component;
 
 use sdl2::pixels::Color;
 
-use crate::clash::Character;
+use crate::clash::{Character, Point};
 
 #[derive(Component)]
 pub struct PlayerComponent {}
 
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct PositionComponent {
-    pub x: u32,
-    pub y: u32,
+    pub position: Point,
 }
 
 impl PositionComponent {
     pub const fn init(x: u32, y: u32) -> PositionComponent {
-        PositionComponent { x, y }
+        PositionComponent { position: Point::init(x, y) }
+    }
+
+    pub fn x(&self) -> u32 {
+        self.position.x
+    }
+    pub fn y(&self) -> u32 {
+        self.position.y
     }
 }
 
