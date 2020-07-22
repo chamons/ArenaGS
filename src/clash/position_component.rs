@@ -5,9 +5,9 @@ use crate::clash::Point;
 
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct PositionComponent {
-    origin: Point,
-    width: u32,
-    height: u32,
+    pub origin: Point,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl PositionComponent {

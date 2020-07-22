@@ -10,10 +10,11 @@ use sdl2::render::Texture;
 
 pub struct LargeEnemy {
     texture: Texture,
+    scale: f32,
 }
 
 impl LargeEnemy {
-    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<LargeEnemy> {
+    pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription, scale: f32) -> BoxResult<LargeEnemy> {
         let folder = Path::new(&description.base_folder)
             .join("monsters")
             .join(format!("{}{}", &description.character, ".png"))
@@ -23,6 +24,7 @@ impl LargeEnemy {
 
         Ok(LargeEnemy {
             texture: load_image(&folder, render_context)?,
+            scale,
         })
     }
 }
@@ -31,7 +33,7 @@ impl Sprite for LargeEnemy {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, _: u32, frame: u64) -> BoxResult<()> {
         let offset = super::sprite::get_animation_frame(frame);
 
-        let mut screen_rect = SDLRect::from_center(screen_position, 122, 96);
+        let mut screen_rect = SDLRect::from_center(screen_position, (122.0 * self.scale) as u32, (96.0 * self.scale) as u32);
         // Tweak location a tad from default
         screen_rect.set_x(screen_rect.x() + 1);
         screen_rect.set_y(screen_rect.y() - 5);

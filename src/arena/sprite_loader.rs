@@ -35,14 +35,17 @@ impl SpriteLoader {
                 SpriteKinds::MonsterBirdBrown => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
+                    1.5,
                 )?),
                 SpriteKinds::MonsterBirdBlue => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
+                    1.5,
                 )?),
                 SpriteKinds::MonsterBirdRed => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
+                    1.5,
                 )?),
             };
             sprites.insert(s.into(), sprite);

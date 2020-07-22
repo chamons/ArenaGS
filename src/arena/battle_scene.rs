@@ -49,7 +49,7 @@ impl<'a> BattleScene<'a> {
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
-            .with(PositionComponent::init(5, 5))
+            .with(PositionComponent::init_multi(5, 5, 3, 3))
             .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();

@@ -34,17 +34,18 @@ fn get_render_sprite_state(render: &RenderComponent, animation: Option<&Animatio
 }
 
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
+    let width = position.width;
     if let Some(animation) = animation {
         if let Some(animation_point) = animation.current_position(frame) {
             return SDLPoint::new(
-                ((animation_point.x * TILE_SIZE as f32) + MAP_CORNER_X as f32 + (TILE_SIZE as u32 / 2) as f32) as i32,
+                ((animation_point.x * TILE_SIZE as f32) + MAP_CORNER_X as f32 + ((width * TILE_SIZE) as u32 / 2) as f32) as i32,
                 ((animation_point.y * TILE_SIZE as f32) + MAP_CORNER_Y as f32) as i32,
             );
         }
     }
     SDLPoint::new(
-        ((position.x() * TILE_SIZE as u32) + MAP_CORNER_X + (TILE_SIZE as u32 / 2)) as i32,
-        ((position.y() * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
+        ((position.origin.x * TILE_SIZE as u32) + MAP_CORNER_X + ((width * TILE_SIZE) as u32 / 2)) as i32,
+        ((position.origin.y * TILE_SIZE as u32) + MAP_CORNER_Y) as i32,
     )
 }
 
