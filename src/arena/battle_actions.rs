@@ -105,7 +105,8 @@ pub fn move_player(ecs: &mut World, direction: Direction) {
     let player = find_player(ecs).unwrap();
     let new_position = {
         let positions = ecs.read_storage::<PositionComponent>();
-        point_in_direction(&positions.get(player).unwrap().position, direction)
+        let position_component = positions.get(player).unwrap();
+        point_in_direction(&position_component.single_position(), direction)
     };
     if let Some(new_position) = new_position {
         move_character(ecs, player, new_position);

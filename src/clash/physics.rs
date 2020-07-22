@@ -4,20 +4,26 @@ use super::*;
 
 pub fn move_character(ecs: &mut World, entity: Entity, new: Point) -> bool {
     let map = &ecs.read_resource::<MapComponent>().map;
-    let mut positions = ecs.write_storage::<PositionComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
 
     if !map.is_in_bounds(&new) || !map.is_walkable(&new) {
         return false;
     }
     for (positions, _) in (&positions, &char_info).join() {
-        if positions.position == new {
+        if positions.contains_point(&new) {
             return false;
         }
     }
+    true
+}
 
-    let mut position = &mut positions.get_mut(entity).unwrap();
-    position.position = new;
+pub fn move_character(ecs: &mut World, entity: Entity, new: Point) -> bool {
+    if !can_move_character(ecs, new) {
+        return false;
+    }
+
+    apply_move(ecs, &entity, &new);
     true
 }
 

@@ -97,10 +97,12 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            let grid_rect = screen_rect_for_map_grid(position.x(), position.y());
-            let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
-            canvas.set_draw_color(field.color);
-            canvas.fill_rect(field_rect)?;
+            for position in position.all_positions().iter() {
+                let grid_rect = screen_rect_for_map_grid(position.x, position.y);
+                let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
+                canvas.set_draw_color(field.color);
+                canvas.fill_rect(field_rect)?;
+            }
         }
 
         Ok(())

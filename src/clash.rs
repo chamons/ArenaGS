@@ -8,7 +8,7 @@ mod skills;
 pub use skills::{get_target_for_skill, invoke_skill, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, PlayerComponent};
 
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
@@ -16,7 +16,10 @@ pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile,
 mod physics;
 pub use physics::move_character;
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+mod position_component;
+pub use position_component::PositionComponent; 
+
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
