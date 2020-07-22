@@ -44,6 +44,10 @@ impl PositionComponent {
         assert!(self.width == 1 && self.height == 1);
         return self.origin;
     }
+
+    pub fn move_to(&mut self, position: Point) {
+        self.origin = position;
+    }
 }
 
 #[cfg(test)]
@@ -74,5 +78,20 @@ mod tests {
         assert_eq!(false, position_component.contains_point(&Point::init(4, 4)));
         assert_eq!(false, position_component.contains_point(&Point::init(0, 0)));
         assert_eq!(false, position_component.contains_point(&Point::init(2, 5)));
+    }
+
+    #[test]
+    fn move_by() {
+        let mut position_component = PositionComponent::init_multi(2, 2, 2, 3);
+        position_component.move_to(Point::init(3, 3));
+
+        let all = position_component.all_positions();
+        assert_eq!(6, all.len());
+        assert_eq!(*all.get(0).unwrap(), Point::init(3, 3));
+        assert_eq!(*all.get(1).unwrap(), Point::init(4, 3));
+        assert_eq!(*all.get(2).unwrap(), Point::init(3, 4));
+        assert_eq!(*all.get(3).unwrap(), Point::init(4, 4));
+        assert_eq!(*all.get(4).unwrap(), Point::init(3, 5));
+        assert_eq!(*all.get(5).unwrap(), Point::init(4, 5));
     }
 }

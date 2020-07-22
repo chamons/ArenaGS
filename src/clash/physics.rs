@@ -2,7 +2,13 @@ use specs::prelude::*;
 
 use super::*;
 
-pub fn move_character(ecs: &mut World, entity: Entity, new: Point) -> bool {
+pub fn apply_move(ecs: &World, entity: &Entity, new_position: &Point) {
+    let mut positions = ecs.write_storage::<PositionComponent>();
+    let position = &mut positions.get_mut(*entity).unwrap();
+    position.move_to(*new_position);
+}
+
+fn can_move_character(ecs: &mut World, new: Point) -> bool {
     let map = &ecs.read_resource::<MapComponent>().map;
     let positions = ecs.read_storage::<PositionComponent>();
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
@@ -42,8 +48,8 @@ mod tests {
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
         let positions = ecs.read_storage::<PositionComponent>();
         let position = &positions.get(*entity).unwrap();
-        assert_eq!(position.x(), expected.x);
-        assert_eq!(position.y(), expected.y);
+        assert_eq!(position.single_position().x, expected.x);
+        assert_eq!(position.single_position().y, expected.y);
     }
 
     #[test]

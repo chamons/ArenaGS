@@ -1,2 +1,2 @@
-// Move to a wraper view for sprites
-// Entities contain RenderComponent which has a sprite who knows how to draw
+- Split background so trees are not under the spites
+- Some sort of ground shadow so you can see what square are taken

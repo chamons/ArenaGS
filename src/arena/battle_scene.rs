@@ -49,7 +49,7 @@ impl<'a> BattleScene<'a> {
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
-            .with(PositionComponent::init_multi(5, 5, 3, 3))
+            .with(PositionComponent::init_multi(5, 5, 2, 2))
             .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
@@ -261,24 +261,33 @@ fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
 }
 
 pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
-    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let mut positions = ecs.write_storage::<PositionComponent>();
-
     // Remove completed animations, applying their change
     let mut completed = vec![];
-    for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
-        if animation.is_complete(frame) {
-            completed.push(entity);
-        }
-        if let Animation::Position { start: _, end } = &animation.animation {
-            if let Some(position) = position {
-                position.position = end.clone();
+    let mut to_move = vec![];
+    {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let animations = ecs.read_storage::<AnimationComponent>();
+        let mut positions = ecs.write_storage::<PositionComponent>();
+
+        for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
+            if animation.is_complete(frame) {
+                completed.push(entity);
+            }
+            if let Animation::Position { start: _, end } = &animation.animation {
+                if let Some(_) = position {
+                    to_move.push((entity, *end));
+                }
             }
         }
     }
-    for c in completed {
-        animations.remove(c);
+    for (entity, position) in to_move.iter() {
+        apply_move(&ecs, &entity, position);
+    }
+    {
+        let mut animations = ecs.write_storage::<AnimationComponent>();
+        for c in completed {
+            animations.remove(c);
+        }
     }
 
     Ok(())
