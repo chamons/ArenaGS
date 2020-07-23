@@ -2,8 +2,6 @@ use specs::prelude::*;
 use specs_derive::Component;
 use std::fmt;
 
-mod animation;
-pub use animation::{Animation, AnimationComponent};
 mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 

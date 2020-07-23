@@ -14,7 +14,7 @@ use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, Positi
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
-use crate::clash::{Point, MAX_MAP_TILES};
+use crate::clash::{AnimationComponent, Point, MAX_MAP_TILES};
 
 pub struct MapView {
     sprites: SpriteLoader,

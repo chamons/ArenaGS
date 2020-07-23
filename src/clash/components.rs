@@ -21,6 +21,16 @@ impl CharacterInfoComponent {
 }
 
 #[derive(Component)]
+pub struct FrameComponent {
+    pub current_frame: u64,
+}
+impl FrameComponent {
+    pub fn init() -> FrameComponent {
+        FrameComponent { current_frame: 0 }
+    }
+}
+
+#[derive(Component)]
 pub struct FieldComponent {
     pub color: Color,
 }
@@ -40,5 +50,9 @@ pub fn create_world() -> World {
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
     ecs.register::<super::MapComponent>();
+    ecs.register::<super::AnimationComponent>();
+    ecs.register::<super::FrameComponent>();
+
+    ecs.insert(FrameComponent::init());
     ecs
 }

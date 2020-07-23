@@ -24,10 +24,10 @@ impl<'a> BattleScene<'a> {
     pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
         let mut ecs = create_world();
         ecs.register::<RenderComponent>();
-        ecs.register::<AnimationComponent>();
         ecs.register::<LogComponent>();
         ecs.register::<BattleSceneStateComponent>();
 
+        ecs.insert(FrameComponent::init());
         ecs.insert(LogComponent::init());
         ecs.insert(BattleSceneStateComponent::init());
 
@@ -50,7 +50,6 @@ impl<'a> BattleScene<'a> {
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init_multi(5, 5, 2, 2))
-            .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
 
@@ -227,6 +226,8 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        self.ecs.write_resource::<FrameComponent>().current_frame = frame;
+
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
@@ -281,6 +282,11 @@ pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
         }
     }
     for (entity, position) in to_move.iter() {
+        // This code needs to live outside of apply_move (should be renamed)
+        // Like start_move and complete_move?
+        //let mut positions = ecs.write_storage::<PositionComponent>();
+        //let position = &mut positions.get_mut(*entity).unwrap();
+        //position.move_to(*new_position);
         apply_move(&ecs, &entity, position);
     }
     {

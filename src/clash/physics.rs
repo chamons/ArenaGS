@@ -3,9 +3,17 @@ use specs::prelude::*;
 use super::*;
 
 pub fn apply_move(ecs: &World, entity: &Entity, new_position: &Point) {
-    let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.get_mut(*entity).unwrap();
-    position.move_to(*new_position);
+    let frame = ecs.read_resource::<FrameComponent>();
+    let mut animations = ecs.write_storage::<AnimationComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    let position = &positions.get(*entity).unwrap();
+
+    let animation = AnimationComponent::movement(position.origin, *new_position, frame.current_frame, frame.current_frame + 20);
+    animations.insert(*entity, animation).unwrap();
+    //    .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
+    //    let mut positions = ecs.write_storage::<PositionComponent>();
+    //  let position = &mut positions.get_mut(*entity).unwrap();
+    // position.move_to(*new_position);
 }
 
 fn can_move_character(ecs: &mut World, new: Point) -> bool {
@@ -64,6 +72,7 @@ mod tests {
 
         assert_position(&ecs, &entity, Point::init(2, 3));
     }
+
     #[test]
     fn walk_into_non_characters() {
         let mut ecs = create_world();

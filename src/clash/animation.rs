@@ -4,6 +4,13 @@ use specs_derive::Component;
 use crate::after_image::CharacterAnimationState;
 use crate::clash::Point;
 
+// Animations are a strange beast/
+// Unless we do some sort of late binding,
+// if we want an action, say a move, to animate
+// to the new state before applying the new location
+// the engine needs to create them
+// However, they really are UI constructs
+
 #[derive(PartialEq)]
 pub struct FPoint {
     pub x: f32,
@@ -26,6 +33,7 @@ pub enum Animation {
         done: CharacterAnimationState,
     },
 }
+
 
 #[derive(Component)]
 pub struct AnimationComponent {
