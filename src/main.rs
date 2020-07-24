@@ -1,11 +1,16 @@
+#![allow(clippy::collapsible_if)]
+
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
+
 #[macro_use]
 extern crate derive_is_enum_variant;
 
+#[cfg(debug_assertions)]
 use std::panic;
 
 mod atlas;
+#[cfg(debug_assertions)]
 use atlas::on_crash;
 
 mod after_image;

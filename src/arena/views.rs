@@ -4,6 +4,7 @@ use crate::after_image::RenderCanvas;
 use crate::atlas::BoxResult;
 use crate::clash::Point;
 
+mod debug;
 mod infobar;
 mod log;
 mod map;
@@ -25,9 +26,10 @@ pub trait View {
     }
 }
 
+pub use debug::DebugView;
 pub use infobar::InfoBarView;
 pub use log::{LogComponent, LogView};
-pub use map::{MapView, MAP_CORNER_Y, TILE_SIZE};
+pub use map::{screen_rect_for_map_grid, screen_to_map_position, MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;
 
 // HACK

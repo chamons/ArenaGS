@@ -27,7 +27,7 @@ impl Sprite for Background {
     fn draw(&self, canvas: &mut RenderCanvas, _: SDLPoint, _: u32, _: u64) -> BoxResult<()> {
         let (screen_x, screen_y) = canvas.viewport().size();
         let map_box = cmp::min(screen_x, screen_y);
-        let image_rect = SDLRect::new(50, 50, 540, 540);
+        let image_rect = SDLRect::new(50, 65, 580, 595);
         let screen_rect = SDLRect::new(0, 0, map_box, map_box);
 
         canvas.copy(&self.image, image_rect, screen_rect)?;

@@ -16,6 +16,7 @@ pub enum FontSize {
 pub enum FontColor {
     Black,
     White,
+    Red,
 }
 
 pub struct TextRenderer<'a> {
@@ -51,6 +52,7 @@ impl<'a> TextRenderer<'a> {
         let color = match color {
             FontColor::Black => Color::RGBA(0, 0, 0, 255),
             FontColor::White => Color::RGBA(255, 255, 255, 255),
+            FontColor::Red => Color::RGBA(255, 0, 0, 255),
         };
 
         let surface = font.render(text).blended(color).map_err(|e| e.to_string())?;

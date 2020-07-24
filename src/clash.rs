@@ -8,12 +8,22 @@ mod skills;
 pub use skills::{get_target_for_skill, invoke_skill, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent};
 
 mod map;
-pub use map::{element_at_location, MapHitTestResult};
+pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+mod physics;
+use physics::complete_move;
+pub use physics::move_character;
+
+mod position_component;
+pub use position_component::PositionComponent;
+
+mod animation;
+pub use animation::*;
+
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,
     pub y: u32,

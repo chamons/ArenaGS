@@ -1,7 +1,10 @@
+#[cfg(debug_assertions)]
 use std::fs;
+#[cfg(debug_assertions)]
 use std::panic;
 
 #[cfg(target_os = "windows")]
+#[cfg(debug_assertions)]
 fn open_url(url: &str) -> bool {
     if let Ok(mut child) = std::process::Command::new("cmd.exe").arg("/C").arg("code").arg("").arg(&url).spawn() {
         std::thread::sleep(std::time::Duration::new(1, 0));
@@ -12,6 +15,7 @@ fn open_url(url: &str) -> bool {
     false
 }
 
+#[cfg(debug_assertions)]
 pub fn on_crash(panic_info: &panic::PanicInfo) {
     let mut debug_spew = String::new();
     if let Some(location) = panic_info.location() {

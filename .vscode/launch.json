@@ -12,7 +12,6 @@
             "preLaunchTask": "build",
             "type": "lldb",
             "windows": {
-                "type": "cppvsdbg",
                 "stopAtEntry": false,
                 "externalConsole": true,
                 "program": "target\\debug\\arena_gunpowder_and_sorcery.exe",

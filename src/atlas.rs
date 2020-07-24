@@ -5,7 +5,9 @@
 mod crash;
 mod paths;
 
+#[cfg(debug_assertions)]
 pub use crash::on_crash;
+
 pub use paths::get_exe_folder;
 
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
