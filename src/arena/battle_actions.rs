@@ -72,7 +72,7 @@ fn find_player(ecs: &World) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let players = ecs.read_storage::<PlayerComponent>();
 
-    for (entity, _) in (&entities, &players).join() {
+    if let Some((entity, _)) = (&entities, &players).join().next() {
         return Some(entity);
     }
     None

@@ -110,7 +110,7 @@ pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
                 completed.push(entity);
             }
             if let Animation::Position { start: _, end } = &animation.animation {
-                if let Some(_) = position {
+                if position.is_some() {
                     to_move.push((entity, *end));
                 }
             }

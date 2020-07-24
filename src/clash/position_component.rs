@@ -42,7 +42,7 @@ impl PositionComponent {
 
     pub fn single_position(&self) -> Point {
         assert!(self.width == 1 && self.height == 1);
-        return self.origin;
+        self.origin
     }
 
     pub fn move_to(&mut self, position: Point) {
