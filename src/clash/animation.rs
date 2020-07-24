@@ -1,7 +1,9 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
+use super::{complete_move, PositionComponent};
 use crate::after_image::CharacterAnimationState;
+use crate::atlas::BoxResult;
 use crate::clash::Point;
 
 // Animations are a strange beast/
@@ -33,7 +35,6 @@ pub enum Animation {
         done: CharacterAnimationState,
     },
 }
-
 
 #[derive(Component)]
 pub struct AnimationComponent {
@@ -93,4 +94,37 @@ impl AnimationComponent {
 
 fn lerp(start: f32, end: f32, t: f64) -> f32 {
     (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
+}
+
+pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
+    // Remove completed animations, applying their change
+    let mut completed = vec![];
+    let mut to_move = vec![];
+    {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let animations = ecs.read_storage::<AnimationComponent>();
+        let mut positions = ecs.write_storage::<PositionComponent>();
+
+        for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
+            if animation.is_complete(frame) {
+                completed.push(entity);
+            }
+            if let Animation::Position { start: _, end } = &animation.animation {
+                if let Some(_) = position {
+                    to_move.push((entity, *end));
+                }
+            }
+        }
+    }
+    for (entity, position) in to_move.iter() {
+        complete_move(ecs, entity, position);
+    }
+    {
+        let mut animations = ecs.write_storage::<AnimationComponent>();
+        for c in completed {
+            animations.remove(c);
+        }
+    }
+
+    Ok(())
 }

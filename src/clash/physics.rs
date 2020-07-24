@@ -2,18 +2,20 @@ use specs::prelude::*;
 
 use super::*;
 
-pub fn apply_move(ecs: &World, entity: &Entity, new_position: &Point) {
+fn begin_move(ecs: &World, entity: &Entity, new_position: &Point) {
     let frame = ecs.read_resource::<FrameComponent>();
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let positions = ecs.read_storage::<PositionComponent>();
     let position = &positions.get(*entity).unwrap();
 
-    let animation = AnimationComponent::movement(position.origin, *new_position, frame.current_frame, frame.current_frame + 20);
+    let animation = AnimationComponent::movement(position.origin, *new_position, frame.current_frame, frame.current_frame + 8);
     animations.insert(*entity, animation).unwrap();
-    //    .with(AnimationComponent::movement(Point::init(5, 5), Point::init(7, 7), 0, 120))
-    //    let mut positions = ecs.write_storage::<PositionComponent>();
-    //  let position = &mut positions.get_mut(*entity).unwrap();
-    // position.move_to(*new_position);
+}
+
+pub fn complete_move(ecs: &World, entity: &Entity, new_position: &Point) {
+    let mut positions = ecs.write_storage::<PositionComponent>();
+    let position = &mut positions.get_mut(*entity).unwrap();
+    position.move_to(*new_position);
 }
 
 fn can_move_character(ecs: &mut World, new: Point) -> bool {
@@ -37,14 +39,26 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: Point) -> bool {
         return false;
     }
 
-    apply_move(ecs, &entity, &new);
+    begin_move(ecs, &entity, &new);
     true
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::create_world;
+    use super::super::{create_world, tick_animations};
     use super::*;
+
+    fn wait_for_animations(ecs: &mut World) {
+        loop {
+            ecs.write_resource::<FrameComponent>().current_frame += 1;
+            tick_animations(ecs, ecs.read_resource::<FrameComponent>().current_frame).unwrap();
+
+            let animations = ecs.read_storage::<AnimationComponent>();
+            if (animations).join().count() == 0 {
+                break;
+            }
+        }
+    }
 
     fn add_character(ecs: &mut World, position: Point) -> Entity {
         ecs.create_entity()
@@ -69,6 +83,7 @@ mod tests {
 
         let success = move_character(&mut ecs, entity, Point::init(2, 3));
         assert_eq!(true, success);
+        wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 3));
     }
@@ -87,6 +102,7 @@ mod tests {
 
         let success = move_character(&mut ecs, entity, Point::init(2, 3));
         assert_eq!(true, success);
+        wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 3));
     }
@@ -102,6 +118,7 @@ mod tests {
 
         let success = move_character(&mut ecs, entity, Point::init(2, 3));
         assert_eq!(false, success);
+        wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 2))
     }
@@ -120,6 +137,7 @@ mod tests {
 
         let success = move_character(&mut ecs, entity, Point::init(2, 3));
         assert_eq!(false, success);
+        wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 2));
     }
@@ -132,6 +150,7 @@ mod tests {
 
         let success = move_character(&mut ecs, entity, Point::init(13, 14));
         assert_eq!(false, success);
+        wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(13, 13));
     }

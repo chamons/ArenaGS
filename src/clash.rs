@@ -14,7 +14,8 @@ mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-pub use physics::{apply_move, move_character};
+use physics::complete_move;
+pub use physics::move_character;
 
 mod position_component;
 pub use position_component::PositionComponent;
