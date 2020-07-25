@@ -24,11 +24,8 @@ impl<'a> BattleScene<'a> {
     pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
         let mut ecs = create_world();
         ecs.register::<RenderComponent>();
-        ecs.register::<LogComponent>();
         ecs.register::<BattleSceneStateComponent>();
 
-        ecs.insert(FrameComponent::init());
-        ecs.insert(LogComponent::init());
         ecs.insert(BattleSceneStateComponent::init());
 
         ecs.create_entity()
@@ -44,7 +41,7 @@ impl<'a> BattleScene<'a> {
                 40,
             ))
             .with(CharacterInfoComponent::init(Character::init()))
-            .with(PlayerComponent {})
+            .with(PlayerComponent::init())
             .build();
 
         ecs.create_entity()

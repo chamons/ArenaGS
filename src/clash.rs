@@ -29,6 +29,9 @@ pub use time::*;
 mod actions;
 pub use actions::*;
 
+mod log;
+pub use log::*;
+
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,

@@ -43,7 +43,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     let target_required = get_target_for_skill(name);
 
     match target_required {
-        TargetType::Enemy | TargetType::Tile => player_use_skill(ecs, name, Some(*position)),
+        TargetType::Enemy | TargetType::Tile => drop(player_use_skill(ecs, name, Some(*position))),
         TargetType::None => panic!("TargetType::None should not have reached select_skill_with_target"),
     }
 }

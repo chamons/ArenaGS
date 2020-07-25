@@ -3,11 +3,17 @@ use specs_derive::Component;
 
 use sdl2::pixels::Color;
 
-use super::PositionComponent;
+use super::{LogComponent, PositionComponent};
 use crate::clash::Character;
 
 #[derive(Component)]
 pub struct PlayerComponent {}
+
+impl PlayerComponent {
+    pub fn init() -> PlayerComponent {
+        PlayerComponent {}
+    }
+}
 
 #[derive(Component)]
 pub struct CharacterInfoComponent {
@@ -53,7 +59,9 @@ pub fn create_world() -> World {
     ecs.register::<super::AnimationComponent>();
     ecs.register::<super::FrameComponent>();
     ecs.register::<super::TimeComponent>();
+    ecs.register::<super::LogComponent>();
 
     ecs.insert(FrameComponent::init());
+    ecs.insert(LogComponent::init());
     ecs
 }

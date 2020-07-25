@@ -8,10 +8,14 @@ pub struct TimeComponent {
     pub ticks: i32,
 }
 
-impl TimeComponent {}
+impl TimeComponent {
+    pub fn init(ticks: i32) -> TimeComponent {
+        TimeComponent { ticks }
+    }
+}
 
-const BASE_ACTION_COST: i32 = 100;
-const MOVE_ACTION_COST: i32 = BASE_ACTION_COST;
+pub const BASE_ACTION_COST: i32 = 100;
+pub const MOVE_ACTION_COST: i32 = BASE_ACTION_COST;
 
 pub fn get_next_actor(ecs: &World) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
@@ -60,7 +64,7 @@ mod tests {
     use super::*;
 
     fn create_timer(ecs: &mut World, ticks: i32) -> Entity {
-        ecs.create_entity().with(TimeComponent { ticks }).build()
+        ecs.create_entity().with(TimeComponent::init(ticks)).build()
     }
 
     #[test]
