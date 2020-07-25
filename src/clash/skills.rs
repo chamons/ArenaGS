@@ -1,6 +1,7 @@
 use specs::prelude::*;
 
 use super::Point;
+use super::{spend_time, TimeComponent, MOVE_ACTION_COST};
 use crate::atlas::Logger;
 
 #[allow(dead_code)]
@@ -39,9 +40,10 @@ fn assert_correct_targeting(name: &str, target: Option<Point>) {
     }
 }
 
-pub fn invoke_skill(ecs: &mut World, name: &str, target: Option<Point>) {
+pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
     assert_correct_targeting(name, target);
     ecs.log(&format!("Invoking {}", name));
+    spend_time(ecs, invoker, MOVE_ACTION_COST);
 }
 
 #[cfg(test)]
@@ -53,13 +55,23 @@ mod tests {
     #[should_panic]
     fn panic_if_wrong_targeting() {
         let mut ecs = create_world();
-        invoke_skill(&mut ecs, "TestNone", Some(Point::init(2, 2)));
+        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        invoke_skill(&mut ecs, &entity, "TestNone", Some(Point::init(2, 2)));
     }
 
     #[test]
     #[should_panic]
     fn panic_if_missing_targeting() {
         let mut ecs = create_world();
-        invoke_skill(&mut ecs, "TestTile", None);
+        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        invoke_skill(&mut ecs, &entity, "TestTile", None);
+    }
+
+    #[test]
+    fn invoker_spend_time() {
+        let mut ecs = create_world();
+        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        invoke_skill(&mut ecs, &entity, "TestNone", None);
+        assert_eq!(0, ecs.read_storage::<TimeComponent>().get(entity).unwrap().ticks);
     }
 }

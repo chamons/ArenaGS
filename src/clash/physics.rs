@@ -18,16 +18,37 @@ pub fn complete_move(ecs: &World, entity: &Entity, new_position: &Point) {
     position.move_to(*new_position);
 }
 
-fn can_move_character(ecs: &mut World, new: Point) -> bool {
+pub fn point_in_direction(initial: &Point, direction: Direction) -> Option<Point> {
+    let is_valid = match direction {
+        Direction::North => initial.y > 0,
+        Direction::South => initial.y < MAX_MAP_TILES - 1,
+        Direction::East => initial.x < MAX_MAP_TILES - 1,
+        Direction::West => initial.x > 0,
+    };
+
+    if is_valid {
+        match direction {
+            Direction::North => Some(Point::init(initial.x, initial.y - 1)),
+            Direction::South => Some(Point::init(initial.x, initial.y + 1)),
+            Direction::East => Some(Point::init(initial.x + 1, initial.y)),
+            Direction::West => Some(Point::init(initial.x - 1, initial.y)),
+        }
+    } else {
+        None
+    }
+}
+
+pub fn can_move_character(ecs: &mut World, mover: &Entity, new: Point) -> bool {
     let map = &ecs.read_resource::<MapComponent>().map;
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
 
     if !map.is_in_bounds(&new) || !map.is_walkable(&new) {
         return false;
     }
-    for (positions, _) in (&positions, &char_info).join() {
-        if positions.contains_point(&new) {
+    for (entity, positions, _) in (&entities, &positions, &char_info).join() {
+        if *mover != entity && positions.contains_point(&new) {
             return false;
         }
     }
@@ -35,12 +56,17 @@ fn can_move_character(ecs: &mut World, new: Point) -> bool {
 }
 
 pub fn move_character(ecs: &mut World, entity: Entity, new: Point) -> bool {
-    if !can_move_character(ecs, new) {
+    if !can_move_character(ecs, &entity, new) {
         return false;
     }
 
     begin_move(ecs, &entity, &new);
+    spend_time(ecs, &entity, MOVE_ACTION_COST);
     true
+}
+
+pub fn wait(ecs: &mut World, entity: Entity) {
+    spend_time(ecs, &entity, BASE_ACTION_COST);
 }
 
 #[cfg(test)]
@@ -64,6 +90,7 @@ mod tests {
         ecs.create_entity()
             .with(PositionComponent::init(position.x, position.y))
             .with(CharacterInfoComponent::init(Character::init()))
+            .with(TimeComponent::init(100))
             .build()
     }
 
@@ -72,6 +99,14 @@ mod tests {
         let position = &positions.get(*entity).unwrap();
         assert_eq!(position.single_position().x, expected.x);
         assert_eq!(position.single_position().y, expected.y);
+    }
+
+    #[test]
+    fn point_off_map() {
+        assert_eq!(None, point_in_direction(&Point::init(5, 0), Direction::North));
+        assert_eq!(None, point_in_direction(&Point::init(5, MAX_MAP_TILES - 1), Direction::South));
+        assert_eq!(None, point_in_direction(&Point::init(0, 5), Direction::West));
+        assert_eq!(None, point_in_direction(&Point::init(MAX_MAP_TILES - 1, 5), Direction::East));
     }
 
     #[test]
@@ -86,6 +121,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 3));
+        assert_eq!(0, ecs.read_storage::<TimeComponent>().get(entity).unwrap().ticks);
     }
 
     #[test]

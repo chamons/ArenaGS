@@ -15,7 +15,7 @@ mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-use physics::{complete_move, move_character};
+use physics::{can_move_character, complete_move, move_character, point_in_direction, wait};
 
 mod position_component;
 pub use position_component::PositionComponent;
@@ -31,6 +31,9 @@ pub use actions::*;
 
 mod log;
 pub use log::*;
+
+mod ai;
+pub use ai::take_enemy_action;
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {

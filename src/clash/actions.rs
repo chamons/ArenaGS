@@ -1,8 +1,8 @@
 use specs::prelude::*;
 
 use super::{
-    get_next_actor, invoke_skill, move_character, spend_time, wait_for_next, PlayerComponent, Point, PositionComponent, TimeComponent, BASE_ACTION_COST,
-    MAX_MAP_TILES, MOVE_ACTION_COST,
+    get_next_actor, invoke_skill, move_character, point_in_direction, spend_time, take_enemy_action, wait_for_next, PlayerComponent, Point, PositionComponent,
+    TimeComponent, BASE_ACTION_COST, MAX_MAP_TILES, MOVE_ACTION_COST,
 };
 
 pub enum Direction {
@@ -20,26 +20,6 @@ pub fn find_player(ecs: &World) -> Option<Entity> {
         return Some(entity);
     }
     None
-}
-
-fn point_in_direction(initial: &Point, direction: Direction) -> Option<Point> {
-    let is_valid = match direction {
-        Direction::North => initial.y > 0,
-        Direction::South => initial.y < MAX_MAP_TILES - 1,
-        Direction::East => initial.x < MAX_MAP_TILES - 1,
-        Direction::West => initial.x > 0,
-    };
-
-    if is_valid {
-        match direction {
-            Direction::North => Some(Point::init(initial.x, initial.y - 1)),
-            Direction::South => Some(Point::init(initial.x, initial.y + 1)),
-            Direction::East => Some(Point::init(initial.x + 1, initial.y)),
-            Direction::West => Some(Point::init(initial.x - 1, initial.y)),
-        }
-    } else {
-        None
-    }
 }
 
 fn can_act(ecs: &World) -> bool {
@@ -62,7 +42,6 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
     };
     if let Some(new_position) = new_position {
         move_character(ecs, player, new_position);
-        spend_time(ecs, &player, MOVE_ACTION_COST);
         true
     } else {
         false
@@ -75,15 +54,14 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
     }
 
     let player = find_player(ecs).unwrap();
-    invoke_skill(ecs, name, target);
-    spend_time(ecs, &player, BASE_ACTION_COST);
+    invoke_skill(ecs, &player, name, target);
     true
 }
 
 pub fn tick_next_action(ecs: &mut World) {
     if let Some(next) = wait_for_next(ecs) {
         if find_player(ecs).unwrap() != next {
-            spend_time(ecs, &next, BASE_ACTION_COST);
+            take_enemy_action(ecs, &next);
         }
     }
 }
@@ -92,14 +70,6 @@ pub fn tick_next_action(ecs: &mut World) {
 mod tests {
     use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
-
-    #[test]
-    fn point_off_map() {
-        assert_eq!(None, point_in_direction(&Point::init(5, 0), Direction::North));
-        assert_eq!(None, point_in_direction(&Point::init(5, MAX_MAP_TILES - 1), Direction::South));
-        assert_eq!(None, point_in_direction(&Point::init(0, 5), Direction::West));
-        assert_eq!(None, point_in_direction(&Point::init(MAX_MAP_TILES - 1, 5), Direction::East));
-    }
 
     #[test]
     fn move_not_current_actor() {
