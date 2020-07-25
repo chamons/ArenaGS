@@ -23,6 +23,9 @@ pub use position_component::PositionComponent;
 mod animation;
 pub use animation::*;
 
+mod time;
+pub use time::*;
+
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,

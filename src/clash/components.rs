@@ -52,6 +52,7 @@ pub fn create_world() -> World {
     ecs.register::<super::MapComponent>();
     ecs.register::<super::AnimationComponent>();
     ecs.register::<super::FrameComponent>();
+    ecs.register::<super::TimeComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs
