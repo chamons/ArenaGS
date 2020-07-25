@@ -3,21 +3,21 @@ use specs::prelude::*;
 use super::components::*;
 use crate::clash::*;
 
-fn player_can_act(ecs: &World) -> bool {
+pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
     for a in (&animations).join() {
         match &a.animation {
             Animation::Position { .. } => {
-                return false;
+                return true;
             }
             Animation::CharacterState { .. } => {}
         }
     }
-    true
+    false
 }
 
 pub fn select_skill(ecs: &mut World, name: &str) {
-    if !player_can_act(ecs) {
+    if has_animations_blocking(ecs) {
         return;
     }
 
@@ -33,7 +33,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
 }
 
 pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
-    if !player_can_act(ecs) {
+    if has_animations_blocking(ecs) {
         return;
     }
 
@@ -62,7 +62,7 @@ pub fn reset_state(ecs: &mut World) {
 }
 
 pub fn move_action(ecs: &mut World, direction: Direction) {
-    if !player_can_act(ecs) {
+    if has_animations_blocking(ecs) {
         return;
     }
 

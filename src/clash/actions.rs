@@ -1,8 +1,8 @@
 use specs::prelude::*;
 
 use super::{
-    get_next_actor, invoke_skill, move_character, spend_time, PlayerComponent, Point, PositionComponent, TimeComponent,
-    BASE_ACTION_COST, MAX_MAP_TILES, MOVE_ACTION_COST,
+    get_next_actor, invoke_skill, move_character, spend_time, wait_for_next, PlayerComponent, Point, PositionComponent, TimeComponent, BASE_ACTION_COST,
+    MAX_MAP_TILES, MOVE_ACTION_COST,
 };
 
 pub enum Direction {
@@ -12,7 +12,7 @@ pub enum Direction {
     West,
 }
 
-fn find_player(ecs: &World) -> Option<Entity> {
+pub fn find_player(ecs: &World) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let players = ecs.read_storage::<PlayerComponent>();
 
@@ -80,9 +80,17 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
     true
 }
 
+pub fn tick_next_action(ecs: &mut World) {
+    if let Some(next) = wait_for_next(ecs) {
+        if find_player(ecs).unwrap() != next {
+            spend_time(ecs, &next, BASE_ACTION_COST);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, TimeComponent, LogComponent, Map, MapComponent};
+    use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
 
     #[test]

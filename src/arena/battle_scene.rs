@@ -42,12 +42,14 @@ impl<'a> BattleScene<'a> {
             ))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
+            .with(TimeComponent::init(0))
             .build();
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init_multi(5, 5, 2, 2))
             .with(CharacterInfoComponent::init(Character::init()))
+            .with(TimeComponent::init(0))
             .build();
 
         let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
@@ -239,6 +241,11 @@ impl<'a> Scene for BattleScene<'a> {
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
         tick_animations(&self.ecs, frame)?;
+
+        if !battle_actions::has_animations_blocking(&self.ecs) {
+            tick_next_action(&mut self.ecs);
+        }
+
         Ok(())
     }
 }
