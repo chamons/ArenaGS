@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::Point;
-use super::{spend_time, TimeComponent, MOVE_ACTION_COST};
+use super::{spend_time, MOVE_ACTION_COST};
 use crate::atlas::Logger;
 
 #[allow(dead_code)]
