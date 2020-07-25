@@ -7,7 +7,6 @@ mod icon_loader;
 mod sprite_loader;
 mod views;
 
-use battle_actions::*;
 use icon_loader::IconLoader;
 use sprite_loader::SpriteLoader;
 

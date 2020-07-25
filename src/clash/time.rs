@@ -22,7 +22,7 @@ pub fn get_next_actor(ecs: &World) -> Option<Entity> {
         time_map.insert(time.ticks, entity);
     }
 
-    if let Some((time, entity)) = time_map.iter().last() {
+    if let Some((_, entity)) = time_map.iter().last() {
         Some(*entity)
     } else {
         None

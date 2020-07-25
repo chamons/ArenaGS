@@ -6,9 +6,9 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
+use super::battle_actions;
 use super::components::*;
 use super::views::*;
-use super::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -91,20 +91,20 @@ impl<'a> BattleScene<'a> {
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
         if cfg!(debug_assertions) {
             if keycode == Keycode::F1 {
-                set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
+                battle_actions::set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
             }
         }
 
         if let Some(i) = is_keystroke_skill(keycode) {
             // HACK - should get name from model, not test data
             let name = super::views::test_skill_name(i);
-            select_skill(&mut self.ecs, &name);
+            battle_actions::select_skill(&mut self.ecs, &name);
         }
         match keycode {
-            Keycode::Up => move_player(&mut self.ecs, Direction::North),
-            Keycode::Down => move_player(&mut self.ecs, Direction::South),
-            Keycode::Left => move_player(&mut self.ecs, Direction::West),
-            Keycode::Right => move_player(&mut self.ecs, Direction::East),
+            Keycode::Up => battle_actions::move_action(&mut self.ecs, Direction::North),
+            Keycode::Down => battle_actions::move_action(&mut self.ecs, Direction::South),
+            Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
+            Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
             _ => {}
         }
         EventStatus::Continue
@@ -112,21 +112,21 @@ impl<'a> BattleScene<'a> {
 
     fn handle_target_key(&mut self, keycode: Keycode) -> EventStatus {
         if keycode == Keycode::Escape {
-            reset_state(&mut self.ecs)
+            battle_actions::reset_state(&mut self.ecs)
         }
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
             // HACK - should get name from model, not test data
             let name = super::views::test_skill_name(i);
-            select_skill(&mut self.ecs, &name);
+            battle_actions::select_skill(&mut self.ecs, &name);
         }
         EventStatus::Continue
     }
 
     fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) -> EventStatus {
         if keycode == Keycode::Escape {
-            reset_state(&mut self.ecs);
+            battle_actions::reset_state(&mut self.ecs);
             return EventStatus::Continue;
         }
         if kind.is_map_overlay() {
@@ -142,7 +142,7 @@ impl<'a> BattleScene<'a> {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
-                select_skill(&mut self.ecs, &name)
+                battle_actions::select_skill(&mut self.ecs, &name)
             }
         }
         EventStatus::Continue
@@ -150,11 +150,11 @@ impl<'a> BattleScene<'a> {
 
     fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
         if button == MouseButton::Right {
-            reset_state(&mut self.ecs);
+            battle_actions::reset_state(&mut self.ecs);
             return EventStatus::Continue;
         }
 
-        let target_info = match read_state(&self.ecs) {
+        let target_info = match battle_actions::read_state(&self.ecs) {
             BattleSceneState::Targeting(target_source, target_type) => Some((target_source, target_type)),
             _ => None,
         };
@@ -169,7 +169,7 @@ impl<'a> BattleScene<'a> {
                 };
                 if let Some(position) = position {
                     match target_source {
-                        BattleTargetSource::Skill(skill_name) => select_skill_with_target(&mut self.ecs, &skill_name, position),
+                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, position),
                     }
                 }
             }
@@ -217,7 +217,7 @@ impl<'a> Scene for BattleScene<'a> {
             }
         }
 
-        let state = read_state(&self.ecs);
+        let state = battle_actions::read_state(&self.ecs);
         match state {
             BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
             BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),

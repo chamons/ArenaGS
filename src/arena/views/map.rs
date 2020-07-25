@@ -6,8 +6,8 @@ use specs::prelude::*;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
+use super::super::battle_actions;
 use super::super::components::*;
-use super::super::read_state;
 use super::{HitTestResult, View};
 use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, PositionComponent};
 
@@ -162,7 +162,7 @@ pub fn screen_to_map_position(x: i32, y: i32) -> Option<Point> {
 }
 
 fn should_draw_grid(ecs: &World) -> bool {
-    let state = read_state(ecs);
+    let state = battle_actions::read_state(ecs);
     if state.is_targeting() {
         return true;
     }

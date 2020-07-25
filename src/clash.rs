@@ -5,7 +5,8 @@ mod character;
 pub use character::Character;
 
 mod skills;
-pub use skills::{get_target_for_skill, invoke_skill, TargetType};
+use skills::invoke_skill;
+pub use skills::{get_target_for_skill, TargetType};
 
 mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent};
@@ -14,8 +15,7 @@ mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-use physics::complete_move;
-pub use physics::move_character;
+use physics::{complete_move, move_character};
 
 mod position_component;
 pub use position_component::PositionComponent;
@@ -25,6 +25,9 @@ pub use animation::*;
 
 mod time;
 pub use time::*;
+
+mod actions;
+pub use actions::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
