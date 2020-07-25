@@ -48,7 +48,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 
 #[cfg(test)]
 mod tests {
-    use super::super::create_world;
+    use super::super::{create_world, TimeComponent};
     use super::*;
 
     #[test]
