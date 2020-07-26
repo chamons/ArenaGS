@@ -1,3 +1,5 @@
+use std::cmp;
+
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -8,7 +10,7 @@ use super::super::{battle_actions, IconLoader};
 use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
-use crate::clash::get_image_path_for_skill;
+use crate::clash::{find_player, get_image_path_for_skill, SkillsComponent};
 
 pub struct SkillBarView {
     position: SDLPoint,
@@ -17,19 +19,22 @@ pub struct SkillBarView {
 
 const BORDER_WIDTH: i32 = 5;
 const ICON_SIZE: i32 = 44;
-const ICON_COUNT: u32 = 10;
+const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
     pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: &TextRenderer) -> BoxResult<SkillBarView> {
         let mut views = Vec::with_capacity(15);
         let icons = IconLoader::init(render_context, "spell")?;
-        for i in 0..ICON_COUNT {
+        for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
                 if let Some(path) = get_image_path_for_skill(&skill_name) {
                     let image = icons.get(render_context, path)?;
                     let hotkey = text.render_texture(&render_context.canvas, &i.to_string(), FontSize::Bold, FontColor::White)?;
                     let view = SkillBarItemView::init(
-                        SDLPoint::new(BORDER_WIDTH + position.x + (ICON_SIZE + BORDER_WIDTH) * i as i32, position.y + BORDER_WIDTH + 1),
+                        SDLPoint::new(
+                            get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
+                            position.y + BORDER_WIDTH + 1,
+                        ),
                         i as u32,
                         image,
                         hotkey,
@@ -42,13 +47,26 @@ impl SkillBarView {
     }
 }
 
+fn get_skillbar_offset(ecs: &World, position: SDLPoint) -> i32 {
+    let skill_count = get_skill_count(ecs) as i32;
+    position.x + ((MAX_ICON_COUNT - skill_count) * (ICON_SIZE + BORDER_WIDTH) / 2)
+}
+
+fn get_skill_count(ecs: &World) -> usize {
+    let skills = ecs.read_storage::<SkillsComponent>();
+    let player = find_player(&ecs).unwrap();
+    cmp::min(skills.get(player).unwrap().skills.len(), MAX_ICON_COUNT as usize)
+}
+
 impl View for SkillBarView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((22, 22, 22)));
+
+        let skill_count = get_skill_count(ecs);
         canvas.fill_rect(SDLRect::new(
-            self.position.x,
+            get_skillbar_offset(ecs, self.position),
             self.position.y,
-            ((ICON_SIZE + BORDER_WIDTH) * ICON_COUNT as i32 + BORDER_WIDTH) as u32,
+            ((ICON_SIZE + BORDER_WIDTH) * skill_count as i32 + BORDER_WIDTH) as u32,
             (ICON_SIZE + BORDER_WIDTH * 2) as u32,
         ))?;
 
