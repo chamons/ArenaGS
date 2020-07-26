@@ -49,6 +49,17 @@ impl FieldComponent {
     }
 }
 
+#[derive(Component)]
+pub struct SkillsComponent {
+    pub skills: Vec<&'static str>,
+}
+
+impl SkillsComponent {
+    pub fn init(skills: &[&'static str]) -> SkillsComponent {
+        SkillsComponent { skills: skills.to_vec() }
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -60,6 +71,7 @@ pub fn create_world() -> World {
     ecs.register::<super::FrameComponent>();
     ecs.register::<super::TimeComponent>();
     ecs.register::<super::LogComponent>();
+    ecs.register::<super::SkillsComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());

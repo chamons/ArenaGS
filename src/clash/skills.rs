@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use lazy_static::lazy_static;
 use specs::prelude::*;
 
 use super::Point;
@@ -5,27 +8,46 @@ use super::{spend_time, MOVE_ACTION_COST};
 use crate::atlas::Logger;
 
 #[allow(dead_code)]
-#[derive(is_enum_variant, Clone)]
+#[derive(is_enum_variant, Clone, Copy)]
 pub enum TargetType {
     None,
     Tile,
     Enemy,
 }
 
-pub fn get_target_for_skill(_name: &str) -> TargetType {
-    #[cfg(test)]
-    {
-        if let Some(test_match) = match _name {
-            "TestNone" => Some(TargetType::None),
-            "TestTile" => Some(TargetType::Tile),
-            "TestEnemy" => Some(TargetType::Enemy),
-            _ => None,
-        } {
-            return test_match;
-        }
-    }
+pub enum SkillEffect {
+    None,
+    Move { distance: i32 },
+}
 
-    TargetType::Enemy
+lazy_static! {
+    static ref SKILLS: HashMap<&'static str, (&'static str, TargetType, SkillEffect)> = {
+        let mut m = HashMap::new();
+        #[cfg(test)]
+        {
+            m.insert("TestNone", ("", TargetType::None, SkillEffect::None));
+            m.insert("TestTile", ("", TargetType::Tile, SkillEffect::None));
+            m.insert("TestEnemy", ("", TargetType::Enemy, SkillEffect::None));
+        }
+        m.insert("Dash", ("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move { distance: 3 }));
+        m
+    };
+}
+
+pub fn get_image_path_for_skill(name: &str) -> Option<&'static str> {
+    if let Some((path, _, _)) = SKILLS.get(name) {
+        Some(*path)
+    } else {
+        None
+    }
+}
+
+pub fn get_target_for_skill(name: &str) -> TargetType {
+    if let Some((_, target, _)) = SKILLS.get(name) {
+        *target
+    } else {
+        TargetType::None
+    }
 }
 
 fn assert_correct_targeting(name: &str, target: Option<Point>) {

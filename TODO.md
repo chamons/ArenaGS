@@ -1,3 +1,0 @@
-- Split background so trees are not under the spites
-- Some sort of ground shadow so you can see what square are taken
-    - White bracket frames around tile? Even just a border

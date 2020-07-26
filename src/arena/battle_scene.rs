@@ -34,15 +34,10 @@ impl<'a> BattleScene<'a> {
                 CharacterAnimationState::Idle,
             ))
             .with(PositionComponent::init(4, 4))
-            .with(AnimationComponent::sprite_state(
-                CharacterAnimationState::Bow,
-                CharacterAnimationState::Idle,
-                0,
-                40,
-            ))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
+            .with(SkillsComponent::init(&["Dash"]))
             .build();
 
         ecs.create_entity()
@@ -75,6 +70,7 @@ impl<'a> BattleScene<'a> {
             Box::from(LogView::init(SDLPoint::new(780, 450), text)?),
             Box::from(SkillBarView::init(
                 render_context,
+                &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 text,
             )?),
@@ -95,9 +91,9 @@ impl<'a> BattleScene<'a> {
         }
 
         if let Some(i) = is_keystroke_skill(keycode) {
-            // HACK - should get name from model, not test data
-            let name = super::views::test_skill_name(i);
-            battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+                battle_actions::select_skill(&mut self.ecs, &name);
+            }
         }
         match keycode {
             Keycode::Up => battle_actions::move_action(&mut self.ecs, Direction::North),
@@ -116,9 +112,9 @@ impl<'a> BattleScene<'a> {
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            // HACK - should get name from model, not test data
-            let name = super::views::test_skill_name(i);
-            battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+                battle_actions::select_skill(&mut self.ecs, &name);
+            }
         }
         EventStatus::Continue
     }
@@ -256,7 +252,6 @@ fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
 
     if chars.len() == 1 {
         match chars[0] {
-            // HACK - should get name from model, not test data
             '0'..='9' => Some(chars[0].to_string().parse().unwrap()),
             _ => None,
         }

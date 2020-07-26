@@ -16,6 +16,17 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
     false
 }
 
+pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
+    let skills = ecs.read_storage::<SkillsComponent>();
+    let player = find_player(&ecs).unwrap();
+    let player_skill = skills.get(player).unwrap();
+    if let Some(name) = player_skill.skills.get(index) {
+        Some(name.to_string())
+    } else {
+        None
+    }
+}
+
 pub fn select_skill(ecs: &mut World, name: &str) {
     if has_animations_blocking(ecs) {
         return;

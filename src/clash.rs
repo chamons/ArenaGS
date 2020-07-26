@@ -6,10 +6,10 @@ pub use character::Character;
 
 mod skills;
 use skills::invoke_skill;
-pub use skills::{get_target_for_skill, TargetType};
+pub use skills::{get_image_path_for_skill, get_target_for_skill, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, SkillsComponent};
 
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
