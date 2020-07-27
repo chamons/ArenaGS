@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use crate::atlas::SizedPoint;
+use crate::atlas::{Point, SizedPoint};
 
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct PositionComponent {
@@ -11,5 +11,9 @@ pub struct PositionComponent {
 impl PositionComponent {
     pub const fn init(position: SizedPoint) -> PositionComponent {
         PositionComponent { position }
+    }
+
+    pub fn move_to(&mut self, point: Point) {
+        self.position = self.position.move_to(point);
     }
 }

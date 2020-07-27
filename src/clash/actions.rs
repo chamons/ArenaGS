@@ -39,7 +39,7 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
     let new_position = {
         let positions = ecs.read_storage::<PositionComponent>();
         let position = positions.get(player).unwrap().position;
-        point_in_direction(&position.single_position(), direction)
+        point_in_direction(&position, direction)
     };
     if let Some(new_position) = new_position {
         move_character(ecs, player, new_position);
@@ -69,9 +69,9 @@ pub fn tick_next_action(ecs: &mut World) {
 
 #[cfg(test)]
 mod tests {
+    use crate::atlas::SizedPoint;
     use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
-    use crate::atlas::SizedPoint;
 
     #[test]
     fn move_not_current_actor() {

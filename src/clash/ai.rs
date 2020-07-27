@@ -20,7 +20,7 @@ impl Distribution<Direction> for Standard {
 }
 
 pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
-    let position = ecs.read_storage::<PositionComponent>().get(*enemy).unwrap().position.origin;
+    let position = ecs.read_storage::<PositionComponent>().get(*enemy).unwrap().position;
     for _ in 0..5 {
         let direction: Direction = rand::random();
         if let Some(point) = point_in_direction(&position, direction) {

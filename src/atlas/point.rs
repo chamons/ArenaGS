@@ -56,13 +56,19 @@ impl SizedPoint {
         self.all_positions().iter().any(|p| *p == *point)
     }
 
+    #[allow(dead_code)]
     pub fn single_position(&self) -> Point {
         assert!(self.width == 1 && self.height == 1);
         self.origin
     }
 
-    pub fn move_to(&mut self, position: Point) {
-        self.origin = position;
+    #[must_use]
+    pub fn move_to(&self, position: Point) -> SizedPoint {
+        SizedPoint {
+            origin: position,
+            width: self.width,
+            height: self.height,
+        }
     }
 }
 
@@ -80,8 +86,8 @@ mod tests {
         //  (2,0) (3,0)
         //  (2,1) (3,1)
         //  (2,2) (3,2)
-        let position_component = SizedPoint::init_multi(2, 2, 2, 3);
-        let all = position_component.all_positions();
+        let point = SizedPoint::init_multi(2, 2, 2, 3);
+        let all = point.all_positions();
         assert_eq!(6, all.len());
         assert_eq!(*all.get(0).unwrap(), Point::init(2, 2));
         assert_eq!(*all.get(1).unwrap(), Point::init(3, 2));
@@ -93,24 +99,24 @@ mod tests {
 
     #[test]
     fn contains_point() {
-        let position_component = SizedPoint::init_multi(2, 2, 2, 3);
-        assert_eq!(true, position_component.contains_point(&Point::init(2, 2)));
-        assert_eq!(true, position_component.contains_point(&Point::init(3, 2)));
-        assert_eq!(true, position_component.contains_point(&Point::init(2, 1)));
-        assert_eq!(true, position_component.contains_point(&Point::init(3, 1)));
-        assert_eq!(true, position_component.contains_point(&Point::init(2, 0)));
-        assert_eq!(true, position_component.contains_point(&Point::init(3, 0)));
-        assert_eq!(false, position_component.contains_point(&Point::init(4, 4)));
-        assert_eq!(false, position_component.contains_point(&Point::init(0, 0)));
-        assert_eq!(false, position_component.contains_point(&Point::init(2, 5)));
+        let point = SizedPoint::init_multi(2, 2, 2, 3);
+        assert_eq!(true, point.contains_point(&Point::init(2, 2)));
+        assert_eq!(true, point.contains_point(&Point::init(3, 2)));
+        assert_eq!(true, point.contains_point(&Point::init(2, 1)));
+        assert_eq!(true, point.contains_point(&Point::init(3, 1)));
+        assert_eq!(true, point.contains_point(&Point::init(2, 0)));
+        assert_eq!(true, point.contains_point(&Point::init(3, 0)));
+        assert_eq!(false, point.contains_point(&Point::init(4, 4)));
+        assert_eq!(false, point.contains_point(&Point::init(0, 0)));
+        assert_eq!(false, point.contains_point(&Point::init(2, 5)));
     }
 
     #[test]
     fn move_by() {
-        let mut position_component = SizedPoint::init_multi(2, 2, 2, 3);
-        position_component.move_to(Point::init(3, 3));
+        let mut point = SizedPoint::init_multi(2, 2, 2, 3);
+        point = point.move_to(Point::init(3, 3));
 
-        let all = position_component.all_positions();
+        let all = point.all_positions();
         assert_eq!(6, all.len());
         assert_eq!(*all.get(0).unwrap(), Point::init(3, 3));
         assert_eq!(*all.get(1).unwrap(), Point::init(4, 3));
