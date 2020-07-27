@@ -45,11 +45,11 @@ pub fn can_move_character(ecs: &mut World, mover: &Entity, new: SizedPoint) -> b
     let positions = ecs.read_storage::<PositionComponent>();
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
 
-    for p in new.all_positions().iter() {
-        if !map.is_in_bounds(&p) || !map.is_walkable(&p) {
-            return false;
-        }
-        for (entity, position, _) in (&entities, &positions, &char_info).join() {
+    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+        for p in new.all_positions().iter() {
+            if !map.is_in_bounds(&p) || !map.is_walkable(&p) {
+                return false;
+            }
             if *mover != entity && position.position.contains_point(&p) {
                 return false;
             }
