@@ -10,7 +10,7 @@ use super::super::{battle_actions, IconLoader};
 use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
-use crate::clash::{find_player, get_image_path_for_skill, SkillsComponent};
+use crate::clash::{find_player, get_skill, SkillInfo, SkillsComponent};
 
 pub struct SkillBarView {
     position: SDLPoint,
@@ -27,20 +27,19 @@ impl SkillBarView {
         let icons = IconLoader::init(render_context, "spell")?;
         for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
-                if let Some(path) = get_image_path_for_skill(&skill_name) {
-                    let image = icons.get(render_context, path)?;
-                    let hotkey = text.render_texture(&render_context.canvas, &i.to_string(), FontSize::Bold, FontColor::White)?;
-                    let view = SkillBarItemView::init(
-                        SDLPoint::new(
-                            get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
-                            position.y + BORDER_WIDTH + 1,
-                        ),
-                        i as u32,
-                        image,
-                        hotkey,
-                    )?;
-                    views.push(view);
-                }
+                let path = get_skill(&skill_name).image;
+                let image = icons.get(render_context, path)?;
+                let hotkey = text.render_texture(&render_context.canvas, &i.to_string(), FontSize::Bold, FontColor::White)?;
+                let view = SkillBarItemView::init(
+                    SDLPoint::new(
+                        get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
+                        position.y + BORDER_WIDTH + 1,
+                    ),
+                    i as u32,
+                    image,
+                    hotkey,
+                )?;
+                views.push(view);
             }
         }
         Ok(SkillBarView { position, views })

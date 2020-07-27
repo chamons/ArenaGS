@@ -6,7 +6,7 @@ pub use character::Character;
 
 mod skills;
 use skills::invoke_skill;
-pub use skills::{get_image_path_for_skill, get_target_for_skill, TargetType, should_targeting_show_trail};
+pub use skills::{get_skill, SkillInfo, TargetType};
 
 mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, SkillsComponent};

@@ -20,42 +20,45 @@ pub enum SkillEffect {
     Move { distance: i32 },
 }
 
+pub struct SkillInfo {
+    pub image: &'static str,
+    pub target: TargetType,
+    pub effect: SkillEffect,
+}
+
+impl SkillInfo {
+    pub fn init(image: &'static str, target: TargetType, effect: SkillEffect) -> SkillInfo {
+        SkillInfo { image, target, effect }
+    }
+
+    pub fn show_trail(&self) -> bool {
+        false
+    }
+}
+
 lazy_static! {
-    static ref SKILLS: HashMap<&'static str, (&'static str, TargetType, SkillEffect)> = {
+    static ref SKILLS: HashMap<&'static str, SkillInfo> = {
         let mut m = HashMap::new();
         #[cfg(test)]
         {
-            m.insert("TestNone", ("", TargetType::None, SkillEffect::None));
-            m.insert("TestTile", ("", TargetType::Tile, SkillEffect::None));
-            m.insert("TestEnemy", ("", TargetType::Enemy, SkillEffect::None));
+            m.insert("TestNone", SkillInfo::init("", TargetType::None, SkillEffect::None));
+            m.insert("TestTile", SkillInfo::init("", TargetType::Tile, SkillEffect::None));
+            m.insert("TestEnemy", SkillInfo::init("", TargetType::Enemy, SkillEffect::None));
         }
-        m.insert("Dash", ("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move { distance: 3 }));
+        m.insert(
+            "Dash",
+            SkillInfo::init("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move { distance: 3 }),
+        );
         m
     };
 }
 
-pub fn get_image_path_for_skill(name: &str) -> Option<&'static str> {
-    if let Some((path, _, _)) = SKILLS.get(name) {
-        Some(*path)
-    } else {
-        None
-    }
-}
-
-pub fn get_target_for_skill(name: &str) -> TargetType {
-    if let Some((_, target, _)) = SKILLS.get(name) {
-        *target
-    } else {
-        TargetType::None
-    }
-}
-
-pub fn should_targeting_show_trail(name: &str) -> bool {
-    false
+pub fn get_skill(name: &str) -> &SkillInfo {
+    SKILLS.get(name).unwrap()
 }
 
 fn assert_correct_targeting(name: &str, target: Option<Point>) {
-    let requires_point = match get_target_for_skill(name) {
+    let requires_point = match get_skill(name).target {
         TargetType::None => false,
         TargetType::Tile => true,
         TargetType::Enemy => true,

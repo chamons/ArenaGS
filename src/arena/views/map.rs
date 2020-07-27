@@ -14,8 +14,7 @@ use super::{HitTestResult, View};
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
 use crate::clash::{
-    element_at_location, find_player, should_targeting_show_trail, AnimationComponent, FieldComponent, MapHitTestResult, Point, PositionComponent,
-    MAX_MAP_TILES,
+    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, Point, PositionComponent, SkillInfo, MAX_MAP_TILES,
 };
 
 pub struct MapView {
@@ -225,7 +224,7 @@ fn should_draw_cursor_trail(ecs: &World) -> bool {
     let state = battle_actions::read_state(ecs);
     match state {
         BattleSceneState::Targeting(source, _) => match source {
-            BattleTargetSource::Skill(name) => should_targeting_show_trail(&name),
+            BattleTargetSource::Skill(name) => get_skill(&name).show_trail(),
         },
         _ => false,
     }

@@ -32,7 +32,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         return;
     }
 
-    let target_required = get_target_for_skill(name);
+    let target_required = get_skill(name).target;
     if target_required.is_none() {
         player_use_skill(ecs, name, None);
     } else {
@@ -51,7 +51,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
     reset_state(ecs);
 
-    let target_required = get_target_for_skill(name);
+    let target_required = get_skill(name).target;
 
     match target_required {
         TargetType::Enemy | TargetType::Tile => {
