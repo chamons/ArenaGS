@@ -50,6 +50,10 @@ pub fn get_target_for_skill(name: &str) -> TargetType {
     }
 }
 
+pub fn should_targeting_show_trail(name: &str) -> bool {
+    false
+}
+
 fn assert_correct_targeting(name: &str, target: Option<Point>) {
     let requires_point = match get_target_for_skill(name) {
         TargetType::None => false,
