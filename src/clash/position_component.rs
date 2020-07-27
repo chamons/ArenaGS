@@ -55,6 +55,10 @@ mod tests {
     use super::*;
     #[test]
     fn all_positions() {
+        //  (2,4) (3,4)
+        //  (2,3) (3,3)
+        //  (2,2) (3,2)
+        // Figure out why you click upper left doesn't count as enemy for hittest
         let position_component = PositionComponent::init_multi(2, 2, 2, 3);
         let all = position_component.all_positions();
         assert_eq!(6, all.len());

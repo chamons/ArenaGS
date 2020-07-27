@@ -42,7 +42,8 @@ impl<'a> Director<'a> {
                             EventStatus::Continue
                         }
                     }
-                    Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, mouse_btn),
+                    Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, Some(mouse_btn)),
+                    Event::MouseMotion { x, y, .. } => self.scene.handle_mouse(x, y, None),
                     _ => EventStatus::Continue,
                 };
 

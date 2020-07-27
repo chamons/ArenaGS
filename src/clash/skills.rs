@@ -4,8 +4,7 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 
 use super::Point;
-use super::{spend_time, MOVE_ACTION_COST};
-use crate::atlas::Logger;
+use super::{spend_time, Logger, MOVE_ACTION_COST};
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -15,6 +14,7 @@ pub enum TargetType {
     Enemy,
 }
 
+#[allow(dead_code)]
 pub enum SkillEffect {
     None,
     Move { distance: i32 },

@@ -55,6 +55,7 @@ impl AnimationComponent {
         }
     }
 
+    #[allow(dead_code)]
     pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, ending: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation::CharacterState { now, done },

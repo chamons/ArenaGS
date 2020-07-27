@@ -1,4 +1,5 @@
 use enum_iterator::IntoEnumIterator;
+use line_drawing::WalkGrid;
 use sdl2::pixels::Color;
 use sdl2::render::BlendMode;
 use specs::prelude::*;
@@ -9,7 +10,7 @@ use sdl2::rect::Rect as SDLRect;
 use super::super::battle_actions;
 use super::super::components::*;
 use super::{HitTestResult, View};
-use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, PositionComponent};
+use crate::clash::{element_at_location, find_player, FieldComponent, MapHitTestResult, PositionComponent};
 
 use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
@@ -108,6 +109,26 @@ impl MapView {
 
         Ok(())
     }
+
+    fn render_cursor(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
+        let mouse = ecs.get_mouse_position();
+        if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
+            let player = find_player(&ecs).unwrap();
+            let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().origin;
+
+            for (x, y) in WalkGrid::new(
+                (player_position.x as i32, player_position.y as i32),
+                (map_position.x as i32, map_position.y as i32),
+            ) {
+                let grid_rect = screen_rect_for_map_grid(x as u32, y as u32);
+                let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
+                canvas.set_draw_color(Color::from((196, 196, 0, 140)));
+                canvas.fill_rect(field_rect)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl View for MapView {
@@ -115,6 +136,9 @@ impl View for MapView {
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
+        }
+        if should_draw_cursor(ecs) {
+            self.render_cursor(canvas, ecs)?;
         }
         self.render_fields(ecs, canvas)?;
         Ok(())
@@ -170,6 +194,15 @@ fn should_draw_grid(ecs: &World) -> bool {
         if kind.is_map_overlay() {
             return true;
         }
+    }
+
+    false
+}
+
+fn should_draw_cursor(ecs: &World) -> bool {
+    let state = battle_actions::read_state(ecs);
+    if state.is_targeting() {
+        return true;
     }
 
     false

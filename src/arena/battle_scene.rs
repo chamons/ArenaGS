@@ -12,7 +12,7 @@ use super::views::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, Logger};
+use crate::atlas::{get_exe_folder, BoxResult};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -25,8 +25,10 @@ impl<'a> BattleScene<'a> {
         let mut ecs = create_world();
         ecs.register::<RenderComponent>();
         ecs.register::<BattleSceneStateComponent>();
+        ecs.register::<MousePositionComponent>();
 
         ecs.insert(BattleSceneStateComponent::init());
+        ecs.insert(MousePositionComponent::init());
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
@@ -202,21 +204,27 @@ impl<'a> Scene for BattleScene<'a> {
         }
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
-        if button == MouseButton::Middle {
-            let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-            match &hit {
-                Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
-                Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
-                _ => {}
-            }
-        }
+    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> EventStatus {
+        self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
 
-        let state = battle_actions::read_state(&self.ecs);
-        match state {
-            BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
-            BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),
-            BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
+        if let Some(button) = button {
+            if button == MouseButton::Middle {
+                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+                match &hit {
+                    Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
+                    Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
+                    _ => {}
+                }
+            }
+
+            let state = battle_actions::read_state(&self.ecs);
+            match state {
+                BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
+                BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),
+                BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
+            }
+        } else {
+            EventStatus::Continue
         }
     }
 

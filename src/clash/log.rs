@@ -144,7 +144,11 @@ mod tests {
     }
 }
 
-use crate::atlas::Logger;
+pub trait Logger {
+    fn log(&mut self, message: &str);
+    fn log_scroll_forward(&mut self);
+    fn log_scroll_back(&mut self);
+}
 
 impl Logger for World {
     fn log(&mut self, message: &str) {
