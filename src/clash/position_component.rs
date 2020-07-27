@@ -30,7 +30,7 @@ impl PositionComponent {
         let mut positions = Vec::with_capacity((self.width * self.height) as usize);
         for y in 0..self.height {
             for x in 0..self.width {
-                positions.push(Point::init(self.origin.x + x, self.origin.y + y))
+                positions.push(Point::init(self.origin.x + x, self.origin.y - y))
             }
         }
         positions
@@ -55,19 +55,18 @@ mod tests {
     use super::*;
     #[test]
     fn all_positions() {
-        //  (2,4) (3,4)
-        //  (2,3) (3,3)
+        //  (2,0) (3,0)
+        //  (2,1) (3,1)
         //  (2,2) (3,2)
-        // Figure out why you click upper left doesn't count as enemy for hittest
         let position_component = PositionComponent::init_multi(2, 2, 2, 3);
         let all = position_component.all_positions();
         assert_eq!(6, all.len());
         assert_eq!(*all.get(0).unwrap(), Point::init(2, 2));
         assert_eq!(*all.get(1).unwrap(), Point::init(3, 2));
-        assert_eq!(*all.get(2).unwrap(), Point::init(2, 3));
-        assert_eq!(*all.get(3).unwrap(), Point::init(3, 3));
-        assert_eq!(*all.get(4).unwrap(), Point::init(2, 4));
-        assert_eq!(*all.get(5).unwrap(), Point::init(3, 4));
+        assert_eq!(*all.get(2).unwrap(), Point::init(2, 1));
+        assert_eq!(*all.get(3).unwrap(), Point::init(3, 1));
+        assert_eq!(*all.get(4).unwrap(), Point::init(2, 0));
+        assert_eq!(*all.get(5).unwrap(), Point::init(3, 0));
     }
 
     #[test]
@@ -75,10 +74,10 @@ mod tests {
         let position_component = PositionComponent::init_multi(2, 2, 2, 3);
         assert_eq!(true, position_component.contains_point(&Point::init(2, 2)));
         assert_eq!(true, position_component.contains_point(&Point::init(3, 2)));
-        assert_eq!(true, position_component.contains_point(&Point::init(2, 3)));
-        assert_eq!(true, position_component.contains_point(&Point::init(3, 3)));
-        assert_eq!(true, position_component.contains_point(&Point::init(2, 2)));
-        assert_eq!(true, position_component.contains_point(&Point::init(3, 4)));
+        assert_eq!(true, position_component.contains_point(&Point::init(2, 1)));
+        assert_eq!(true, position_component.contains_point(&Point::init(3, 1)));
+        assert_eq!(true, position_component.contains_point(&Point::init(2, 0)));
+        assert_eq!(true, position_component.contains_point(&Point::init(3, 0)));
         assert_eq!(false, position_component.contains_point(&Point::init(4, 4)));
         assert_eq!(false, position_component.contains_point(&Point::init(0, 0)));
         assert_eq!(false, position_component.contains_point(&Point::init(2, 5)));
@@ -93,9 +92,9 @@ mod tests {
         assert_eq!(6, all.len());
         assert_eq!(*all.get(0).unwrap(), Point::init(3, 3));
         assert_eq!(*all.get(1).unwrap(), Point::init(4, 3));
-        assert_eq!(*all.get(2).unwrap(), Point::init(3, 4));
-        assert_eq!(*all.get(3).unwrap(), Point::init(4, 4));
-        assert_eq!(*all.get(4).unwrap(), Point::init(3, 5));
-        assert_eq!(*all.get(5).unwrap(), Point::init(4, 5));
+        assert_eq!(*all.get(2).unwrap(), Point::init(3, 2));
+        assert_eq!(*all.get(3).unwrap(), Point::init(4, 2));
+        assert_eq!(*all.get(4).unwrap(), Point::init(3, 1));
+        assert_eq!(*all.get(5).unwrap(), Point::init(4, 1));
     }
 }
