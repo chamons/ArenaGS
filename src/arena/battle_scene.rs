@@ -12,7 +12,7 @@ use super::views::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, Point};
+use crate::atlas::{get_exe_folder, BoxResult, Point, SizedPoint};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -35,7 +35,7 @@ impl<'a> BattleScene<'a> {
                 SpriteKinds::MaleBrownHairBlueBody,
                 CharacterAnimationState::Idle,
             ))
-            .with(PositionComponent::init(4, 4))
+            .with(PositionComponent::init(SizedPoint::init(4, 4)))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
@@ -44,7 +44,7 @@ impl<'a> BattleScene<'a> {
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
-            .with(PositionComponent::init_multi(5, 5, 2, 2))
+            .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(TimeComponent::init(0))
             .build();
@@ -58,11 +58,11 @@ impl<'a> BattleScene<'a> {
             .build();
 
         ecs.create_entity()
-            .with(PositionComponent::init(4, 7))
+            .with(PositionComponent::init(SizedPoint::init(4, 7)))
             .with(FieldComponent::init(255, 0, 0))
             .build();
         ecs.create_entity()
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(FieldComponent::init(0, 0, 255))
             .build();
 

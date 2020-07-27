@@ -1,13 +1,13 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::Point;
+use crate::atlas::{Point, SizedPoint};
 
 fn begin_move(ecs: &World, entity: &Entity, new_position: &Point) {
     let frame = ecs.read_resource::<FrameComponent>();
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let positions = ecs.read_storage::<PositionComponent>();
-    let position = &positions.get(*entity).unwrap();
+    let position = &positions.get(*entity).unwrap().position;
 
     let animation = AnimationComponent::movement(position.origin, *new_position, frame.current_frame, frame.current_frame + 8);
     animations.insert(*entity, animation).unwrap();
@@ -15,7 +15,7 @@ fn begin_move(ecs: &World, entity: &Entity, new_position: &Point) {
 
 pub fn complete_move(ecs: &World, entity: &Entity, new_position: &Point) {
     let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.get_mut(*entity).unwrap();
+    let position = &mut positions.get_mut(*entity).unwrap().position;
     position.move_to(*new_position);
 }
 
@@ -49,8 +49,8 @@ pub fn can_move_character(ecs: &mut World, mover: &Entity, new: Point) -> bool {
     if !map.is_in_bounds(&new) || !map.is_walkable(&new) {
         return false;
     }
-    for (entity, positions, _) in (&entities, &positions, &char_info).join() {
-        if *mover != entity && positions.contains_point(&new) {
+    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+        if *mover != entity && position.position.contains_point(&new) {
             return false;
         }
     }
@@ -75,6 +75,7 @@ pub fn wait(ecs: &mut World, entity: Entity) {
 mod tests {
     use super::super::{create_world, tick_animations};
     use super::*;
+    use crate::atlas::SizedPoint;
 
     fn wait_for_animations(ecs: &mut World) {
         loop {
@@ -90,7 +91,7 @@ mod tests {
 
     fn add_character(ecs: &mut World, position: Point) -> Entity {
         ecs.create_entity()
-            .with(PositionComponent::init(position.x, position.y))
+            .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(TimeComponent::init(100))
             .build()
@@ -99,8 +100,8 @@ mod tests {
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
         let positions = ecs.read_storage::<PositionComponent>();
         let position = &positions.get(*entity).unwrap();
-        assert_eq!(position.single_position().x, expected.x);
-        assert_eq!(position.single_position().y, expected.y);
+        assert_eq!(position.position.single_position().x, expected.x);
+        assert_eq!(position.position.single_position().y, expected.y);
     }
 
     #[test]
@@ -132,7 +133,7 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
         let entity = add_character(&mut ecs, Point::init(2, 2));
         ecs.create_entity()
-            .with(PositionComponent::init(2, 3))
+            .with(PositionComponent::init(SizedPoint::init (2, 3)))
             .with(FieldComponent::init(255, 0, 0))
             .build();
 
@@ -167,7 +168,7 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
         let entity = add_character(&mut ecs, Point::init(2, 2));
         ecs.create_entity()
-            .with(PositionComponent::init(2, 3))
+            .with(PositionComponent::init(SizedPoint::init (2, 3)))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
 

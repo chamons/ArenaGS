@@ -83,7 +83,7 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
     let player = ecs.read_storage::<PlayerComponent>();
 
     for (position, field, character, player) in (&positions, (&fields).maybe(), (&character_infos).maybe(), (&player).maybe()).join() {
-        if position.contains_point(map_position) {
+        if position.position.contains_point(map_position) {
             if let Some(_character) = character {
                 if player.is_none() {
                     return MapHitTestResult::Enemy();

@@ -35,6 +35,7 @@ fn get_render_sprite_state(render: &RenderComponent, animation: Option<&Animatio
 }
 
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
+    let position = position.position;
     let width = position.width;
     if let Some(animation) = animation {
         if let Some(animation_point) = animation.current_position(frame) {
@@ -99,7 +100,7 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            for position in position.all_positions().iter() {
+            for position in position.position.all_positions().iter() {
                 self.draw_overlay_tile(canvas, position, field.color)?;
             }
         }
@@ -112,7 +113,7 @@ impl MapView {
         if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
             if should_draw_cursor_trail(ecs) {
                 let player = find_player(&ecs).unwrap();
-                let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().origin;
+                let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position.origin;
                 self.draw_line(
                     canvas,
                     player_position.x as i32,
