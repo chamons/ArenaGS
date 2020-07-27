@@ -5,7 +5,8 @@ use std::fmt;
 mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
-use crate::clash::{FrameComponent, Point, TargetType};
+use crate::atlas::Point;
+use crate::clash::{FrameComponent, TargetType};
 
 #[derive(Clone)]
 pub enum BattleTargetSource {

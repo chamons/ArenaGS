@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, Point, PositionComponent};
-use crate::atlas::BoxResult;
+use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+use crate::atlas::{BoxResult, Point};
 
 pub const MAX_MAP_TILES: u32 = 13;
 pub const MAX_MAP_TILES_SIZED: usize = MAX_MAP_TILES as usize;

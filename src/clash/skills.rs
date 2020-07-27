@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::Point;
 use super::{spend_time, Logger, MOVE_ACTION_COST};
+use crate::atlas::Point;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]

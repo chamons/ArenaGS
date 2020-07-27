@@ -1,9 +1,10 @@
 use specs::prelude::*;
 
 use super::{
-    get_next_actor, invoke_skill, move_character, point_in_direction, take_enemy_action, wait_for_next, PlayerComponent, Point, PositionComponent,
-    TimeComponent, MOVE_ACTION_COST,
+    get_next_actor, invoke_skill, move_character, point_in_direction, take_enemy_action, wait_for_next, PlayerComponent, PositionComponent, TimeComponent,
+    MOVE_ACTION_COST,
 };
+use crate::atlas::Point;
 
 pub enum Direction {
     North,

@@ -3,11 +3,13 @@
 // - paths provides current exe location (for resource loading)
 // - BoxResults types
 mod crash;
-mod paths;
-
 #[cfg(debug_assertions)]
 pub use crash::on_crash;
 
+mod paths;
 pub use paths::get_exe_folder;
+
+mod point;
+pub use point::{Point, SizedPoint};
 
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;

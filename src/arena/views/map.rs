@@ -12,9 +12,9 @@ use super::super::{battle_actions, SpriteLoader};
 use super::{HitTestResult, View};
 
 use crate::after_image::{RenderCanvas, RenderContext};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, Point};
 use crate::clash::{
-    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, Point, PositionComponent, SkillInfo, MAX_MAP_TILES,
+    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, PositionComponent, SkillInfo, MAX_MAP_TILES,
 };
 
 pub struct MapView {

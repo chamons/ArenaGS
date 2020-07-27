@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use crate::clash::*;
+use crate::atlas::Point;
 
 pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();

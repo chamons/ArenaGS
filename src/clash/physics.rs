@@ -1,6 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
+use crate::atlas::Point;
 
 fn begin_move(ecs: &World, entity: &Entity, new_position: &Point) {
     let frame = ecs.read_resource::<FrameComponent>();
@@ -38,6 +39,7 @@ pub fn point_in_direction(initial: &Point, direction: Direction) -> Option<Point
     }
 }
 
+// BUG - multi-square enemies don't check their non-origin
 pub fn can_move_character(ecs: &mut World, mover: &Entity, new: Point) -> bool {
     let map = &ecs.read_resource::<MapComponent>().map;
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();

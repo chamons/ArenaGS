@@ -12,7 +12,7 @@ use super::views::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult};
+use crate::atlas::{get_exe_folder, BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {

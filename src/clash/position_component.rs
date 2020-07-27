@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use crate::clash::Point;
+use crate::atlas::Point;
 
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct PositionComponent {

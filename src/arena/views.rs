@@ -1,8 +1,7 @@
 use specs::prelude::*;
 
 use crate::after_image::RenderCanvas;
-use crate::atlas::BoxResult;
-use crate::clash::Point;
+use crate::atlas::{BoxResult, Point};
 
 mod debug;
 mod infobar;
