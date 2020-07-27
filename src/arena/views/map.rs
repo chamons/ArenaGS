@@ -216,7 +216,7 @@ fn should_draw_grid(ecs: &World) -> bool {
 fn should_draw_cursor(ecs: &World) -> bool {
     let state = battle_actions::read_state(ecs);
     match state {
-        BattleSceneState::Targeting(source, _) => true,
+        BattleSceneState::Targeting(_, _) => true,
         _ => false,
     }
 }

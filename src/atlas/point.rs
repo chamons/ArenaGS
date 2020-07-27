@@ -1,5 +1,7 @@
 use std::fmt;
 
+use line_drawing::WalkGrid;
+
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,
@@ -68,6 +70,33 @@ impl SizedPoint {
             origin: position,
             width: self.width,
             height: self.height,
+        }
+    }
+
+    pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        // TODO - Can we be smarter than checking every point?
+        let positions = self.all_positions();
+        let shortest = positions.iter().min_by(|first, second| {
+            let first = WalkGrid::new((first.x as i32, first.y as i32), (point.x as i32, point.y as i32)).count();
+            let second = WalkGrid::new((second.x as i32, second.y as i32), (point.x as i32, point.y as i32)).count();
+            first.cmp(&second)
+        });
+        if let Some(shortest) = shortest {
+            Some(
+                WalkGrid::new((shortest.x as i32, shortest.y as i32), (point.x as i32, point.y as i32))
+                    .map(|(x, y)| Point::init(x as u32, y as u32))
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        if let Some(path) = self.line_to(point) {
+            Some(path.len() as u32)
+        } else {
+            None
         }
     }
 }
