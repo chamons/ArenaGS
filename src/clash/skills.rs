@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{spend_time, Logger, PositionComponent, MOVE_ACTION_COST};
+use super::{is_area_clear, spend_time, Logger, Positions, MOVE_ACTION_COST};
 use crate::atlas::{Point, SizedPoint};
 
 #[allow(dead_code)]
@@ -29,6 +29,7 @@ pub struct SkillInfo {
 }
 
 impl SkillInfo {
+    #[allow(dead_code)]
     pub fn init(image: &'static str, target: TargetType, effect: SkillEffect) -> SkillInfo {
         SkillInfo {
             image,

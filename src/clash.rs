@@ -7,7 +7,7 @@ use skills::invoke_skill;
 pub use skills::{get_skill, SkillInfo, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, SkillsComponent};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, SkillsComponent, Positions};
 
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};

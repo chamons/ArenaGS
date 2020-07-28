@@ -4,6 +4,7 @@ use specs_derive::Component;
 use sdl2::pixels::Color;
 
 use super::{LogComponent, PositionComponent};
+use crate::atlas::SizedPoint;
 use crate::clash::Character;
 
 #[derive(Component)]
@@ -76,4 +77,14 @@ pub fn create_world() -> World {
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
     ecs
+}
+
+pub trait Positions {
+    fn get_position(&self, entity: &Entity) -> SizedPoint;
+}
+
+impl Positions for World {
+    fn get_position(&self, entity: &Entity) -> SizedPoint {
+        self.read_storage::<PositionComponent>().get(*entity).unwrap().position
+    }
 }

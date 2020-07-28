@@ -14,7 +14,7 @@ use super::{HitTestResult, View};
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
 use crate::clash::{
-    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, PositionComponent, SkillInfo, MAX_MAP_TILES,
+    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, PositionComponent, SkillInfo, MAX_MAP_TILES, Positions
 };
 
 pub struct MapView {
@@ -113,7 +113,7 @@ impl MapView {
         if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
             if let Some(skill) = get_target_skill(ecs) {
                 let player = find_player(&ecs).unwrap();
-                let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position;
+                let player_position = ecs.get_position(&player);
 
                 let color = if skill.is_good_target(player_position, map_position).unwrap_or(false) {
                     Color::from((196, 196, 0, 140))

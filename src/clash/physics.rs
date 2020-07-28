@@ -6,8 +6,7 @@ use crate::atlas::{Point, SizedPoint};
 fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
     let frame = ecs.read_resource::<FrameComponent>();
     let mut animations = ecs.write_storage::<AnimationComponent>();
-    let positions = ecs.read_storage::<PositionComponent>();
-    let position = &positions.get(*entity).unwrap().position;
+    let position = ecs.get_position(entity);
 
     let animation = AnimationComponent::movement(position.origin, new_position.origin, frame.current_frame, frame.current_frame + 8);
     animations.insert(*entity, animation).unwrap();
@@ -99,10 +98,9 @@ mod tests {
     }
 
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
-        let positions = ecs.read_storage::<PositionComponent>();
-        let position = &positions.get(*entity).unwrap();
-        assert_eq!(position.position.single_position().x, expected.x);
-        assert_eq!(position.position.single_position().y, expected.y);
+        let position = ecs.get_position(entity);
+        assert_eq!(position.single_position().x, expected.x);
+        assert_eq!(position.single_position().y, expected.y);
     }
 
     #[test]

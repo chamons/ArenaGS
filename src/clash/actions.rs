@@ -1,9 +1,6 @@
 use specs::prelude::*;
 
-use super::{
-    get_next_actor, invoke_skill, move_character, point_in_direction, take_enemy_action, wait_for_next, PlayerComponent, PositionComponent, TimeComponent,
-    MOVE_ACTION_COST,
-};
+use super::*;
 use crate::atlas::Point;
 
 pub enum Direction {
@@ -37,8 +34,7 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
 
     let player = find_player(ecs).unwrap();
     let new_position = {
-        let positions = ecs.read_storage::<PositionComponent>();
-        let position = positions.get(player).unwrap().position;
+        let position = ecs.get_position(&player);
         point_in_direction(&position, direction)
     };
     if let Some(new_position) = new_position {
@@ -69,9 +65,9 @@ pub fn tick_next_action(ecs: &mut World) {
 
 #[cfg(test)]
 mod tests {
-    use crate::atlas::SizedPoint;
     use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
+    use crate::atlas::SizedPoint;
 
     #[test]
     fn move_not_current_actor() {
