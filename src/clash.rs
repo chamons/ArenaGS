@@ -13,7 +13,7 @@ mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-use physics::{can_move_character, complete_move, move_character, point_in_direction, wait};
+use physics::{can_move_character, complete_move, move_character, point_in_direction, wait, is_area_clear};
 
 mod position_component;
 pub use position_component::PositionComponent;

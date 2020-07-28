@@ -115,7 +115,7 @@ impl MapView {
                 let player = find_player(&ecs).unwrap();
                 let player_position = ecs.get_position(&player);
 
-                let color = if skill.is_good_target(player_position, map_position).unwrap_or(false) {
+                let color = if skill.is_good_target(ecs, &player, map_position) {
                     Color::from((196, 196, 0, 140))
                 } else {
                     Color::from((196, 0, 0, 140))

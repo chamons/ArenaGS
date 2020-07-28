@@ -57,9 +57,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     match skill.target {
         TargetType::Enemy | TargetType::Tile => {
             let player = find_player(&ecs).unwrap();
-            let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position;
-            // This unwrap is safe, as we should not have gotten here if we were invalid targeting state
-            if skill.is_good_target(player_position, *position).unwrap() {
+            if skill.is_good_target(ecs, &player, *position) {
                 player_use_skill(ecs, name, Some(*position));
             }
         }
