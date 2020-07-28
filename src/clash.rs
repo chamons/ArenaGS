@@ -7,13 +7,16 @@ use skills::invoke_skill;
 pub use skills::{get_skill, SkillInfo, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, SkillsComponent, Positions};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, Positions, SkillsComponent};
 
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-use physics::{can_move_character, complete_move, move_character, point_in_direction, wait, is_area_clear};
+use physics::{begin_move, can_move_character, complete_move, is_area_clear, move_character, point_in_direction, wait};
+
+#[cfg(test)]
+use physics::wait_for_animations;
 
 mod position_component;
 pub use position_component::PositionComponent;

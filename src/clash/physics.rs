@@ -3,7 +3,7 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::{Point, SizedPoint};
 
-fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
+pub fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
     let frame = ecs.read_resource::<FrameComponent>();
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let position = ecs.get_position(entity);
@@ -77,22 +77,23 @@ pub fn wait(ecs: &mut World, entity: Entity) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::super::{create_world, tick_animations};
-    use super::*;
-    use crate::atlas::SizedPoint;
+pub fn wait_for_animations(ecs: &mut World) {
+    loop {
+        ecs.write_resource::<FrameComponent>().current_frame += 1;
+        tick_animations(ecs, ecs.read_resource::<FrameComponent>().current_frame).unwrap();
 
-    fn wait_for_animations(ecs: &mut World) {
-        loop {
-            ecs.write_resource::<FrameComponent>().current_frame += 1;
-            tick_animations(ecs, ecs.read_resource::<FrameComponent>().current_frame).unwrap();
-
-            let animations = ecs.read_storage::<AnimationComponent>();
-            if (animations).join().count() == 0 {
-                break;
-            }
+        let animations = ecs.read_storage::<AnimationComponent>();
+        if (animations).join().count() == 0 {
+            break;
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::{create_world};
+    use super::*;
+    use crate::atlas::SizedPoint;
 
     fn add_character(ecs: &mut World, position: SizedPoint) -> Entity {
         ecs.create_entity()

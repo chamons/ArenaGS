@@ -4,8 +4,8 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{is_area_clear, spend_time, Logger, Positions, MOVE_ACTION_COST};
-use crate::atlas::{Point, SizedPoint};
+use super::{begin_move, is_area_clear, spend_time, Logger, Positions, MOVE_ACTION_COST};
+use crate::atlas::Point;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -95,6 +95,10 @@ lazy_static! {
             m.insert("TestEnemy", SkillInfo::init("", TargetType::Enemy, SkillEffect::None));
             m.insert(
                 "TestWithRange",
+                SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), false),
+            );
+            m.insert(
+                "TestMove",
                 SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false),
             );
         }
@@ -130,13 +134,23 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
 pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
     assert_correct_targeting(ecs, invoker, name, target);
-    ecs.log(&format!("Invoking {}", name));
+
+    let skill = get_skill(name);
+    match skill.effect {
+        SkillEffect::Move => {
+            // Targeting only gives us a point, so clone their position to get size as wel
+            let position = ecs.get_position(invoker).move_to(target.unwrap());
+            begin_move(ecs, invoker, position);
+        }
+        SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
+    }
+
     spend_time(ecs, invoker, MOVE_ACTION_COST);
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, Character, CharacterInfoComponent, Map, MapComponent, PositionComponent, TimeComponent};
+    use super::super::{create_world, wait_for_animations, Character, CharacterInfoComponent, Map, MapComponent, PositionComponent, TimeComponent};
     use super::*;
     use crate::atlas::SizedPoint;
 
@@ -198,7 +212,7 @@ mod tests {
             .build();
         ecs.insert(MapComponent::init(Map::init_empty()));
 
-        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false);
+        let info = get_skill("TestWithRange");
         assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
         assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 5)));
         let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
@@ -220,7 +234,7 @@ mod tests {
             .build();
         ecs.insert(MapComponent::init(Map::init_empty()));
 
-        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false);
+        let info = get_skill("TestWithRange");
         assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
         assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 3)));
     }
@@ -236,7 +250,7 @@ mod tests {
             .build();
         ecs.insert(MapComponent::init(Map::init_empty()));
 
-        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), true);
+        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
@@ -244,5 +258,39 @@ mod tests {
             .build();
 
         assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
+    }
+
+    #[test]
+    fn movement_effect() {
+        let mut ecs = create_world();
+        let entity = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(Point::init(3, 3), ecs.get_position(&entity).origin);
+    }
+
+    #[test]
+    fn movement_effect_multi() {
+        let mut ecs = create_world();
+        let entity = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init_multi(2, 2, 2, 1)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(Point::init(3, 3), ecs.get_position(&entity).origin);
     }
 }

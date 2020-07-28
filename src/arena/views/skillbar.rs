@@ -10,7 +10,7 @@ use super::super::{battle_actions, IconLoader};
 use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
-use crate::clash::{find_player, get_skill, SkillInfo, SkillsComponent};
+use crate::clash::{find_player, get_skill, SkillsComponent};
 
 pub struct SkillBarView {
     position: SDLPoint,
