@@ -78,8 +78,13 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
         panic!("invoke_skill for {} called with wrong targeting param state.", name);
     }
 
-    if let Some(range) = skill.target_range() {
-        let position = ecs.read_storage::<PositionComponent>().get(*invoker).unwrap().position;
+    if let Some(target) = target {
+        if let Some(skill_range) = skill.target_range() {
+            let position = ecs.read_storage::<PositionComponent>().get(*invoker).unwrap().position;
+            if let Some(range_to_target) = position.distance_to(target) {
+                assert!(range_to_target <= skill_range);
+            }
+        }
     }
 }
 
@@ -128,6 +133,17 @@ mod tests {
             .with(TimeComponent::init(100))
             .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .build();
-        invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(10, 10)));
+        invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 5)));
+    }
+
+    #[test]
+    fn target_in_range() {
+        let mut ecs = create_world();
+        let entity = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .build();
+        invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 4)));
     }
 }

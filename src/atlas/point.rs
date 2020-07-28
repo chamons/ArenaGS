@@ -94,7 +94,7 @@ impl SizedPoint {
 
     pub fn distance_to(&self, point: Point) -> Option<u32> {
         if let Some(path) = self.line_to(point) {
-            Some(path.len() as u32)
+            Some(path.len() as u32 - 1) // Path includes both end points
         } else {
             None
         }
@@ -185,13 +185,13 @@ mod tests {
     fn distance_to_single() {
         let point = SizedPoint::init(2, 2);
         let distance = point.distance_to(Point::init(4, 5)).unwrap();
-        assert_eq!(6, distance);
+        assert_eq!(5, distance);
     }
 
     #[test]
     fn distance_to_multi() {
         let point = SizedPoint::init_multi(1, 2, 2, 1);
         let distance = point.distance_to(Point::init(4, 5)).unwrap();
-        assert_eq!(6, distance);
+        assert_eq!(5, distance);
     }
 }
