@@ -154,4 +154,44 @@ mod tests {
         assert_eq!(*all.get(4).unwrap(), Point::init(3, 1));
         assert_eq!(*all.get(5).unwrap(), Point::init(4, 1));
     }
+
+    #[test]
+    fn line_to_single() {
+        let point = SizedPoint::init(2, 2);
+        let line = point.line_to(Point::init(4, 5)).unwrap();
+        assert_eq!(6, line.len());
+        assert_eq!(*line.get(0).unwrap(), Point::init(2, 2));
+        assert_eq!(*line.get(1).unwrap(), Point::init(2, 3));
+        assert_eq!(*line.get(2).unwrap(), Point::init(3, 3));
+        assert_eq!(*line.get(3).unwrap(), Point::init(3, 4));
+        assert_eq!(*line.get(4).unwrap(), Point::init(4, 4));
+        assert_eq!(*line.get(5).unwrap(), Point::init(4, 5));
+    }
+
+    #[test]
+    fn line_to_multi() {
+        let point = SizedPoint::init_multi(1, 2, 2, 1);
+        let line = point.line_to(Point::init(4, 5)).unwrap();
+        assert_eq!(6, line.len());
+        assert_eq!(*line.get(0).unwrap(), Point::init(2, 2));
+        assert_eq!(*line.get(1).unwrap(), Point::init(2, 3));
+        assert_eq!(*line.get(2).unwrap(), Point::init(3, 3));
+        assert_eq!(*line.get(3).unwrap(), Point::init(3, 4));
+        assert_eq!(*line.get(4).unwrap(), Point::init(4, 4));
+        assert_eq!(*line.get(5).unwrap(), Point::init(4, 5));
+    }
+
+    #[test]
+    fn distance_to_single() {
+        let point = SizedPoint::init(2, 2);
+        let distance = point.distance_to(Point::init(4, 5)).unwrap();
+        assert_eq!(6, distance);
+    }
+
+    #[test]
+    fn distance_to_multi() {
+        let point = SizedPoint::init_multi(1, 2, 2, 1);
+        let distance = point.distance_to(Point::init(4, 5)).unwrap();
+        assert_eq!(6, distance);
+    }
 }
