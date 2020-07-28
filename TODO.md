@@ -1,5 +1,3 @@
-- Make dash actually work, with animation
-- Test skill effects a bunch
 - PR
 - Add ranged attack skill 
    - with character animation
