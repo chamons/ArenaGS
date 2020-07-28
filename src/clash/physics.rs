@@ -91,7 +91,7 @@ pub fn wait_for_animations(ecs: &mut World) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world};
+    use super::super::create_world;
     use super::*;
     use crate::atlas::SizedPoint;
 

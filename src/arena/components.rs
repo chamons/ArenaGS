@@ -6,7 +6,7 @@ mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
 use crate::atlas::Point;
-use crate::clash::{FrameComponent};
+use crate::clash::FrameComponent;
 
 #[derive(Clone)]
 pub enum BattleTargetSource {
