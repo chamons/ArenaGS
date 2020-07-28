@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 
 use super::{spend_time, Logger, PositionComponent, MOVE_ACTION_COST};
-use crate::atlas::Point;
+use crate::atlas::{Point, SizedPoint};
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -31,6 +31,7 @@ impl SkillInfo {
         SkillInfo { image, target, effect }
     }
 
+    // Skills that require clear LOS
     pub fn show_trail(&self) -> bool {
         false
     }
@@ -40,6 +41,16 @@ impl SkillInfo {
             SkillEffect::Move { distance } => Some(distance),
             SkillEffect::None => None,
         }
+    }
+
+    // HACK - Should check LOS as well
+    pub fn is_good_target(&self, initial: SizedPoint, target: Point) -> Option<bool> {
+        if let Some(skill_range) = self.target_range() {
+            if let Some(range_to_target) = initial.distance_to(target) {
+                return Some(range_to_target <= skill_range);
+            }
+        }
+        None
     }
 }
 
@@ -61,7 +72,7 @@ lazy_static! {
     };
 }
 
-pub fn get_skill(name: &str) -> &SkillInfo {
+pub fn get_skill(name: &str) -> &'static SkillInfo {
     SKILLS.get(name).unwrap()
 }
 
@@ -79,11 +90,10 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
     }
 
     if let Some(target) = target {
-        if let Some(skill_range) = skill.target_range() {
-            let position = ecs.read_storage::<PositionComponent>().get(*invoker).unwrap().position;
-            if let Some(range_to_target) = position.distance_to(target) {
-                assert!(range_to_target <= skill_range);
-            }
+        let position = ecs.read_storage::<PositionComponent>().get(*invoker).unwrap().position;
+        let skill_range = skill.is_good_target(position, target);
+        if let Some(skill_range) = skill_range {
+            assert!(skill_range);
         }
     }
 }
@@ -145,5 +155,14 @@ mod tests {
             .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .build();
         invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 4)));
+    }
+
+    #[test]
+    fn skill_info_range() {
+        let info = SkillInfo::init("", TargetType::Tile, SkillEffect::Move { distance: 2 });
+        assert_eq!(true, info.is_good_target(SizedPoint::init(2, 2), Point::init(2, 4)).unwrap());
+        assert_eq!(false, info.is_good_target(SizedPoint::init(2, 2), Point::init(2, 5)).unwrap());
+        let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
+        assert_eq!(true, info.is_good_target(SizedPoint::init(2, 2), Point::init(2, 5)).is_none());
     }
 }

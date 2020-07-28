@@ -111,27 +111,38 @@ impl MapView {
     fn render_cursor(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
         let mouse = ecs.get_mouse_position();
         if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
-            if should_draw_cursor_trail(ecs) {
+            if let Some(skill) = get_target_skill(ecs) {
                 let player = find_player(&ecs).unwrap();
-                let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position.origin;
-                self.draw_line(
-                    canvas,
-                    player_position.x as i32,
-                    player_position.y as i32,
-                    map_position.x as i32,
-                    map_position.y as i32,
-                )?;
-            } else {
-                self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 140)))?;
+                let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position;
+
+                let color = if skill.is_good_target(player_position, map_position).unwrap_or(false) {
+                    Color::from((196, 196, 0, 140))
+                } else {
+                    Color::from((196, 0, 0, 140))
+                };
+
+                // HACK - This is wrong, it is always from origin. Should get path from skill itself
+                if skill.show_trail() {
+                    self.draw_line(
+                        canvas,
+                        player_position.origin.x as i32,
+                        player_position.origin.y as i32,
+                        map_position.x as i32,
+                        map_position.y as i32,
+                        color,
+                    )?;
+                } else {
+                    self.draw_overlay_tile(canvas, &map_position, color)?;
+                }
             }
         }
 
         Ok(())
     }
 
-    fn draw_line(&self, canvas: &mut RenderCanvas, start_x: i32, start_y: i32, end_x: i32, end_y: i32) -> BoxResult<()> {
+    fn draw_line(&self, canvas: &mut RenderCanvas, start_x: i32, start_y: i32, end_x: i32, end_y: i32, color: Color) -> BoxResult<()> {
         for (x, y) in WalkGrid::new((start_x, start_y), (end_x, end_y)) {
-            self.draw_overlay_tile(canvas, &Point::init(x as u32, y as u32), Color::from((196, 196, 0, 140)))?;
+            self.draw_overlay_tile(canvas, &Point::init(x as u32, y as u32), color)?;
         }
         Ok(())
     }
@@ -221,12 +232,12 @@ fn should_draw_cursor(ecs: &World) -> bool {
     }
 }
 
-fn should_draw_cursor_trail(ecs: &World) -> bool {
+fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
     let state = battle_actions::read_state(ecs);
     match state {
         BattleSceneState::Targeting(source, _) => match source {
-            BattleTargetSource::Skill(name) => get_skill(&name).show_trail(),
+            BattleTargetSource::Skill(name) => Some(get_skill(&name)),
         },
-        _ => false,
+        _ => None,
     }
 }

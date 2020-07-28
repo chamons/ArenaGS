@@ -52,11 +52,16 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
     reset_state(ecs);
 
-    let target_required = get_skill(name).target;
+    let skill = get_skill(name);
 
-    match target_required {
+    match skill.target {
         TargetType::Enemy | TargetType::Tile => {
-            player_use_skill(ecs, name, Some(*position));
+            let player = find_player(&ecs).unwrap();
+            let player_position = ecs.read_storage::<PositionComponent>().get(player).unwrap().position;
+            // This unwrap is safe, as we should not have gotten here if we were invalid targeting state
+            if skill.is_good_target(player_position, *position).unwrap() {
+                player_use_skill(ecs, name, Some(*position));
+            }
         }
         TargetType::None => panic!("TargetType::None should not have reached select_skill_with_target"),
     }
