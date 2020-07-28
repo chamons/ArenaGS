@@ -1,5 +1,4 @@
 use enum_iterator::IntoEnumIterator;
-use line_drawing::WalkGrid;
 use sdl2::pixels::Color;
 use sdl2::render::BlendMode;
 use specs::prelude::*;
@@ -121,16 +120,12 @@ impl MapView {
                     Color::from((196, 0, 0, 140))
                 };
 
-                // HACK - This is wrong, it is always from origin. Should get path from skill itself
                 if skill.show_trail() {
-                    self.draw_line(
-                        canvas,
-                        player_position.origin.x as i32,
-                        player_position.origin.y as i32,
-                        map_position.x as i32,
-                        map_position.y as i32,
-                        color,
-                    )?;
+                    if let Some(points) = player_position.line_to(map_position) {
+                        self.draw_line(canvas, &points, color)?;
+                    } else {
+                        self.draw_overlay_tile(canvas, &map_position, color)?;
+                    }
                 } else {
                     self.draw_overlay_tile(canvas, &map_position, color)?;
                 }
@@ -140,9 +135,9 @@ impl MapView {
         Ok(())
     }
 
-    fn draw_line(&self, canvas: &mut RenderCanvas, start_x: i32, start_y: i32, end_x: i32, end_y: i32, color: Color) -> BoxResult<()> {
-        for (x, y) in WalkGrid::new((start_x, start_y), (end_x, end_y)) {
-            self.draw_overlay_tile(canvas, &Point::init(x as u32, y as u32), color)?;
+    fn draw_line(&self, canvas: &mut RenderCanvas, points: &[Point], color: Color) -> BoxResult<()> {
+        for p in points.iter() {
+            self.draw_overlay_tile(canvas, &p, color)?;
         }
         Ok(())
     }

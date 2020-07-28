@@ -104,7 +104,7 @@ lazy_static! {
         }
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), false),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
         );
         m
     };
@@ -138,7 +138,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     match skill.effect {
         SkillEffect::Move => {
-            // Targeting only gives us a point, so clone their position to get size as wel
+            // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
