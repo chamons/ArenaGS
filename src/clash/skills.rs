@@ -49,9 +49,8 @@ impl SkillInfo {
         }
     }
 
-    // Skills that require clear LOS
     pub fn show_trail(&self) -> bool {
-        false
+        self.must_be_clear
     }
 
     // HACK - Should check LOS as well
@@ -80,7 +79,7 @@ lazy_static! {
         }
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), false),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
         );
         m
     };
