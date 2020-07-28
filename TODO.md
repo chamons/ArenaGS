@@ -1,5 +1,3 @@
-- Skills should have "Does require clear LOS" target flag
-- Map cursor should be red when over wrong TargetType
 - Make dash actually work, with animation
 - Test skill effects a bunch
 - PR

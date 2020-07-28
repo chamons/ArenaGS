@@ -38,7 +38,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         player_use_skill(ecs, name, None);
     } else {
         match target_required {
-            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required)),
+            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
     }

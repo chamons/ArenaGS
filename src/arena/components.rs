@@ -6,7 +6,7 @@ mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
 use crate::atlas::Point;
-use crate::clash::{FrameComponent, TargetType};
+use crate::clash::{FrameComponent};
 
 #[derive(Clone)]
 pub enum BattleTargetSource {
@@ -27,7 +27,7 @@ impl fmt::Display for DebugKind {
 #[derive(is_enum_variant, Clone)]
 pub enum BattleSceneState {
     Default(),
-    Targeting(BattleTargetSource, TargetType),
+    Targeting(BattleTargetSource),
     Debug(DebugKind),
 }
 

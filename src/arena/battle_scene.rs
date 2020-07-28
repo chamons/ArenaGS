@@ -152,21 +152,15 @@ impl<'a> BattleScene<'a> {
         }
 
         let target_info = match battle_actions::read_state(&self.ecs) {
-            BattleSceneState::Targeting(target_source, target_type) => Some((target_source, target_type)),
+            BattleSceneState::Targeting(target_source) => Some(target_source),
             _ => None,
         };
 
-        if let Some((target_source, required_type)) = target_info {
+        if let Some(target_source) = target_info {
             if button == MouseButton::Left {
-                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                let position = match &hit {
-                    Some(HitTestResult::Tile(position)) if required_type.is_tile() => Some(position),
-                    Some(HitTestResult::Enemy(position)) if required_type.is_enemy() => Some(position),
-                    _ => None,
-                };
-                if let Some(position) = position {
+                if let Some(map_position) = screen_to_map_position(x, y) {
                     match target_source {
-                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, position),
+                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, &map_position),
                     }
                 }
             }
@@ -199,7 +193,7 @@ impl<'a> Scene for BattleScene<'a> {
         let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
         match state {
             BattleSceneState::Default() => self.handle_default_key(keycode),
-            BattleSceneState::Targeting(_, _) => self.handle_target_key(keycode),
+            BattleSceneState::Targeting(_) => self.handle_target_key(keycode),
             BattleSceneState::Debug(kind) => self.handle_debug_key(kind, keycode),
         }
     }
@@ -220,7 +214,7 @@ impl<'a> Scene for BattleScene<'a> {
             let state = battle_actions::read_state(&self.ecs);
             match state {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
-                BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),
+                BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),
                 BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
             }
         } else {

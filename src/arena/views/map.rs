@@ -227,7 +227,7 @@ fn should_draw_grid(ecs: &World) -> bool {
 fn should_draw_cursor(ecs: &World) -> bool {
     let state = battle_actions::read_state(ecs);
     match state {
-        BattleSceneState::Targeting(_, _) => true,
+        BattleSceneState::Targeting(_) => true,
         _ => false,
     }
 }
@@ -235,7 +235,7 @@ fn should_draw_cursor(ecs: &World) -> bool {
 fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
     let state = battle_actions::read_state(ecs);
     match state {
-        BattleSceneState::Targeting(source, _) => match source {
+        BattleSceneState::Targeting(source) => match source {
             BattleTargetSource::Skill(name) => Some(get_skill(&name)),
         },
         _ => None,

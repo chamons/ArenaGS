@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::slice::from_ref;
 
 use lazy_static::lazy_static;
 use specs::prelude::*;
@@ -57,6 +58,14 @@ impl SkillInfo {
     pub fn is_good_target(&self, ecs: &World, invoker: &Entity, target: Point) -> bool {
         let initial = ecs.get_position(invoker);
 
+        if !match self.target {
+            TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
+            TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+            TargetType::None => false,
+        } {
+            return false;
+        }
+
         if let Some(skill_range) = self.distance {
             if let Some(range_to_target) = initial.distance_to(target) {
                 if range_to_target > skill_range {
@@ -91,7 +100,7 @@ lazy_static! {
         }
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), false),
         );
         m
     };
@@ -127,7 +136,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, Map, MapComponent, PositionComponent, TimeComponent, Character, CharacterInfoComponent};
+    use super::super::{create_world, Character, CharacterInfoComponent, Map, MapComponent, PositionComponent, TimeComponent};
     use super::*;
     use crate::atlas::SizedPoint;
 
@@ -175,6 +184,7 @@ mod tests {
             .with(TimeComponent::init(100))
             .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
         invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 4)));
     }
 
@@ -196,7 +206,27 @@ mod tests {
     }
 
     #[test]
-    fn skill_info_clear() {
+    fn skill_info_correct_target_kind() {
+        let mut ecs = create_world();
+        let entity = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.create_entity()
+            .with(PositionComponent::init(SizedPoint::init(2, 3)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false);
+        assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
+        assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 3)));
+    }
+
+    #[test]
+    fn skill_info_must_be_clear() {
         let mut ecs = create_world();
         let entity = ecs
             .create_entity()
@@ -208,8 +238,7 @@ mod tests {
 
         let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), true);
         assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
-        ecs
-            .create_entity()
+        ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
