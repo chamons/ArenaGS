@@ -17,18 +17,36 @@ pub enum TargetType {
 #[allow(dead_code)]
 pub enum SkillEffect {
     None,
-    Move { distance: u32 },
+    Move,
 }
 
 pub struct SkillInfo {
     pub image: &'static str,
     pub target: TargetType,
     pub effect: SkillEffect,
+    pub distance: Option<u32>,
+    pub must_be_clear: bool,
 }
 
 impl SkillInfo {
     pub fn init(image: &'static str, target: TargetType, effect: SkillEffect) -> SkillInfo {
-        SkillInfo { image, target, effect }
+        SkillInfo {
+            image,
+            target,
+            effect,
+            distance: None,
+            must_be_clear: false,
+        }
+    }
+
+    pub fn init_with_distance(image: &'static str, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
+        SkillInfo {
+            image,
+            target,
+            effect,
+            distance,
+            must_be_clear,
+        }
     }
 
     // Skills that require clear LOS
@@ -36,16 +54,9 @@ impl SkillInfo {
         false
     }
 
-    pub fn target_range(&self) -> Option<u32> {
-        match self.effect {
-            SkillEffect::Move { distance } => Some(distance),
-            SkillEffect::None => None,
-        }
-    }
-
     // HACK - Should check LOS as well
     pub fn is_good_target(&self, initial: SizedPoint, target: Point) -> Option<bool> {
-        if let Some(skill_range) = self.target_range() {
+        if let Some(skill_range) = self.distance {
             if let Some(range_to_target) = initial.distance_to(target) {
                 return Some(range_to_target <= skill_range);
             }
@@ -62,11 +73,14 @@ lazy_static! {
             m.insert("TestNone", SkillInfo::init("", TargetType::None, SkillEffect::None));
             m.insert("TestTile", SkillInfo::init("", TargetType::Tile, SkillEffect::None));
             m.insert("TestEnemy", SkillInfo::init("", TargetType::Enemy, SkillEffect::None));
-            m.insert("TestWithRange", SkillInfo::init("", TargetType::Tile, SkillEffect::Move { distance: 2 }));
+            m.insert(
+                "TestWithRange",
+                SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false),
+            );
         }
         m.insert(
             "Dash",
-            SkillInfo::init("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move { distance: 3 }),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), false),
         );
         m
     };
@@ -159,7 +173,7 @@ mod tests {
 
     #[test]
     fn skill_info_range() {
-        let info = SkillInfo::init("", TargetType::Tile, SkillEffect::Move { distance: 2 });
+        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false);
         assert_eq!(true, info.is_good_target(SizedPoint::init(2, 2), Point::init(2, 4)).unwrap());
         assert_eq!(false, info.is_good_target(SizedPoint::init(2, 2), Point::init(2, 5)).unwrap());
         let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
