@@ -1,0 +1,4 @@
+#! /bin/bash
+if command -v "code" > /dev/null 2>&1; then
+	code --open-url "vscode://vadimcn.vscode-lldb/launch/command?LD_LIBRARY_PATH=$LD_LIBRARY_PATH&$*"
+fi

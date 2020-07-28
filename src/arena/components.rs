@@ -5,7 +5,8 @@ use std::fmt;
 mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
-use crate::clash::TargetType;
+use crate::atlas::Point;
+use crate::clash::FrameComponent;
 
 #[derive(Clone)]
 pub enum BattleTargetSource {
@@ -26,7 +27,7 @@ impl fmt::Display for DebugKind {
 #[derive(is_enum_variant, Clone)]
 pub enum BattleSceneState {
     Default(),
-    Targeting(BattleTargetSource, TargetType),
+    Targeting(BattleTargetSource),
     Debug(DebugKind),
 }
 
@@ -40,5 +41,29 @@ impl BattleSceneStateComponent {
         BattleSceneStateComponent {
             state: BattleSceneState::Default(),
         }
+    }
+}
+#[derive(Component)]
+pub struct MousePositionComponent {
+    pub position: Point,
+}
+
+impl MousePositionComponent {
+    pub fn init() -> MousePositionComponent {
+        MousePositionComponent { position: Point::init(0, 0) }
+    }
+}
+
+pub trait UIState {
+    fn get_current_frame(&self) -> u64;
+    fn get_mouse_position(&self) -> Point;
+}
+
+impl UIState for World {
+    fn get_current_frame(&self) -> u64 {
+        self.read_resource::<FrameComponent>().current_frame
+    }
+    fn get_mouse_position(&self) -> Point {
+        self.read_resource::<MousePositionComponent>().position
     }
 }

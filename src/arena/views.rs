@@ -1,8 +1,7 @@
 use specs::prelude::*;
 
 use crate::after_image::RenderCanvas;
-use crate::atlas::BoxResult;
-use crate::clash::Point;
+use crate::atlas::{BoxResult, Point};
 
 mod debug;
 mod infobar;
@@ -31,6 +30,3 @@ pub use infobar::InfoBarView;
 pub use log::LogView;
 pub use map::{screen_rect_for_map_grid, screen_to_map_position, MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;
-
-// HACK
-pub use skillbar::test_skill_name;

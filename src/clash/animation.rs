@@ -4,7 +4,7 @@ use specs_derive::Component;
 use super::{complete_move, PositionComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
-use crate::clash::Point;
+use crate::atlas::Point;
 
 // Animations are a strange beast/
 // Unless we do some sort of late binding,
@@ -55,6 +55,7 @@ impl AnimationComponent {
         }
     }
 
+    #[allow(dead_code)]
     pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, ending: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation::CharacterState { now, done },

@@ -1,9 +1,7 @@
 use specs::prelude::*;
 
-use super::{
-    get_next_actor, invoke_skill, move_character, point_in_direction, take_enemy_action, wait_for_next, PlayerComponent, Point, PositionComponent,
-    TimeComponent, MOVE_ACTION_COST,
-};
+use super::*;
+use crate::atlas::Point;
 
 pub enum Direction {
     North,
@@ -36,9 +34,8 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
 
     let player = find_player(ecs).unwrap();
     let new_position = {
-        let positions = ecs.read_storage::<PositionComponent>();
-        let position_component = positions.get(player).unwrap();
-        point_in_direction(&position_component.single_position(), direction)
+        let position = ecs.get_position(&player);
+        point_in_direction(&position, direction)
     };
     if let Some(new_position) = new_position {
         move_character(ecs, player, new_position);
@@ -70,13 +67,14 @@ pub fn tick_next_action(ecs: &mut World) {
 mod tests {
     use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
+    use crate::atlas::SizedPoint;
 
     #[test]
     fn move_not_current_actor() {
         let mut ecs = create_world();
         ecs.create_entity()
             .with(TimeComponent::init(0))
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(PlayerComponent::init())
             .build();
         ecs.create_entity().with(TimeComponent::init(10)).build();
@@ -92,7 +90,7 @@ mod tests {
         let player = ecs
             .create_entity()
             .with(TimeComponent::init(100))
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(PlayerComponent::init())
             .build();
         ecs.insert(MapComponent::init(Map::init_empty()));
@@ -108,7 +106,7 @@ mod tests {
         let mut ecs = create_world();
         ecs.create_entity()
             .with(TimeComponent::init(0))
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(PlayerComponent::init())
             .build();
         ecs.create_entity().with(TimeComponent::init(10)).build();
@@ -124,7 +122,7 @@ mod tests {
         let player = ecs
             .create_entity()
             .with(TimeComponent::init(100))
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(PlayerComponent::init())
             .build();
         ecs.create_entity().with(TimeComponent::init(10)).build();

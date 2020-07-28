@@ -13,8 +13,10 @@ dependencies = [
  "bincode",
  "derive_is_enum_variant",
  "enum-iterator",
+ "lazy_static",
+ "line_drawing",
  "num-derive",
- "num-traits",
+ "num-traits 0.2.12",
  "num_enum",
  "rand 0.7.3",
  "sdl2",
@@ -248,6 +250,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99e85c08494b21a9054e7fe1374a732aeadaff3980b6990b94bfd3a70f690005"
 
 [[package]]
+name = "line_drawing"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f81902e542483002b103c6424d23e765c2e5a65f732923299053a601bce50ab2"
+dependencies = [
+ "num-traits 0.1.43",
+]
+
+[[package]]
 name = "log"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -301,7 +312,7 @@ checksum = "4703ad64153382334aa8db57c637364c322d3372e097840c72000dabdcf6156e"
 dependencies = [
  "num-integer",
  "num-iter",
- "num-traits",
+ "num-traits 0.2.12",
 ]
 
 [[package]]
@@ -322,7 +333,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d59457e662d541ba17869cf51cf177c0b5f0cbf476c66bdc90bf1edac4f875b"
 dependencies = [
  "autocfg 1.0.0",
- "num-traits",
+ "num-traits 0.2.12",
 ]
 
 [[package]]
@@ -333,7 +344,16 @@ checksum = "7a6e6b7c748f995c4c29c5f5ae0248536e04a5739927c74ec0fa564805094b9f"
 dependencies = [
  "autocfg 1.0.0",
  "num-integer",
- "num-traits",
+ "num-traits 0.2.12",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.1.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
+dependencies = [
+ "num-traits 0.2.12",
 ]
 
 [[package]]

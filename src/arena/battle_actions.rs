@@ -1,6 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
+use crate::atlas::Point;
 use crate::clash::*;
 
 pub fn has_animations_blocking(ecs: &World) -> bool {
@@ -16,17 +17,28 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
     false
 }
 
+pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
+    let skills = ecs.read_storage::<SkillsComponent>();
+    let player = find_player(&ecs).unwrap();
+    let player_skill = skills.get(player).unwrap();
+    if let Some(name) = player_skill.skills.get(index) {
+        Some(name.to_string())
+    } else {
+        None
+    }
+}
+
 pub fn select_skill(ecs: &mut World, name: &str) {
     if has_animations_blocking(ecs) {
         return;
     }
 
-    let target_required = get_target_for_skill(name);
+    let target_required = get_skill(name).target;
     if target_required.is_none() {
         player_use_skill(ecs, name, None);
     } else {
         match target_required {
-            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()), target_required)),
+            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
     }
@@ -40,11 +52,14 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
     reset_state(ecs);
 
-    let target_required = get_target_for_skill(name);
+    let skill = get_skill(name);
 
-    match target_required {
+    match skill.target {
         TargetType::Enemy | TargetType::Tile => {
-            player_use_skill(ecs, name, Some(*position));
+            let player = find_player(&ecs).unwrap();
+            if skill.is_good_target(ecs, &player, *position) {
+                player_use_skill(ecs, name, Some(*position));
+            }
         }
         TargetType::None => panic!("TargetType::None should not have reached select_skill_with_target"),
     }

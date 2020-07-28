@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, Point, PositionComponent};
-use crate::atlas::BoxResult;
+use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
+use crate::atlas::{BoxResult, Point};
 
 pub const MAX_MAP_TILES: u32 = 13;
 pub const MAX_MAP_TILES_SIZED: usize = MAX_MAP_TILES as usize;
@@ -83,7 +83,7 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
     let player = ecs.read_storage::<PlayerComponent>();
 
     for (position, field, character, player) in (&positions, (&fields).maybe(), (&character_infos).maybe(), (&player).maybe()).join() {
-        if position.contains_point(map_position) {
+        if position.position.contains_point(map_position) {
             if let Some(_character) = character {
                 if player.is_none() {
                     return MapHitTestResult::Enemy();

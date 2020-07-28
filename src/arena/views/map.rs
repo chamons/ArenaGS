@@ -1,4 +1,5 @@
 use enum_iterator::IntoEnumIterator;
+use line_drawing::WalkGrid;
 use sdl2::pixels::Color;
 use sdl2::render::BlendMode;
 use specs::prelude::*;
@@ -6,15 +7,15 @@ use specs::prelude::*;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::super::battle_actions;
 use super::super::components::*;
+use super::super::{battle_actions, SpriteLoader};
 use super::{HitTestResult, View};
-use crate::clash::{element_at_location, FieldComponent, MapHitTestResult, PositionComponent};
 
-use super::super::SpriteLoader;
 use crate::after_image::{RenderCanvas, RenderContext};
-use crate::atlas::BoxResult;
-use crate::clash::{AnimationComponent, Point, MAX_MAP_TILES};
+use crate::atlas::{BoxResult, Point};
+use crate::clash::{
+    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, PositionComponent, Positions, SkillInfo, MAX_MAP_TILES,
+};
 
 pub struct MapView {
     sprites: SpriteLoader,
@@ -34,6 +35,7 @@ fn get_render_sprite_state(render: &RenderComponent, animation: Option<&Animatio
 }
 
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
+    let position = position.position;
     let width = position.width;
     if let Some(animation) = animation {
         if let Some(animation_point) = animation.current_position(frame) {
@@ -98,14 +100,58 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            for position in position.all_positions().iter() {
-                let grid_rect = screen_rect_for_map_grid(position.x, position.y);
-                let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
-                canvas.set_draw_color(field.color);
-                canvas.fill_rect(field_rect)?;
+            for position in position.position.all_positions().iter() {
+                self.draw_overlay_tile(canvas, position, field.color)?;
             }
         }
 
+        Ok(())
+    }
+
+    fn render_cursor(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
+        let mouse = ecs.get_mouse_position();
+        if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
+            if let Some(skill) = get_target_skill(ecs) {
+                let player = find_player(&ecs).unwrap();
+                let player_position = ecs.get_position(&player);
+
+                let color = if skill.is_good_target(ecs, &player, map_position) {
+                    Color::from((196, 196, 0, 140))
+                } else {
+                    Color::from((196, 0, 0, 140))
+                };
+
+                // HACK - This is wrong, it is always from origin. Should get path from skill itself
+                if skill.show_trail() {
+                    self.draw_line(
+                        canvas,
+                        player_position.origin.x as i32,
+                        player_position.origin.y as i32,
+                        map_position.x as i32,
+                        map_position.y as i32,
+                        color,
+                    )?;
+                } else {
+                    self.draw_overlay_tile(canvas, &map_position, color)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn draw_line(&self, canvas: &mut RenderCanvas, start_x: i32, start_y: i32, end_x: i32, end_y: i32, color: Color) -> BoxResult<()> {
+        for (x, y) in WalkGrid::new((start_x, start_y), (end_x, end_y)) {
+            self.draw_overlay_tile(canvas, &Point::init(x as u32, y as u32), color)?;
+        }
+        Ok(())
+    }
+
+    fn draw_overlay_tile(&self, canvas: &mut RenderCanvas, position: &Point, color: Color) -> BoxResult<()> {
+        let grid_rect = screen_rect_for_map_grid(position.x, position.y);
+        let field_rect = SDLRect::new(grid_rect.x() + 1, grid_rect.y() + 1, grid_rect.width() - 2, grid_rect.height() - 2);
+        canvas.set_draw_color(color);
+        canvas.fill_rect(field_rect)?;
         Ok(())
     }
 }
@@ -115,6 +161,9 @@ impl View for MapView {
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
+        }
+        if should_draw_cursor(ecs) {
+            self.render_cursor(canvas, ecs)?;
         }
         self.render_fields(ecs, canvas)?;
         Ok(())
@@ -173,4 +222,22 @@ fn should_draw_grid(ecs: &World) -> bool {
     }
 
     false
+}
+
+fn should_draw_cursor(ecs: &World) -> bool {
+    let state = battle_actions::read_state(ecs);
+    match state {
+        BattleSceneState::Targeting(_) => true,
+        _ => false,
+    }
+}
+
+fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
+    let state = battle_actions::read_state(ecs);
+    match state {
+        BattleSceneState::Targeting(source) => match source {
+            BattleTargetSource::Skill(name) => Some(get_skill(&name)),
+        },
+        _ => None,
+    }
 }

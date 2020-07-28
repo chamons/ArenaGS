@@ -12,7 +12,7 @@ use super::views::*;
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, Logger};
+use crate::atlas::{get_exe_folder, BoxResult, Point, SizedPoint};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -25,29 +25,26 @@ impl<'a> BattleScene<'a> {
         let mut ecs = create_world();
         ecs.register::<RenderComponent>();
         ecs.register::<BattleSceneStateComponent>();
+        ecs.register::<MousePositionComponent>();
 
         ecs.insert(BattleSceneStateComponent::init());
+        ecs.insert(MousePositionComponent::init());
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
                 SpriteKinds::MaleBrownHairBlueBody,
                 CharacterAnimationState::Idle,
             ))
-            .with(PositionComponent::init(4, 4))
-            .with(AnimationComponent::sprite_state(
-                CharacterAnimationState::Bow,
-                CharacterAnimationState::Idle,
-                0,
-                40,
-            ))
+            .with(PositionComponent::init(SizedPoint::init(4, 4)))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
+            .with(SkillsComponent::init(&["Dash"]))
             .build();
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
-            .with(PositionComponent::init_multi(5, 5, 2, 2))
+            .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
             .with(CharacterInfoComponent::init(Character::init()))
             .with(TimeComponent::init(0))
             .build();
@@ -61,11 +58,11 @@ impl<'a> BattleScene<'a> {
             .build();
 
         ecs.create_entity()
-            .with(PositionComponent::init(4, 7))
+            .with(PositionComponent::init(SizedPoint::init(4, 7)))
             .with(FieldComponent::init(255, 0, 0))
             .build();
         ecs.create_entity()
-            .with(PositionComponent::init(2, 2))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(FieldComponent::init(0, 0, 255))
             .build();
 
@@ -75,6 +72,7 @@ impl<'a> BattleScene<'a> {
             Box::from(LogView::init(SDLPoint::new(780, 450), text)?),
             Box::from(SkillBarView::init(
                 render_context,
+                &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 text,
             )?),
@@ -95,9 +93,9 @@ impl<'a> BattleScene<'a> {
         }
 
         if let Some(i) = is_keystroke_skill(keycode) {
-            // HACK - should get name from model, not test data
-            let name = super::views::test_skill_name(i);
-            battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+                battle_actions::select_skill(&mut self.ecs, &name);
+            }
         }
         match keycode {
             Keycode::Up => battle_actions::move_action(&mut self.ecs, Direction::North),
@@ -116,9 +114,9 @@ impl<'a> BattleScene<'a> {
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            // HACK - should get name from model, not test data
-            let name = super::views::test_skill_name(i);
-            battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+                battle_actions::select_skill(&mut self.ecs, &name);
+            }
         }
         EventStatus::Continue
     }
@@ -154,21 +152,15 @@ impl<'a> BattleScene<'a> {
         }
 
         let target_info = match battle_actions::read_state(&self.ecs) {
-            BattleSceneState::Targeting(target_source, target_type) => Some((target_source, target_type)),
+            BattleSceneState::Targeting(target_source) => Some(target_source),
             _ => None,
         };
 
-        if let Some((target_source, required_type)) = target_info {
+        if let Some(target_source) = target_info {
             if button == MouseButton::Left {
-                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                let position = match &hit {
-                    Some(HitTestResult::Tile(position)) if required_type.is_tile() => Some(position),
-                    Some(HitTestResult::Enemy(position)) if required_type.is_enemy() => Some(position),
-                    _ => None,
-                };
-                if let Some(position) = position {
+                if let Some(map_position) = screen_to_map_position(x, y) {
                     match target_source {
-                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, position),
+                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, &map_position),
                     }
                 }
             }
@@ -201,26 +193,32 @@ impl<'a> Scene for BattleScene<'a> {
         let state = self.ecs.read_resource::<BattleSceneStateComponent>().state.clone();
         match state {
             BattleSceneState::Default() => self.handle_default_key(keycode),
-            BattleSceneState::Targeting(_, _) => self.handle_target_key(keycode),
+            BattleSceneState::Targeting(_) => self.handle_target_key(keycode),
             BattleSceneState::Debug(kind) => self.handle_debug_key(kind, keycode),
         }
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
-        if button == MouseButton::Middle {
-            let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-            match &hit {
-                Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
-                Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
-                _ => {}
-            }
-        }
+    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> EventStatus {
+        self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
 
-        let state = battle_actions::read_state(&self.ecs);
-        match state {
-            BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
-            BattleSceneState::Targeting(_, _) => self.handle_target_mouse(x, y, button),
-            BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
+        if let Some(button) = button {
+            if button == MouseButton::Middle {
+                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+                match &hit {
+                    Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
+                    Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
+                    _ => {}
+                }
+            }
+
+            let state = battle_actions::read_state(&self.ecs);
+            match state {
+                BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
+                BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),
+                BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
+            }
+        } else {
+            EventStatus::Continue
         }
     }
 
@@ -256,7 +254,6 @@ fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
 
     if chars.len() == 1 {
         match chars[0] {
-            // HACK - should get name from model, not test data
             '0'..='9' => Some(chars[0].to_string().parse().unwrap()),
             _ => None,
         }

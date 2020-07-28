@@ -5,7 +5,7 @@ use rand::{
     Rng,
 };
 
-use super::{can_move_character, move_character, point_in_direction, wait, Direction, PositionComponent};
+use super::{can_move_character, move_character, point_in_direction, wait, Direction, Positions};
 
 impl Distribution<Direction> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Direction {
@@ -20,7 +20,7 @@ impl Distribution<Direction> for Standard {
 }
 
 pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
-    let position = ecs.read_storage::<PositionComponent>().get(*enemy).unwrap().origin;
+    let position = ecs.get_position(enemy);
     for _ in 0..5 {
         let direction: Direction = rand::random();
         if let Some(point) = point_in_direction(&position, direction) {
