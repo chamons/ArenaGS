@@ -49,12 +49,12 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32
         .with(AttackComponent::init(strength, kind))
         .build();
 
-    ecs.fire_event(EventType::Bolt(*source), &bolt);
+    ecs.fire_event(EventKind::Bolt(*source), &bolt);
 }
 
 pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     if let Some(target_characater) = find_character_at_location(ecs, target) {
-        ecs.fire_event(EventType::Melee(*source, strength, kind), &target_characater);
+        ecs.fire_event(EventKind::Melee(*source, strength, kind), &target_characater);
     }
 }
 

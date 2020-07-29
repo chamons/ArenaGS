@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{apply_bolt, complete_move, PositionComponent};
+use super::{apply_bolt, complete_move, EventCoordinator, EventKind, PositionComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;
@@ -25,7 +25,7 @@ impl FPoint {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum AnimationKind {
     Position {
         start: Point,
@@ -78,7 +78,6 @@ impl Animation {
     }
 }
 
-// Step 2 - Animation should take an optional function to call when complete.
 // This lets us chain animations (proc adds a new animation to entity)
 // This lets us rip out Bolt specific bits and collapse back to point
 // This lets us apply melee as well without a 4th animaion kind
@@ -141,7 +140,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
         for (entity, animation_component, position) in (&entities, &animations, (&mut positions).maybe()).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
-                completed.push((entity, animation.kind.clone()));
+                completed.push(entity);
             }
 
             if position.is_some() {
@@ -160,17 +159,10 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     }
 
     {
-        for (entity, animation) in completed {
-            match animation {
-                AnimationKind::Bolt { start: _, end } => {
-                    apply_bolt(ecs, &entity, end);
-                    ecs.delete_entity(entity)?;
-                }
-                _ => {
-                    let mut animations = ecs.write_storage::<AnimationComponent>();
-                    animations.remove(entity);
-                }
-            }
+        for entity in completed {
+            ecs.fire_event(EventKind::AnimationComplete(), &entity);
+            let mut animations = ecs.write_storage::<AnimationComponent>();
+            animations.remove(entity);
         }
     }
 

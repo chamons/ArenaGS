@@ -40,4 +40,4 @@ mod combat;
 pub use combat::{apply_bolt, begin_bolt, begin_melee, AttackComponent, BoltKind, WeaponKind};
 
 mod events;
-pub use events::{EventComponent, EventCoordinator, EventType};
+pub use events::{EventComponent, EventCoordinator, EventKind};

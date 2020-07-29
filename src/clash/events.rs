@@ -3,12 +3,13 @@ use specs_derive::Component;
 
 use super::WeaponKind;
 
-pub enum EventType {
+pub enum EventKind {
     Bolt(Entity),
     Melee(Entity, u32, WeaponKind),
+    AnimationComplete(),
 }
 
-type EventCallback = fn(ecs: &mut World, kind: EventType, target: &Entity) -> ();
+type EventCallback = fn(ecs: &mut World, kind: EventKind, target: &Entity) -> ();
 
 #[derive(Component)]
 pub struct EventComponent {
@@ -22,12 +23,12 @@ impl EventComponent {
 }
 
 pub trait EventCoordinator {
-    fn fire_event(&mut self, kind: EventType, target: &Entity);
+    fn fire_event(&mut self, kind: EventKind, target: &Entity);
     fn subscribe(&mut self, callback: EventCallback);
 }
 
 impl EventCoordinator for World {
-    fn fire_event(&mut self, kind: EventType, target: &Entity) {
+    fn fire_event(&mut self, kind: EventKind, target: &Entity) {
         let event = self.read_resource::<EventComponent>().on_event;
         if let Some(event) = event {
             event(self, kind, target);

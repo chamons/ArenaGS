@@ -87,9 +87,9 @@ impl<'a> BattleScene<'a> {
         Ok(BattleScene { ecs, views })
     }
 
-    fn on_event(ecs: &mut World, kind: EventType, target: &Entity) {
+    fn on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
         match kind {
-            EventType::Bolt(invoker) => {
+            EventKind::Bolt(invoker) => {
                 let (sprite, animation) = {
                     let attacks = ecs.write_storage::<AttackComponent>();
                     match attacks.get(*target).unwrap().color {
@@ -103,7 +103,7 @@ impl<'a> BattleScene<'a> {
                 let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
                 animations.insert(invoker, cast_animation).unwrap();
             }
-            EventType::Melee(invoker, strength, kind) => {
+            EventKind::Melee(invoker, strength, kind) => {
                 let animation = {
                     match kind {
                         WeaponKind::Sword => CharacterAnimationState::AttackTwo,
@@ -114,6 +114,21 @@ impl<'a> BattleScene<'a> {
                 let mut animations = ecs.write_storage::<AnimationComponent>();
                 let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
                 animations.insert(invoker, cast_animation).unwrap();
+            }
+            EventKind::AnimationComplete() => {
+                let animation_kind = {
+                    let animations = ecs.read_storage::<AnimationComponent>();
+                    let animation_component = animations.get(*target).unwrap();
+                    animation_component.animation.kind
+                };
+
+                match animation_kind {
+                    AnimationKind::Bolt { start: _, end } => {
+                        apply_bolt(ecs, &target, end);
+                        ecs.delete_entity(*target).unwrap();
+                    }
+                    _ => {}
+                }
             }
         }
     }
