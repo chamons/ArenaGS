@@ -35,16 +35,21 @@ pub enum AnimationKind {
         now: CharacterAnimationState,
         done: CharacterAnimationState,
     },
-    Bolt {
-        start: Point,
-        end: Point,
-    },
+}
+
+#[derive(Clone, Copy)]
+pub enum PostAnimationEffect {
+    None,
+    StartBolt,
+    ApplyBolt,
+    ApplyMelee,
 }
 
 pub struct Animation {
     pub kind: AnimationKind,
     pub beginning: u64,
     pub duration: u64,
+    pub effect: PostAnimationEffect,
 }
 
 impl Animation {
@@ -54,7 +59,7 @@ impl Animation {
 
     pub fn current_position(&self, current: u64) -> Option<FPoint> {
         match &self.kind {
-            AnimationKind::Position { start, end } | AnimationKind::Bolt { start, end } => {
+            AnimationKind::Position { start, end } => {
                 if self.is_complete(current) {
                     Some(FPoint::init(end.x as f32, end.y as f32))
                 } else {
@@ -73,7 +78,6 @@ impl Animation {
             AnimationKind::CharacterState { now, done: _ } => Some(now),
             // Bit of a hack since we can't have multiple animations stacked
             AnimationKind::Position { .. } => Some(&CharacterAnimationState::Walk),
-            AnimationKind::Bolt { .. } => None,
         }
     }
 }
@@ -88,19 +92,6 @@ pub struct AnimationComponent {
 }
 
 impl AnimationComponent {
-    pub fn bolt(start_point: Point, end_point: Point, beginning: u64, duration: u64) -> AnimationComponent {
-        AnimationComponent {
-            animation: Animation {
-                kind: AnimationKind::Bolt {
-                    start: start_point,
-                    end: end_point,
-                },
-                beginning,
-                duration,
-            },
-        }
-    }
-
     pub fn movement(start_point: Point, end_point: Point, beginning: u64, duration: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation {
@@ -110,6 +101,7 @@ impl AnimationComponent {
                 },
                 beginning,
                 duration,
+                effect: PostAnimationEffect::None,
             },
         }
     }
@@ -119,8 +111,14 @@ impl AnimationComponent {
                 kind: AnimationKind::CharacterState { now, done },
                 beginning,
                 duration,
+                effect: PostAnimationEffect::None,
             },
         }
+    }
+
+    pub fn with_effect(mut self, effect: PostAnimationEffect) -> AnimationComponent {
+        self.animation.effect = effect;
+        self
     }
 }
 
@@ -129,7 +127,6 @@ fn lerp(start: f32, end: f32, t: f64) -> f32 {
 }
 
 pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
-    // Remove completed animations, applying their change
     let mut completed = vec![];
     let mut to_move = vec![];
     {
@@ -140,12 +137,12 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
         for (entity, animation_component, position) in (&entities, &animations, (&mut positions).maybe()).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
-                completed.push(entity);
+                completed.push((entity, animation.effect));
             }
 
             if position.is_some() {
                 match &animation.kind {
-                    AnimationKind::Position { start: _, end } | AnimationKind::Bolt { start: _, end } => {
+                    AnimationKind::Position { start: _, end } => {
                         to_move.push((entity, *end));
                     }
                     AnimationKind::CharacterState { .. } => {}
@@ -158,12 +155,9 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
         complete_move(ecs, entity, position);
     }
 
-    {
-        for entity in completed {
-            ecs.fire_event(EventKind::AnimationComplete(), &entity);
-            let mut animations = ecs.write_storage::<AnimationComponent>();
-            animations.remove(entity);
-        }
+    for (entity, effect) in completed {
+        ecs.write_storage::<AnimationComponent>().remove(entity);
+        ecs.fire_event(EventKind::AnimationComplete(entity, effect), &entity);
     }
 
     Ok(())

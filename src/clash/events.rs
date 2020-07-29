@@ -1,12 +1,13 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::WeaponKind;
+use super::{PostAnimationEffect, WeaponKind};
+use crate::atlas::Point;
 
 pub enum EventKind {
     Bolt(Entity),
-    Melee(Entity, u32, WeaponKind),
-    AnimationComplete(),
+    Melee(Entity),
+    AnimationComplete(Entity, PostAnimationEffect),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: &Entity) -> ();

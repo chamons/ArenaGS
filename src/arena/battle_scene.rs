@@ -90,46 +90,64 @@ impl<'a> BattleScene<'a> {
     fn on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
         match kind {
             EventKind::Bolt(invoker) => {
-                let (sprite, animation) = {
+                let animation = {
                     let attacks = ecs.write_storage::<AttackComponent>();
-                    match attacks.get(*target).unwrap().color {
-                        BoltKind::Fire => (SpriteKinds::FireBolt, CharacterAnimationState::Magic),
+                    match attacks.get(*target).unwrap().attack.ranged_kind() {
+                        BoltKind::Fire => CharacterAnimationState::Magic,
                     }
                 };
-                let mut renderables = ecs.write_storage::<RenderComponent>();
-                renderables.insert(*target, RenderComponent::init(sprite)).unwrap();
+
                 let frame = ecs.get_current_frame();
-                let mut animations = ecs.write_storage::<AnimationComponent>();
-                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
-                animations.insert(invoker, cast_animation).unwrap();
+                let cast_animation =
+                    AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::StartBolt);
+                ecs.write_storage::<AnimationComponent>().insert(invoker, cast_animation).unwrap();
             }
-            EventKind::Melee(invoker, strength, kind) => {
+            EventKind::Melee(invoker) => {
                 let animation = {
-                    match kind {
+                    let attacks = ecs.read_storage::<AttackComponent>();
+                    match attacks.get(*target).unwrap().attack.melee_kind() {
                         WeaponKind::Sword => CharacterAnimationState::AttackTwo,
                     }
                 };
 
                 let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
-                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
-                animations.insert(invoker, cast_animation).unwrap();
+                let attack_animation =
+                    AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::ApplyMelee);
+                animations.insert(invoker, attack_animation).unwrap();
             }
-            EventKind::AnimationComplete() => {
-                let animation_kind = {
-                    let animations = ecs.read_storage::<AnimationComponent>();
-                    let animation_component = animations.get(*target).unwrap();
-                    animation_component.animation.kind
-                };
+            EventKind::AnimationComplete(entity, effect) => match effect {
+                PostAnimationEffect::StartBolt => {
+                    let bolt = start_bolt(ecs, &entity);
+                    let sprite = {
+                        let attacks = ecs.write_storage::<AttackComponent>();
+                        match attacks.get(bolt).unwrap().attack.ranged_kind() {
+                            BoltKind::Fire => SpriteKinds::FireBolt,
+                        }
+                    };
+                    ecs.write_storage::<RenderComponent>().insert(bolt, RenderComponent::init(sprite)).unwrap();
 
-                match animation_kind {
-                    AnimationKind::Bolt { start: _, end } => {
-                        apply_bolt(ecs, &target, end);
-                        ecs.delete_entity(*target).unwrap();
-                    }
-                    _ => {}
+                    let source_position = ecs.get_position(&bolt);
+                    let target_position = ecs.read_storage::<AttackComponent>().get(bolt).unwrap().attack.target;
+
+                    let path_length = source_position.distance_to(target_position).unwrap() as u64;
+                    let frame = ecs.get_current_frame();
+                    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
+
+                    let mut animations = ecs.write_storage::<AnimationComponent>();
+                    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length)
+                        .with_effect(PostAnimationEffect::ApplyBolt);
+                    animations.insert(bolt, animation).unwrap();
                 }
-            }
+                PostAnimationEffect::ApplyBolt => {
+                    apply_bolt(ecs, &target);
+                    ecs.delete_entity(*target).unwrap();
+                }
+                PostAnimationEffect::ApplyMelee => {
+                    apply_melee(ecs, &target);
+                }
+                PostAnimationEffect::None => {}
+            },
         }
     }
 
