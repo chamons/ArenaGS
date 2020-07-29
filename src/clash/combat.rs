@@ -45,7 +45,7 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32
     let bolt = ecs
         .create_entity()
         .with(PositionComponent::init(initial))
-        .with(AnimationComponent::bolt(initial.origin, target, frame, frame + animation_length))
+        .with(AnimationComponent::bolt(initial.origin, target, frame, animation_length))
         .with(AttackComponent::init(strength, kind))
         .build();
 

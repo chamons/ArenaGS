@@ -8,7 +8,7 @@ pub fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let position = ecs.get_position(entity);
 
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, frame + 8);
+    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, 8);
     animations.insert(*entity, animation).unwrap();
 }
 
@@ -64,7 +64,7 @@ pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
 
     for (entity, position, _) in (&entities, &positions, &char_info).join() {
-        if position.position.contains_point (&area) {
+        if position.position.contains_point(&area) {
             return Some(entity);
         }
     }
