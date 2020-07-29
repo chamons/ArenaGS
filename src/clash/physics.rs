@@ -4,11 +4,11 @@ use super::*;
 use crate::atlas::{Point, SizedPoint};
 
 pub fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
-    let frame = ecs.read_resource::<FrameComponent>();
+    let frame = ecs.get_current_frame();
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let position = ecs.get_position(entity);
 
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame.current_frame, frame.current_frame + 8);
+    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, frame + 8);
     animations.insert(*entity, animation).unwrap();
 }
 

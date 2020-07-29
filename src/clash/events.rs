@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 pub enum EventType {
-    Bolt,
+    Bolt(Entity),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventType, target: &Entity) -> ();

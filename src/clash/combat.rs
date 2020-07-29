@@ -39,5 +39,5 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32
         .with(AttackComponent::init(strength, color))
         .build();
 
-    ecs.fire_event(EventType::Bolt, &bolt);
+    ecs.fire_event(EventType::Bolt(*source), &bolt);
 }
