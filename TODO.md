@@ -1,5 +1,3 @@
-- Add ranged attack skill 
-   - with character animation
 - Add melee attack skill
    - with animation
 - PR

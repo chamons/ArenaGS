@@ -90,17 +90,17 @@ impl<'a> BattleScene<'a> {
     fn on_event(ecs: &mut World, kind: EventType, target: &Entity) {
         match kind {
             EventType::Bolt(invoker) => {
-                let sprite = {
+                let (sprite, animation) = {
                     let attacks = ecs.write_storage::<AttackComponent>();
                     match attacks.get(*target).unwrap().color {
-                        BoltColor::Fire => SpriteKinds::FireBolt,
+                        BoltColor::Fire => (SpriteKinds::FireBolt, CharacterAnimationState::Magic),
                     }
                 };
                 let mut renderables = ecs.write_storage::<RenderComponent>();
                 renderables.insert(*target, RenderComponent::init(sprite)).unwrap();
                 let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
-                let cast_animation = AnimationComponent::sprite_state(CharacterAnimationState::Magic, CharacterAnimationState::Idle, frame, frame + 12);
+                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, frame + 12);
                 animations.insert(invoker, cast_animation).unwrap();
             }
         }
