@@ -86,7 +86,7 @@ impl AnimationComponent {
 
     pub fn current_position(&self, current: u64) -> Option<FPoint> {
         match &self.animation {
-            Animation::Position { start, end } => {
+            Animation::Position { start, end } | Animation::Bolt { start, end } => {
                 if self.is_complete(current) {
                     Some(FPoint::init(end.x as f32, end.y as f32))
                 } else {

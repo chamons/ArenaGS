@@ -74,9 +74,11 @@ pub fn create_world() -> World {
     ecs.register::<super::LogComponent>();
     ecs.register::<super::SkillsComponent>();
     ecs.register::<super::AttackComponent>();
+    ecs.register::<super::EventComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+    ecs.insert(super::EventComponent::init());
     ecs
 }
 
@@ -87,5 +89,15 @@ pub trait Positions {
 impl Positions for World {
     fn get_position(&self, entity: &Entity) -> SizedPoint {
         self.read_storage::<PositionComponent>().get(*entity).unwrap().position
+    }
+}
+
+pub trait Framer {
+    fn get_current_frame(&self) -> u64;
+}
+
+impl Framer for World {
+    fn get_current_frame(&self) -> u64 {
+        self.read_resource::<FrameComponent>().current_frame
     }
 }

@@ -82,7 +82,25 @@ impl<'a> BattleScene<'a> {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), text)?));
         }
 
+        ecs.subscribe(BattleScene::on_event);
+
         Ok(BattleScene { ecs, views })
+    }
+
+    fn on_event(ecs: &mut World, kind: EventType, target: &Entity) -> () {
+        match kind {
+            EventType::Bolt => {
+                let sprite = {
+                    let attacks = ecs.write_storage::<AttackComponent>();
+                    match attacks.get(*target).unwrap().color {
+                        BoltColor::Fire => SpriteKinds::FireBolt,
+                    }
+                };
+
+                let mut renderables = ecs.write_storage::<RenderComponent>();
+                renderables.insert(*target, RenderComponent::init(sprite)).unwrap();
+            }
+        }
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {

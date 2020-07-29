@@ -3,7 +3,7 @@ use specs_derive::Component;
 
 use super::*;
 use crate::atlas::Point;
-use crate::clash::Logger;
+use crate::clash::{EventCoordinator, Framer, Logger};
 
 #[derive(Clone, Copy)]
 pub enum BoltColor {
@@ -27,20 +27,17 @@ pub fn apply_bolt(ecs: &mut World, _bolt: &Entity, target: Point) {
 }
 
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32, color: BoltColor) {
-    const BOLT_SPEED_PER_TILE: u32 = 10;
-
-    let sprite = match color {
-        BoltColor::Fire => SpriteKinds::FireBolt,
-    };
     let initial = ecs.get_position(source);
+    let path_length = initial.distance_to(target).unwrap() as u64;
+    let frame = ecs.get_current_frame();
+    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
 
-    // Hard problem - We need to attach a render component with a sprite
-    // However, we're in clash / guts of combat, we don't have access
-    // How we we hook in something to let us communicate up - callback? event?
-    // This will be the first of many
-    ecs.create_entity()
-        .with(RenderComponent::init(sprite))
+    let bolt = ecs
+        .create_entity()
         .with(PositionComponent::init(initial))
-        .with(AnimationComponent::bolt(initial.origin, target, 0, 40))
+        .with(AnimationComponent::bolt(initial.origin, target, frame, frame + animation_length))
+        .with(AttackComponent::init(strength, color))
         .build();
+
+    ecs.fire_event(EventType::Bolt, &bolt);
 }

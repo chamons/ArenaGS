@@ -119,7 +119,7 @@ lazy_static! {
                 "SpellBook06_117.png",
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(5, BoltColor::Fire),
-                Some(5),
+                Some(15),
                 true,
             ),
         );
@@ -160,7 +160,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, color) => begin_bolt(ecs, target.unwrap(), strength, color),
+        SkillEffect::RangedAttack(strength, color) => begin_bolt(ecs, &invoker, target.unwrap(), strength, color),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

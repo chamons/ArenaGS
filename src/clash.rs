@@ -7,7 +7,7 @@ use skills::invoke_skill;
 pub use skills::{get_skill, SkillInfo, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, PlayerComponent, Positions, SkillsComponent};
+pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, Framer, PlayerComponent, Positions, SkillsComponent};
 
 mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
@@ -38,3 +38,6 @@ pub use ai::take_enemy_action;
 
 mod combat;
 pub use combat::{apply_bolt, begin_bolt, AttackComponent, BoltColor};
+
+mod events;
+pub use events::{EventComponent, EventCoordinator, EventType};

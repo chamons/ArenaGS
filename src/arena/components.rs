@@ -6,7 +6,6 @@ mod render;
 pub use render::{RenderComponent, RenderOrder, SpriteKinds};
 
 use crate::atlas::Point;
-use crate::clash::FrameComponent;
 
 #[derive(Clone)]
 pub enum BattleTargetSource {
@@ -55,14 +54,10 @@ impl MousePositionComponent {
 }
 
 pub trait UIState {
-    fn get_current_frame(&self) -> u64;
     fn get_mouse_position(&self) -> Point;
 }
 
 impl UIState for World {
-    fn get_current_frame(&self) -> u64 {
-        self.read_resource::<FrameComponent>().current_frame
-    }
     fn get_mouse_position(&self) -> Point {
         self.read_resource::<MousePositionComponent>().position
     }
