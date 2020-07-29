@@ -54,7 +54,10 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32
 
 pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     if let Some(target_characater) = find_character_at_location(ecs, target) {
-        ecs.fire_event(EventType::Melee(*source, kind), &target_characater);
-        ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", strength, target.x, target.y).as_str());
+        ecs.fire_event(EventType::Melee(*source, strength, kind), &target_characater);
     }
+}
+
+pub fn apply_melee(ecs: &mut World, _target_character: &Entity, target_point: Point, strength: u32, _kind: WeaponKind) {
+    ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", strength, target_point.x, target_point.y).as_str());
 }

@@ -103,7 +103,7 @@ impl<'a> BattleScene<'a> {
                 let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
                 animations.insert(invoker, cast_animation).unwrap();
             }
-            EventType::Melee(invoker, kind) => {
+            EventType::Melee(invoker, strength, kind) => {
                 let animation = {
                     match kind {
                         WeaponKind::Sword => CharacterAnimationState::AttackTwo,

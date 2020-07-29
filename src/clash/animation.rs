@@ -41,6 +41,12 @@ pub enum Animation {
     },
 }
 
+// Step 1 - All of this state needs to move up to animation container, rename Animation to AnimationKind
+// Step 2 - Animation should take an optional function to call when complete.
+// This lets us chain animations (proc adds a new animation to entity)
+// This lets us rip out Bolt specific bits and collapse back to point
+// This lets us apply melee as well without a 4th animaion kind
+
 #[derive(Component)]
 pub struct AnimationComponent {
     pub animation: Animation,

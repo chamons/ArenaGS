@@ -5,7 +5,7 @@ use super::WeaponKind;
 
 pub enum EventType {
     Bolt(Entity),
-    Melee(Entity, WeaponKind),
+    Melee(Entity, u32, WeaponKind),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventType, target: &Entity) -> ();
