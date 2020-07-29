@@ -17,6 +17,8 @@ pub enum SpriteKinds {
     MonsterBirdBrown,
     MonsterBirdBlue,
     MonsterBirdRed,
+
+    FireBolt,
 }
 
 #[derive(PartialEq, IntoEnumIterator)]

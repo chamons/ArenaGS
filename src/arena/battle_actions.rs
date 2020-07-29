@@ -8,7 +8,7 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
     for a in (&animations).join() {
         match &a.animation {
-            Animation::Position { .. } => {
+            Animation::Position { .. } | Animation::Bolt { .. } => {
                 return true;
             }
             Animation::CharacterState { .. } => {}

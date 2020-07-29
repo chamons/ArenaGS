@@ -35,3 +35,6 @@ pub use log::*;
 
 mod ai;
 pub use ai::take_enemy_action;
+
+mod combat;
+pub use combat::{apply_bolt, begin_bolt, AttackComponent, BoltColor};

@@ -4,7 +4,7 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{begin_move, is_area_clear, spend_time, Logger, Positions, MOVE_ACTION_COST};
+use super::{begin_bolt, begin_move, is_area_clear, spend_time, BoltColor, Logger, Positions, MOVE_ACTION_COST};
 use crate::atlas::Point;
 
 #[allow(dead_code)]
@@ -19,6 +19,7 @@ pub enum TargetType {
 pub enum SkillEffect {
     None,
     Move,
+    RangedAttack(u32, BoltColor),
 }
 
 pub struct SkillInfo {
@@ -75,7 +76,13 @@ impl SkillInfo {
         }
 
         if self.must_be_clear {
-            if let Some(path) = initial.line_to(target) {
+            if let Some(mut path) = initial.line_to(target) {
+                // If we are targeting an enemy we can safely
+                // ignore the last square, since we know that it must
+                // have the target (from checks above)
+                if self.target.is_enemy() {
+                    path.pop();
+                }
                 if !is_area_clear(ecs, &path, invoker) {
                     return false;
                 }
@@ -106,6 +113,17 @@ lazy_static! {
             "Dash",
             SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
         );
+        m.insert(
+            "Fire Bolt",
+            SkillInfo::init_with_distance(
+                "SpellBook06_117.png",
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(5, BoltColor::Fire),
+                Some(5),
+                true,
+            ),
+        );
+
         m
     };
 }
@@ -142,6 +160,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
+        SkillEffect::RangedAttack(strength, color) => begin_bolt(ecs, target.unwrap(), strength, color),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

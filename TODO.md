@@ -1,4 +1,3 @@
-- PR
 - Add ranged attack skill 
    - with character animation
    - And bolt flying

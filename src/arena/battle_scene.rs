@@ -39,7 +39,7 @@ impl<'a> BattleScene<'a> {
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
-            .with(SkillsComponent::init(&["Dash"]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt"]))
             .build();
 
         ecs.create_entity()
@@ -238,7 +238,7 @@ impl<'a> Scene for BattleScene<'a> {
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
-        tick_animations(&self.ecs, frame)?;
+        tick_animations(&mut self.ecs, frame)?;
 
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);

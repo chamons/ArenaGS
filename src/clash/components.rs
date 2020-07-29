@@ -73,6 +73,7 @@ pub fn create_world() -> World {
     ecs.register::<super::TimeComponent>();
     ecs.register::<super::LogComponent>();
     ecs.register::<super::SkillsComponent>();
+    ecs.register::<super::AttackComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());

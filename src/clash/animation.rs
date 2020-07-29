@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{complete_move, PositionComponent};
+use super::{apply_bolt, complete_move, PositionComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;
@@ -25,6 +25,7 @@ impl FPoint {
     }
 }
 
+#[derive(Clone)]
 pub enum Animation {
     Position {
         start: Point,
@@ -33,6 +34,10 @@ pub enum Animation {
     CharacterState {
         now: CharacterAnimationState,
         done: CharacterAnimationState,
+    },
+    Bolt {
+        start: Point,
+        end: Point,
     },
 }
 
@@ -44,6 +49,17 @@ pub struct AnimationComponent {
 }
 
 impl AnimationComponent {
+    pub fn bolt(start_point: Point, end_point: Point, beginning: u64, ending: u64) -> AnimationComponent {
+        AnimationComponent {
+            animation: Animation::Bolt {
+                start: start_point,
+                end: end_point,
+            },
+            beginning,
+            ending,
+        }
+    }
+
     pub fn movement(start_point: Point, end_point: Point, beginning: u64, ending: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation::Position {
@@ -88,7 +104,8 @@ impl AnimationComponent {
         match &self.animation {
             Animation::CharacterState { now, done: _ } => Some(now),
             // Bit of a hack since we can't have multiple animations stacked
-            Animation::Position { start: _, end: _ } => Some(&CharacterAnimationState::Walk),
+            Animation::Position { .. } => Some(&CharacterAnimationState::Walk),
+            Animation::Bolt { .. } => None,
         }
     }
 }
@@ -97,7 +114,7 @@ fn lerp(start: f32, end: f32, t: f64) -> f32 {
     (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
 }
 
-pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
+pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     // Remove completed animations, applying their change
     let mut completed = vec![];
     let mut to_move = vec![];
@@ -108,22 +125,36 @@ pub fn tick_animations(ecs: &World, frame: u64) -> BoxResult<()> {
 
         for (entity, animation, position) in (&entities, &animations, (&mut positions).maybe()).join() {
             if animation.is_complete(frame) {
-                completed.push(entity);
+                completed.push((entity, animation.animation.clone()));
             }
-            if let Animation::Position { start: _, end } = &animation.animation {
-                if position.is_some() {
-                    to_move.push((entity, *end));
+
+            if position.is_some() {
+                match &animation.animation {
+                    Animation::Position { start: _, end } | Animation::Bolt { start: _, end } => {
+                        to_move.push((entity, *end));
+                    }
+                    Animation::CharacterState { .. } => {}
                 }
             }
         }
     }
+
     for (entity, position) in to_move.iter() {
         complete_move(ecs, entity, position);
     }
+
     {
-        let mut animations = ecs.write_storage::<AnimationComponent>();
-        for c in completed {
-            animations.remove(c);
+        for (entity, animation) in completed {
+            match animation {
+                Animation::Bolt { start: _, end } => {
+                    apply_bolt(ecs, &entity, end);
+                    ecs.delete_entity(entity)?;
+                }
+                _ => {
+                    let mut animations = ecs.write_storage::<AnimationComponent>();
+                    animations.remove(entity);
+                }
+            }
         }
     }
 

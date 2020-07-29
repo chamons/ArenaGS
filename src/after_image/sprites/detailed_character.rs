@@ -73,7 +73,7 @@ impl DetailedCharacter {
     }
 
     fn get_texture(&self, state: &CharacterAnimationState, frame: u64) -> &Texture {
-        let offset = super::sprite::get_animation_frame(frame);
+        let offset = self.get_animation_frame(3, frame);
 
         match state {
             CharacterAnimationState::AttackOne => &self.attack_one[offset],
