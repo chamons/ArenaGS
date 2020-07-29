@@ -39,7 +39,7 @@ impl<'a> BattleScene<'a> {
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
-            .with(SkillsComponent::init(&["Dash", "Fire Bolt"]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash"]))
             .build();
 
         ecs.create_entity()
@@ -93,7 +93,7 @@ impl<'a> BattleScene<'a> {
                 let (sprite, animation) = {
                     let attacks = ecs.write_storage::<AttackComponent>();
                     match attacks.get(*target).unwrap().color {
-                        BoltColor::Fire => (SpriteKinds::FireBolt, CharacterAnimationState::Magic),
+                        BoltKind::Fire => (SpriteKinds::FireBolt, CharacterAnimationState::Magic),
                     }
                 };
                 let mut renderables = ecs.write_storage::<RenderComponent>();
@@ -101,6 +101,18 @@ impl<'a> BattleScene<'a> {
                 let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
                 let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, frame + 12);
+                animations.insert(invoker, cast_animation).unwrap();
+            }
+            EventType::Melee(invoker, kind) => {
+                let animation = {
+                    match kind {
+                        WeaponKind::Sword => CharacterAnimationState::AttackTwo,
+                    }
+                };
+
+                let frame = ecs.get_current_frame();
+                let mut animations = ecs.write_storage::<AnimationComponent>();
+                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, frame + 15);
                 animations.insert(invoker, cast_animation).unwrap();
             }
         }

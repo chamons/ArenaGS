@@ -4,7 +4,7 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{begin_bolt, begin_move, is_area_clear, spend_time, BoltColor, Logger, Positions, MOVE_ACTION_COST};
+use super::{begin_bolt, begin_melee, begin_move, is_area_clear, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
 use crate::atlas::Point;
 
 #[allow(dead_code)]
@@ -19,7 +19,8 @@ pub enum TargetType {
 pub enum SkillEffect {
     None,
     Move,
-    RangedAttack(u32, BoltColor),
+    RangedAttack(u32, BoltKind),
+    MeleeAttack(u32, WeaponKind),
 }
 
 pub struct SkillInfo {
@@ -118,8 +119,18 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(5, BoltColor::Fire),
+                SkillEffect::RangedAttack(5, BoltKind::Fire),
                 Some(15),
+                true,
+            ),
+        );
+        m.insert(
+            "Slash",
+            SkillInfo::init_with_distance(
+                "SpellBook01_76.png",
+                TargetType::Enemy,
+                SkillEffect::MeleeAttack(5, WeaponKind::Sword),
+                Some(1),
                 true,
             ),
         );
@@ -160,7 +171,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, color) => begin_bolt(ecs, &invoker, target.unwrap(), strength, color),
+        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), strength, kind),
+        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), strength, kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

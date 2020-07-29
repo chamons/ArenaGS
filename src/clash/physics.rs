@@ -58,6 +58,19 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
     true
 }
 
+pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    let char_info = ecs.read_storage::<CharacterInfoComponent>();
+
+    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+        if position.position.contains_point (&area) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
 pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
     is_area_clear(ecs, &new.all_positions(), mover)
 }

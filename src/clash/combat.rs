@@ -3,30 +3,40 @@ use specs_derive::Component;
 
 use super::*;
 use crate::atlas::Point;
-use crate::clash::{EventCoordinator, Framer, Logger};
+use crate::clash::{find_character_at_location, EventCoordinator, Framer, Logger};
 
 #[derive(Clone, Copy)]
-pub enum BoltColor {
+pub enum BoltKind {
     Fire,
+}
+
+#[derive(Clone, Copy)]
+pub enum WeaponKind {
+    Sword,
 }
 
 #[derive(Component)]
 pub struct AttackComponent {
     pub strength: u32,
-    pub color: BoltColor,
+    pub color: BoltKind,
 }
 
 impl AttackComponent {
-    pub fn init(strength: u32, color: BoltColor) -> AttackComponent {
+    pub fn init(strength: u32, color: BoltKind) -> AttackComponent {
         AttackComponent { strength, color }
     }
 }
 
-pub fn apply_bolt(ecs: &mut World, _bolt: &Entity, target: Point) {
-    ecs.log(format!("Enemy was struck at ({},{})!", target.x, target.y).as_str());
+pub fn apply_bolt(ecs: &mut World, bolt: &Entity, target: Point) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.get(*bolt).unwrap().strength
+    };
+
+    ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack, target.x, target.y).as_str());
 }
 
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32, color: BoltColor) {
+pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: BoltKind) {
     let initial = ecs.get_position(source);
     let path_length = initial.distance_to(target).unwrap() as u64;
     let frame = ecs.get_current_frame();
@@ -36,8 +46,15 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target: Point, strength: u32
         .create_entity()
         .with(PositionComponent::init(initial))
         .with(AnimationComponent::bolt(initial.origin, target, frame, frame + animation_length))
-        .with(AttackComponent::init(strength, color))
+        .with(AttackComponent::init(strength, kind))
         .build();
 
     ecs.fire_event(EventType::Bolt(*source), &bolt);
+}
+
+pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
+    if let Some(target_characater) = find_character_at_location(ecs, target) {
+        ecs.fire_event(EventType::Melee(*source, kind), &target_characater);
+        ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", strength, target.x, target.y).as_str());
+    }
 }
