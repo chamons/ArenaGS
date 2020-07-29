@@ -31,7 +31,7 @@ impl LargeEnemy {
 
 impl Sprite for LargeEnemy {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, _: u32, frame: u64) -> BoxResult<()> {
-        let offset = self.get_animation_frame(3, frame);
+        let offset = self.get_animation_frame(3, 55, frame);
 
         let mut screen_rect = SDLRect::from_center(screen_position, (122.0 * self.scale) as u32, (96.0 * self.scale) as u32);
         // Tweak location a tad from default

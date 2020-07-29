@@ -24,6 +24,14 @@ pub const MAP_CORNER_X: u32 = 50;
 pub const MAP_CORNER_Y: u32 = 50;
 pub const TILE_SIZE: u32 = 48;
 
+fn get_render_frame(animation: Option<&AnimationComponent>, frame: u64) -> u64 {
+    if let Some(animation) = animation {
+        frame - animation.beginning
+    } else {
+        frame
+    }
+}
+
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
     if let Some(animation) = animation {
         if let Some(state) = animation.current_character_state() {
@@ -79,12 +87,16 @@ impl MapView {
                 if render.order == order {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
+                    // Animations have a relative frame that starts at 0 (start of animation) and
+                    // lasts through duration. We need to use the "real" frame for render position
+                    // and the relative "render_frame" for the rest if we have it
+                    let render_frame = get_render_frame(animation, frame);
                     if let Some(position) = position {
                         let offset = get_render_position(position, animation, frame);
                         let state = get_render_sprite_state(render, animation);
-                        sprite.draw(canvas, offset, state, frame)?;
+                        sprite.draw(canvas, offset, state, render_frame)?;
                     } else {
-                        sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
+                        sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, render_frame)?;
                     }
                 }
             }

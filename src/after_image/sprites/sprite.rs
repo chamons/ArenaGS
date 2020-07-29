@@ -10,13 +10,11 @@ use sdl2::render::Texture;
 pub trait Sprite {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()>;
 
-    fn get_animation_frame(&self, length: usize, frame: u64) -> usize {
-        const ANIMATION_LENGTH: usize = 55;
-        let period = ANIMATION_LENGTH / length;
-
-        let frame = frame as usize % ANIMATION_LENGTH;
-        let frame = (frame / period) as usize;
-        cmp::min(frame, length - 1)
+    fn get_animation_frame(&self, number_of_frames: usize, animation_length: usize, current_frame: u64) -> usize {
+        let period = animation_length / number_of_frames;
+        let current_frame = current_frame as usize % animation_length;
+        let current_frame = (current_frame / period) as usize;
+        cmp::min(current_frame, number_of_frames - 1)
     }
 }
 

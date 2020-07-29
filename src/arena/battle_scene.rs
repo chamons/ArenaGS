@@ -100,7 +100,7 @@ impl<'a> BattleScene<'a> {
                 renderables.insert(*target, RenderComponent::init(sprite)).unwrap();
                 let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
-                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 12);
+                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
                 animations.insert(invoker, cast_animation).unwrap();
             }
             EventType::Melee(invoker, kind) => {
@@ -112,7 +112,7 @@ impl<'a> BattleScene<'a> {
 
                 let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
-                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 15);
+                let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18);
                 animations.insert(invoker, cast_animation).unwrap();
             }
         }

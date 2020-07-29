@@ -33,7 +33,7 @@ impl Bolt {
 
 impl Sprite for Bolt {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, _: u32, frame: u64) -> BoxResult<()> {
-        let offset = self.get_animation_frame(self.length, frame);
+        let offset = self.get_animation_frame(self.length, 30, frame);
 
         let screen_rect = SDLRect::from_center(screen_position, (64.0) as u32, (64.0) as u32);
         let sprite_rect = get_sprite_sheet_rect_for_index(self.start + offset);
