@@ -25,16 +25,16 @@ pub const MAP_CORNER_Y: u32 = 50;
 pub const TILE_SIZE: u32 = 48;
 
 fn get_render_frame(animation: Option<&AnimationComponent>, frame: u64) -> u64 {
-    if let Some(animation) = animation {
-        frame - animation.beginning
+    if let Some(animation_component) = animation {
+        frame - animation_component.animation.beginning
     } else {
         frame
     }
 }
 
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
-    if let Some(animation) = animation {
-        if let Some(state) = animation.current_character_state() {
+    if let Some(animation_component) = animation {
+        if let Some(state) = animation_component.animation.current_character_state() {
             return (*state).into();
         }
     }
@@ -44,8 +44,8 @@ fn get_render_sprite_state(render: &RenderComponent, animation: Option<&Animatio
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
     let position = position.position;
     let width = position.width;
-    if let Some(animation) = animation {
-        if let Some(animation_point) = animation.current_position(frame) {
+    if let Some(animation_component) = animation {
+        if let Some(animation_point) = animation_component.animation.current_position(frame) {
             return SDLPoint::new(
                 ((animation_point.x * TILE_SIZE as f32) + MAP_CORNER_X as f32 + ((width * TILE_SIZE) as u32 / 2) as f32) as i32,
                 ((animation_point.y * TILE_SIZE as f32) + MAP_CORNER_Y as f32) as i32,
