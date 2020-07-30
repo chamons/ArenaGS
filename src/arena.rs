@@ -6,6 +6,7 @@ mod components;
 mod icon_loader;
 mod sprite_loader;
 mod views;
+mod battle_animations;
 
 use icon_loader::IconLoader;
 use sprite_loader::SpriteLoader;
