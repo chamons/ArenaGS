@@ -6,9 +6,9 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
-use super::battle_actions;
 use super::components::*;
 use super::views::*;
+use super::{battle_actions, battle_animations, tick_animations, AnimationComponent};
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -20,15 +20,22 @@ pub struct BattleScene<'a> {
     views: Vec<Box<dyn View + 'a>>,
 }
 
+pub fn add_ui_extension(ecs: &mut World) {
+    ecs.register::<RenderComponent>();
+    ecs.register::<BattleSceneStateComponent>();
+    ecs.register::<MousePositionComponent>();
+    ecs.register::<AnimationComponent>();
+
+    ecs.subscribe(BattleScene::on_event);
+
+    ecs.insert(BattleSceneStateComponent::init());
+    ecs.insert(MousePositionComponent::init());
+}
+
 impl<'a> BattleScene<'a> {
     pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
         let mut ecs = create_world();
-        ecs.register::<RenderComponent>();
-        ecs.register::<BattleSceneStateComponent>();
-        ecs.register::<MousePositionComponent>();
-
-        ecs.insert(BattleSceneStateComponent::init());
-        ecs.insert(MousePositionComponent::init());
+        add_ui_extension(&mut ecs);
 
         ecs.create_entity()
             .with(RenderComponent::init_with_char_state(
@@ -39,7 +46,7 @@ impl<'a> BattleScene<'a> {
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
-            .with(SkillsComponent::init(&["Dash"]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash"]))
             .build();
 
         ecs.create_entity()
@@ -83,6 +90,20 @@ impl<'a> BattleScene<'a> {
         }
 
         Ok(BattleScene { ecs, views })
+    }
+
+    fn on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+        match kind {
+            EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
+            EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
+            EventKind::Move() => battle_animations::begin_move_animation(ecs, &target.unwrap()),
+            EventKind::AnimationComplete(effect) => match effect {
+                PostAnimationEffect::StartBolt => battle_animations::begin_ranged_bolt_animation(ecs, &target.unwrap()),
+                _ => {}
+            },
+            #[cfg(test)]
+            EventKind::WaitForAnimations() => super::complete_animations(ecs),
+        }
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
@@ -238,7 +259,7 @@ impl<'a> Scene for BattleScene<'a> {
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
-        tick_animations(&self.ecs, frame)?;
+        tick_animations(&mut self.ecs, frame)?;
 
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);

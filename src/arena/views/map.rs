@@ -1,5 +1,4 @@
 use enum_iterator::IntoEnumIterator;
-use line_drawing::WalkGrid;
 use sdl2::pixels::Color;
 use sdl2::render::BlendMode;
 use specs::prelude::*;
@@ -8,14 +7,12 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
-use super::super::{battle_actions, SpriteLoader};
+use super::super::{battle_actions, AnimationComponent, SpriteLoader};
 use super::{HitTestResult, View};
 
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
-use crate::clash::{
-    element_at_location, find_player, get_skill, AnimationComponent, FieldComponent, MapHitTestResult, PositionComponent, Positions, SkillInfo, MAX_MAP_TILES,
-};
+use crate::clash::{element_at_location, find_player, get_skill, FieldComponent, MapHitTestResult, PositionComponent, Positions, SkillInfo, MAX_MAP_TILES};
 
 pub struct MapView {
     sprites: SpriteLoader,
@@ -25,9 +22,17 @@ pub const MAP_CORNER_X: u32 = 50;
 pub const MAP_CORNER_Y: u32 = 50;
 pub const TILE_SIZE: u32 = 48;
 
+fn get_render_frame(animation: Option<&AnimationComponent>, frame: u64) -> u64 {
+    if let Some(animation_component) = animation {
+        frame - animation_component.animation.beginning
+    } else {
+        frame
+    }
+}
+
 fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
-    if let Some(animation) = animation {
-        if let Some(state) = animation.current_character_state() {
+    if let Some(animation_component) = animation {
+        if let Some(state) = animation_component.animation.current_character_state() {
             return (*state).into();
         }
     }
@@ -37,8 +42,8 @@ fn get_render_sprite_state(render: &RenderComponent, animation: Option<&Animatio
 fn get_render_position(position: &PositionComponent, animation: Option<&AnimationComponent>, frame: u64) -> SDLPoint {
     let position = position.position;
     let width = position.width;
-    if let Some(animation) = animation {
-        if let Some(animation_point) = animation.current_position(frame) {
+    if let Some(animation_component) = animation {
+        if let Some(animation_point) = animation_component.animation.current_position(frame) {
             return SDLPoint::new(
                 ((animation_point.x * TILE_SIZE as f32) + MAP_CORNER_X as f32 + ((width * TILE_SIZE) as u32 / 2) as f32) as i32,
                 ((animation_point.y * TILE_SIZE as f32) + MAP_CORNER_Y as f32) as i32,
@@ -80,12 +85,16 @@ impl MapView {
                 if render.order == order {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
+                    // Animations have a relative frame that starts at 0 (start of animation) and
+                    // lasts through duration. We need to use the "real" frame for render position
+                    // and the relative "render_frame" for the rest if we have it
+                    let render_frame = get_render_frame(animation, frame);
                     if let Some(position) = position {
                         let offset = get_render_position(position, animation, frame);
                         let state = get_render_sprite_state(render, animation);
-                        sprite.draw(canvas, offset, state, frame)?;
+                        sprite.draw(canvas, offset, state, render_frame)?;
                     } else {
-                        sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, frame)?;
+                        sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, render_frame)?;
                     }
                 }
             }
@@ -121,16 +130,12 @@ impl MapView {
                     Color::from((196, 0, 0, 140))
                 };
 
-                // HACK - This is wrong, it is always from origin. Should get path from skill itself
                 if skill.show_trail() {
-                    self.draw_line(
-                        canvas,
-                        player_position.origin.x as i32,
-                        player_position.origin.y as i32,
-                        map_position.x as i32,
-                        map_position.y as i32,
-                        color,
-                    )?;
+                    if let Some(points) = player_position.line_to(map_position) {
+                        self.draw_line(canvas, &points, color)?;
+                    } else {
+                        self.draw_overlay_tile(canvas, &map_position, color)?;
+                    }
                 } else {
                     self.draw_overlay_tile(canvas, &map_position, color)?;
                 }
@@ -140,9 +145,9 @@ impl MapView {
         Ok(())
     }
 
-    fn draw_line(&self, canvas: &mut RenderCanvas, start_x: i32, start_y: i32, end_x: i32, end_y: i32, color: Color) -> BoxResult<()> {
-        for (x, y) in WalkGrid::new((start_x, start_y), (end_x, end_y)) {
-            self.draw_overlay_tile(canvas, &Point::init(x as u32, y as u32), color)?;
+    fn draw_line(&self, canvas: &mut RenderCanvas, points: &[Point], color: Color) -> BoxResult<()> {
+        for p in points.iter() {
+            self.draw_overlay_tile(canvas, &p, color)?;
         }
         Ok(())
     }

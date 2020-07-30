@@ -1,21 +1,40 @@
 use specs::prelude::*;
+use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{Point, SizedPoint};
 
-pub fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
-    let frame = ecs.read_resource::<FrameComponent>();
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let position = ecs.get_position(entity);
-
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame.current_frame, frame.current_frame + 8);
-    animations.insert(*entity, animation).unwrap();
+#[derive(Component)]
+pub struct MovementComponent {
+    pub new_position: SizedPoint,
 }
 
-pub fn complete_move(ecs: &World, entity: &Entity, new_position: &Point) {
+impl MovementComponent {
+    pub fn init(new_position: SizedPoint) -> MovementComponent {
+        MovementComponent { new_position }
+    }
+}
+
+pub fn move_action(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
+    {
+        let mut movements = ecs.write_storage::<MovementComponent>();
+        movements.insert(*entity, MovementComponent::init(new_position)).unwrap();
+    }
+
+    ecs.raise_event(EventKind::Move(), Some(*entity));
+}
+
+pub fn complete_move(ecs: &World, entity: &Entity) {
+    let new_position = {
+        let mut movements = ecs.write_storage::<MovementComponent>();
+        let new_position = movements.get(*entity).unwrap().new_position;
+        movements.remove(*entity);
+        new_position.origin
+    };
+
     let mut positions = ecs.write_storage::<PositionComponent>();
     let position = &mut positions.get_mut(*entity).unwrap();
-    position.move_to(*new_position);
+    position.move_to(new_position);
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
@@ -58,6 +77,20 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
     true
 }
 
+#[allow(dead_code)]
+pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    let char_info = ecs.read_storage::<CharacterInfoComponent>();
+
+    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+        if position.position.contains_point(&area) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
 pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
     is_area_clear(ecs, &new.all_positions(), mover)
 }
@@ -67,7 +100,7 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
         return false;
     }
 
-    begin_move(ecs, &entity, new);
+    move_action(ecs, &entity, new);
     spend_time(ecs, &entity, MOVE_ACTION_COST);
     true
 }
@@ -76,17 +109,21 @@ pub fn wait(ecs: &mut World, entity: Entity) {
     spend_time(ecs, &entity, BASE_ACTION_COST);
 }
 
+pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::AnimationComplete(effect) => match effect {
+            PostAnimationEffect::Move => {
+                complete_move(ecs, &target.unwrap());
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
-    loop {
-        ecs.write_resource::<FrameComponent>().current_frame += 1;
-        tick_animations(ecs, ecs.read_resource::<FrameComponent>().current_frame).unwrap();
-
-        let animations = ecs.read_storage::<AnimationComponent>();
-        if (animations).join().count() == 0 {
-            break;
-        }
-    }
+    ecs.raise_event(EventKind::WaitForAnimations(), None);
 }
 
 #[cfg(test)]

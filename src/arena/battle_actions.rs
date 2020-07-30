@@ -1,20 +1,13 @@
 use specs::prelude::*;
 
 use super::components::*;
+use super::AnimationComponent;
 use crate::atlas::Point;
 use crate::clash::*;
 
 pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
-    for a in (&animations).join() {
-        match &a.animation {
-            Animation::Position { .. } => {
-                return true;
-            }
-            Animation::CharacterState { .. } => {}
-        }
-    }
-    false
+    (&animations).join().count() > 0
 }
 
 pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {

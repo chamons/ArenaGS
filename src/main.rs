@@ -1,4 +1,5 @@
 #![allow(clippy::collapsible_if)]
+#![allow(clippy::single_match)]
 
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
@@ -28,7 +29,13 @@ pub fn main() -> Result<(), String> {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     #[cfg(debug_assertions)]
-    panic::set_hook(Box::new(|panic_info| on_crash(&panic_info)));
+    {
+        let default_hook = std::panic::take_hook();
+        panic::set_hook(Box::new(move |panic_info| {
+            on_crash(&panic_info);
+            default_hook(&panic_info);
+        }));
+    }
 
     let mut render_context = RenderContext::initialize()?;
     let font_context = FontContext::initialize()?;

@@ -1,3 +1,4 @@
+use std::cmp;
 use std::path::Path;
 
 use crate::after_image::{load_image, RenderCanvas, RenderContext};
@@ -8,6 +9,13 @@ use sdl2::render::Texture;
 
 pub trait Sprite {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()>;
+
+    fn get_animation_frame(&self, number_of_frames: usize, animation_length: usize, current_frame: u64) -> usize {
+        let period = animation_length / number_of_frames;
+        let current_frame = current_frame as usize % animation_length;
+        let current_frame = (current_frame / period) as usize;
+        cmp::min(current_frame, number_of_frames - 1)
+    }
 }
 
 pub struct SpriteFolderDescription {
@@ -43,16 +51,4 @@ fn get_set_name(folder: &str, description: &SpriteFolderDescription, action: &st
         .to_str()
         .unwrap()
         .to_string()
-}
-
-pub fn get_animation_frame(frame: u64) -> usize {
-    const ANIMATION_LENGTH: usize = 55;
-    let frame: usize = frame as usize % ANIMATION_LENGTH;
-    if frame > ((2 * ANIMATION_LENGTH) / 3) {
-        2
-    } else if frame > (ANIMATION_LENGTH / 3) {
-        1
-    } else {
-        0
-    }
 }

@@ -4,7 +4,7 @@ use std::path::Path;
 use enum_iterator::IntoEnumIterator;
 
 use super::components::*;
-use crate::after_image::{Background, DetailedCharacter, LargeEnemy, RenderContext, Sprite, SpriteFolderDescription};
+use crate::after_image::*;
 use crate::atlas::BoxResult;
 
 pub struct SpriteLoader {
@@ -47,6 +47,7 @@ impl SpriteLoader {
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
                     1.5,
                 )?),
+                SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"))?),
             };
             sprites.insert(s.into(), sprite);
         }

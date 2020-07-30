@@ -3,7 +3,7 @@ use specs_derive::Component;
 
 use sdl2::pixels::Color;
 
-use super::{LogComponent, PositionComponent};
+use super::{EventCoordinator, LogComponent, PositionComponent};
 use crate::atlas::SizedPoint;
 use crate::clash::Character;
 
@@ -68,14 +68,26 @@ pub fn create_world() -> World {
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
     ecs.register::<super::MapComponent>();
-    ecs.register::<super::AnimationComponent>();
     ecs.register::<super::FrameComponent>();
     ecs.register::<super::TimeComponent>();
     ecs.register::<super::LogComponent>();
     ecs.register::<super::SkillsComponent>();
+    ecs.register::<super::AttackComponent>();
+    ecs.register::<super::EventComponent>();
+    ecs.register::<super::MovementComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+
+    ecs.insert(super::EventComponent::init());
+    ecs.subscribe(super::combat_on_event);
+    ecs.subscribe(super::physics_on_event);
+
+    #[cfg(test)]
+    {
+        crate::arena::add_ui_extension(&mut ecs);
+    }
+
     ecs
 }
 
@@ -86,5 +98,15 @@ pub trait Positions {
 impl Positions for World {
     fn get_position(&self, entity: &Entity) -> SizedPoint {
         self.read_storage::<PositionComponent>().get(*entity).unwrap().position
+    }
+}
+
+pub trait Framer {
+    fn get_current_frame(&self) -> u64;
+}
+
+impl Framer for World {
+    fn get_current_frame(&self) -> u64 {
+        self.read_resource::<FrameComponent>().current_frame
     }
 }

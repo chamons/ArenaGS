@@ -4,7 +4,7 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{begin_move, is_area_clear, spend_time, Logger, Positions, MOVE_ACTION_COST};
+use super::{bolt, is_area_clear, melee, move_action, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
 use crate::atlas::Point;
 
 #[allow(dead_code)]
@@ -19,6 +19,8 @@ pub enum TargetType {
 pub enum SkillEffect {
     None,
     Move,
+    RangedAttack(u32, BoltKind),
+    MeleeAttack(u32, WeaponKind),
 }
 
 pub struct SkillInfo {
@@ -75,7 +77,13 @@ impl SkillInfo {
         }
 
         if self.must_be_clear {
-            if let Some(path) = initial.line_to(target) {
+            if let Some(mut path) = initial.line_to(target) {
+                // If we are targeting an enemy we can safely
+                // ignore the last square, since we know that it must
+                // have the target (from checks above)
+                if self.target.is_enemy() {
+                    path.pop();
+                }
                 if !is_area_clear(ecs, &path, invoker) {
                     return false;
                 }
@@ -104,8 +112,29 @@ lazy_static! {
         }
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), false),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
         );
+        m.insert(
+            "Fire Bolt",
+            SkillInfo::init_with_distance(
+                "SpellBook06_117.png",
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(5, BoltKind::Fire),
+                Some(15),
+                true,
+            ),
+        );
+        m.insert(
+            "Slash",
+            SkillInfo::init_with_distance(
+                "SpellBook01_76.png",
+                TargetType::Enemy,
+                SkillEffect::MeleeAttack(5, WeaponKind::Sword),
+                Some(1),
+                true,
+            ),
+        );
+
         m
     };
 }
@@ -138,10 +167,12 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     match skill.effect {
         SkillEffect::Move => {
-            // Targeting only gives us a point, so clone their position to get size as wel
+            // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            begin_move(ecs, invoker, position);
+            move_action(ecs, invoker, position);
         }
+        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), strength, kind),
+        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), strength, kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
