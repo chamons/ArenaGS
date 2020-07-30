@@ -4,6 +4,7 @@ use specs_derive::Component;
 use super::{PostAnimationEffect, WeaponKind};
 use crate::atlas::Point;
 
+#[derive(Copy, Clone)]
 pub enum EventKind {
     Bolt(Entity),
     Melee(Entity),
@@ -14,12 +15,12 @@ type EventCallback = fn(ecs: &mut World, kind: EventKind, target: &Entity) -> ()
 
 #[derive(Component)]
 pub struct EventComponent {
-    pub on_event: Option<EventCallback>,
+    pub on_event: Vec<EventCallback>,
 }
 
 impl EventComponent {
     pub fn init() -> EventComponent {
-        EventComponent { on_event: None }
+        EventComponent { on_event: vec![] }
     }
 }
 
@@ -30,13 +31,13 @@ pub trait EventCoordinator {
 
 impl EventCoordinator for World {
     fn fire_event(&mut self, kind: EventKind, target: &Entity) {
-        let event = self.read_resource::<EventComponent>().on_event;
-        if let Some(event) = event {
-            event(self, kind, target);
+        let events = self.read_resource::<EventComponent>().on_event.clone();
+        for handler in events.iter() {
+            handler(self, kind, target);
         }
     }
 
     fn subscribe(&mut self, callback: EventCallback) {
-        self.write_resource::<EventComponent>().on_event = Some(callback);
+        self.write_resource::<EventComponent>().on_event.push(callback);
     }
 }
