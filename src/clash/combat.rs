@@ -3,7 +3,7 @@ use specs_derive::Component;
 
 use super::*;
 use crate::atlas::Point;
-use crate::clash::{find_character_at_location, EventCoordinator, Framer, Logger};
+use crate::clash::{EventCoordinator, Logger};
 
 #[derive(Clone, Copy)]
 pub enum BoltKind {

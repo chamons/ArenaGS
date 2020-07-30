@@ -58,6 +58,7 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
     true
 }
 
+#[allow(dead_code)]
 pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
@@ -92,8 +93,11 @@ pub fn wait(ecs: &mut World, entity: Entity) {
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
     loop {
-        ecs.write_resource::<FrameComponent>().current_frame += 1;
-        tick_animations(ecs, ecs.read_resource::<FrameComponent>().current_frame).unwrap();
+        let current_frame = {
+            ecs.write_resource::<FrameComponent>().current_frame += 1;
+            ecs.read_resource::<FrameComponent>().current_frame
+        };
+        tick_animations(ecs, current_frame).unwrap();
 
         let animations = ecs.read_storage::<AnimationComponent>();
         if (animations).join().count() == 0 {
