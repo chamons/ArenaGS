@@ -92,11 +92,11 @@ pub fn wait(ecs: &mut World, entity: Entity) {
 
 pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
     match kind {
-        EventKind::AnimationComplete(entity, effect) => match effect {
+        EventKind::AnimationComplete(effect) => match effect {
             PostAnimationEffect::Move => {
                 let animations = ecs.read_storage::<AnimationComponent>();
-                let position = animations.get(entity).unwrap().animation.end_position();
-                complete_move(ecs, &entity, &position);
+                let position = animations.get(*target).unwrap().animation.end_position();
+                complete_move(ecs, target, &position);
             }
             _ => {}
         },

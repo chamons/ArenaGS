@@ -89,10 +89,10 @@ impl<'a> BattleScene<'a> {
 
     fn on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
         match kind {
-            EventKind::Bolt(invoker) => battle_animations::begin_ranged_cast_animation(ecs, target, invoker),
-            EventKind::Melee(invoker) => battle_animations::begin_melee_animation(ecs, target, invoker),
-            EventKind::AnimationComplete(entity, effect) => match effect {
-                PostAnimationEffect::StartBolt => battle_animations::begin_ranged_bolt_animation(ecs, &entity),
+            EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, target, *target),
+            EventKind::Melee() => battle_animations::begin_melee_animation(ecs, target, *target),
+            EventKind::AnimationComplete(effect) => match effect {
+                PostAnimationEffect::StartBolt => battle_animations::begin_ranged_bolt_animation(ecs, &target),
                 _ => {}
             },
         }

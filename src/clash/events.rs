@@ -5,9 +5,9 @@ use super::PostAnimationEffect;
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
-    Bolt(Entity),
-    Melee(Entity),
-    AnimationComplete(Entity, PostAnimationEffect),
+    Bolt(),
+    Melee(),
+    AnimationComplete(PostAnimationEffect),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: &Entity) -> ();

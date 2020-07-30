@@ -144,7 +144,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     }
 
     for (entity, effect) in completed {
-        ecs.fire_event(EventKind::AnimationComplete(entity, effect), &entity);
+        ecs.fire_event(EventKind::AnimationComplete(effect), &entity);
         ecs.write_storage::<AnimationComponent>().remove(entity);
     }
 

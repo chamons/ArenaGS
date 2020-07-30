@@ -59,9 +59,9 @@ impl AttackComponent {
 
 pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
     match kind {
-        EventKind::AnimationComplete(entity, effect) => match effect {
+        EventKind::AnimationComplete(effect) => match effect {
             PostAnimationEffect::ApplyBolt => {
-                apply_bolt(ecs, &entity);
+                apply_bolt(ecs, target);
                 ecs.delete_entity(*target).unwrap();
             }
             PostAnimationEffect::ApplyMelee => {
@@ -79,7 +79,7 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, stre
         .insert(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)))
         .unwrap();
 
-    ecs.fire_event(EventKind::Bolt(*source), source);
+    ecs.fire_event(EventKind::Bolt(), source);
 }
 
 pub fn start_bolt(ecs: &mut World, source: &Entity) -> Entity {
@@ -110,7 +110,7 @@ pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u3
         .insert(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)))
         .unwrap();
 
-    ecs.fire_event(EventKind::Melee(*source), &source);
+    ecs.fire_event(EventKind::Melee(), &source);
 }
 
 fn apply_melee(ecs: &mut World, character: &Entity) {
