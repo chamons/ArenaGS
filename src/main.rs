@@ -1,4 +1,5 @@
 #![allow(clippy::collapsible_if)]
+#![allow(clippy::single_match)]
 
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
