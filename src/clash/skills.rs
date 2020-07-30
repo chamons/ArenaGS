@@ -4,7 +4,7 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{move_action, bolt, is_area_clear, melee, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
+use super::{bolt, is_area_clear, melee, move_action, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
 use crate::atlas::Point;
 
 #[allow(dead_code)]
