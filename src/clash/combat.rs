@@ -57,15 +57,15 @@ impl AttackComponent {
     }
 }
 
-pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
+pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::AnimationComplete(effect) => match effect {
             PostAnimationEffect::ApplyBolt => {
-                apply_bolt(ecs, target);
-                ecs.delete_entity(*target).unwrap();
+                apply_bolt(ecs, &target.unwrap());
+                ecs.delete_entity(target.unwrap()).unwrap();
             }
             PostAnimationEffect::ApplyMelee => {
-                apply_melee(ecs, &target);
+                apply_melee(ecs, &target.unwrap());
             }
             PostAnimationEffect::None => {}
             _ => {}
@@ -74,12 +74,12 @@ pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
     }
 }
 
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
+pub fn bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
     ecs.write_storage::<AttackComponent>()
         .insert(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)))
         .unwrap();
 
-    ecs.fire_event(EventKind::Bolt(), source);
+    ecs.raise_event(EventKind::Bolt(), Some(*source));
 }
 
 pub fn start_bolt(ecs: &mut World, source: &Entity) -> Entity {
@@ -105,12 +105,12 @@ fn apply_bolt(ecs: &mut World, bolt: &Entity) {
     ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
 }
 
-pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
+pub fn melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     ecs.write_storage::<AttackComponent>()
         .insert(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)))
         .unwrap();
 
-    ecs.fire_event(EventKind::Melee(), &source);
+    ecs.raise_event(EventKind::Melee(), Some(*source));
 }
 
 fn apply_melee(ecs: &mut World, character: &Entity) {

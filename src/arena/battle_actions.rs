@@ -1,6 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
+use super::{AnimationComponent, AnimationKind};
 use crate::atlas::Point;
 use crate::clash::*;
 

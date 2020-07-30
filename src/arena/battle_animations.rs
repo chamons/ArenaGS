@@ -1,11 +1,12 @@
 use specs::prelude::*;
 
 use super::components::*;
+use super::AnimationComponent;
 use crate::clash::*;
 
 use crate::after_image::CharacterAnimationState;
 
-pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity, invoker: Entity) {
+pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
     let frame = ecs.get_current_frame();
     let animation = {
         let attacks = ecs.write_storage::<AttackComponent>();
@@ -15,10 +16,10 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity, invoker: En
     };
 
     let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::StartBolt);
-    ecs.write_storage::<AnimationComponent>().insert(invoker, cast_animation).unwrap();
+    ecs.write_storage::<AnimationComponent>().insert(*target, cast_animation).unwrap();
 }
 
-pub fn begin_melee_animation(ecs: &mut World, target: &Entity, invoker: Entity) {
+pub fn begin_melee_animation(ecs: &mut World, target: &Entity) {
     let frame = ecs.get_current_frame();
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
@@ -29,7 +30,7 @@ pub fn begin_melee_animation(ecs: &mut World, target: &Entity, invoker: Entity) 
 
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let attack_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::ApplyMelee);
-    animations.insert(invoker, attack_animation).unwrap();
+    animations.insert(*target, attack_animation).unwrap();
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
@@ -52,4 +53,15 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length).with_effect(PostAnimationEffect::ApplyBolt);
     animations.insert(bolt, animation).unwrap();
+}
+
+pub fn begin_move_animation(ecs: &mut World, target: &Entity) {
+    let movements = ecs.read_storage::<MovementComponent>();
+    let new_position = movements.get(*target).unwrap().new_position;
+
+    let frame = ecs.get_current_frame();
+    let position = ecs.get_position(target);
+    let mut animations = ecs.write_storage::<AnimationComponent>();
+    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, 8).with_effect(PostAnimationEffect::Move);
+    animations.insert(*target, animation).unwrap();
 }

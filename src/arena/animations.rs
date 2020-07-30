@@ -1,17 +1,10 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{EventCoordinator, EventKind};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;
-
-// Animations are a strange beast/
-// Unless we do some sort of late binding,
-// if we want an action, say a move, to animate
-// to the new state before applying the new location
-// the engine needs to create them
-// However, they really are UI constructs
+use crate::clash::*;
 
 #[derive(PartialEq)]
 pub struct FPoint {
@@ -36,14 +29,6 @@ pub enum AnimationKind {
         done: CharacterAnimationState,
     },
 }
-#[derive(Clone, Copy)]
-pub enum PostAnimationEffect {
-    None,
-    Move,
-    StartBolt,
-    ApplyBolt,
-    ApplyMelee,
-}
 
 pub struct Animation {
     pub kind: AnimationKind,
@@ -53,13 +38,6 @@ pub struct Animation {
 }
 
 impl Animation {
-    pub fn end_position(&self) -> Point {
-        match self.kind {
-            AnimationKind::Position { end, .. } => end,
-            _ => panic!("Wrong kind in end_position"),
-        }
-    }
-
     pub fn is_complete(&self, current: u64) -> bool {
         (current - self.beginning) > self.duration
     }
@@ -87,6 +65,10 @@ impl Animation {
             AnimationKind::Position { .. } => Some(&CharacterAnimationState::Walk),
         }
     }
+}
+
+fn lerp(start: f32, end: f32, t: f64) -> f32 {
+    (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
 }
 
 #[derive(Component)]
@@ -125,10 +107,6 @@ impl AnimationComponent {
     }
 }
 
-fn lerp(start: f32, end: f32, t: f64) -> f32 {
-    (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
-}
-
 pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     let mut completed = vec![];
     {
@@ -144,9 +122,25 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     }
 
     for (entity, effect) in completed {
-        ecs.fire_event(EventKind::AnimationComplete(effect), &entity);
+        ecs.raise_event(EventKind::AnimationComplete(effect), Some(entity));
         ecs.write_storage::<AnimationComponent>().remove(entity);
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+pub fn complete_animations(ecs: &mut World) {
+    loop {
+        let current_frame = {
+            ecs.write_resource::<FrameComponent>().current_frame += 1;
+            ecs.read_resource::<FrameComponent>().current_frame
+        };
+        tick_animations(ecs, current_frame).unwrap();
+
+        let animations = ecs.read_storage::<AnimationComponent>();
+        if (animations).join().count() == 0 {
+            break;
+        }
+    }
 }

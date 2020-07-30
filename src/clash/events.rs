@@ -1,16 +1,27 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::PostAnimationEffect;
+#[derive(Clone, Copy)]
+pub enum PostAnimationEffect {
+    None,
+    StartBolt,
+    Move,
+    ApplyBolt,
+    ApplyMelee,
+}
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
+    Move(),
     Bolt(),
     Melee(),
     AnimationComplete(PostAnimationEffect),
+
+    #[cfg(test)]
+    WaitForAnimations(),
 }
 
-type EventCallback = fn(ecs: &mut World, kind: EventKind, target: &Entity) -> ();
+type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();
 
 #[derive(Component)]
 pub struct EventComponent {
@@ -24,12 +35,12 @@ impl EventComponent {
 }
 
 pub trait EventCoordinator {
-    fn fire_event(&mut self, kind: EventKind, target: &Entity);
+    fn raise_event(&mut self, kind: EventKind, target: Option<Entity>);
     fn subscribe(&mut self, callback: EventCallback);
 }
 
 impl EventCoordinator for World {
-    fn fire_event(&mut self, kind: EventKind, target: &Entity) {
+    fn raise_event(&mut self, kind: EventKind, target: Option<Entity>) {
         let events = self.read_resource::<EventComponent>().on_event.clone();
         for handler in events.iter() {
             handler(self, kind, target);

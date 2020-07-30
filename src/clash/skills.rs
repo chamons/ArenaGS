@@ -4,7 +4,7 @@ use std::slice::from_ref;
 use lazy_static::lazy_static;
 use specs::prelude::*;
 
-use super::{begin_bolt, begin_melee, begin_move, is_area_clear, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
+use super::{move_action, bolt, is_area_clear, melee, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
 use crate::atlas::Point;
 
 #[allow(dead_code)]
@@ -169,10 +169,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            begin_move(ecs, invoker, position);
+            move_action(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), strength, kind),
-        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), strength, kind),
+        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), strength, kind),
+        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), strength, kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

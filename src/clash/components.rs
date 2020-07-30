@@ -68,13 +68,13 @@ pub fn create_world() -> World {
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
     ecs.register::<super::MapComponent>();
-    ecs.register::<super::AnimationComponent>();
     ecs.register::<super::FrameComponent>();
     ecs.register::<super::TimeComponent>();
     ecs.register::<super::LogComponent>();
     ecs.register::<super::SkillsComponent>();
     ecs.register::<super::AttackComponent>();
     ecs.register::<super::EventComponent>();
+    ecs.register::<super::MovementComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
@@ -82,6 +82,11 @@ pub fn create_world() -> World {
     ecs.insert(super::EventComponent::init());
     ecs.subscribe(super::combat_on_event);
     ecs.subscribe(super::physics_on_event);
+
+    #[cfg(test)]
+    {
+        crate::arena::add_ui_extension(&mut ecs);
+    }
 
     ecs
 }
