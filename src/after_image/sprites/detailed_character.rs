@@ -75,7 +75,7 @@ impl DetailedCharacter {
     fn get_texture(&self, state: &CharacterAnimationState, frame: u64) -> &Texture {
         let animation_length = match state {
             CharacterAnimationState::Idle => 55,
-            _ => 15 
+            _ => 15,
         };
         let offset = self.get_animation_frame(3, animation_length, frame);
 
