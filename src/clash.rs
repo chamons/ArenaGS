@@ -13,7 +13,8 @@ mod map;
 pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
-use physics::{begin_move, can_move_character, complete_move, is_area_clear, move_character, point_in_direction, wait};
+use physics::physics_on_event;
+use physics::{begin_move, can_move_character, is_area_clear, move_character, point_in_direction, wait};
 
 #[cfg(test)]
 use physics::wait_for_animations;

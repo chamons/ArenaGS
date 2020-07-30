@@ -59,9 +59,9 @@ impl AttackComponent {
 
 pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
     match kind {
-        EventKind::AnimationComplete(_, effect) => match effect {
+        EventKind::AnimationComplete(entity, effect) => match effect {
             PostAnimationEffect::ApplyBolt => {
-                apply_bolt(ecs, &target);
+                apply_bolt(ecs, &entity);
                 ecs.delete_entity(*target).unwrap();
             }
             PostAnimationEffect::ApplyMelee => {

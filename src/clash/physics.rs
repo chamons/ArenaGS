@@ -8,7 +8,7 @@ pub fn begin_move(ecs: &World, entity: &Entity, new_position: SizedPoint) {
     let mut animations = ecs.write_storage::<AnimationComponent>();
     let position = ecs.get_position(entity);
 
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, 8);
+    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, 8).with_effect(PostAnimationEffect::Move);
     animations.insert(*entity, animation).unwrap();
 }
 
@@ -88,6 +88,20 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
 
 pub fn wait(ecs: &mut World, entity: Entity) {
     spend_time(ecs, &entity, BASE_ACTION_COST);
+}
+
+pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
+    match kind {
+        EventKind::AnimationComplete(entity, effect) => match effect {
+            PostAnimationEffect::Move => {
+                let animations = ecs.read_storage::<AnimationComponent>();
+                let position = animations.get(entity).unwrap().animation.end_position();
+                complete_move(ecs, &entity, &position);
+            }
+            _ => {}
+        },
+        _ => {}
+    }
 }
 
 #[cfg(test)]

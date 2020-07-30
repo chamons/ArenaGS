@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{complete_move, EventCoordinator, EventKind, PositionComponent};
+use super::{EventCoordinator, EventKind};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;
@@ -36,10 +36,10 @@ pub enum AnimationKind {
         done: CharacterAnimationState,
     },
 }
-
 #[derive(Clone, Copy)]
 pub enum PostAnimationEffect {
     None,
+    Move,
     StartBolt,
     ApplyBolt,
     ApplyMelee,
@@ -53,6 +53,13 @@ pub struct Animation {
 }
 
 impl Animation {
+    pub fn end_position(&self) -> Point {
+        match self.kind {
+            AnimationKind::Position { end, .. } => end,
+            _ => panic!("Wrong kind in end_position"),
+        }
+    }
+
     pub fn is_complete(&self, current: u64) -> bool {
         (current - self.beginning) > self.duration
     }
@@ -81,10 +88,6 @@ impl Animation {
         }
     }
 }
-
-// This lets us chain animations (proc adds a new animation to entity)
-// This lets us rip out Bolt specific bits and collapse back to point
-// This lets us apply melee as well without a 4th animaion kind
 
 #[derive(Component)]
 pub struct AnimationComponent {
@@ -128,36 +131,21 @@ fn lerp(start: f32, end: f32, t: f64) -> f32 {
 
 pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
     let mut completed = vec![];
-    let mut to_move = vec![];
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let animations = ecs.read_storage::<AnimationComponent>();
-        let mut positions = ecs.write_storage::<PositionComponent>();
 
-        for (entity, animation_component, position) in (&entities, &animations, (&mut positions).maybe()).join() {
+        for (entity, animation_component) in (&entities, &animations).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
                 completed.push((entity, animation.effect));
             }
-
-            if position.is_some() {
-                match &animation.kind {
-                    AnimationKind::Position { start: _, end } => {
-                        to_move.push((entity, *end));
-                    }
-                    AnimationKind::CharacterState { .. } => {}
-                }
-            }
         }
     }
 
-    for (entity, position) in to_move.iter() {
-        complete_move(ecs, entity, position);
-    }
-
     for (entity, effect) in completed {
-        ecs.write_storage::<AnimationComponent>().remove(entity);
         ecs.fire_event(EventKind::AnimationComplete(entity, effect), &entity);
+        ecs.write_storage::<AnimationComponent>().remove(entity);
     }
 
     Ok(())
