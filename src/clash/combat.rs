@@ -57,6 +57,23 @@ impl AttackComponent {
     }
 }
 
+pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
+    match kind {
+        EventKind::AnimationComplete(_, effect) => match effect {
+            PostAnimationEffect::ApplyBolt => {
+                apply_bolt(ecs, &target);
+                ecs.delete_entity(*target).unwrap();
+            }
+            PostAnimationEffect::ApplyMelee => {
+                apply_melee(ecs, &target);
+            }
+            PostAnimationEffect::None => {}
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
     ecs.write_storage::<AttackComponent>()
         .insert(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)))
@@ -80,7 +97,7 @@ pub fn start_bolt(ecs: &mut World, source: &Entity) -> Entity {
     bolt
 }
 
-pub fn apply_bolt(ecs: &mut World, bolt: &Entity) {
+fn apply_bolt(ecs: &mut World, bolt: &Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.get(*bolt).unwrap().attack
@@ -96,7 +113,7 @@ pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u3
     ecs.fire_event(EventKind::Melee(*source), &source);
 }
 
-pub fn apply_melee(ecs: &mut World, character: &Entity) {
+fn apply_melee(ecs: &mut World, character: &Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.get(*character).unwrap().attack

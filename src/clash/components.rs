@@ -3,7 +3,7 @@ use specs_derive::Component;
 
 use sdl2::pixels::Color;
 
-use super::{LogComponent, PositionComponent};
+use super::{LogComponent, PositionComponent, EventCoordinator};
 use crate::atlas::SizedPoint;
 use crate::clash::Character;
 
@@ -78,7 +78,10 @@ pub fn create_world() -> World {
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+
     ecs.insert(super::EventComponent::init());
+    ecs.subscribe(super::combat_on_event);
+
     ecs
 }
 

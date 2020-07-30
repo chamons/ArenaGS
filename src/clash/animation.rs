@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{apply_bolt, complete_move, EventCoordinator, EventKind, PositionComponent};
+use super::{complete_move, EventCoordinator, EventKind, PositionComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;

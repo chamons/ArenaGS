@@ -37,7 +37,8 @@ mod ai;
 pub use ai::take_enemy_action;
 
 mod combat;
-pub use combat::{apply_bolt, apply_melee, begin_bolt, begin_melee, start_bolt, AttackComponent, BoltKind, WeaponKind};
+use combat::combat_on_event;
+pub use combat::{begin_bolt, begin_melee, start_bolt, AttackComponent, BoltKind, WeaponKind};
 
 mod events;
 pub use events::{EventComponent, EventCoordinator, EventKind};

@@ -88,6 +88,7 @@ impl<'a> BattleScene<'a> {
     }
 
     fn on_event(ecs: &mut World, kind: EventKind, target: &Entity) {
+        let frame = ecs.get_current_frame();
         match kind {
             EventKind::Bolt(invoker) => {
                 let animation = {
@@ -97,7 +98,6 @@ impl<'a> BattleScene<'a> {
                     }
                 };
 
-                let frame = ecs.get_current_frame();
                 let cast_animation =
                     AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::StartBolt);
                 ecs.write_storage::<AnimationComponent>().insert(invoker, cast_animation).unwrap();
@@ -110,7 +110,6 @@ impl<'a> BattleScene<'a> {
                     }
                 };
 
-                let frame = ecs.get_current_frame();
                 let mut animations = ecs.write_storage::<AnimationComponent>();
                 let attack_animation =
                     AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::ApplyMelee);
@@ -131,7 +130,6 @@ impl<'a> BattleScene<'a> {
                     let target_position = ecs.read_storage::<AttackComponent>().get(bolt).unwrap().attack.target;
 
                     let path_length = source_position.distance_to(target_position).unwrap() as u64;
-                    let frame = ecs.get_current_frame();
                     let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
 
                     let mut animations = ecs.write_storage::<AnimationComponent>();
@@ -139,14 +137,7 @@ impl<'a> BattleScene<'a> {
                         .with_effect(PostAnimationEffect::ApplyBolt);
                     animations.insert(bolt, animation).unwrap();
                 }
-                PostAnimationEffect::ApplyBolt => {
-                    apply_bolt(ecs, &target);
-                    ecs.delete_entity(*target).unwrap();
-                }
-                PostAnimationEffect::ApplyMelee => {
-                    apply_melee(ecs, &target);
-                }
-                PostAnimationEffect::None => {}
+                _ => {}
             },
         }
     }

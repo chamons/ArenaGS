@@ -1,8 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{PostAnimationEffect, WeaponKind};
-use crate::atlas::Point;
+use super::PostAnimationEffect;
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
