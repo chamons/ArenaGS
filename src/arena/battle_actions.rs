@@ -12,7 +12,7 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
 
 pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
     let skills = ecs.read_storage::<SkillsComponent>();
-    let player = find_player(&ecs).unwrap();
+    let player = find_player(&ecs);
     let player_skill = skills.get(player).unwrap();
     if let Some(name) = player_skill.skills.get(index) {
         Some(name.to_string())
@@ -49,7 +49,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
 
     match skill.target {
         TargetType::Enemy | TargetType::Tile => {
-            let player = find_player(&ecs).unwrap();
+            let player = find_player(&ecs);
             if skill.is_good_target(ecs, &player, *position) {
                 player_use_skill(ecs, name, Some(*position));
             }

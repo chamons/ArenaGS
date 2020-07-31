@@ -38,12 +38,11 @@ fn find_images(render_context: &RenderContext, images: &mut HashMap<String, Stri
         if path.is_dir() {
             find_images(render_context, images, &Path::new(location).join(path).stringify())?;
         } else {
-            let fullpath = path.stringify();
-            let name = path.file_name().unwrap().to_str().unwrap().to_ascii_lowercase();
+            let name = path.file_name().unwrap().stringify().to_ascii_lowercase();
             if images.contains_key(&name) {
                 println!("IconLoader Warning: {} already exists!", name)
             }
-            images.insert(name.to_string(), fullpath.to_string());
+            images.insert(name.to_string(), path.stringify_owned());
         }
     }
     Ok(())

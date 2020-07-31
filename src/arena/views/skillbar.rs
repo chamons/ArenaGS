@@ -53,7 +53,7 @@ fn get_skillbar_offset(ecs: &World, position: SDLPoint) -> i32 {
 
 fn get_skill_count(ecs: &World) -> usize {
     let skills = ecs.read_storage::<SkillsComponent>();
-    let player = find_player(&ecs).unwrap();
+    let player = find_player(&ecs);
     cmp::min(skills.get(player).unwrap().skills.len(), MAX_ICON_COUNT as usize)
 }
 

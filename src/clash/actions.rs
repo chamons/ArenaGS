@@ -10,18 +10,15 @@ pub enum Direction {
     West,
 }
 
-pub fn find_player(ecs: &World) -> Option<Entity> {
+pub fn find_player(ecs: &World) -> Entity {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let players = ecs.read_storage::<PlayerComponent>();
-
-    if let Some((entity, _)) = (&entities, &players).join().next() {
-        return Some(entity);
-    }
-    None
+    let (entity, _) = (&entities, &players).join().next().expect("No player in world?");
+    entity
 }
 
 fn can_act(ecs: &World) -> bool {
-    let player = find_player(ecs).unwrap();
+    let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
     let is_ready = ecs.read_storage::<TimeComponent>().get(player).unwrap().ticks == MOVE_ACTION_COST;
     is_player && is_ready
@@ -32,7 +29,7 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
         return false;
     }
 
-    let player = find_player(ecs).unwrap();
+    let player = find_player(ecs);
     let new_position = {
         let position = ecs.get_position(&player);
         point_in_direction(&position, direction)
@@ -50,14 +47,14 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
         return false;
     }
 
-    let player = find_player(ecs).unwrap();
+    let player = find_player(ecs);
     invoke_skill(ecs, &player, name, target);
     true
 }
 
 pub fn tick_next_action(ecs: &mut World) {
     if let Some(next) = wait_for_next(ecs) {
-        if find_player(ecs).unwrap() != next {
+        if find_player(ecs) != next {
             take_enemy_action(ecs, &next);
         }
     }
