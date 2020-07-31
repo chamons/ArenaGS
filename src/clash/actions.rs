@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{Point, EasyECS};
+use crate::atlas::{EasyECS, Point};
 
 pub enum Direction {
     North,

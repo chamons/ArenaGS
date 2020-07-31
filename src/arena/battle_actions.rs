@@ -2,7 +2,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::AnimationComponent;
-use crate::atlas::{Point, EasyECS};
+use crate::atlas::{EasyECS, Point};
 use crate::clash::*;
 
 pub fn has_animations_blocking(ecs: &World) -> bool {

@@ -12,7 +12,7 @@ use super::{battle_actions, battle_animations, tick_animations, AnimationCompone
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, Point, SizedPoint, EasyPath};
+use crate::atlas::{get_exe_folder, BoxResult, EasyPath, Point, SizedPoint};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
