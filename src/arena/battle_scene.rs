@@ -12,7 +12,7 @@ use super::{battle_actions, battle_animations, tick_animations, AnimationCompone
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, Point, SizedPoint};
+use crate::atlas::{get_exe_folder, BoxResult, EasyPath, Point, SizedPoint};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -57,7 +57,7 @@ impl<'a> BattleScene<'a> {
             .build();
 
         let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
-        let map_data_path = map_data_path.to_str().unwrap();
+        let map_data_path = map_data_path.stringify();
         ecs.insert(MapComponent::init(Map::init(map_data_path)?));
 
         ecs.create_entity()

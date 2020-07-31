@@ -2,7 +2,7 @@ use std::path::Path;
 
 use super::{Sprite, SpriteFolderDescription};
 use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, EasyPath};
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -19,9 +19,7 @@ impl Bolt {
         let folder = Path::new(&description.base_folder)
             .join("bolts")
             .join(format!("{}{}", &description.character, ".png"))
-            .to_str()
-            .unwrap()
-            .to_string();
+            .stringify_owned();
 
         Ok(Bolt {
             texture: load_image(&folder, render_context)?,

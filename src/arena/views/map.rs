@@ -121,7 +121,7 @@ impl MapView {
         let mouse = ecs.get_mouse_position();
         if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
             if let Some(skill) = get_target_skill(ecs) {
-                let player = find_player(&ecs).unwrap();
+                let player = find_player(&ecs);
                 let player_position = ecs.get_position(&player);
 
                 let color = if skill.is_good_target(ecs, &player, map_position) {

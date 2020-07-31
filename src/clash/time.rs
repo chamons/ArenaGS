@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 use specs::prelude::*;
 use specs_derive::Component;
 
+use crate::atlas::{EasyECS, EasyMutECS};
+
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct TimeComponent {
     pub ticks: i32,
@@ -42,7 +44,7 @@ pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
 
 pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
     if let Some(next) = get_next_actor(ecs) {
-        let time = ecs.read_storage::<TimeComponent>().get(next).unwrap().ticks;
+        let time = ecs.read_storage::<TimeComponent>().grab(next).ticks;
         if time < BASE_ACTION_COST {
             let missing = BASE_ACTION_COST - time;
             add_ticks(ecs, missing);
@@ -54,8 +56,8 @@ pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
 
 pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
     let mut times = ecs.write_storage::<TimeComponent>();
-    times.get_mut(*element).unwrap().ticks -= ticks_to_spend;
-    assert!(times.get_mut(*element).unwrap().ticks >= 0);
+    times.grab_mut(*element).ticks -= ticks_to_spend;
+    assert!(times.grab(*element).ticks >= 0);
 }
 
 #[cfg(test)]
@@ -93,7 +95,7 @@ mod tests {
         assert_eq!(next, second);
         {
             let mut times = ecs.write_storage::<TimeComponent>();
-            times.get_mut(next).unwrap().ticks = 0;
+            times.grab_mut(next).ticks = 0;
         }
         let next = get_next_actor(&ecs).unwrap();
         assert_eq!(next, first);
@@ -105,7 +107,7 @@ mod tests {
         let first = create_timer(&mut ecs, 10);
         add_ticks(&mut ecs, 50);
         let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(60, times.get(first).unwrap().ticks);
+        assert_eq!(60, times.grab(first).ticks);
     }
 
     #[test]
@@ -117,8 +119,8 @@ mod tests {
         let next = wait_for_next(&mut ecs).unwrap();
         assert_eq!(next, second);
         let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(90, times.get(first).unwrap().ticks);
-        assert_eq!(100, times.get(second).unwrap().ticks);
+        assert_eq!(90, times.grab(first).ticks);
+        assert_eq!(100, times.grab(second).ticks);
     }
 
     #[test]
@@ -135,6 +137,6 @@ mod tests {
         let first = create_timer(&mut ecs, 110);
         spend_time(&mut ecs, &first, BASE_ACTION_COST);
         let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(10, times.get(first).unwrap().ticks);
+        assert_eq!(10, times.grab(first).ticks);
     }
 }

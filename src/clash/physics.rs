@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
 
 #[derive(Component)]
 pub struct MovementComponent {
@@ -18,7 +18,7 @@ impl MovementComponent {
 pub fn move_action(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     {
         let mut movements = ecs.write_storage::<MovementComponent>();
-        movements.insert(*entity, MovementComponent::init(new_position)).unwrap();
+        movements.shovel(*entity, MovementComponent::init(new_position));
     }
 
     ecs.raise_event(EventKind::Move(), Some(*entity));
@@ -27,13 +27,13 @@ pub fn move_action(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
 pub fn complete_move(ecs: &World, entity: &Entity) {
     let new_position = {
         let mut movements = ecs.write_storage::<MovementComponent>();
-        let new_position = movements.get(*entity).unwrap().new_position;
+        let new_position = movements.grab(*entity).new_position;
         movements.remove(*entity);
         new_position.origin
     };
 
     let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.get_mut(*entity).unwrap();
+    let position = &mut positions.grab_mut(*entity);
     position.move_to(new_position);
 }
 
@@ -166,7 +166,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 3));
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().get(entity).unwrap().ticks);
+        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(entity).ticks);
     }
 
     #[test]

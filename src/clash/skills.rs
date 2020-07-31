@@ -140,7 +140,7 @@ lazy_static! {
 }
 
 pub fn get_skill(name: &str) -> &'static SkillInfo {
-    SKILLS.get(name).unwrap()
+    &SKILLS[name]
 }
 
 fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
@@ -183,7 +183,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 mod tests {
     use super::super::{create_world, wait_for_animations, Character, CharacterInfoComponent, Map, MapComponent, PositionComponent, TimeComponent};
     use super::*;
-    use crate::atlas::SizedPoint;
+    use crate::atlas::{EasyECS, SizedPoint};
 
     #[test]
     #[should_panic]
@@ -206,7 +206,7 @@ mod tests {
         let mut ecs = create_world();
         let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
         invoke_skill(&mut ecs, &entity, "TestNone", None);
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().get(entity).unwrap().ticks);
+        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(entity).ticks);
     }
 
     #[test]
