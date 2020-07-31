@@ -2,6 +2,11 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
+// "Share" code with the actual project
+#[path = "src/atlas/easy_path.rs"]
+mod easy_path;
+use easy_path::EasyPath;
+
 #[allow(dead_code)]
 fn print<S: Into<String>>(message: S) {
     println!("{}", format!("cargo:warning={}", message.into()));
@@ -18,7 +23,7 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
             copy_all_with_extension(&path, Path::new(&dest).join(path.file_name().unwrap()).stringify(), extension)?;
         } else if let Some(file_name) = path.file_name() {
             if let Some(file_extension) = path.extension() {
-                if file_extension.to_str().unwrap().to_ascii_lowercase() == extension || extension == "*" {
+                if file_extension.stringify().to_ascii_lowercase() == extension || extension == "*" {
                     let dest_file = Path::new(&dest).join(file_name);
                     //println!("{}", format!("cargo:rerun-if-changed={}", path.stringify()));
 
@@ -40,7 +45,7 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
 }
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").unwrap();
+    let out_dir = env::var("OUT_DIR").expect("No OUT_DIR set?");
     // ../../.. to get to out of the crate specific folder
     let dest_dir = Path::new(&out_dir).join("..").join("..").join("..");
 
@@ -58,15 +63,5 @@ fn main() {
         if path.exists() {
             copy_all_with_extension(&path, &dest_dir.join(folder).stringify(), extension).unwrap_or_else(|_| panic!(format!("Unable to copy {}", folder)));
         }
-    }
-}
-
-pub trait EasyPath {
-    fn stringify(&self) -> &str;
-}
-
-impl EasyPath for std::path::Path {
-    fn stringify(&self) -> &str {
-        self.to_str().unwrap()
     }
 }
