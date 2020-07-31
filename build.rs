@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 
 // "Share" code with the actual project
-#[path = "src/atlas/easy_path.rs"]
+#[path = "src/atlas/paths.rs"]
 mod easy_path;
 use easy_path::EasyPath;
 
