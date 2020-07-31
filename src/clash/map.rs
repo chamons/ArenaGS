@@ -69,6 +69,7 @@ impl MapComponent {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum MapHitTestResult {
     None(),
     Enemy(),
@@ -96,4 +97,36 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
         }
     }
     MapHitTestResult::None()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::{create_world, Character, CharacterInfoComponent, FieldComponent, TimeComponent};
+    use super::*;
+    use crate::atlas::SizedPoint;
+
+    #[test]
+    fn map_hittest() {
+        let mut ecs = create_world();
+        ecs.create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .with(PlayerComponent::init())
+            .build();
+        ecs.create_entity()
+            .with(TimeComponent::init(10))
+            .with(PositionComponent::init(SizedPoint::init(3, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.create_entity()
+            .with(PositionComponent::init(SizedPoint::init(4, 2)))
+            .with(FieldComponent::init(255, 0, 0))
+            .build();
+
+        assert_eq!(MapHitTestResult::None(), element_at_location(&ecs, &Point::init(1, 2)));
+        assert_eq!(MapHitTestResult::Player(), element_at_location(&ecs, &Point::init(2, 2)));
+        assert_eq!(MapHitTestResult::Enemy(), element_at_location(&ecs, &Point::init(3, 2)));
+        assert_eq!(MapHitTestResult::Field(), element_at_location(&ecs, &Point::init(4, 2)));
+    }
 }

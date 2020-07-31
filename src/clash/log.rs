@@ -45,6 +45,11 @@ impl LogComponent {
     fn clamp_index(&self, index: i64) -> usize {
         cmp::min(cmp::max(index, 0) as usize, self.logs.len() - 1)
     }
+
+    #[allow(dead_code)]
+    pub fn count(&self) -> usize {
+        self.logs.len()
+    }
 }
 
 #[cfg(test)]
