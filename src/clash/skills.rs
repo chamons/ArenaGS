@@ -109,6 +109,14 @@ lazy_static! {
                 "TestMove",
                 SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false),
             );
+            m.insert(
+                "TestRanged",
+                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::RangedAttack(2, BoltKind::Fire), Some(2), false),
+            );
+            m.insert(
+                "TestMelee",
+                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::MeleeAttack(2, WeaponKind::Sword), Some(1), false),
+            );
         }
         m.insert(
             "Dash",
@@ -181,7 +189,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, wait_for_animations, Character, CharacterInfoComponent, Map, MapComponent, PositionComponent, TimeComponent};
+    use super::super::{
+        create_world, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent, TimeComponent,
+    };
     use super::*;
     use crate::atlas::{EasyECS, SizedPoint};
 
@@ -323,5 +333,101 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(Point::init(3, 3), ecs.get_position(&entity).origin);
+    }
+
+    #[test]
+    fn ranged_effect() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+
+        ecs.create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(4, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(4, 2)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn ranged_effect_multi() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+
+        ecs.create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init_multi(2, 5, 2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(2, 4)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn melee_effect() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+
+        ecs.create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 3)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn melee_effect_multi() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+
+        ecs.create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init_multi(2, 4, 2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
     }
 }

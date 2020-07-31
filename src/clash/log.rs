@@ -46,6 +46,7 @@ impl LogComponent {
         cmp::min(cmp::max(index, 0) as usize, self.logs.len() - 1)
     }
 
+    #[allow(dead_code)]
     pub fn count(&self) -> usize {
         self.logs.len()
     }
