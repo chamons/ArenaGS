@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use crate::atlas::EasyECS;
+use crate::atlas::{EasyECS, EasyMutECS};
 
 #[derive(Hash, PartialEq, Eq, Component)]
 pub struct TimeComponent {
@@ -56,7 +56,7 @@ pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
 
 pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
     let mut times = ecs.write_storage::<TimeComponent>();
-    times.get_mut(*element).unwrap().ticks -= ticks_to_spend;
+    times.grab_mut(*element).ticks -= ticks_to_spend;
     assert!(times.grab(*element).ticks >= 0);
 }
 
@@ -95,7 +95,7 @@ mod tests {
         assert_eq!(next, second);
         {
             let mut times = ecs.write_storage::<TimeComponent>();
-            times.get_mut(next).unwrap().ticks = 0;
+            times.grab_mut(next).ticks = 0;
         }
         let next = get_next_actor(&ecs).unwrap();
         assert_eq!(next, first);

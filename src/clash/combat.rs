@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{Point, EasyECS};
+use crate::atlas::{EasyECS, EasyMutECS, Point};
 use crate::clash::{EventCoordinator, Logger};
 
 #[derive(Clone, Copy)]
@@ -77,8 +77,7 @@ pub fn combat_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>)
 
 pub fn bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
     ecs.write_storage::<AttackComponent>()
-        .insert(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)))
-        .unwrap();
+        .shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
 
     ecs.raise_event(EventKind::Bolt(), Some(*source));
 }
@@ -108,8 +107,7 @@ fn apply_bolt(ecs: &mut World, bolt: &Entity) {
 
 pub fn melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     ecs.write_storage::<AttackComponent>()
-        .insert(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)))
-        .unwrap();
+        .shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
 
     ecs.raise_event(EventKind::Melee(), Some(*source));
 }

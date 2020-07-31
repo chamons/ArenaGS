@@ -13,6 +13,6 @@ mod point;
 pub use point::{Point, SizedPoint};
 
 mod ecs;
-pub use ecs::EasyECS;
+pub use ecs::{EasyECS, EasyMutECS};
 
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
