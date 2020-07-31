@@ -206,7 +206,7 @@ mod tests {
         let mut ecs = create_world();
         let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
         invoke_skill(&mut ecs, &entity, "TestNone", None);
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().get(entity).unwrap().ticks);
+        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(entity).ticks);
     }
 
     #[test]

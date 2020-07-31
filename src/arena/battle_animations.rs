@@ -2,15 +2,16 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::AnimationComponent;
-use crate::clash::*;
 
 use crate::after_image::CharacterAnimationState;
+use crate::atlas::EasyECS;
+use crate::clash::*;
 
 pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
     let frame = ecs.get_current_frame();
     let animation = {
         let attacks = ecs.write_storage::<AttackComponent>();
-        match attacks.get(*target).unwrap().attack.ranged_kind() {
+        match attacks.grab(*target).attack.ranged_kind() {
             BoltKind::Fire => CharacterAnimationState::Magic,
         }
     };
@@ -23,7 +24,7 @@ pub fn begin_melee_animation(ecs: &mut World, target: &Entity) {
     let frame = ecs.get_current_frame();
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.get(*target).unwrap().attack.melee_kind() {
+        match attacks.grab(*target).attack.melee_kind() {
             WeaponKind::Sword => CharacterAnimationState::AttackTwo,
         }
     };
@@ -38,14 +39,14 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
     let bolt = start_bolt(ecs, &target);
     let sprite = {
         let attacks = ecs.write_storage::<AttackComponent>();
-        match attacks.get(bolt).unwrap().attack.ranged_kind() {
+        match attacks.grab(bolt).attack.ranged_kind() {
             BoltKind::Fire => SpriteKinds::FireBolt,
         }
     };
     ecs.write_storage::<RenderComponent>().insert(bolt, RenderComponent::init(sprite)).unwrap();
 
     let source_position = ecs.get_position(&bolt);
-    let target_position = ecs.read_storage::<AttackComponent>().get(bolt).unwrap().attack.target;
+    let target_position = ecs.read_storage::<AttackComponent>().grab(bolt).attack.target;
 
     let path_length = source_position.distance_to(target_position).unwrap() as u64;
     let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
@@ -57,7 +58,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
 
 pub fn begin_move_animation(ecs: &mut World, target: &Entity) {
     let movements = ecs.read_storage::<MovementComponent>();
-    let new_position = movements.get(*target).unwrap().new_position;
+    let new_position = movements.grab(*target).new_position;
 
     let frame = ecs.get_current_frame();
     let position = ecs.get_position(target);

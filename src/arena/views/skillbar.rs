@@ -9,7 +9,7 @@ use specs::prelude::*;
 use super::super::{battle_actions, IconLoader};
 use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, get_skill, SkillsComponent};
 
 pub struct SkillBarView {
@@ -54,7 +54,7 @@ fn get_skillbar_offset(ecs: &World, position: SDLPoint) -> i32 {
 fn get_skill_count(ecs: &World) -> usize {
     let skills = ecs.read_storage::<SkillsComponent>();
     let player = find_player(&ecs);
-    cmp::min(skills.get(player).unwrap().skills.len(), MAX_ICON_COUNT as usize)
+    cmp::min(skills.grab(player).skills.len(), MAX_ICON_COUNT as usize)
 }
 
 impl View for SkillBarView {

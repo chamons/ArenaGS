@@ -4,7 +4,7 @@ use specs_derive::Component;
 use sdl2::pixels::Color;
 
 use super::{EventCoordinator, LogComponent, PositionComponent};
-use crate::atlas::SizedPoint;
+use crate::atlas::{EasyECS, SizedPoint};
 use crate::clash::Character;
 
 #[derive(Component)]
@@ -97,7 +97,7 @@ pub trait Positions {
 
 impl Positions for World {
     fn get_position(&self, entity: &Entity) -> SizedPoint {
-        self.read_storage::<PositionComponent>().get(*entity).unwrap().position
+        self.read_storage::<PositionComponent>().grab(*entity).position
     }
 }
 
