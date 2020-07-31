@@ -119,3 +119,49 @@ fn apply_melee(ecs: &mut World, character: &Entity) {
     };
     ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::atlas::SizedPoint;
+
+    #[test]
+    fn melee_logs_on_hit() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(PlayerComponent::init())
+            .build();
+        ecs.create_entity()
+            .with(TimeComponent::init(10))
+            .with(PositionComponent::init(SizedPoint::init(3, 2)))
+            .build();
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
+        wait_for_animations(&mut ecs);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn ranged_logs_on_hit() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(PlayerComponent::init())
+            .build();
+        ecs.create_entity()
+            .with(TimeComponent::init(10))
+            .with(PositionComponent::init(SizedPoint::init(4, 2)))
+            .build();
+
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+}
