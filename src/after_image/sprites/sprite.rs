@@ -2,7 +2,7 @@ use std::cmp;
 use std::path::Path;
 
 use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, EasyPath};
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::render::Texture;
@@ -27,7 +27,7 @@ pub struct SpriteFolderDescription {
 impl SpriteFolderDescription {
     pub fn init(base_folder: &Path, set: &str, character: &str) -> SpriteFolderDescription {
         SpriteFolderDescription {
-            base_folder: base_folder.to_str().unwrap().to_string(),
+            base_folder: base_folder.stringify_owned(),
             set: set.to_string(),
             character: character.to_string(),
         }
@@ -48,7 +48,5 @@ pub fn load_set(folder: &str, description: &SpriteFolderDescription, action: &st
 fn get_set_name(folder: &str, description: &SpriteFolderDescription, action: &str, index: &str) -> String {
     Path::new(&folder)
         .join(format!("{}_{}_{} ({}).png", description.set, description.character, action, index))
-        .to_str()
-        .unwrap()
-        .to_string()
+        .stringify_owned()
 }

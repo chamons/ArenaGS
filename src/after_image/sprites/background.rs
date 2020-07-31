@@ -5,7 +5,7 @@ use crate::after_image::{load_image, RenderCanvas, RenderContext};
 
 use std::cmp;
 
-use crate::atlas::{get_exe_folder, BoxResult};
+use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -18,7 +18,7 @@ pub struct Background {
 impl Background {
     pub fn init(render_context: &RenderContext, name: &str) -> BoxResult<Background> {
         let map_path = Path::new(&get_exe_folder()).join("maps").join(name).join("map1.png");
-        let image = load_image(map_path.to_str().unwrap(), render_context)?;
+        let image = load_image(map_path.stringify(), render_context)?;
         Ok(Background { image })
     }
 }

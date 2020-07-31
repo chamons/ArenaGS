@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
@@ -27,7 +27,7 @@ pub struct TextRenderer<'a> {
 
 impl<'a> TextRenderer<'a> {
     pub fn init(font_context: &'a FontContext) -> BoxResult<TextRenderer> {
-        let font_path = PathBuf::from(get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
+        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
 
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
         small_font.set_style(sdl2::ttf::FontStyle::NORMAL);

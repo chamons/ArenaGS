@@ -12,7 +12,7 @@ use std::panic;
 
 mod atlas;
 #[cfg(debug_assertions)]
-use atlas::on_crash;
+use atlas::{on_crash, BoxResult};
 
 mod after_image;
 use after_image::{FontContext, RenderContext, TextRenderer};
@@ -25,7 +25,7 @@ mod clash;
 mod arena;
 use arena::BattleScene;
 
-pub fn main() -> Result<(), String> {
+pub fn main() -> BoxResult<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     #[cfg(debug_assertions)]
@@ -39,11 +39,11 @@ pub fn main() -> Result<(), String> {
 
     let mut render_context = RenderContext::initialize()?;
     let font_context = FontContext::initialize()?;
-    let text_renderer = TextRenderer::init(&font_context).unwrap();
+    let text_renderer = TextRenderer::init(&font_context)?;
 
-    let scene = Box::new(BattleScene::init(&render_context, &text_renderer).unwrap());
+    let scene = Box::new(BattleScene::init(&render_context, &text_renderer)?);
     let mut director = Director::init(scene);
-    director.run(&mut render_context).unwrap();
+    director.run(&mut render_context)?;
 
     Ok(())
 }

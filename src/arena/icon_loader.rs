@@ -6,7 +6,7 @@ use sdl2::render::Texture;
 
 use crate::after_image::{load_image, RenderContext};
 
-use crate::atlas::{get_exe_folder, BoxResult};
+use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
 
 pub struct IconLoader {
     images: HashMap<String, String>,
@@ -15,13 +15,7 @@ pub struct IconLoader {
 impl IconLoader {
     pub fn init(render_context: &RenderContext, subfolder: &str) -> BoxResult<IconLoader> {
         let mut images = HashMap::new();
-        let folder = Path::new(&get_exe_folder())
-            .join("icons")
-            .join("game_icons")
-            .join(subfolder)
-            .to_str()
-            .unwrap()
-            .to_string();
+        let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").join(subfolder).stringify_owned();
         find_images(render_context, &mut images, &folder)?;
 
         Ok(IconLoader { images })
@@ -42,9 +36,9 @@ fn find_images(render_context: &RenderContext, images: &mut HashMap<String, Stri
     for entry in entries {
         let path = entry?.path();
         if path.is_dir() {
-            find_images(render_context, images, &Path::new(location).join(path).to_str().unwrap())?;
+            find_images(render_context, images, &Path::new(location).join(path).stringify())?;
         } else {
-            let fullpath = path.to_str().unwrap();
+            let fullpath = path.stringify();
             let name = path.file_name().unwrap().to_str().unwrap().to_ascii_lowercase();
             if images.contains_key(&name) {
                 println!("IconLoader Warning: {} already exists!", name)

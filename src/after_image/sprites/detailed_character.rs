@@ -7,7 +7,7 @@ use num_traits::FromPrimitive;
 use super::{sprite::load_set, SpriteFolderDescription};
 use crate::after_image::{load_image, RenderCanvas, RenderContext, Sprite};
 
-use crate::atlas::BoxResult;
+use crate::atlas::{BoxResult, EasyPath};
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -52,9 +52,7 @@ impl DetailedCharacter {
             .join("battle")
             .join(format!("set{}", &description.set))
             .join(&description.character)
-            .to_str()
-            .unwrap()
-            .to_string();
+            .stringify_owned();
 
         Ok(DetailedCharacter {
             attack_one: load_set(&folder, description, "atk1", render_context)?,
@@ -109,7 +107,5 @@ impl Sprite for DetailedCharacter {
 pub fn get_single_name(folder: &str, description: &SpriteFolderDescription) -> String {
     Path::new(&folder)
         .join(format!("{}_{}_down.png", description.set, description.character))
-        .to_str()
-        .unwrap()
-        .to_string()
+        .stringify_owned()
 }

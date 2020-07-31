@@ -15,12 +15,12 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
         let path = entry.path();
 
         if path.is_dir() {
-            copy_all_with_extension(&path, Path::new(&dest).join(path.file_name().unwrap()).to_str().unwrap(), extension)?;
+            copy_all_with_extension(&path, Path::new(&dest).join(path.file_name().unwrap()).stringify(), extension)?;
         } else if let Some(file_name) = path.file_name() {
             if let Some(file_extension) = path.extension() {
                 if file_extension.to_str().unwrap().to_ascii_lowercase() == extension || extension == "*" {
                     let dest_file = Path::new(&dest).join(file_name);
-                    //println!("{}", format!("cargo:rerun-if-changed={}", path.to_str().unwrap()));
+                    //println!("{}", format!("cargo:rerun-if-changed={}", path.stringify()));
 
                     if !dest_file.exists() {
                         if !created_folder {
@@ -29,7 +29,7 @@ fn copy_all_with_extension(src: &Path, dest: &str, extension: &str) -> Result<()
                             created_folder = true;
                         }
                         // Joys, no way to do this easily: https://github.com/rust-lang/cargo/issues/5305
-                        //print(format!("Copy to {}", dest_file.to_str().unwrap()));
+                        //print(format!("Copy to {}", dest_file.stringify()));
                         fs::copy(path, dest_file)?;
                     }
                 }
@@ -48,16 +48,25 @@ fn main() {
     if let "windows" = platform.as_str() {
         let lib_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("lib").join("win");
 
-        copy_all_with_extension(&lib_dir, &dest_dir.to_str().unwrap(), "dll").expect("Unable to copy native libraries");
+        copy_all_with_extension(&lib_dir, &dest_dir.stringify(), "dll").expect("Unable to copy native libraries");
 
-        println!("{}", format!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap()));
+        println!("{}", format!("cargo:rustc-link-search={}", lib_dir.stringify()));
     }
 
     for (folder, extension) in &[("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png")] {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join(folder);
         if path.exists() {
-            copy_all_with_extension(&path, &dest_dir.join(folder).to_str().unwrap(), extension)
-                .unwrap_or_else(|_| panic!(format!("Unable to copy {}", folder)));
+            copy_all_with_extension(&path, &dest_dir.join(folder).stringify(), extension).unwrap_or_else(|_| panic!(format!("Unable to copy {}", folder)));
         }
+    }
+}
+
+pub trait EasyPath {
+    fn stringify(&self) -> &str;
+}
+
+impl EasyPath for std::path::Path {
+    fn stringify(&self) -> &str {
+        self.to_str().unwrap()
     }
 }
