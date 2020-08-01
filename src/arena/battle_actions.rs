@@ -45,7 +45,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     match skill.target {
         TargetType::Enemy | TargetType::Tile => {
             let player = find_player(&ecs);
-            if skill.is_good_target(ecs, &player, *position) {
+            if can_invoke_skill(ecs, &player, &skill, Some(*position)) {
                 player_use_skill(ecs, name, Some(*position));
             }
         }

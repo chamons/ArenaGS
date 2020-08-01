@@ -56,41 +56,6 @@ impl SkillInfo {
     pub fn show_trail(&self) -> bool {
         self.must_be_clear
     }
-
-    pub fn is_good_target(&self, ecs: &World, invoker: &Entity, target: Point) -> bool {
-        let initial = ecs.get_position(invoker);
-
-        if !match self.target {
-            TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
-            TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
-            TargetType::None => false,
-        } {
-            return false;
-        }
-
-        if let Some(skill_range) = self.distance {
-            if let Some(range_to_target) = initial.distance_to(target) {
-                if range_to_target > skill_range {
-                    return false;
-                }
-            }
-        }
-
-        if self.must_be_clear {
-            if let Some(mut path) = initial.line_to(target) {
-                // If we are targeting an enemy we can safely
-                // ignore the last square, since we know that it must
-                // have the target (from checks above)
-                if self.target.is_enemy() {
-                    path.pop();
-                }
-                if !is_area_clear(ecs, &path, invoker) {
-                    return false;
-                }
-            }
-        }
-        true
-    }
 }
 
 lazy_static! {
@@ -165,7 +130,50 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
     }
 
     if let Some(target) = target {
-        assert!(skill.is_good_target(ecs, invoker, target));
+        assert!(is_good_target(ecs, invoker, &skill, target));
+    }
+}
+
+pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
+    let initial = ecs.get_position(invoker);
+
+    if !match skill.target {
+        TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::None => false,
+    } {
+        return false;
+    }
+
+    if let Some(skill_range) = skill.distance {
+        if let Some(range_to_target) = initial.distance_to(target) {
+            if range_to_target > skill_range {
+                return false;
+            }
+        }
+    }
+
+    if skill.must_be_clear {
+        if let Some(mut path) = initial.line_to(target) {
+            // If we are targeting an enemy we can safely
+            // ignore the last square, since we know that it must
+            // have the target (from checks above)
+            if skill.target.is_enemy() {
+                path.pop();
+            }
+            if !is_area_clear(ecs, &path, invoker) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
+    if let Some(target) = target {
+        is_good_target(ecs, invoker, skill, target)
+    } else {
+        true
     }
 }
 
@@ -254,10 +262,10 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
-        assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 5)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
         let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
-        assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 5)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
     }
 
     #[test]
@@ -276,8 +284,8 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
-        assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
     }
 
     #[test]
@@ -292,13 +300,13 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
 
         let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
-        assert_eq!(true, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
             .with(CharacterInfoComponent::init(Character::init()))
             .build();
 
-        assert_eq!(false, info.is_good_target(&mut ecs, &entity, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
