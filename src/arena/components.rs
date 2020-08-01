@@ -42,6 +42,7 @@ impl BattleSceneStateComponent {
         }
     }
 }
+
 #[derive(Component)]
 pub struct MousePositionComponent {
     pub position: Point,

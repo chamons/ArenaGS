@@ -75,6 +75,7 @@ pub fn create_world() -> World {
     ecs.register::<super::AttackComponent>();
     ecs.register::<super::EventComponent>();
     ecs.register::<super::MovementComponent>();
+    ecs.register::<super::SkillResourceComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());

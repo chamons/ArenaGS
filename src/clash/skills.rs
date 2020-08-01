@@ -3,9 +3,10 @@ use std::slice::from_ref;
 
 use lazy_static::lazy_static;
 use specs::prelude::*;
+use specs_derive::Component;
 
 use super::{bolt, is_area_clear, melee, move_action, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
-use crate::atlas::Point;
+use crate::atlas::{EasyECS, EasyMutECS, Point};
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -23,12 +24,36 @@ pub enum SkillEffect {
     MeleeAttack(u32, WeaponKind),
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AmmoKind {
+    Bullets,
+}
+
+pub struct AmmoInfo {
+    pub ammo: AmmoKind,
+    pub ammo_usage: u32,
+}
+
+#[derive(Component)]
+pub struct SkillResourceComponent {
+    pub ammo: HashMap<AmmoKind, u32>,
+}
+
+impl SkillResourceComponent {
+    pub fn init(starting_ammo: &[(AmmoKind, u32)]) -> SkillResourceComponent {
+        SkillResourceComponent {
+            ammo: starting_ammo.iter().map(|(k, a)| (*k, *a)).collect(),
+        }
+    }
+}
+
 pub struct SkillInfo {
     pub image: &'static str,
     pub target: TargetType,
     pub effect: SkillEffect,
     pub distance: Option<u32>,
     pub must_be_clear: bool,
+    pub ammo_info: Option<AmmoInfo>,
 }
 
 impl SkillInfo {
@@ -40,6 +65,7 @@ impl SkillInfo {
             effect,
             distance: None,
             must_be_clear: false,
+            ammo_info: None,
         }
     }
 
@@ -50,11 +76,37 @@ impl SkillInfo {
             effect,
             distance,
             must_be_clear,
+            ammo_info: None,
         }
     }
 
     pub fn show_trail(&self) -> bool {
         self.must_be_clear
+    }
+
+    pub fn with_ammo(mut self, ammo: AmmoKind, ammo_usage: u32) -> SkillInfo {
+        self.ammo_info = Some(AmmoInfo { ammo, ammo_usage });
+        self
+    }
+
+    pub fn get_remaining_usages(&self, ecs: &World, entity: &Entity) -> Option<u32> {
+        match &self.ammo_info {
+            Some(ammo_info) => {
+                let skill_resources = ecs.read_storage::<SkillResourceComponent>();
+                let current_state = &skill_resources.grab(*entity).ammo;
+                match current_state.get(&ammo_info.ammo) {
+                    Some(current) => {
+                        if *current >= ammo_info.ammo_usage {
+                            Some(current / ammo_info.ammo_usage)
+                        } else {
+                            Some(0)
+                        }
+                    }
+                    None => Some(0),
+                }
+            }
+            None => None,
+        }
     }
 }
 
@@ -81,6 +133,10 @@ lazy_static! {
             m.insert(
                 "TestMelee",
                 SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::MeleeAttack(2, WeaponKind::Sword), Some(1), false),
+            );
+            m.insert(
+                "TestAmmo",
+                SkillInfo::init("", TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1),
             );
         }
         m.insert(
@@ -170,17 +226,17 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
 }
 
 pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
-    if let Some(target) = target {
-        is_good_target(ecs, invoker, skill, target)
-    } else {
-        true
-    }
+    let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
+    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
+
+    has_needed_ammo && has_valid_target
 }
 
 pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
     assert_correct_targeting(ecs, invoker, name, target);
-
     let skill = get_skill(name);
+    assert!(can_invoke_skill(ecs, invoker, skill, target));
+
     match skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
@@ -193,12 +249,25 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
 
     spend_time(ecs, invoker, MOVE_ACTION_COST);
+    spend_ammo(ecs, invoker, skill)
+}
+
+fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    match &skill.ammo_info {
+        Some(ammo_info) => {
+            let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[&ammo_info.ammo] };
+
+            let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+            *skill_resources.grab_mut(*invoker).ammo.get_mut(&ammo_info.ammo).unwrap() = current_ammo - 1;
+        }
+        None => {}
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::{
-        create_world, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent, TimeComponent,
+        add_ticks, create_world, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent, TimeComponent,
     };
     use super::*;
     use crate::atlas::{EasyECS, SizedPoint};
@@ -437,5 +506,64 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn get_remaining_usages_with_ammo() {
+        let mut ecs = create_world();
+        let player = ecs.create_entity().with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)])).build();
+
+        assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+    }
+
+    #[test]
+    fn get_remaining_usages_zero_ammo() {
+        let mut ecs = create_world();
+        let player = ecs.create_entity().with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 0)])).build();
+
+        assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+    }
+
+    #[test]
+    fn get_remaining_usages_non_existant_ammo() {
+        let mut ecs = create_world();
+        let player = ecs.create_entity().with(SkillResourceComponent::init(&[])).build();
+
+        assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+    }
+
+    #[test]
+    fn get_remaining_usages_skill_uses_no_ammo() {
+        let mut ecs = create_world();
+        let player = ecs.create_entity().with(SkillResourceComponent::init(&[])).build();
+
+        assert_eq!(true, get_skill("TestMelee").get_remaining_usages(&ecs, &player).is_none());
+    }
+
+    #[test]
+    fn skills_with_ammo() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        let skill = get_skill("TestAmmo");
+        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
+        invoke_skill(&mut ecs, &player, "TestAmmo", None);
+        add_ticks(&mut ecs, 100);
+
+        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
+        invoke_skill(&mut ecs, &player, "TestAmmo", None);
+        add_ticks(&mut ecs, 100);
+
+        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
+        invoke_skill(&mut ecs, &player, "TestAmmo", None);
+        add_ticks(&mut ecs, 100);
+        assert_eq!(false, can_invoke_skill(&mut ecs, &player, &skill, None));
     }
 }
