@@ -4,7 +4,7 @@ pub use character::Character;
 
 mod skills;
 use skills::invoke_skill;
-pub use skills::{get_skill, SkillInfo, TargetType};
+pub use skills::{can_invoke_skill, get_skill, is_good_target, AmmoKind, SkillInfo, SkillResourceComponent, TargetType};
 
 mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, Framer, PlayerComponent, Positions, SkillsComponent};
@@ -36,3 +36,8 @@ pub use combat::{bolt, melee, start_bolt, AttackComponent, BoltKind, WeaponKind}
 
 mod events;
 pub use events::{EventComponent, EventCoordinator, EventKind, PostAnimationEffect};
+
+#[cfg(test)]
+mod test_helpers;
+#[cfg(test)]
+pub use test_helpers::*;

@@ -101,24 +101,13 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, Character, CharacterInfoComponent, FieldComponent, TimeComponent};
+    use super::super::{create_test_state, FieldComponent};
     use super::*;
     use crate::atlas::SizedPoint;
 
     #[test]
     fn map_hittest() {
-        let mut ecs = create_world();
-        ecs.create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(PlayerComponent::init())
-            .build();
-        ecs.create_entity()
-            .with(TimeComponent::init(10))
-            .with(PositionComponent::init(SizedPoint::init(3, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(3, 2, 0).build();
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(4, 2)))
             .with(FieldComponent::init(255, 0, 0))

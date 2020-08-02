@@ -47,7 +47,13 @@ impl SpriteLoader {
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
                     1.5,
                 )?),
-                SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"))?),
+                SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
+                SpriteKinds::BulletBolt => Box::new(Bolt::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "weapons_2"),
+                    6,
+                    1,
+                )?),
             };
             sprites.insert(s.into(), sprite);
         }

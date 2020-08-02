@@ -46,7 +46,8 @@ impl<'a> BattleScene<'a> {
             .with(CharacterInfoComponent::init(Character::init()))
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
-            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash"]))
+            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot"]))
             .build();
 
         ecs.create_entity()
@@ -62,15 +63,6 @@ impl<'a> BattleScene<'a> {
 
         ecs.create_entity()
             .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
-            .build();
-
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(4, 7)))
-            .with(FieldComponent::init(255, 0, 0))
-            .build();
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(FieldComponent::init(0, 0, 255))
             .build();
 
         let mut views: Vec<Box<dyn View>> = vec![

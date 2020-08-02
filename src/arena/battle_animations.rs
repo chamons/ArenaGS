@@ -13,6 +13,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
         let attacks = ecs.write_storage::<AttackComponent>();
         match attacks.grab(*target).attack.ranged_kind() {
             BoltKind::Fire => CharacterAnimationState::Magic,
+            BoltKind::Bullet => CharacterAnimationState::Crouch,
         }
     };
 
@@ -41,6 +42,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
         let attacks = ecs.write_storage::<AttackComponent>();
         match attacks.grab(bolt).attack.ranged_kind() {
             BoltKind::Fire => SpriteKinds::FireBolt,
+            BoltKind::Bullet => SpriteKinds::BulletBolt,
         }
     };
     ecs.write_storage::<RenderComponent>().shovel(bolt, RenderComponent::init(sprite));

@@ -13,7 +13,20 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
 pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
     let skills_component = ecs.read_storage::<SkillsComponent>();
     let skills = &skills_component.grab(find_player(&ecs)).skills;
-    skills.get(index).map(|s| s.to_string())
+    skills.get(index).map(|s| get_current_skill(ecs, s))
+}
+
+// Some skills have an alternate when not usable (such as reload)
+pub fn get_current_skill(ecs: &World, skill_name: &str) -> String {
+    let skill = get_skill(skill_name);
+
+    if skill.is_usable(ecs, &find_player(&ecs)) {
+        skill_name.to_string()
+    } else if let Some(alt_skill) = &skill.alternate {
+        alt_skill.to_string()
+    } else {
+        skill_name.to_string()
+    }
 }
 
 pub fn select_skill(ecs: &mut World, name: &str) {
@@ -21,7 +34,13 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         return;
     }
 
-    let target_required = get_skill(name).target;
+    let skill = get_skill(name);
+
+    if !skill.is_usable(ecs, &find_player(&ecs)) {
+        return;
+    }
+
+    let target_required = skill.target;
     if target_required.is_none() {
         player_use_skill(ecs, name, None);
     } else {
@@ -45,7 +64,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     match skill.target {
         TargetType::Enemy | TargetType::Tile => {
             let player = find_player(&ecs);
-            if skill.is_good_target(ecs, &player, *position) {
+            if can_invoke_skill(ecs, &player, &skill, Some(*position)) {
                 player_use_skill(ecs, name, Some(*position));
             }
         }
