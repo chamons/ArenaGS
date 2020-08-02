@@ -19,13 +19,13 @@
             "osx": {
                 "terminal": "integrated",
                 "program": "target/debug/arena_gunpowder_and_sorcery",
+                "sourceMap": {
+                    "/rustc/*": "${env:HOME}/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust"
+                },
             },
             "sourceLanguages": [
                 "rust"
             ],
-            "sourceMap": {
-                "/rustc/*": "${env:HOME}/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust"
-            },
             "logging": {
                 "moduleLoad": false
             }
