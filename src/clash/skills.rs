@@ -55,7 +55,7 @@ pub struct SkillInfo {
     pub distance: Option<u32>,
     pub must_be_clear: bool,
     pub ammo_info: Option<AmmoInfo>,
-    pub backup: Option<String>,
+    pub alternate: Option<String>,
 }
 
 impl SkillInfo {
@@ -68,7 +68,7 @@ impl SkillInfo {
             distance: None,
             must_be_clear: false,
             ammo_info: None,
-            backup: None,
+            alternate: None,
         }
     }
 
@@ -80,7 +80,7 @@ impl SkillInfo {
             distance,
             must_be_clear,
             ammo_info: None,
-            backup: None,
+            alternate: None,
         }
     }
 
@@ -89,8 +89,8 @@ impl SkillInfo {
         self
     }
 
-    pub fn with_backup(mut self, skill_name: &str) -> SkillInfo {
-        self.backup = Some(skill_name.to_string());
+    pub fn with_alternate(mut self, skill_name: &str) -> SkillInfo {
+        self.alternate = Some(skill_name.to_string());
         self
     }
 
@@ -174,7 +174,7 @@ lazy_static! {
                 true,
             )
             .with_ammo(AmmoKind::Bullets, 1)
-            .with_backup("Reload"),
+            .with_alternate("Reload"),
         );
         m.insert(
             "Fire Bolt",

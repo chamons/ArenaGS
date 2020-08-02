@@ -92,7 +92,7 @@ pub struct SkillBarItemView {
     skill_name: String,
     hotkey: ((u32, u32), Texture),
     hotkey_inactive: ((u32, u32), Texture),
-    backup_image: Option<Texture>,
+    alternate_image: Option<Texture>,
 }
 type HotKeyRenderInfo = ((u32, u32), Texture);
 
@@ -110,8 +110,8 @@ impl SkillBarItemView {
         let image = icons.get(render_context, skill.image)?;
         let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
         let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
-        let backup_image = match &skill.backup {
-            Some(backup) => Some(icons.get(render_context, get_skill(backup).image)?),
+        let alternate_image = match &skill.alternate {
+            Some(alternate) => Some(icons.get(render_context, get_skill(alternate).image)?),
             None => None,
         };
 
@@ -122,7 +122,7 @@ impl SkillBarItemView {
             skill_name: skill_name.to_string(),
             hotkey,
             hotkey_inactive,
-            backup_image,
+            alternate_image,
         })
     }
 
@@ -131,8 +131,8 @@ impl SkillBarItemView {
 
         if skill.is_usable(ecs, &find_player(&ecs)) {
             return (&self.hotkey, &self.image, false);
-        } else if skill.backup.is_some() {
-            return (&self.hotkey, &self.backup_image.as_ref().unwrap(), false);
+        } else if skill.alternate.is_some() {
+            return (&self.hotkey, &self.alternate_image.as_ref().unwrap(), false);
         } else {
             return (&self.hotkey_inactive, &self.image, true);
         }
@@ -143,7 +143,7 @@ impl SkillBarItemView {
 
         if skill.is_usable(ecs, &find_player(&ecs)) {
             return &self.skill_name;
-        } else if let Some(unavailable_skill) = &skill.backup {
+        } else if let Some(unavailable_skill) = &skill.alternate {
             return &unavailable_skill;
         } else {
             return &self.skill_name;
