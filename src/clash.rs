@@ -36,3 +36,8 @@ pub use combat::{bolt, melee, start_bolt, AttackComponent, BoltKind, WeaponKind}
 
 mod events;
 pub use events::{EventComponent, EventCoordinator, EventKind, PostAnimationEffect};
+
+#[cfg(test)]
+mod test_helpers;
+#[cfg(test)]
+pub use test_helpers::*;

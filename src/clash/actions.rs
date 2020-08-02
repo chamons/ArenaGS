@@ -62,71 +62,39 @@ pub fn tick_next_action(ecs: &mut World) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_world, LogComponent, Map, MapComponent, TimeComponent};
     use super::*;
-    use crate::atlas::SizedPoint;
 
     #[test]
     fn move_not_current_actor() {
-        let mut ecs = create_world();
-        ecs.create_entity()
-            .with(TimeComponent::init(0))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(PlayerComponent::init())
-            .build();
-        ecs.create_entity().with(TimeComponent::init(10)).build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).with_map().build();
 
-        let did_move = player_move(&mut ecs, Direction::North);
-        assert_eq!(false, did_move);
+        assert_eq!(false, player_move(&mut ecs, Direction::North));
     }
 
     #[test]
     fn move_spends_time() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(PlayerComponent::init())
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_player(&ecs);
 
-        let did_move = player_move(&mut ecs, Direction::North);
-        assert_eq!(true, did_move);
+        assert_eq!(true, player_move(&mut ecs, Direction::North));
 
         assert_eq!(0, get_ticks(&ecs, &player));
     }
 
     #[test]
     fn use_skill_not_current_actor() {
-        let mut ecs = create_world();
-        ecs.create_entity()
-            .with(TimeComponent::init(0))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(PlayerComponent::init())
-            .build();
-        ecs.create_entity().with(TimeComponent::init(10)).build();
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).with_log().build();
         ecs.insert(LogComponent::init());
 
-        let did_act = player_use_skill(&mut ecs, "TestNone", None);
-        assert_eq!(false, did_act);
+        assert_eq!(false, player_use_skill(&mut ecs, "TestNone", None));
     }
 
     #[test]
     fn use_skill_spends_time() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(PlayerComponent::init())
-            .build();
-        ecs.create_entity().with(TimeComponent::init(10)).build();
-        ecs.insert(LogComponent::init());
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_timed(10).with_log().build();
+        let player = find_player(&ecs);
 
-        let did_act = player_use_skill(&mut ecs, "TestNone", None);
-        assert_eq!(true, did_act);
+        assert_eq!(true, player_use_skill(&mut ecs, "TestNone", None));
         assert_eq!(0, get_ticks(&ecs, &player));
     }
 }
