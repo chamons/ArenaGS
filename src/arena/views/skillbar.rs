@@ -137,18 +137,6 @@ impl SkillBarItemView {
             return (&self.hotkey_inactive, &self.image, true);
         }
     }
-
-    fn get_current_skill(&self, ecs: &World) -> &String {
-        let skill = get_skill(&self.skill_name);
-
-        if skill.is_usable(ecs, &find_player(&ecs)) {
-            return &self.skill_name;
-        } else if let Some(unavailable_skill) = &skill.alternate {
-            return &unavailable_skill;
-        } else {
-            return &self.skill_name;
-        }
-    }
 }
 
 impl View for SkillBarItemView {
@@ -172,7 +160,7 @@ impl View for SkillBarItemView {
 
     fn hit_test(&self, ecs: &World, _: i32, _: i32) -> Option<HitTestResult> {
         if battle_actions::get_skill_name(ecs, self.index as usize).is_some() {
-            Some(HitTestResult::Skill(self.get_current_skill(ecs).to_string()))
+            Some(HitTestResult::Skill(battle_actions::get_current_skill(ecs, &self.skill_name)))
         } else {
             None
         }

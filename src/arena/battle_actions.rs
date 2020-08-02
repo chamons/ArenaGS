@@ -13,7 +13,20 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
 pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
     let skills_component = ecs.read_storage::<SkillsComponent>();
     let skills = &skills_component.grab(find_player(&ecs)).skills;
-    skills.get(index).map(|s| s.to_string())
+    skills.get(index).map(|s| get_current_skill(ecs, s))
+}
+
+// Some skills have an alternate when not usable (such as reload)
+pub fn get_current_skill(ecs: &World, skill_name: &str) -> String {
+    let skill = get_skill(skill_name);
+
+    if skill.is_usable(ecs, &find_player(&ecs)) {
+        return skill_name.to_string();
+    } else if let Some(alt_skill) = &skill.alternate {
+        return alt_skill.to_string();
+    } else {
+        return skill_name.to_string();
+    }
 }
 
 pub fn select_skill(ecs: &mut World, name: &str) {
