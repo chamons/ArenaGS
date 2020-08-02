@@ -7,6 +7,7 @@ use crate::clash::{EventCoordinator, Logger};
 
 #[derive(Clone, Copy)]
 pub enum BoltKind {
+    Bullet,
     Fire,
 }
 

@@ -42,6 +42,7 @@ pub struct FieldComponent {
     pub color: Color,
 }
 
+#[allow(dead_code)]
 impl FieldComponent {
     pub fn init(r: u8, g: u8, b: u8) -> FieldComponent {
         FieldComponent {

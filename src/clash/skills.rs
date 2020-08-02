@@ -144,6 +144,16 @@ lazy_static! {
             SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
         );
         m.insert(
+            "Strong Shot",
+            SkillInfo::init_with_distance(
+                "SpellBook01_37.png",
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(10, BoltKind::Bullet),
+                Some(10),
+                true,
+            ),
+        );
+        m.insert(
             "Fire Bolt",
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
