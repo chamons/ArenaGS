@@ -89,13 +89,13 @@ mod tests {
         let first = all[0];
         let second = all[1];
         let next = get_next_actor(&ecs).unwrap();
-        assert_eq!(next, *second);
+        assert_eq!(next, second);
         {
             let mut times = ecs.write_storage::<TimeComponent>();
             times.grab_mut(next).ticks = 0;
         }
         let next = get_next_actor(&ecs).unwrap();
-        assert_eq!(next, *first);
+        assert_eq!(next, first);
     }
 
     #[test]

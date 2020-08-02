@@ -82,12 +82,12 @@ pub fn find_at_time(ecs: &World, desired_time: i32) -> Entity {
     panic!();
 }
 
-pub fn find_all_entities(ecs: &World) -> Vec<&Entity> {
+pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
 
-    let all = vec![];
+    let mut all = vec![];
     for entity in (&entities).join() {
-        all.push(&entity);
+        all.push(entity);
     }
     all
 }
