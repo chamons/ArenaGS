@@ -27,17 +27,16 @@ impl SkillBarView {
         let icons = IconLoader::init(render_context, "spell")?;
         for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
-                let path = get_skill(&skill_name).image;
-                let image = icons.get(render_context, path)?;
-                let hotkey = text.render_texture(&render_context.canvas, &i.to_string(), FontSize::Bold, FontColor::White)?;
                 let view = SkillBarItemView::init(
                     SDLPoint::new(
                         get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
                         position.y + BORDER_WIDTH + 1,
                     ),
+                    render_context,
+                    text,
+                    &icons,
                     i as u32,
-                    image,
-                    hotkey,
+                    skill_name.as_str(),
                 )?;
                 views.push(view);
             }
@@ -90,25 +89,54 @@ pub struct SkillBarItemView {
     pub rect: SDLRect,
     index: u32,
     image: Texture,
+    skill_name: String,
     hotkey: ((u32, u32), Texture),
+    hotkey_inactive: ((u32, u32), Texture),
 }
 
 impl SkillBarItemView {
-    pub fn init(position: SDLPoint, index: u32, image: Texture, hotkey: ((u32, u32), Texture)) -> BoxResult<SkillBarItemView> {
+    pub fn init(
+        position: SDLPoint,
+        render_context: &RenderContext,
+        text: &TextRenderer,
+        icons: &IconLoader,
+        index: u32,
+        skill_name: &str,
+    ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
-        Ok(SkillBarItemView { rect, index, image, hotkey })
+        let path = get_skill(&skill_name).image;
+        let image = icons.get(render_context, path)?;
+        let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
+        let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
+
+        Ok(SkillBarItemView {
+            rect,
+            index,
+            image,
+            skill_name: skill_name.to_string(),
+            hotkey,
+            hotkey_inactive,
+        })
     }
 }
 
 impl View for SkillBarItemView {
-    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        let usable = get_skill(&self.skill_name).is_usable(ecs, &find_player(&ecs));
+
         canvas.copy(&self.image, SDLRect::new(0, 0, 256, 256), self.rect)?;
-        let ((width, height), texture) = &self.hotkey;
+        let ((width, height), texture) = if usable { &self.hotkey } else { &self.hotkey_inactive };
         let hotkey_bounds = SDLRect::new(2 + self.rect.x() as i32, 24 + self.rect.y() as i32, *width, *height);
         let hotkey_background_bounds = SDLRect::new(hotkey_bounds.x() - 2, hotkey_bounds.y(), hotkey_bounds.width() + 4, hotkey_bounds.height());
         canvas.set_draw_color(Color::RGBA(32, 32, 32, 200));
         canvas.fill_rect(hotkey_background_bounds)?;
         canvas.copy(&texture, SDLRect::new(0, 0, *width, *height), hotkey_bounds)?;
+
+        if !usable {
+            canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
+            canvas.fill_rect(self.rect)?;
+        }
+
         Ok(())
     }
 

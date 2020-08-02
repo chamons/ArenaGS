@@ -108,6 +108,13 @@ impl SkillInfo {
             None => None,
         }
     }
+
+    pub fn is_usable(&self, ecs: &World, entity: &Entity) -> bool {
+        match self.get_remaining_usages(ecs, entity) {
+            Some(amount) => amount >= self.ammo_info.as_ref().unwrap().usage,
+            None => true,
+        }
+    }
 }
 
 lazy_static! {
@@ -151,7 +158,8 @@ lazy_static! {
                 SkillEffect::RangedAttack(10, BoltKind::Bullet),
                 Some(10),
                 true,
-            ),
+            )
+            .with_ammo(AmmoKind::Bullets, 1),
         );
         m.insert(
             "Fire Bolt",

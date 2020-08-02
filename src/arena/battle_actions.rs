@@ -21,7 +21,13 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         return;
     }
 
-    let target_required = get_skill(name).target;
+    let skill = get_skill(name);
+
+    if !skill.is_usable(ecs, &find_player(&ecs)) {
+        return;
+    }
+
+    let target_required = skill.target;
     if target_required.is_none() {
         player_use_skill(ecs, name, None);
     } else {
