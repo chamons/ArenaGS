@@ -64,15 +64,6 @@ impl<'a> BattleScene<'a> {
             .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
             .build();
 
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(4, 7)))
-            .with(FieldComponent::init(255, 0, 0))
-            .build();
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(FieldComponent::init(0, 0, 255))
-            .build();
-
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(render_context)?),
             Box::from(InfoBarView::init(SDLPoint::new(780, 20), text)?),
