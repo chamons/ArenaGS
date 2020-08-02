@@ -283,32 +283,32 @@ fn reload(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_ticks, create_world, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent,
-        TimeComponent,
+        add_ticks, create_test_state, create_world, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent,
+        LogComponent, PositionComponent,
     };
     use super::*;
-    use crate::atlas::SizedPoint;
+    use crate::atlas::{EasyMutECS, SizedPoint};
 
     #[test]
     #[should_panic]
     fn panic_if_wrong_targeting() {
-        let mut ecs = create_world();
-        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        let mut ecs = create_test_state().with_timed(100).build();
+        let entity = find_first_entity(&ecs);
         invoke_skill(&mut ecs, &entity, "TestNone", Some(Point::init(2, 2)));
     }
 
     #[test]
     #[should_panic]
     fn panic_if_missing_targeting() {
-        let mut ecs = create_world();
-        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        let mut ecs = create_test_state().with_timed(100).build();
+        let entity = find_first_entity(&ecs);
         invoke_skill(&mut ecs, &entity, "TestTile", None);
     }
 
     #[test]
     fn invoker_spend_time() {
-        let mut ecs = create_world();
-        let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
+        let mut ecs = create_test_state().with_timed(100).build();
+        let entity = find_first_entity(&ecs);
         invoke_skill(&mut ecs, &entity, "TestNone", None);
         assert_eq!(0, get_ticks(&ecs, &entity));
     }
@@ -316,36 +316,22 @@ mod tests {
     #[test]
     #[should_panic]
     fn target_must_be_in_range() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .build();
+        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let entity = find_at(&ecs, 2, 2);
         invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 5)));
     }
 
     #[test]
     fn target_in_range() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
         invoke_skill(&mut ecs, &entity, "TestWithRange", Some(Point::init(2, 4)));
     }
 
     #[test]
     fn skill_info_range() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
@@ -356,18 +342,8 @@ mod tests {
 
     #[test]
     fn skill_info_correct_target_kind() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
@@ -376,14 +352,8 @@ mod tests {
 
     #[test]
     fn skill_info_must_be_clear() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
@@ -397,14 +367,8 @@ mod tests {
 
     #[test]
     fn movement_effect() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
 
         invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);
@@ -414,14 +378,11 @@ mod tests {
 
     #[test]
     fn movement_effect_multi() {
-        let mut ecs = create_world();
-        let entity = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init_multi(2, 2, 2, 1)))
-            .with(CharacterInfoComponent::init(Character::init()))
+        let mut ecs = create_test_state()
+            .with_sized_character(SizedPoint::init_multi(2, 2, 2, 1), 100)
+            .with_map()
             .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let entity = find_at(&ecs, 2, 2);
 
         invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);
@@ -431,20 +392,8 @@ mod tests {
 
     #[test]
     fn ranged_effect() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-
-        ecs.create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(4, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(4, 2)));
@@ -455,20 +404,12 @@ mod tests {
 
     #[test]
     fn ranged_effect_multi() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
+        let mut ecs = create_test_state()
+            .with_character(2, 2, 100)
+            .with_sized_character(SizedPoint::init_multi(2, 5, 2, 2), 100)
+            .with_map()
             .build();
-
-        ecs.create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init_multi(2, 5, 2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let player = find_at(&ecs, 2, 2);
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(2, 4)));
@@ -479,20 +420,8 @@ mod tests {
 
     #[test]
     fn melee_effect() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-
-        ecs.create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
@@ -503,20 +432,12 @@ mod tests {
 
     #[test]
     fn melee_effect_multi() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
+        let mut ecs = create_test_state()
+            .with_character(2, 2, 100)
+            .with_sized_character(SizedPoint::init_multi(2, 4, 2, 2), 100)
+            .with_map()
             .build();
-
-        ecs.create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init_multi(2, 4, 2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let player = find_at(&ecs, 2, 2);
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
@@ -542,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn get_remaining_usages_non_existant_ammo() {
+    fn get_remaining_usages_non_existent_ammo() {
         let mut ecs = create_world();
         let player = ecs.create_entity().with(SkillResourceComponent::init(&[])).build();
 
@@ -557,17 +478,17 @@ mod tests {
         assert_eq!(true, get_skill("TestMelee").get_remaining_usages(&ecs, &player).is_none());
     }
 
+    fn add_bullets(ecs: &mut World, player: &Entity) {
+        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]);
+        skill_resources.shovel(*player, resource);
+    }
+
     #[test]
     fn skills_with_ammo() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player);
 
         let skill = get_skill("TestAmmo");
 
@@ -582,15 +503,9 @@ mod tests {
 
     #[test]
     fn reload_ammo() {
-        let mut ecs = create_world();
-        let player = ecs
-            .create_entity()
-            .with(TimeComponent::init(100))
-            .with(PositionComponent::init(SizedPoint::init(2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]))
-            .build();
-        ecs.insert(MapComponent::init(Map::init_empty()));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player);
 
         for _ in 0..3 {
             invoke_skill(&mut ecs, &player, "TestAmmo", None);

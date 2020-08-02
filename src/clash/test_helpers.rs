@@ -63,3 +63,31 @@ pub fn create_test_state() -> StateBuilder {
 pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_character_at_location(ecs, Point::init(x, y)).unwrap()
 }
+
+pub fn find_first_entity(ecs: &World) -> Entity {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let entity = (&entities).join().next().unwrap();
+    entity
+}
+
+pub fn find_at_time(ecs: &World, desired_time: i32) -> Entity {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let times = ecs.read_storage::<TimeComponent>();
+
+    for (entity, time) in (&entities, &times).join() {
+        if desired_time == time.ticks {
+            return entity;
+        }
+    }
+    panic!();
+}
+
+pub fn find_all_entities(ecs: &World) -> Vec<&Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+
+    let all = vec![];
+    for entity in (&entities).join() {
+        all.push(&entity);
+    }
+    all
+}
