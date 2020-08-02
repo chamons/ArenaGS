@@ -22,6 +22,7 @@ pub enum SkillEffect {
     Move,
     RangedAttack(u32, BoltKind),
     MeleeAttack(u32, WeaponKind),
+    Reload(AmmoKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -54,6 +55,7 @@ pub struct SkillInfo {
     pub distance: Option<u32>,
     pub must_be_clear: bool,
     pub ammo_info: Option<AmmoInfo>,
+    pub backup: Option<String>,
 }
 
 impl SkillInfo {
@@ -66,6 +68,7 @@ impl SkillInfo {
             distance: None,
             must_be_clear: false,
             ammo_info: None,
+            backup: None,
         }
     }
 
@@ -77,16 +80,22 @@ impl SkillInfo {
             distance,
             must_be_clear,
             ammo_info: None,
+            backup: None,
         }
-    }
-
-    pub fn show_trail(&self) -> bool {
-        self.must_be_clear
     }
 
     pub fn with_ammo(mut self, kind: AmmoKind, usage: u32) -> SkillInfo {
         self.ammo_info = Some(AmmoInfo { kind, usage });
         self
+    }
+
+    pub fn with_backup(mut self, skill_name: &str) -> SkillInfo {
+        self.backup = Some(skill_name.to_string());
+        self
+    }
+
+    pub fn show_trail(&self) -> bool {
+        self.must_be_clear
     }
 
     pub fn get_remaining_usages(&self, ecs: &World, entity: &Entity) -> Option<u32> {
@@ -145,10 +154,15 @@ lazy_static! {
                 "TestAmmo",
                 SkillInfo::init("", TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1),
             );
+            m.insert("TestReload", SkillInfo::init("", TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
         }
         m.insert(
             "Dash",
             SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
+        );
+        m.insert(
+            "Reload",
+            SkillInfo::init("SpellBook06_22.png", TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
         );
         m.insert(
             "Strong Shot",
@@ -159,7 +173,8 @@ lazy_static! {
                 Some(10),
                 true,
             )
-            .with_ammo(AmmoKind::Bullets, 1),
+            .with_ammo(AmmoKind::Bullets, 1)
+            .with_backup("Reload"),
         );
         m.insert(
             "Fire Bolt",
@@ -263,6 +278,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         }
         SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), strength, kind),
         SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), strength, kind),
+        SkillEffect::Reload(kind) => reload(ecs, &invoker, kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
@@ -286,16 +302,9 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
-fn reload(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
-    match &skill.ammo_info {
-        Some(ammo_info) => {
-            let kind = ammo_info.kind;
-            let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
-            set_ammo(ecs, invoker, kind, max_ammo);
-            spend_time(ecs, invoker, BASE_ACTION_COST);
-        }
-        None => {}
-    }
+fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
+    let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
+    set_ammo(ecs, invoker, kind, max_ammo);
 }
 
 #[cfg(test)]
@@ -530,7 +539,7 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
 
-        reload(&mut ecs, &player, get_skill("TestAmmo"));
+        invoke_skill(&mut ecs, &player, "TestReload", None);
         assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
         assert_eq!(0, get_ticks(&ecs, &player));
     }

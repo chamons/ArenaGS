@@ -92,7 +92,9 @@ pub struct SkillBarItemView {
     skill_name: String,
     hotkey: ((u32, u32), Texture),
     hotkey_inactive: ((u32, u32), Texture),
+    backup_image: Option<Texture>,
 }
+type HotKeyRenderInfo = ((u32, u32), Texture);
 
 impl SkillBarItemView {
     pub fn init(
@@ -104,10 +106,14 @@ impl SkillBarItemView {
         skill_name: &str,
     ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
-        let path = get_skill(&skill_name).image;
-        let image = icons.get(render_context, path)?;
+        let skill = get_skill(&skill_name);
+        let image = icons.get(render_context, skill.image)?;
         let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
         let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
+        let backup_image = match &skill.backup {
+            Some(backup) => Some(icons.get(render_context, get_skill(backup).image)?),
+            None => None,
+        };
 
         Ok(SkillBarItemView {
             rect,
@@ -116,23 +122,47 @@ impl SkillBarItemView {
             skill_name: skill_name.to_string(),
             hotkey,
             hotkey_inactive,
+            backup_image,
         })
+    }
+
+    fn get_render_params(&self, ecs: &World) -> (&HotKeyRenderInfo, &Texture, bool) {
+        let skill = get_skill(&self.skill_name);
+
+        if skill.is_usable(ecs, &find_player(&ecs)) {
+            return (&self.hotkey, &self.image, false);
+        } else if skill.backup.is_some() {
+            return (&self.hotkey, &self.backup_image.as_ref().unwrap(), false);
+        } else {
+            return (&self.hotkey_inactive, &self.image, true);
+        }
+    }
+
+    fn get_current_skill(&self, ecs: &World) -> &String {
+        let skill = get_skill(&self.skill_name);
+
+        if skill.is_usable(ecs, &find_player(&ecs)) {
+            return &self.skill_name;
+        } else if let Some(unavailable_skill) = &skill.backup {
+            return &unavailable_skill;
+        } else {
+            return &self.skill_name;
+        }
     }
 }
 
 impl View for SkillBarItemView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
-        let usable = get_skill(&self.skill_name).is_usable(ecs, &find_player(&ecs));
+        let (((width, height), hotkey_texture), texture, disable_overlay) = self.get_render_params(ecs);
 
-        canvas.copy(&self.image, SDLRect::new(0, 0, 256, 256), self.rect)?;
-        let ((width, height), texture) = if usable { &self.hotkey } else { &self.hotkey_inactive };
+        canvas.copy(texture, SDLRect::new(0, 0, 256, 256), self.rect)?;
         let hotkey_bounds = SDLRect::new(2 + self.rect.x() as i32, 24 + self.rect.y() as i32, *width, *height);
         let hotkey_background_bounds = SDLRect::new(hotkey_bounds.x() - 2, hotkey_bounds.y(), hotkey_bounds.width() + 4, hotkey_bounds.height());
         canvas.set_draw_color(Color::RGBA(32, 32, 32, 200));
         canvas.fill_rect(hotkey_background_bounds)?;
-        canvas.copy(&texture, SDLRect::new(0, 0, *width, *height), hotkey_bounds)?;
+        canvas.copy(&hotkey_texture, SDLRect::new(0, 0, *width, *height), hotkey_bounds)?;
 
-        if !usable {
+        if disable_overlay {
             canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
             canvas.fill_rect(self.rect)?;
         }
@@ -141,8 +171,8 @@ impl View for SkillBarItemView {
     }
 
     fn hit_test(&self, ecs: &World, _: i32, _: i32) -> Option<HitTestResult> {
-        if let Some(skill_name) = battle_actions::get_skill_name(ecs, self.index as usize) {
-            Some(HitTestResult::Skill(skill_name))
+        if battle_actions::get_skill_name(ecs, self.index as usize).is_some() {
+            Some(HitTestResult::Skill(self.get_current_skill(ecs).to_string()))
         } else {
             None
         }
