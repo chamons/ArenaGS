@@ -30,8 +30,8 @@ pub enum AmmoKind {
 }
 
 pub struct AmmoInfo {
-    pub ammo: AmmoKind,
-    pub ammo_usage: u32,
+    pub kind: AmmoKind,
+    pub usage: u32,
 }
 
 #[derive(Component)]
@@ -84,8 +84,8 @@ impl SkillInfo {
         self.must_be_clear
     }
 
-    pub fn with_ammo(mut self, ammo: AmmoKind, ammo_usage: u32) -> SkillInfo {
-        self.ammo_info = Some(AmmoInfo { ammo, ammo_usage });
+    pub fn with_ammo(mut self, kind: AmmoKind, usage: u32) -> SkillInfo {
+        self.ammo_info = Some(AmmoInfo { kind, usage });
         self
     }
 
@@ -94,10 +94,10 @@ impl SkillInfo {
             Some(ammo_info) => {
                 let skill_resources = ecs.read_storage::<SkillResourceComponent>();
                 let current_state = &skill_resources.grab(*entity).ammo;
-                match current_state.get(&ammo_info.ammo) {
+                match current_state.get(&ammo_info.kind) {
                     Some(current) => {
-                        if *current >= ammo_info.ammo_usage {
-                            Some(current / ammo_info.ammo_usage)
+                        if *current >= ammo_info.usage {
+                            Some(current / ammo_info.usage)
                         } else {
                             Some(0)
                         }
@@ -255,10 +255,11 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     match &skill.ammo_info {
         Some(ammo_info) => {
-            let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[&ammo_info.ammo] };
+            let kind = &ammo_info.kind;
+            let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[kind] };
 
             let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-            *skill_resources.grab_mut(*invoker).ammo.get_mut(&ammo_info.ammo).unwrap() = current_ammo - 1;
+            *skill_resources.grab_mut(*invoker).ammo.get_mut(kind).unwrap() = current_ammo - 1;
         }
         None => {}
     }
