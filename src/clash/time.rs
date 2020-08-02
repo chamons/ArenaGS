@@ -44,7 +44,7 @@ pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
 
 pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
     if let Some(next) = get_next_actor(ecs) {
-        let time = ecs.read_storage::<TimeComponent>().grab(next).ticks;
+        let time = get_ticks(ecs, &next);
         if time < BASE_ACTION_COST {
             let missing = BASE_ACTION_COST - time;
             add_ticks(ecs, missing);
@@ -52,6 +52,10 @@ pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
         return Some(next);
     }
     None
+}
+
+pub fn get_ticks(ecs: &World, entity: &Entity) -> i32 {
+    ecs.read_storage::<TimeComponent>().grab(*entity).ticks
 }
 
 pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
@@ -81,9 +85,7 @@ mod tests {
         create_timer(&mut ecs, 0);
         create_timer(&mut ecs, 10);
         let next = get_next_actor(&ecs).unwrap();
-        let times = ecs.read_storage::<TimeComponent>();
-        let time = times.get(next).unwrap().ticks;
-        assert_eq!(10, time);
+        assert_eq!(10, get_ticks(&ecs, &next));
     }
 
     #[test]
@@ -106,8 +108,7 @@ mod tests {
         let mut ecs = create_world();
         let first = create_timer(&mut ecs, 10);
         add_ticks(&mut ecs, 50);
-        let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(60, times.grab(first).ticks);
+        assert_eq!(60, get_ticks(&ecs, &first));
     }
 
     #[test]
@@ -118,9 +119,8 @@ mod tests {
 
         let next = wait_for_next(&mut ecs).unwrap();
         assert_eq!(next, second);
-        let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(90, times.grab(first).ticks);
-        assert_eq!(100, times.grab(second).ticks);
+        assert_eq!(90, get_ticks(&ecs, &first));
+        assert_eq!(100, get_ticks(&ecs, &second));
     }
 
     #[test]
@@ -136,7 +136,6 @@ mod tests {
         let mut ecs = create_world();
         let first = create_timer(&mut ecs, 110);
         spend_time(&mut ecs, &first, BASE_ACTION_COST);
-        let times = ecs.read_storage::<TimeComponent>();
-        assert_eq!(10, times.grab(first).ticks);
+        assert_eq!(10, get_ticks (&ecs, &first));
     }
 }

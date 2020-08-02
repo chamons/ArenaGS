@@ -166,7 +166,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, &entity, Point::init(2, 3));
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(entity).ticks);
+        assert_eq!(0, get_ticks(&ecs, &entity));
     }
 
     #[test]

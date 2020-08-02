@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{bolt, is_area_clear, melee, move_action, spend_time, BoltKind, Logger, Positions, WeaponKind, MOVE_ACTION_COST};
+use super::{bolt, is_area_clear, melee, move_action, spend_time, BoltKind, Logger, Positions, WeaponKind, BASE_ACTION_COST};
 use crate::atlas::{EasyECS, EasyMutECS, Point};
 
 #[allow(dead_code)]
@@ -268,10 +268,11 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_ticks, create_world, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent, TimeComponent,
+        add_ticks, create_world, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent, Map, MapComponent, PositionComponent,
+        TimeComponent,
     };
     use super::*;
-    use crate::atlas::{EasyECS, SizedPoint};
+    use crate::atlas::SizedPoint;
 
     #[test]
     #[should_panic]
@@ -294,7 +295,7 @@ mod tests {
         let mut ecs = create_world();
         let entity = ecs.create_entity().with(TimeComponent::init(100)).build();
         invoke_skill(&mut ecs, &entity, "TestNone", None);
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(entity).ticks);
+        assert_eq!(0, get_ticks(&ecs, &entity));
     }
 
     #[test]
@@ -554,17 +555,13 @@ mod tests {
         ecs.insert(MapComponent::init(Map::init_empty()));
 
         let skill = get_skill("TestAmmo");
-        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
-        invoke_skill(&mut ecs, &player, "TestAmmo", None);
-        add_ticks(&mut ecs, 100);
 
-        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
-        invoke_skill(&mut ecs, &player, "TestAmmo", None);
-        add_ticks(&mut ecs, 100);
+        for _ in 0..3 {
+            assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
 
-        assert_eq!(true, can_invoke_skill(&mut ecs, &player, &skill, None));
-        invoke_skill(&mut ecs, &player, "TestAmmo", None);
-        add_ticks(&mut ecs, 100);
         assert_eq!(false, can_invoke_skill(&mut ecs, &player, &skill, None));
     }
 }

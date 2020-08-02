@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, Point};
+use crate::atlas::Point;
 
 pub enum Direction {
     North,
@@ -20,7 +20,7 @@ pub fn find_player(ecs: &World) -> Entity {
 fn can_act(ecs: &World) -> bool {
     let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
-    let is_ready = ecs.read_storage::<TimeComponent>().grab(player).ticks == MOVE_ACTION_COST;
+    let is_ready = get_ticks(ecs, &player) == BASE_ACTION_COST;
     is_player && is_ready
 }
 
@@ -95,7 +95,7 @@ mod tests {
         let did_move = player_move(&mut ecs, Direction::North);
         assert_eq!(true, did_move);
 
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(player).ticks);
+        assert_eq!(0, get_ticks(&ecs, &player));
     }
 
     #[test]
@@ -127,6 +127,6 @@ mod tests {
 
         let did_act = player_use_skill(&mut ecs, "TestNone", None);
         assert_eq!(true, did_act);
-        assert_eq!(0, ecs.read_storage::<TimeComponent>().grab(player).ticks);
+        assert_eq!(0, get_ticks(&ecs, &player));
     }
 }
