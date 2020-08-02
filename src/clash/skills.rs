@@ -37,13 +37,13 @@ pub struct AmmoInfo {
 #[derive(Component)]
 pub struct SkillResourceComponent {
     pub ammo: HashMap<AmmoKind, u32>,
+    pub max: HashMap<AmmoKind, u32>,
 }
 
 impl SkillResourceComponent {
     pub fn init(starting_ammo: &[(AmmoKind, u32)]) -> SkillResourceComponent {
-        SkillResourceComponent {
-            ammo: starting_ammo.iter().map(|(k, a)| (*k, *a)).collect(),
-        }
+        let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(k, a)| (*k, *a)).collect();
+        SkillResourceComponent { max: ammo.clone(), ammo }
     }
 }
 
@@ -248,18 +248,33 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
-    spend_time(ecs, invoker, MOVE_ACTION_COST);
+    spend_time(ecs, invoker, BASE_ACTION_COST);
     spend_ammo(ecs, invoker, skill)
+}
+
+fn set_ammo(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
+    let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+    *skill_resources.grab_mut(*invoker).ammo.get_mut(&kind).unwrap() = amount;
 }
 
 fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     match &skill.ammo_info {
         Some(ammo_info) => {
-            let kind = &ammo_info.kind;
-            let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[kind] };
+            let kind = ammo_info.kind;
+            let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[&kind] };
+            set_ammo(ecs, invoker, kind, current_ammo - 1);
+        }
+        None => {}
+    }
+}
 
-            let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-            *skill_resources.grab_mut(*invoker).ammo.get_mut(kind).unwrap() = current_ammo - 1;
+fn reload(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    match &skill.ammo_info {
+        Some(ammo_info) => {
+            let kind = ammo_info.kind;
+            let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
+            set_ammo(ecs, invoker, kind, max_ammo);
+            spend_time(ecs, invoker, BASE_ACTION_COST);
         }
         None => {}
     }
@@ -563,5 +578,27 @@ mod tests {
         }
 
         assert_eq!(false, can_invoke_skill(&mut ecs, &player, &skill, None));
+    }
+
+    #[test]
+    fn reload_ammo() {
+        let mut ecs = create_world();
+        let player = ecs
+            .create_entity()
+            .with(TimeComponent::init(100))
+            .with(PositionComponent::init(SizedPoint::init(2, 2)))
+            .with(CharacterInfoComponent::init(Character::init()))
+            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]))
+            .build();
+        ecs.insert(MapComponent::init(Map::init_empty()));
+
+        for _ in 0..3 {
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        reload(&mut ecs, &player, get_skill("TestAmmo"));
+        assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(0, get_ticks(&ecs, &player));
     }
 }
