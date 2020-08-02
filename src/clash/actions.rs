@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn use_skill_not_current_actor() {
-        let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).with_log().build();
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).build();
         ecs.insert(LogComponent::init());
 
         assert_eq!(false, player_use_skill(&mut ecs, "TestNone", None));
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn use_skill_spends_time() {
-        let mut ecs = create_test_state().with_player(2, 2, 100).with_timed(10).with_log().build();
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_timed(10).build();
         let player = find_player(&ecs);
 
         assert_eq!(true, player_use_skill(&mut ecs, "TestNone", None));

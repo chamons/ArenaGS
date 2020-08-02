@@ -128,17 +128,9 @@ pub fn wait_for_animations(ecs: &mut World) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::create_world;
+    use super::create_test_state;
     use super::*;
     use crate::atlas::SizedPoint;
-
-    fn add_character(ecs: &mut World, position: SizedPoint) -> Entity {
-        ecs.create_entity()
-            .with(PositionComponent::init(position))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(TimeComponent::init(100))
-            .build()
-    }
 
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
         let position = ecs.get_position(entity);
@@ -156,9 +148,8 @@ mod tests {
 
     #[test]
     fn walk_into_clear() {
-        let mut ecs = create_world();
-        ecs.insert(MapComponent::init(Map::init_empty()));
-        let entity = add_character(&mut ecs, SizedPoint::init(2, 2));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
         assert_position(&ecs, &entity, Point::init(2, 2));
 
         let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
@@ -171,9 +162,8 @@ mod tests {
 
     #[test]
     fn walk_into_non_characters() {
-        let mut ecs = create_world();
-        ecs.insert(MapComponent::init(Map::init_empty()));
-        let entity = add_character(&mut ecs, SizedPoint::init(2, 2));
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
             .with(FieldComponent::init(255, 0, 0))
@@ -190,11 +180,12 @@ mod tests {
 
     #[test]
     fn unable_to_walk_into_unwalkable() {
-        let mut ecs = create_world();
+        let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let mut map = Map::init_empty();
         map.set_walkable(&Point::init(2, 3), false);
         ecs.insert(MapComponent::init(map));
-        let entity = add_character(&mut ecs, SizedPoint::init(2, 2));
+        let entity = find_at(&ecs, 2, 2);
+
         assert_position(&ecs, &entity, Point::init(2, 2));
 
         let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
@@ -206,13 +197,8 @@ mod tests {
 
     #[test]
     fn unable_to_walk_into_another() {
-        let mut ecs = create_world();
-        ecs.insert(MapComponent::init(Map::init_empty()));
-        let entity = add_character(&mut ecs, SizedPoint::init(2, 2));
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
 
         assert_position(&ecs, &entity, Point::init(2, 2));
 
@@ -225,9 +211,8 @@ mod tests {
 
     #[test]
     fn walk_off_map() {
-        let mut ecs = create_world();
-        ecs.insert(MapComponent::init(Map::init_empty()));
-        let entity = add_character(&mut ecs, SizedPoint::init(13, 13));
+        let mut ecs = create_test_state().with_character(13, 13, 100).with_map().build();
+        let entity = find_at(&ecs, 13, 13);
         assert_position(&ecs, &entity, Point::init(13, 13));
 
         let success = move_character(&mut ecs, entity, SizedPoint::init(13, 14));
@@ -239,13 +224,14 @@ mod tests {
 
     #[test]
     fn multi_walks_into_single() {
-        let mut ecs = create_world();
-        ecs.insert(MapComponent::init(Map::init_empty()));
-        add_character(&mut ecs, SizedPoint::init(2, 2));
-        let bottom = add_character(&mut ecs, SizedPoint::init_multi(2, 4, 2, 2));
+        let mut ecs = create_test_state()
+            .with_character(2, 2, 100)
+            .with_sized_character(SizedPoint::init_multi(2, 4, 2, 2), 100)
+            .with_map()
+            .build();
+        let bottom = find_at(&ecs, 2, 4);
 
-        let success = move_character(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2));
-        assert_eq!(false, success);
+        assert_eq!(false, move_character(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
         wait_for_animations(&mut ecs);
     }
 }
