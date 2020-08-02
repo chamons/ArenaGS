@@ -130,11 +130,11 @@ impl SkillBarItemView {
         let skill = get_skill(&self.skill_name);
 
         if skill.is_usable(ecs, &find_player(&ecs)) {
-            return (&self.hotkey, &self.image, false);
+            (&self.hotkey, &self.image, false)
         } else if skill.alternate.is_some() {
-            return (&self.hotkey, &self.alternate_image.as_ref().unwrap(), false);
+            (&self.hotkey, &self.alternate_image.as_ref().unwrap(), false)
         } else {
-            return (&self.hotkey_inactive, &self.image, true);
+            (&self.hotkey_inactive, &self.image, true)
         }
     }
 }

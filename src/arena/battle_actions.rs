@@ -21,11 +21,11 @@ pub fn get_current_skill(ecs: &World, skill_name: &str) -> String {
     let skill = get_skill(skill_name);
 
     if skill.is_usable(ecs, &find_player(&ecs)) {
-        return skill_name.to_string();
+        skill_name.to_string()
     } else if let Some(alt_skill) = &skill.alternate {
-        return alt_skill.to_string();
+        alt_skill.to_string()
     } else {
-        return skill_name.to_string();
+        skill_name.to_string()
     }
 }
 
