@@ -39,12 +39,27 @@ pub struct AmmoInfo {
 pub struct SkillResourceComponent {
     pub ammo: HashMap<AmmoKind, u32>,
     pub max: HashMap<AmmoKind, u32>,
+    pub exhaustion: f64,
+    pub focus: f64,
+    pub max_focus: f64,
 }
 
 impl SkillResourceComponent {
     pub fn init(starting_ammo: &[(AmmoKind, u32)]) -> SkillResourceComponent {
         let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(k, a)| (*k, *a)).collect();
-        SkillResourceComponent { max: ammo.clone(), ammo }
+        SkillResourceComponent {
+            max: ammo.clone(),
+            ammo,
+            exhaustion: 0.0,
+            focus: 0.0,
+            max_focus: 0.0,
+        }
+    }
+
+    pub fn with_focus_use(mut self, focus: f64) -> SkillResourceComponent {
+        self.focus = focus;
+        self.max_focus = focus;
+        self
     }
 }
 
@@ -56,6 +71,8 @@ pub struct SkillInfo {
     pub must_be_clear: bool,
     pub ammo_info: Option<AmmoInfo>,
     pub alternate: Option<String>,
+    pub exhaustion: Option<f64>,
+    pub focus_use: Option<f64>,
 }
 
 impl SkillInfo {
@@ -69,6 +86,8 @@ impl SkillInfo {
             must_be_clear: false,
             ammo_info: None,
             alternate: None,
+            exhaustion: None,
+            focus_use: None,
         }
     }
 
@@ -81,6 +100,8 @@ impl SkillInfo {
             must_be_clear,
             ammo_info: None,
             alternate: None,
+            exhaustion: None,
+            focus_use: None,
         }
     }
 
@@ -94,11 +115,21 @@ impl SkillInfo {
         self
     }
 
+    pub fn with_exhaustion(mut self, exhaustion: f64) -> SkillInfo {
+        self.exhaustion = Some(exhaustion);
+        self
+    }
+
+    pub fn with_focus_use(mut self, focus: f64) -> SkillInfo {
+        self.focus_use = Some(focus);
+        self
+    }
+
     pub fn show_trail(&self) -> bool {
         self.must_be_clear
     }
 
-    pub fn get_remaining_usages(&self, ecs: &World, entity: &Entity) -> Option<u32> {
+    fn get_ammo_usage(&self, ecs: &World, entity: &Entity) -> Option<u32> {
         match &self.ammo_info {
             Some(ammo_info) => {
                 let skill_resources = ecs.read_storage::<SkillResourceComponent>();
@@ -118,9 +149,25 @@ impl SkillInfo {
         }
     }
 
+    fn get_exhaustion_usage(&self, ecs: &World, entity: &Entity) -> Option<u32> {
+        match &self.exhaustion {
+            Some(usage) => {
+                let current = ecs.read_storage::<SkillResourceComponent>().grab(*entity).exhaustion;
+                let remaining = MAX_EXHAUSTION - current;
+                Some((remaining / usage).floor() as u32)
+            }
+            None => None,
+        }
+    }
+
+    pub fn get_remaining_usages(&self, ecs: &World, entity: &Entity) -> Option<u32> {
+        let usages = vec![self.get_ammo_usage(ecs, entity), self.get_exhaustion_usage(ecs, entity)];
+        usages.iter().filter_map(|x| *x).min()
+    }
+
     pub fn is_usable(&self, ecs: &World, entity: &Entity) -> bool {
         match self.get_remaining_usages(ecs, entity) {
-            Some(amount) => amount >= self.ammo_info.as_ref().unwrap().usage,
+            Some(amount) => amount > 0,
             None => true,
         }
     }
@@ -155,10 +202,18 @@ lazy_static! {
                 SkillInfo::init("", TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1),
             );
             m.insert("TestReload", SkillInfo::init("", TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
+            m.insert("TestExhaustion", SkillInfo::init("", TargetType::None, SkillEffect::None).with_exhaustion(25.0));
+            m.insert("TestFocus", SkillInfo::init("", TargetType::None, SkillEffect::None).with_focus_use(1.0));
+            m.insert(
+                "TestMultiple",
+                SkillInfo::init("", TargetType::None, SkillEffect::None)
+                    .with_ammo(AmmoKind::Bullets, 1)
+                    .with_exhaustion(25.0),
+            );
         }
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true),
+            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
         );
         m.insert(
             "Reload",
@@ -204,6 +259,9 @@ lazy_static! {
 pub fn get_skill(name: &str) -> &'static SkillInfo {
     &SKILLS[name]
 }
+
+pub const MAX_EXHAUSTION: f64 = 100.0;
+pub const EXHAUSTION_PER_100_TICKS: f64 = 5.0;
 
 fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
     let skill = get_skill(name);
@@ -283,7 +341,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
 
     spend_time(ecs, invoker, BASE_ACTION_COST);
-    spend_ammo(ecs, invoker, skill)
+    spend_ammo(ecs, invoker, skill);
+    spend_exhaustion(ecs, invoker, skill);
 }
 
 fn set_ammo(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
@@ -302,6 +361,16 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
+fn spend_exhaustion(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    match &skill.exhaustion {
+        Some(cost) => {
+            ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).exhaustion += cost;
+            assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).exhaustion <= MAX_EXHAUSTION);
+        }
+        None => {}
+    }
+}
+
 fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
     let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
     set_ammo(ecs, invoker, kind, max_ammo);
@@ -310,8 +379,8 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_ticks, create_test_state, create_world, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent,
-        LogComponent, PositionComponent,
+        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
+        PositionComponent,
     };
     use super::*;
     use crate::atlas::{EasyMutECS, SizedPoint};
@@ -473,49 +542,50 @@ mod tests {
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
     }
 
+    fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
+        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count)]);
+        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+        skill_resources.shovel(*player, resource);
+    }
+
     #[test]
     fn get_remaining_usages_with_ammo() {
-        let mut ecs = create_world();
-        let player = ecs.create_entity().with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)])).build();
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
+        add_bullets(&mut ecs, &player, 3);
 
         assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
     }
 
     #[test]
     fn get_remaining_usages_zero_ammo() {
-        let mut ecs = create_world();
-        let player = ecs.create_entity().with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 0)])).build();
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
+        add_bullets(&mut ecs, &player, 0);
 
         assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
     }
 
     #[test]
     fn get_remaining_usages_non_existent_ammo() {
-        let mut ecs = create_world();
-        let player = ecs.create_entity().with(SkillResourceComponent::init(&[])).build();
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
 
         assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
     }
 
     #[test]
     fn get_remaining_usages_skill_uses_no_ammo() {
-        let mut ecs = create_world();
-        let player = ecs.create_entity().with(SkillResourceComponent::init(&[])).build();
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
 
         assert_eq!(true, get_skill("TestMelee").get_remaining_usages(&ecs, &player).is_none());
     }
-
-    fn add_bullets(ecs: &mut World, player: &Entity) {
-        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, 3)]);
-        skill_resources.shovel(*player, resource);
-    }
-
     #[test]
     fn skills_with_ammo() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        add_bullets(&mut ecs, &player);
+        add_bullets(&mut ecs, &player, 3);
 
         let skill = get_skill("TestAmmo");
 
@@ -532,7 +602,7 @@ mod tests {
     fn reload_ammo() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        add_bullets(&mut ecs, &player);
+        add_bullets(&mut ecs, &player, 3);
 
         for _ in 0..3 {
             invoke_skill(&mut ecs, &player, "TestAmmo", None);
@@ -542,5 +612,38 @@ mod tests {
         invoke_skill(&mut ecs, &player, "TestReload", None);
         assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
         assert_eq!(0, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn get_exhaustion_usage() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
+        assert_eq!(4, get_skill("TestExhaustion").get_remaining_usages(&ecs, &player).unwrap());
+    }
+
+    #[test]
+    fn get_multiple_usage() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_first_entity(&ecs);
+        add_bullets(&mut ecs, &player, 3);
+        assert_eq!(3, get_skill("TestMultiple").get_remaining_usages(&ecs, &player).unwrap());
+    }
+
+    #[test]
+    fn skills_with_exhaustion_up_to_max() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 3);
+
+        for _ in 0..4 {
+            invoke_skill(&mut ecs, &player, "TestExhaustion", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        assert_eq!(0, get_skill("TestExhaustion").get_remaining_usages(&ecs, &player).unwrap());
+        for _ in 0..10 {
+            add_ticks(&mut ecs, 100);
+        }
+        assert_eq!(true, get_skill("TestExhaustion").get_remaining_usages(&ecs, &player).unwrap() > 0);
     }
 }
