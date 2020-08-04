@@ -4,7 +4,7 @@ use super::{
     create_world, find_character_at_location, Character, CharacterInfoComponent, Map, MapComponent, PlayerComponent, PositionComponent, SkillResourceComponent,
     TimeComponent,
 };
-use crate::atlas::{Point, SizedPoint};
+use crate::atlas::{EasyMutECS, Point, SizedPoint};
 
 pub struct StateBuilder {
     ecs: World,
@@ -94,4 +94,9 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
         all.push(entity);
     }
     all
+}
+
+pub fn add_test_resource(ecs: &mut World, player: &Entity, resources: SkillResourceComponent) {
+    let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+    skill_resources.shovel(*player, resources);
 }

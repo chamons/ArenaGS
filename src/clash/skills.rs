@@ -6,7 +6,10 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{bolt, is_area_clear, melee, move_action, spend_exhaustion, spend_focus, spend_time, BoltKind, Logger, Positions, WeaponKind, BASE_ACTION_COST, MAX_EXHAUSTION};
+use super::{
+    bolt, is_area_clear, melee, move_action, spend_exhaustion, spend_focus, spend_time, BoltKind, Logger, Positions, WeaponKind, BASE_ACTION_COST,
+    MAX_EXHAUSTION,
+};
 use crate::atlas::{EasyECS, EasyMutECS, Point};
 
 #[allow(dead_code)]
@@ -355,8 +358,13 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 
     spend_time(ecs, invoker, BASE_ACTION_COST);
     spend_ammo(ecs, invoker, skill);
-    spend_exhaustion(ecs, invoker, skill);
-    spend_focus(ecs, invoker, skill);
+
+    if let Some(exhaustion) = skill.exhaustion {
+        spend_exhaustion(ecs, invoker, exhaustion);
+    }
+    if let Some(focus_use) = skill.focus_use {
+        spend_focus(ecs, invoker, focus_use);
+    }
 }
 
 fn set_ammo(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
@@ -383,8 +391,8 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
-        PositionComponent,
+        add_test_resource, add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent,
+        LogComponent, PositionComponent,
     };
     use super::*;
     use crate::atlas::{EasyMutECS, SizedPoint};
@@ -652,9 +660,7 @@ mod tests {
     }
 
     fn add_focus(ecs: &mut World, player: &Entity, focus: f64) {
-        let resource = SkillResourceComponent::init(&[]).with_focus(focus);
-        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-        skill_resources.shovel(*player, resource);
+        add_test_resource(ecs, &player, SkillResourceComponent::init(&[]).with_focus(focus));
     }
 
     #[test]

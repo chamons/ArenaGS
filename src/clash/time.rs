@@ -39,6 +39,7 @@ pub fn get_next_actor(ecs: &World) -> Option<Entity> {
 }
 
 pub const EXHAUSTION_PER_100_TICKS: f64 = 5.0;
+pub const EXHAUSTION_COST_PER_MOVE: f64 = 5.0;
 pub const FOCUS_PER_100_TICKS: f64 = 0.1;
 
 pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
