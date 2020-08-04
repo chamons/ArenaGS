@@ -1,3 +1,4 @@
+use enum_iterator::IntoEnumIterator;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -6,7 +7,7 @@ use specs::prelude::*;
 use super::View;
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_player, SkillResourceComponent};
+use crate::clash::{find_player, AmmoKind, SkillResourceComponent};
 
 pub struct InfoBarView<'a> {
     position: SDLPoint,
@@ -24,8 +25,8 @@ impl<'a> InfoBarView<'a> {
         let resources = &ecs.read_storage::<SkillResourceComponent>();
         let resource = resources.grab(find_player(&ecs));
         self.text.render_text(
-            format!("Exhaustion: {}", resource.exhaustion).as_str(),
-            self.position.x,
+            format!("Exhaustion: {:.2}", resource.exhaustion).as_str(),
+            self.position.x + 4,
             self.position.y + 30,
             canvas,
             FontSize::Small,
@@ -33,13 +34,29 @@ impl<'a> InfoBarView<'a> {
         )?;
 
         self.text.render_text(
-            format!("Focus: {}", resource.focus).as_str(),
-            self.position.x,
+            format!("Focus: {:.2}", resource.focus).as_str(),
+            self.position.x + 4,
             self.position.y + 50,
             canvas,
             FontSize::Small,
             FontColor::Black,
         )?;
+
+        for kind in AmmoKind::into_enum_iter() {
+            match resource.max.get(&kind) {
+                Some(value) => {
+                    self.text.render_text(
+                        format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(),
+                        self.position.x + 4,
+                        self.position.y + 70,
+                        canvas,
+                        FontSize::Small,
+                        FontColor::Black,
+                    )?;
+                }
+                None => {}
+            }
+        }
 
         Ok(())
     }

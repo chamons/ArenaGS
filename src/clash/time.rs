@@ -5,7 +5,7 @@ use ordered_float::*;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{SkillResourceComponent, EXHAUSTION_PER_100_TICKS};
+use super::SkillResourceComponent;
 use crate::atlas::{EasyECS, EasyMutECS};
 
 #[derive(Hash, PartialEq, Eq, Component)]
@@ -38,6 +38,9 @@ pub fn get_next_actor(ecs: &World) -> Option<Entity> {
     }
 }
 
+pub const EXHAUSTION_PER_100_TICKS: f64 = 5.0;
+pub const FOCUS_PER_100_TICKS: f64 = 0.1;
+
 pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
     let mut times = ecs.write_storage::<TimeComponent>();
     let mut skills = ecs.write_storage::<SkillResourceComponent>();
@@ -45,8 +48,11 @@ pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
         time.ticks += ticks_to_add;
         if let Some(skill) = skill {
             let exhaustion_to_remove = EXHAUSTION_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
+
+            let focus_to_add = FOCUS_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
             // Ordering f64 is hard _tm_
             skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
+            skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
         }
     }
 }
@@ -75,6 +81,8 @@ pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
 
 #[cfg(test)]
 mod tests {
+    use assert_approx_eq::assert_approx_eq;
+
     use super::super::{create_test_state, create_world, find_all_entities, find_at, find_at_time, find_first_entity, SkillResourceComponent};
     use super::*;
 
@@ -153,20 +161,45 @@ mod tests {
             add_ticks(&mut ecs, 50);
         }
 
-        let skills = ecs.read_storage::<SkillResourceComponent>();
-        assert_eq!(true, skills.grab(player).exhaustion < 1.0)
-    }
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).exhaustion, 0.0);
+        }
 
-    #[test]
-    fn add_ticks_exhaustion_never_goes_below_zero() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
-        let player = find_at(&ecs, 2, 2);
+        // Keep going, make sure it doesn't drop below zero
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
 
-        let skills = ecs.read_storage::<SkillResourceComponent>();
-        let exhaustion = skills.grab(player).exhaustion;
-        assert_eq!(true, exhaustion < 0.1 && exhaustion >= 0.0)
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).exhaustion, 0.0);
+        }
+    }
+
+    #[test]
+    fn add_ticks_increases_focus() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<SkillResourceComponent>().grab_mut(player).focus = 0.0;
+        ecs.write_storage::<SkillResourceComponent>().grab_mut(player).max_focus = 1.0;
+        for _ in 0..20 {
+            add_ticks(&mut ecs, 50);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).focus, 1.0);
+        }
+
+        // Keep going, make sure it doesn't go above max
+        for _ in 0..10 {
+            add_ticks(&mut ecs, 100);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).focus, 1.0);
+        }
     }
 }

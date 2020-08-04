@@ -121,6 +121,27 @@ pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>
     }
 }
 
+pub const MAX_EXHAUSTION: f64 = 100.0;
+pub fn spend_exhaustion(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    match &skill.exhaustion {
+        Some(cost) => {
+            ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).exhaustion += cost;
+            assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).exhaustion <= MAX_EXHAUSTION);
+        }
+        None => {}
+    }
+}
+
+pub fn spend_focus(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    match &skill.focus_use {
+        Some(cost) => {
+            ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).focus -= cost;
+            assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).focus >= 0.0);
+        }
+        None => {}
+    }
+}
+
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
     ecs.raise_event(EventKind::WaitForAnimations(), None);

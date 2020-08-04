@@ -4,7 +4,9 @@ pub use character::Character;
 
 mod skills;
 use skills::invoke_skill;
-pub use skills::{can_invoke_skill, get_skill, is_good_target, AmmoKind, SkillInfo, SkillResourceComponent, TargetType, EXHAUSTION_PER_100_TICKS};
+pub use skills::{
+    can_invoke_skill, get_skill, is_good_target, AmmoKind, SkillInfo, SkillResourceComponent, TargetType, 
+};
 
 mod components;
 pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, Framer, PlayerComponent, Positions, SkillsComponent};
