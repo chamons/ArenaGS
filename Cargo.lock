@@ -10,6 +10,7 @@ checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
 name = "arena_gunpowder_and_sorcery"
 version = "0.1.0"
 dependencies = [
+ "assert_approx_eq",
  "bincode",
  "derive_is_enum_variant",
  "enum-iterator",
@@ -18,6 +19,7 @@ dependencies = [
  "num-derive",
  "num-traits 0.2.12",
  "num_enum",
+ "ordered-float",
  "rand 0.7.3",
  "sdl2",
  "serde",
@@ -30,6 +32,12 @@ name = "arrayvec"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
+
+[[package]]
+name = "assert_approx_eq"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c07dab4369547dbe5114677b33fbbf724971019f3818172d59a97a61c774ffd"
 
 [[package]]
 name = "atom"
@@ -395,6 +403,15 @@ dependencies = [
  "proc-macro2",
  "quote 1.0.7",
  "syn 1.0.33",
+]
+
+[[package]]
+name = "ordered-float"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fe9037165d7023b1228bc4ae9a2fa1a2b0095eca6c2998c624723dfd01314a5"
+dependencies = [
+ "num-traits 0.2.12",
 ]
 
 [[package]]

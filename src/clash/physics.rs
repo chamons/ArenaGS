@@ -92,7 +92,15 @@ pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
 }
 
 pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
-    is_area_clear(ecs, &new.all_positions(), mover)
+    let has_exhaustion = {
+        if let Some(skill_resource) = ecs.read_storage::<SkillResourceComponent>().get(*mover) {
+            skill_resource.exhaustion + EXHAUSTION_COST_PER_MOVE <= MAX_EXHAUSTION
+        } else {
+            true
+        }
+    };
+
+    is_area_clear(ecs, &new.all_positions(), mover) && has_exhaustion
 }
 
 pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool {
@@ -102,6 +110,9 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
 
     move_action(ecs, &entity, new);
     spend_time(ecs, &entity, MOVE_ACTION_COST);
+    if ecs.read_storage::<SkillResourceComponent>().get(entity).is_some() {
+        spend_exhaustion(ecs, &entity, EXHAUSTION_COST_PER_MOVE);
+    }
     true
 }
 
@@ -121,6 +132,17 @@ pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>
     }
 }
 
+pub const MAX_EXHAUSTION: f64 = 100.0;
+pub fn spend_exhaustion(ecs: &mut World, invoker: &Entity, cost: f64) {
+    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).exhaustion += cost;
+    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).exhaustion <= MAX_EXHAUSTION);
+}
+
+pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
+    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).focus -= cost;
+    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).focus >= 0.0);
+}
+
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
     ecs.raise_event(EventKind::WaitForAnimations(), None);
@@ -131,6 +153,7 @@ mod tests {
     use super::create_test_state;
     use super::*;
     use crate::atlas::SizedPoint;
+    use assert_approx_eq::assert_approx_eq;
 
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
         let position = ecs.get_position(entity);
@@ -233,5 +256,38 @@ mod tests {
 
         assert_eq!(false, move_character(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
         wait_for_animations(&mut ecs);
+    }
+
+    #[test]
+    fn entity_with_resources_spend_exhaustion_to_move() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
+        add_test_resource(&mut ecs, &player, SkillResourceComponent::init(&[]));
+
+        assert_eq!(true, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        let skills = ecs.read_storage::<SkillResourceComponent>();
+        assert_approx_eq!(EXHAUSTION_COST_PER_MOVE, skills.grab(player).exhaustion);
+    }
+
+    #[test]
+    fn entity_with_max_resources_can_not_move() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
+        add_test_resource(
+            &mut ecs,
+            &player,
+            SkillResourceComponent {
+                exhaustion: MAX_EXHAUSTION,
+                ..SkillResourceComponent::init(&[])
+            },
+        );
+
+        assert_eq!(false, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
+        let skills = ecs.read_storage::<SkillResourceComponent>();
+        assert_approx_eq!(100.0, skills.grab(player).exhaustion);
     }
 }
