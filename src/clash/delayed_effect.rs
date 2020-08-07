@@ -22,7 +22,7 @@ impl DelayedEffect {
     }
 
     pub fn is_on_frame(&self, frame: u64) -> bool {
-        self.target_frame == frame
+        self.target_frame <= frame
     }
 }
 
@@ -43,7 +43,7 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let delayed = ecs.read_storage::<DelayedEffectComponent>();
         for (entity, delay) in (&entities, &delayed).join() {
-            if delay.effect.target_frame <= frame {
+            if delay.effect.is_on_frame(frame) {
                 delayed_effects.push((entity, delay.effect.kind));
             }
         }
@@ -64,6 +64,7 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
                 physics::complete_move(ecs, &entity);
             }
         }
+        ecs.write_storage::<DelayedEffectComponent>().remove(entity);
     }
 }
 

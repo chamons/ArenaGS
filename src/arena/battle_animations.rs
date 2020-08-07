@@ -76,6 +76,6 @@ pub fn begin_move_animation(ecs: &mut World, target: &Entity) {
     let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH);
     ecs.write_storage::<AnimationComponent>().shovel(*target, animation);
 
-    let bolt_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::Move, frame, MOVE_LENGTH));
-    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, bolt_effect);
+    let move_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::Move, frame, MOVE_LENGTH));
+    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, move_effect);
 }
