@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, battle_animations, tick_animations, AnimationComponent};
+use super::{battle_actions, battle_animations, tick_animations, AnimationComponent, SecondaryAnimation};
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -89,10 +89,6 @@ impl<'a> BattleScene<'a> {
             EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
             EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
             EventKind::Move() => battle_animations::begin_move_animation(ecs, &target.unwrap()),
-            EventKind::AnimationComplete(effect) => match effect {
-                PostAnimationEffect::StartBolt => battle_animations::begin_ranged_bolt_animation(ecs, &target.unwrap()),
-                _ => {}
-            },
             #[cfg(test)]
             EventKind::WaitForAnimations() => super::complete_animations(ecs),
         }
@@ -251,8 +247,14 @@ impl<'a> Scene for BattleScene<'a> {
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
-        tick_animations(&mut self.ecs, frame)?;
-
+        let completed = tick_animations(&mut self.ecs, frame)?;
+        for (entity, secondary) in completed {
+            match secondary {
+                SecondaryAnimation::StartBolt => super::battle_animations::begin_ranged_bolt_animation(&mut self.ecs, &entity),
+                SecondaryAnimation::None => {}
+            }
+        }
+        tick_delayed_effects(&mut self.ecs, frame);
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }

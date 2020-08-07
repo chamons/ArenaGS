@@ -1,21 +1,11 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-#[derive(Clone, Copy)]
-pub enum PostAnimationEffect {
-    None,
-    StartBolt,
-    Move,
-    ApplyBolt,
-    ApplyMelee,
-}
-
 #[derive(Copy, Clone)]
 pub enum EventKind {
     Move(),
     Bolt(),
     Melee(),
-    AnimationComplete(PostAnimationEffect),
 
     #[cfg(test)]
     WaitForAnimations(),

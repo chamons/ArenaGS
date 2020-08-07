@@ -30,11 +30,17 @@ pub enum AnimationKind {
     },
 }
 
+#[derive(Clone, Copy)]
+pub enum SecondaryAnimation {
+    None,
+    StartBolt,
+}
+
 pub struct Animation {
     pub kind: AnimationKind,
     pub beginning: u64,
     pub duration: u64,
-    pub effect: PostAnimationEffect,
+    pub secondary: SecondaryAnimation,
 }
 
 impl Animation {
@@ -86,7 +92,7 @@ impl AnimationComponent {
                 },
                 beginning,
                 duration,
-                effect: PostAnimationEffect::None,
+                secondary: SecondaryAnimation::None,
             },
         }
     }
@@ -96,18 +102,18 @@ impl AnimationComponent {
                 kind: AnimationKind::CharacterState { now, done },
                 beginning,
                 duration,
-                effect: PostAnimationEffect::None,
+                secondary: SecondaryAnimation::None,
             },
         }
     }
 
-    pub fn with_effect(mut self, effect: PostAnimationEffect) -> AnimationComponent {
-        self.animation.effect = effect;
+    pub fn with_secondary(mut self, secondary: SecondaryAnimation) -> AnimationComponent {
+        self.animation.secondary = secondary;
         self
     }
 }
 
-pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
+pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<Vec<(Entity, SecondaryAnimation)>> {
     let mut completed = vec![];
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
@@ -116,17 +122,16 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
         for (entity, animation_component) in (&entities, &animations).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
-                completed.push((entity, animation.effect));
+                completed.push((entity, animation.secondary));
             }
         }
     }
 
-    for (entity, effect) in completed {
-        ecs.raise_event(EventKind::AnimationComplete(effect), Some(entity));
-        ecs.write_storage::<AnimationComponent>().remove(entity);
+    for (entity, _) in &completed {
+        ecs.write_storage::<AnimationComponent>().remove(*entity);
     }
 
-    Ok(())
+    Ok(completed)
 }
 
 #[cfg(test)]

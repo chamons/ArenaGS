@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
-use super::AnimationComponent;
+use super::{AnimationComponent, SecondaryAnimation};
 
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyECS, EasyMutECS};
@@ -17,7 +17,9 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
         }
     };
 
-    let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::StartBolt);
+    const RANGED_CAST_LENGTH: u64 = 18;
+    let cast_animation =
+        AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, RANGED_CAST_LENGTH).with_secondary(SecondaryAnimation::StartBolt);
     ecs.write_storage::<AnimationComponent>().shovel(*target, cast_animation);
 }
 
@@ -30,9 +32,12 @@ pub fn begin_melee_animation(ecs: &mut World, target: &Entity) {
         }
     };
 
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let attack_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, 18).with_effect(PostAnimationEffect::ApplyMelee);
-    animations.shovel(*target, attack_animation);
+    const MELEE_ATTACK_LENGTH: u64 = 18;
+    let attack_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH);
+    ecs.write_storage::<AnimationComponent>().shovel(*target, attack_animation);
+
+    let attack_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::ApplyMelee, frame, MELEE_ATTACK_LENGTH));
+    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, attack_effect);
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
@@ -53,18 +58,24 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
     let path_length = source_position.distance_to(target_position).unwrap() as u64;
     let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
 
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length).with_effect(PostAnimationEffect::ApplyBolt);
-    animations.shovel(bolt, animation);
+    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length);
+    ecs.write_storage::<AnimationComponent>().shovel(bolt, animation);
+
+    let bolt_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::ApplyBolt, frame, animation_length));
+    ecs.write_storage::<DelayedEffectComponent>().shovel(bolt, bolt_effect);
 }
 
 pub fn begin_move_animation(ecs: &mut World, target: &Entity) {
     let movements = ecs.read_storage::<MovementComponent>();
     let new_position = movements.grab(*target).new_position;
 
+    const MOVE_LENGTH: u64 = 8;
     let frame = ecs.get_current_frame();
     let position = ecs.get_position(target);
-    let mut animations = ecs.write_storage::<AnimationComponent>();
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, 8).with_effect(PostAnimationEffect::Move);
-    animations.shovel(*target, animation);
+
+    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH);
+    ecs.write_storage::<AnimationComponent>().shovel(*target, animation);
+
+    let bolt_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::Move, frame, MOVE_LENGTH));
+    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, bolt_effect);
 }

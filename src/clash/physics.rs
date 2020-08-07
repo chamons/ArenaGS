@@ -120,18 +120,6 @@ pub fn wait(ecs: &mut World, entity: Entity) {
     spend_time(ecs, &entity, BASE_ACTION_COST);
 }
 
-pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    match kind {
-        EventKind::AnimationComplete(effect) => match effect {
-            PostAnimationEffect::Move => {
-                complete_move(ecs, &target.unwrap());
-            }
-            _ => {}
-        },
-        _ => {}
-    }
-}
-
 pub const MAX_EXHAUSTION: f64 = 100.0;
 pub fn spend_exhaustion(ecs: &mut World, invoker: &Entity, cost: f64) {
     ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).exhaustion += cost;

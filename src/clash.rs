@@ -31,11 +31,13 @@ mod ai;
 pub use ai::take_enemy_action;
 
 mod combat;
-use combat::combat_on_event;
 pub use combat::{bolt, melee, start_bolt, AttackComponent, BoltKind, WeaponKind};
 
 mod events;
-pub use events::{EventComponent, EventCoordinator, EventKind, PostAnimationEffect};
+pub use events::{EventComponent, EventCoordinator, EventKind};
+
+mod delayed_effect;
+pub use delayed_effect::{DelayedEffect, DelayedEffectComponent, DelayedEffectKind, tick_delayed_effects};
 
 #[cfg(test)]
 mod test_helpers;
