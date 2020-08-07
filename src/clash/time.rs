@@ -48,14 +48,18 @@ pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
     for (time, skill) in (&mut times, (&mut skills).maybe()).join() {
         time.ticks += ticks_to_add;
         if let Some(skill) = skill {
-            let exhaustion_to_remove = EXHAUSTION_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
-
-            let focus_to_add = FOCUS_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
-            // Ordering f64 is hard _tm_
-            skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
-            skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
+            add_ticks_for_skill(skill, ticks_to_add);
         }
     }
+}
+
+fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
+    let exhaustion_to_remove = EXHAUSTION_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
+
+    let focus_to_add = FOCUS_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
+    // Ordering f64 is hard _tm_
+    skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
+    skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
 }
 
 pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
