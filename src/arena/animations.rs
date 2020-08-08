@@ -141,7 +141,8 @@ pub fn complete_animations(ecs: &mut World) {
             ecs.write_resource::<FrameComponent>().current_frame += 1;
             ecs.read_resource::<FrameComponent>().current_frame
         };
-        tick_animations(ecs, current_frame).unwrap();
+
+        super::battle_scene::process_tick_events(ecs, current_frame).unwrap();
 
         let animations = ecs.read_storage::<AnimationComponent>();
         if (animations).join().count() == 0 {

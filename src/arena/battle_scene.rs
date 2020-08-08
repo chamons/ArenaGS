@@ -247,20 +247,25 @@ impl<'a> Scene for BattleScene<'a> {
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
         self.ecs.maintain();
-        let completed = tick_animations(&mut self.ecs, frame)?;
-        for (entity, secondary) in completed {
-            match secondary {
-                SecondaryAnimation::StartBolt => super::battle_animations::begin_ranged_bolt_animation(&mut self.ecs, &entity),
-                SecondaryAnimation::None => {}
-            }
-        }
-        tick_delayed_effects(&mut self.ecs, frame);
+        process_tick_events(&mut self.ecs, frame)?;
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
 
         Ok(())
     }
+}
+
+pub fn process_tick_events(ecs: &mut World, frame: u64) -> BoxResult<()> {
+    let completed = tick_animations(ecs, frame)?;
+    for (entity, secondary) in completed {
+        match secondary {
+            SecondaryAnimation::StartBolt => super::battle_animations::begin_ranged_bolt_animation(ecs, &entity),
+            SecondaryAnimation::None => {}
+        }
+    }
+    tick_delayed_effects(ecs, frame);
+    Ok(())
 }
 
 fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
