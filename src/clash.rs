@@ -28,16 +28,16 @@ mod log;
 pub use log::*;
 
 mod ai;
-pub use ai::take_enemy_action;
+pub use ai::{take_enemy_action, BehaviorComponent, BehaviorKind};
 
 mod combat;
-pub use combat::{bolt, melee, start_bolt, AttackComponent, BoltKind, WeaponKind};
+pub use combat::{bolt, explode, field, melee, start_bolt, AttackComponent, AttackKind, BoltKind, FieldKind, WeaponKind};
 
 mod events;
 pub use events::{EventComponent, EventCoordinator, EventKind};
 
 mod delayed_effect;
-pub use delayed_effect::{DelayedEffect, DelayedEffectComponent, DelayedEffectKind, tick_delayed_effects};
+pub use delayed_effect::{tick_delayed_effects, DelayedEffect, DelayedEffectComponent, DelayedEffectKind};
 
 #[cfg(test)]
 mod test_helpers;

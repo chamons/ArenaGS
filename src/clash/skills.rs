@@ -6,10 +6,7 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{
-    bolt, is_area_clear, melee, move_action, spend_exhaustion, spend_focus, spend_time, BoltKind, Logger, Positions, WeaponKind, BASE_ACTION_COST,
-    MAX_EXHAUSTION,
-};
+use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, Point};
 
 #[allow(dead_code)]
@@ -27,6 +24,7 @@ pub enum SkillEffect {
     RangedAttack(u32, BoltKind),
     MeleeAttack(u32, WeaponKind),
     Reload(AmmoKind),
+    FieldEffect(Vec<Point>, u32, FieldKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug)]
@@ -344,15 +342,16 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
-    match skill.effect {
+    match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             move_action(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), strength, kind),
-        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), strength, kind),
-        SkillEffect::Reload(kind) => reload(ecs, &invoker, kind),
+        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
+        SkillEffect::FieldEffect(relative_squares, strength, kind) => field(ecs, &invoker, target, &relative_squares, *strength, *kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

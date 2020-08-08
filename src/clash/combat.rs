@@ -2,8 +2,13 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point};
-use crate::clash::{EventCoordinator, Logger};
+use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::clash::{EventCoordinator, FieldComponent, Logger};
+
+#[derive(Clone, Copy)]
+pub enum FieldKind {
+    Fire,
+}
 
 #[derive(Clone, Copy)]
 pub enum BoltKind {
@@ -20,6 +25,8 @@ pub enum WeaponKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
+    Field(FieldKind),
+    Explode(u32),
 }
 
 #[derive(Clone, Copy)]
@@ -101,6 +108,46 @@ pub fn apply_melee(ecs: &mut World, character: &Entity) {
         attacks.grab(*character).attack
     };
     ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+}
+
+pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, relative_squares: &Vec<Point>, strength: u32, kind: FieldKind) {
+    for p in relative_squares.iter() {
+        let p = if let Some(target_position) = target_position {
+            Point::init(target_position.x + p.x, target_position.y + p.y)
+        } else {
+            *p
+        };
+
+        let (r, g, b) = match kind {
+            FieldKind::Fire => (255, 0, 0),
+        };
+
+        ecs.create_entity()
+            .with(PositionComponent::init(SizedPoint::init(p.x, p.y)))
+            .with(AttackComponent::init(p, strength, AttackKind::Field(kind)))
+            .with(FieldComponent::init(r, g, b))
+            .with(TimeComponent::init(0))
+            .build();
+
+        ecs.raise_event(EventKind::Field(), Some(*source));
+    }
+}
+
+pub fn explode(ecs: &mut World, source: &Entity, strength: u32) {
+    let range = match ecs.read_storage::<AttackComponent>().grab(*source).attack.kind {
+        AttackKind::Explode(range) => range,
+        _ => panic!("Explode with wrong AttackKind"),
+    };
+
+    for in_blast in ecs.get_position(source).origin.get_burst(range) {
+        if let Some(target) = find_character_at_location(ecs, in_blast) {
+            if target != *source {
+                ecs.log(format!("Sruct by blast ({}) at {}", strength, in_blast).as_str());
+            }
+        }
+    }
+
+    ecs.delete_entity(*source).unwrap();
 }
 
 #[cfg(test)]

@@ -6,6 +6,7 @@ pub enum EventKind {
     Move(),
     Bolt(),
     Melee(),
+    Field(),
 
     #[cfg(test)]
     WaitForAnimations(),

@@ -54,6 +54,7 @@ impl<'a> BattleScene<'a> {
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
             .with(CharacterInfoComponent::init(Character::init()))
+            .with(BehaviorComponent::init(BehaviorKind::Random))
             .with(TimeComponent::init(0))
             .build();
 
@@ -89,6 +90,7 @@ impl<'a> BattleScene<'a> {
             EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
             EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
             EventKind::Move() => battle_animations::begin_move_animation(ecs, &target.unwrap()),
+            EventKind::Field() => {}
             #[cfg(test)]
             EventKind::WaitForAnimations() => super::complete_animations(ecs),
         }
@@ -246,7 +248,6 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
-        self.ecs.maintain();
         process_tick_events(&mut self.ecs, frame)?;
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
@@ -257,6 +258,7 @@ impl<'a> Scene for BattleScene<'a> {
 }
 
 pub fn process_tick_events(ecs: &mut World, frame: u64) -> BoxResult<()> {
+    ecs.maintain();
     let completed = tick_animations(ecs, frame)?;
     for (entity, secondary) in completed {
         match secondary {
