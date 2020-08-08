@@ -4,7 +4,6 @@ use specs_derive::Component;
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::BoxResult;
 use crate::atlas::Point;
-use crate::clash::*;
 
 #[derive(PartialEq)]
 pub struct FPoint {
@@ -138,8 +137,8 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<Vec<(Entity, Se
 pub fn complete_animations(ecs: &mut World) {
     loop {
         let current_frame = {
-            ecs.write_resource::<FrameComponent>().current_frame += 1;
-            ecs.read_resource::<FrameComponent>().current_frame
+            ecs.write_resource::<crate::clash::FrameComponent>().current_frame += 1;
+            ecs.read_resource::<crate::clash::FrameComponent>().current_frame
         };
 
         super::battle_scene::process_tick_events(ecs, current_frame).unwrap();

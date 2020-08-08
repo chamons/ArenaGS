@@ -6,6 +6,8 @@ pub enum DelayedEffectKind {
     Move,
     ApplyBolt,
     ApplyMelee,
+    #[cfg(test)]
+    None,
 }
 
 pub struct DelayedEffect {
@@ -63,10 +65,40 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
             DelayedEffectKind::Move => {
                 physics::complete_move(ecs, &entity);
             }
+            #[cfg(test)]
+            DelayedEffectKind::None => {}
         }
         ecs.write_storage::<DelayedEffectComponent>().remove(entity);
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::super::create_test_state;
+    use super::*;
+
+    #[test]
+    fn removed_on_tick() {
+        let mut ecs = create_test_state().build();
+        ecs.create_entity()
+            .with(DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::None, 0, 10)))
+            .build();
+        for i in 0..11 {
+            tick_delayed_effects(&mut ecs, i);
+        }
+        assert_eq!(0, ecs.read_storage::<DelayedEffectComponent>().count());
+    }
+
+    #[test]
+    fn removed_if_past_tick() {
+        let mut ecs = create_test_state().build();
+        ecs.create_entity()
+            .with(DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::None, 0, 10)))
+            .build();
+        for i in 0..10 {
+            tick_delayed_effects(&mut ecs, i);
+        }
+        tick_delayed_effects(&mut ecs, 12);
+        assert_eq!(0, ecs.read_storage::<DelayedEffectComponent>().count());
+    }
+}
