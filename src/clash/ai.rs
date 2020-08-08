@@ -58,8 +58,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
             }
         }
         BehaviorKind::Explode => {
-            let strength = ecs.write_storage::<AttackComponent>().grab(*enemy).attack.strength;
-            explode(ecs, &enemy, strength);
+            explode(ecs, &enemy);
         }
     };
 }

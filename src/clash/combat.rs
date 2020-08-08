@@ -133,10 +133,13 @@ pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, r
     }
 }
 
-pub fn explode(ecs: &mut World, source: &Entity, strength: u32) {
-    let range = match ecs.read_storage::<AttackComponent>().grab(*source).attack.kind {
-        AttackKind::Explode(range) => range,
-        _ => panic!("Explode with wrong AttackKind"),
+pub fn explode(ecs: &mut World, source: &Entity) {
+    let (strength, range) = {
+        let attack_info = ecs.read_storage::<AttackComponent>().grab(*source).attack;
+        match attack_info.kind {
+            AttackKind::Explode(range) => (attack_info.strength, range),
+            _ => panic!("Explode with wrong AttackKind"),
+        }
     };
 
     for in_blast in ecs.get_position(source).origin.get_burst(range) {
@@ -178,5 +181,41 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    #[test]
+    fn exbplode_logs_on_hit() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let exploder = find_at(&mut ecs, 2, 3);
+        ecs.write_storage::<AttackComponent>()
+            .shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
+        explode(&mut ecs, &exploder);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+    }
+
+    fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let positions = ecs.read_storage::<PositionComponent>();
+        let fields = ecs.read_storage::<FieldComponent>();
+
+        for (entity, position, _) in (&entities, &positions, &fields).join() {
+            if *target == position.position.origin {
+                return Some(entity);
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn field_is_placed() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+
+        field(&mut ecs, &player, Some(Point::init(2, 3)), &vec![Point::init(0, 0)], 1, FieldKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
     }
 }
