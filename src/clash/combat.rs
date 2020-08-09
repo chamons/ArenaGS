@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent, Logger};
 
 #[derive(Clone, Copy)]
@@ -65,8 +65,7 @@ impl AttackComponent {
 }
 
 pub fn bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
-    ecs.write_storage::<AttackComponent>()
-        .shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
+    ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
 
     ecs.raise_event(EventKind::Bolt(), Some(*source));
 }
@@ -95,8 +94,7 @@ pub fn apply_bolt(ecs: &mut World, bolt: &Entity) {
 }
 
 pub fn melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
-    ecs.write_storage::<AttackComponent>()
-        .shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
 
     ecs.raise_event(EventKind::Melee(), Some(*source));
 }
@@ -187,8 +185,7 @@ mod tests {
     fn exbplode_logs_on_hit() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let exploder = find_at(&mut ecs, 2, 3);
-        ecs.write_storage::<AttackComponent>()
-            .shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
+        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
         explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 

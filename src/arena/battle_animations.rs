@@ -4,13 +4,13 @@ use super::components::*;
 use super::{AnimationComponent, SecondaryAnimation};
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyECS, EasyMutECS};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld};
 use crate::clash::*;
 
 pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
     let frame = ecs.get_current_frame();
     let animation = {
-        let attacks = ecs.write_storage::<AttackComponent>();
+        let attacks = ecs.read_storage::<AttackComponent>();
         match attacks.grab(*target).attack.ranged_kind() {
             BoltKind::Fire => CharacterAnimationState::Magic,
             BoltKind::Bullet => CharacterAnimationState::Crouch,
@@ -20,7 +20,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: &Entity) {
     const RANGED_CAST_LENGTH: u64 = 18;
     let cast_animation =
         AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, RANGED_CAST_LENGTH).with_secondary(SecondaryAnimation::StartBolt);
-    ecs.write_storage::<AnimationComponent>().shovel(*target, cast_animation);
+    ecs.shovel(*target, cast_animation);
 }
 
 pub fn begin_melee_animation(ecs: &mut World, target: &Entity) {
@@ -34,10 +34,10 @@ pub fn begin_melee_animation(ecs: &mut World, target: &Entity) {
 
     const MELEE_ATTACK_LENGTH: u64 = 18;
     let attack_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH);
-    ecs.write_storage::<AnimationComponent>().shovel(*target, attack_animation);
+    ecs.shovel(*target, attack_animation);
 
     let attack_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::ApplyMelee, frame, MELEE_ATTACK_LENGTH));
-    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, attack_effect);
+    ecs.shovel(*target, attack_effect);
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
@@ -50,7 +50,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
             BoltKind::Bullet => SpriteKinds::BulletBolt,
         }
     };
-    ecs.write_storage::<RenderComponent>().shovel(bolt, RenderComponent::init(sprite));
+    ecs.shovel(bolt, RenderComponent::init(sprite));
 
     let source_position = ecs.get_position(&bolt);
     let target_position = ecs.read_storage::<AttackComponent>().grab(bolt).attack.target;
@@ -59,23 +59,25 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
     let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
 
     let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length);
-    ecs.write_storage::<AnimationComponent>().shovel(bolt, animation);
+    ecs.shovel(bolt, animation);
 
     let bolt_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::ApplyBolt, frame, animation_length));
-    ecs.write_storage::<DelayedEffectComponent>().shovel(bolt, bolt_effect);
+    ecs.shovel(bolt, bolt_effect);
 }
 
 pub fn begin_move_animation(ecs: &mut World, target: &Entity) {
-    let movements = ecs.read_storage::<MovementComponent>();
-    let new_position = movements.grab(*target).new_position;
+    let new_position = {
+        let movements = ecs.read_storage::<MovementComponent>();
+        movements.grab(*target).new_position
+    };
 
     const MOVE_LENGTH: u64 = 8;
     let frame = ecs.get_current_frame();
     let position = ecs.get_position(target);
 
-    let animation = AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH);
-    ecs.write_storage::<AnimationComponent>().shovel(*target, animation);
-
-    let move_effect = DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::Move, frame, MOVE_LENGTH));
-    ecs.write_storage::<DelayedEffectComponent>().shovel(*target, move_effect);
+    ecs.shovel(*target, AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH));
+    ecs.shovel(
+        *target,
+        DelayedEffectComponent::init(DelayedEffect::init(DelayedEffectKind::Move, frame, MOVE_LENGTH)),
+    );
 }

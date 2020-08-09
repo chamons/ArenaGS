@@ -3,7 +3,7 @@ use specs_derive::Component;
 
 use sdl2::pixels::Color;
 
-use super::{LogComponent, PositionComponent};
+use super::{EventCoordinator, LogComponent, PositionComponent};
 use crate::atlas::{EasyECS, SizedPoint};
 use crate::clash::Character;
 

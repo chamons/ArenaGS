@@ -278,9 +278,9 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "en_craft_96.png",
                 TargetType::Any,
-                SkillEffect::FieldEffect(vec![Point::init (0, 0)], 1, FieldKind::Fire),
+                SkillEffect::FieldEffect(vec![Point::init(0, 0)], 1, FieldKind::Fire),
                 Some(3),
-                true
+                true,
             ),
         );
 
@@ -405,11 +405,11 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_test_resource, add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent,
-        LogComponent, PositionComponent,
+        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
+        PositionComponent,
     };
     use super::*;
-    use crate::atlas::{EasyMutECS, SizedPoint};
+    use crate::atlas::{EasyMutECS, EasyMutWorld, SizedPoint};
 
     #[test]
     #[should_panic]
@@ -581,8 +581,7 @@ mod tests {
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
         let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count)]);
-        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-        skill_resources.shovel(*player, resource);
+        ecs.shovel(*player, resource);
     }
 
     #[test]
@@ -685,7 +684,7 @@ mod tests {
     }
 
     fn add_focus(ecs: &mut World, player: &Entity, focus: f64) {
-        add_test_resource(ecs, &player, SkillResourceComponent::init(&[]).with_focus(focus));
+        ecs.shovel(*player, SkillResourceComponent::init(&[]).with_focus(focus));
     }
 
     #[test]
@@ -719,8 +718,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let other = find_at(&ecs, 2, 3);
-        ecs.write_storage::<BehaviorComponent>()
-            .shovel(other, BehaviorComponent::init(BehaviorKind::None));
+        ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
         invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
 
         add_ticks(&mut ecs, 100);

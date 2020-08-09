@@ -34,7 +34,7 @@ mod combat;
 pub use combat::{bolt, explode, field, melee, start_bolt, AttackComponent, AttackKind, BoltKind, FieldKind, WeaponKind};
 
 mod events;
-pub use events::{EventComponent, EventCoordinator, EventKind};
+pub use events::*;
 
 mod delayed_effect;
 pub use delayed_effect::{tick_delayed_effects, DelayedEffect, DelayedEffectComponent, DelayedEffectKind};

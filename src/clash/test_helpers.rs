@@ -95,8 +95,3 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
     }
     all
 }
-
-pub fn add_test_resource(ecs: &mut World, player: &Entity, resources: SkillResourceComponent) {
-    let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-    skill_resources.shovel(*player, resources);
-}

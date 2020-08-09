@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 #[derive(Component)]
 pub struct MovementComponent {
@@ -139,7 +139,7 @@ pub fn wait_for_animations(ecs: &mut World) {
 mod tests {
     use super::create_test_state;
     use super::*;
-    use crate::atlas::SizedPoint;
+    use crate::atlas::{EasyMutWorld, SizedPoint};
     use assert_approx_eq::assert_approx_eq;
 
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
@@ -250,7 +250,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
-        add_test_resource(&mut ecs, &player, SkillResourceComponent::init(&[]));
+        ecs.shovel(player, SkillResourceComponent::init(&[]));
 
         assert_eq!(true, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
         wait_for_animations(&mut ecs);
@@ -264,9 +264,8 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
-        add_test_resource(
-            &mut ecs,
-            &player,
+        ecs.shovel(
+            player,
             SkillResourceComponent {
                 exhaustion: MAX_EXHAUSTION,
                 ..SkillResourceComponent::init(&[])

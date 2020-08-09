@@ -67,14 +67,13 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyMutECS, Point, SizedPoint};
+    use crate::atlas::{EasyMutWorld, Point, SizedPoint};
 
     #[test]
     fn no_behavior() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let character = find_at(&ecs, 2, 2);
-        ecs.write_storage::<BehaviorComponent>()
-            .shovel(character, BehaviorComponent::init(BehaviorKind::None));
+        ecs.shovel(character, BehaviorComponent::init(BehaviorKind::None));
 
         take_enemy_action(&mut ecs, &character);
         wait_for_animations(&mut ecs);
@@ -87,8 +86,7 @@ mod tests {
     fn random_behavior() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let character = find_at(&ecs, 2, 2);
-        ecs.write_storage::<BehaviorComponent>()
-            .shovel(character, BehaviorComponent::init(BehaviorKind::Random));
+        ecs.shovel(character, BehaviorComponent::init(BehaviorKind::Random));
 
         take_enemy_action(&mut ecs, &character);
         wait_for_animations(&mut ecs);

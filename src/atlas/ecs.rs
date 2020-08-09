@@ -17,16 +17,21 @@ impl<'a, T: Component> EasyECS<T> for WriteStorage<'a, T> {
 }
 
 pub trait EasyMutECS<T: Component> {
-    fn shovel(&mut self, entity: Entity, item: T);
     fn grab_mut(&mut self, entity: Entity) -> &mut T;
 }
 
 impl<'a, T: Component> EasyMutECS<T> for WriteStorage<'a, T> {
-    fn shovel(&mut self, entity: Entity, item: T) {
-        self.insert(entity, item).unwrap();
-    }
-
     fn grab_mut(&mut self, entity: Entity) -> &mut T {
         self.get_mut(entity).unwrap()
+    }
+}
+
+pub trait EasyMutWorld<T: Component> {
+    fn shovel(&mut self, entity: Entity, item: T);
+}
+
+impl<T: Component> EasyMutWorld<T> for World {
+    fn shovel(&mut self, entity: Entity, item: T) {
+        self.write_storage::<T>().insert(entity, item).unwrap();
     }
 }
