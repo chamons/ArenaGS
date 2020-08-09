@@ -273,6 +273,16 @@ lazy_static! {
                 true,
             ),
         );
+        m.insert(
+            "Delayed Blast",
+            SkillInfo::init_with_distance(
+                "en_craft_96.png",
+                TargetType::Any,
+                SkillEffect::FieldEffect(vec![Point::init (0, 0)], 1, FieldKind::Fire),
+                Some(3),
+                true
+            ),
+        );
 
         m
     };
@@ -708,8 +718,9 @@ mod tests {
     fn skill_with_field_explodes() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        let other = find_at (&ecs, 2, 3); 
-        ecs.write_storage::<BehaviorComponent>().shovel (other, BehaviorComponent::init (BehaviorKind::None));
+        let other = find_at(&ecs, 2, 3);
+        ecs.write_storage::<BehaviorComponent>()
+            .shovel(other, BehaviorComponent::init(BehaviorKind::None));
         invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
 
         add_ticks(&mut ecs, 100);

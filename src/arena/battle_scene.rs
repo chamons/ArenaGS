@@ -47,7 +47,7 @@ impl<'a> BattleScene<'a> {
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
             .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
-            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot"]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot", "Delayed Blast"]))
             .build();
 
         ecs.create_entity()
