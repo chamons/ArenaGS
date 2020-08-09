@@ -45,7 +45,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         player_use_skill(ecs, name, None);
     } else {
         match target_required {
-            TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
+            TargetType::Any | TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
     }
@@ -62,7 +62,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     let skill = get_skill(name);
 
     match skill.target {
-        TargetType::Enemy | TargetType::Tile => {
+        TargetType::Enemy | TargetType::Tile | TargetType::Any => {
             let player = find_player(&ecs);
             if can_invoke_skill(ecs, &player, &skill, Some(*position)) {
                 player_use_skill(ecs, name, Some(*position));

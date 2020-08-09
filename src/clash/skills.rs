@@ -15,6 +15,7 @@ pub enum TargetType {
     None,
     Tile,
     Enemy,
+    Any,
 }
 
 #[allow(dead_code)]
@@ -226,6 +227,10 @@ lazy_static! {
                     .with_ammo(AmmoKind::Bullets, 1)
                     .with_exhaustion(25.0),
             );
+            m.insert(
+                "TestField",
+                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(vec![Point::init(0, 0)], 1, FieldKind::Fire)),
+            );
         }
         m.insert(
             "Dash",
@@ -282,8 +287,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile => true,
-        TargetType::Enemy => true,
+        TargetType::Tile | TargetType::Enemy | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -301,6 +305,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Any => !initial.contains_point(&target),
         TargetType::None => false,
     } {
         return false;
@@ -470,6 +475,17 @@ mod tests {
             .build();
 
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+    }
+
+    #[test]
+    fn skill_info_any_target() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+
+        let info = SkillInfo::init_with_distance("", TargetType::Any, SkillEffect::None, Some(2), false);
+        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
@@ -686,5 +702,20 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
         assert_eq!(true, get_skill("TestFocus").get_remaining_usages(&ecs, &player).unwrap() > 0);
+    }
+
+    #[test]
+    fn skill_with_field_explodes() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let other = find_at (&ecs, 2, 3); 
+        ecs.write_storage::<BehaviorComponent>().shovel (other, BehaviorComponent::init (BehaviorKind::None));
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+
+        add_ticks(&mut ecs, 100);
+        wait(&mut ecs, player);
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        tick_next_action(&mut ecs);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
     }
 }
