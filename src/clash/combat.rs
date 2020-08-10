@@ -242,7 +242,7 @@ mod tests {
     }
 
     #[test]
-    fn exbplode_logs_on_hit() {
+    fn explode_logs_on_hit() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let exploder = find_at(&mut ecs, 2, 3);
         ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
