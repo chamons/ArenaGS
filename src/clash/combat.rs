@@ -150,7 +150,7 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
 pub fn start_field(ecs: &mut World, source: Entity) {
     let source_position = ecs.get_position(&source);
-    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack.clone();
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     let field_projectile = ecs
         .create_entity()
@@ -165,7 +165,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(projectile).attack.clone()
+        attacks.grab(projectile).attack
     };
     let (r, g, b) = match attack.field_kind() {
         FieldKind::Fire => (255, 0, 0),
