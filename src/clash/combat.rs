@@ -144,7 +144,7 @@ pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, r
             .with(TimeComponent::init(0))
             .build();
 
-        ecs.raise_event(EventKind::Field(), Some(*source));
+        ecs.raise_event(EventKind::Field(FieldState::BeginCast), Some(*source));
     }
 }
 
