@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::Point;
 use crate::clash::{EventCoordinator, EventKind};
 
 #[derive(PartialEq)]

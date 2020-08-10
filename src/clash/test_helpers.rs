@@ -4,7 +4,7 @@ use super::{
     create_world, find_character_at_location, Character, CharacterInfoComponent, Map, MapComponent, PlayerComponent, PositionComponent, SkillResourceComponent,
     TimeComponent,
 };
-use crate::atlas::{EasyMutECS, Point, SizedPoint};
+use crate::atlas::{Point, SizedPoint};
 
 pub struct StateBuilder {
     ecs: World,

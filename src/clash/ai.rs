@@ -10,6 +10,7 @@ use super::*;
 use crate::atlas::EasyECS;
 
 #[derive(Clone, Copy)]
+#[allow(dead_code)]
 pub enum BehaviorKind {
     None,
     Random,

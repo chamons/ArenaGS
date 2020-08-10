@@ -134,7 +134,7 @@ pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
 
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
-    ecs.raise_event(EventKind::WaitForAnimations(), None);
+    crate::arena::complete_animations(ecs);
 }
 
 #[cfg(test)]

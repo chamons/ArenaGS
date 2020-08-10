@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, battle_animations, tick_animations, AnimationComponent, PostAnimationEvent};
+use super::{battle_actions, tick_animations, AnimationComponent};
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -26,7 +26,6 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<MousePositionComponent>();
     ecs.register::<AnimationComponent>();
 
-    ecs.subscribe(BattleScene::on_event);
     ecs.subscribe(super::battle_animations::move_event);
     ecs.subscribe(super::battle_animations::bolt_event);
     ecs.subscribe(super::battle_animations::melee_event);
@@ -86,17 +85,6 @@ impl<'a> BattleScene<'a> {
         }
 
         Ok(BattleScene { ecs, views })
-    }
-
-    fn on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-        match kind {
-            EventKind::Bolt(state) => {}
-            EventKind::Melee(state) => {}
-            EventKind::Move(state) => {}
-            EventKind::Field() => {}
-            #[cfg(test)]
-            EventKind::WaitForAnimations() => super::complete_animations(ecs),
-        }
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {

@@ -409,7 +409,7 @@ mod tests {
         PositionComponent,
     };
     use super::*;
-    use crate::atlas::{EasyMutECS, EasyMutWorld, SizedPoint};
+    use crate::atlas::{EasyMutWorld, SizedPoint};
 
     #[test]
     #[should_panic]

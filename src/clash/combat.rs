@@ -124,7 +124,7 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, relative_squares: &Vec<Point>, strength: u32, kind: FieldKind) {
+pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, relative_squares: &[Point], strength: u32, kind: FieldKind) {
     for p in relative_squares.iter() {
         let p = if let Some(target_position) = target_position {
             Point::init(target_position.x + p.x, target_position.y + p.y)

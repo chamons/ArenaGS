@@ -27,9 +27,6 @@ pub enum EventKind {
     Bolt(BoltState),
     Melee(MeleeState),
     Field(),
-
-    #[cfg(test)]
-    WaitForAnimations(),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();

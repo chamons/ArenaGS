@@ -1,10 +1,10 @@
 use specs::prelude::*;
 
 use super::components::*;
-use super::{AnimationComponent, PostAnimationEvent};
+use super::AnimationComponent;
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld};
+use crate::atlas::{EasyECS, EasyMutWorld};
 use crate::clash::*;
 
 pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
