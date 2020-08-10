@@ -31,7 +31,7 @@ mod ai;
 pub use ai::{take_enemy_action, BehaviorComponent, BehaviorKind};
 
 mod combat;
-pub use combat::{bolt, explode, field, melee, start_bolt, AttackComponent, AttackKind, BoltKind, FieldKind, WeaponKind};
+pub use combat::*;
 
 mod events;
 pub use events::*;

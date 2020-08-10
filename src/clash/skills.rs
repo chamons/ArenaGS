@@ -361,9 +361,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            move_action(ecs, invoker, position);
+            begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
         SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), *strength, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(relative_squares, strength, kind) => field(ecs, &invoker, target, &relative_squares, *strength, *kind),

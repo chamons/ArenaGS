@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, battle_animations, tick_animations, AnimationComponent, SecondaryAnimation};
+use super::{battle_actions, battle_animations, tick_animations, AnimationComponent, PostAnimationEvent};
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -28,6 +28,8 @@ pub fn add_ui_extension(ecs: &mut World) {
 
     ecs.subscribe(BattleScene::on_event);
     ecs.subscribe(super::battle_animations::move_event);
+    ecs.subscribe(super::battle_animations::bolt_event);
+    ecs.subscribe(super::battle_animations::melee_event);
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
@@ -88,8 +90,8 @@ impl<'a> BattleScene<'a> {
 
     fn on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         match kind {
-            EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
-            EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
+            EventKind::Bolt(state) => {}
+            EventKind::Melee(state) => {}
             EventKind::Move(state) => {}
             EventKind::Field() => {}
             #[cfg(test)]
@@ -249,7 +251,7 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
-        process_tick_events(&mut self.ecs, frame)?;
+        process_tick_events(&mut self.ecs, frame);
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
@@ -258,17 +260,10 @@ impl<'a> Scene for BattleScene<'a> {
     }
 }
 
-pub fn process_tick_events(ecs: &mut World, frame: u64) -> BoxResult<()> {
+pub fn process_tick_events(ecs: &mut World, frame: u64) {
     ecs.maintain();
-    let completed = tick_animations(ecs, frame)?;
-    for (entity, secondary) in completed {
-        match secondary {
-            SecondaryAnimation::StartBolt => super::battle_animations::begin_ranged_bolt_animation(ecs, &entity),
-            SecondaryAnimation::None => {}
-        }
-    }
+    tick_animations(ecs, frame);
     tick_delayed_effects(ecs, frame);
-    Ok(())
 }
 
 fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {

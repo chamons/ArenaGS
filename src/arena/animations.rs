@@ -2,8 +2,8 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::BoxResult;
-use crate::atlas::Point;
+use crate::atlas::{BoxResult, Point};
+use crate::clash::{EventCoordinator, EventKind};
 
 #[derive(PartialEq)]
 pub struct FPoint {
@@ -30,16 +30,16 @@ pub enum AnimationKind {
 }
 
 #[derive(Clone, Copy)]
-pub enum SecondaryAnimation {
-    None,
-    StartBolt,
+pub struct PostAnimationEvent {
+    kind: EventKind,
+    target: Option<Entity>,
 }
 
 pub struct Animation {
     pub kind: AnimationKind,
     pub beginning: u64,
     pub duration: u64,
-    pub secondary: SecondaryAnimation,
+    pub post_event: Option<PostAnimationEvent>,
 }
 
 impl Animation {
@@ -91,7 +91,7 @@ impl AnimationComponent {
                 },
                 beginning,
                 duration,
-                secondary: SecondaryAnimation::None,
+                post_event: None,
             },
         }
     }
@@ -101,19 +101,20 @@ impl AnimationComponent {
                 kind: AnimationKind::CharacterState { now, done },
                 beginning,
                 duration,
-                secondary: SecondaryAnimation::None,
+                post_event: None,
             },
         }
     }
 
-    pub fn with_secondary(mut self, secondary: SecondaryAnimation) -> AnimationComponent {
-        self.animation.secondary = secondary;
+    pub fn with_post_event(mut self, kind: EventKind, target: Option<Entity>) -> AnimationComponent {
+        self.animation.post_event = Some(PostAnimationEvent { kind, target });
         self
     }
 }
 
-pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<Vec<(Entity, SecondaryAnimation)>> {
+pub fn tick_animations(ecs: &mut World, frame: u64) {
     let mut completed = vec![];
+    let mut needs_events = vec![];
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let animations = ecs.read_storage::<AnimationComponent>();
@@ -121,16 +122,21 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<Vec<(Entity, Se
         for (entity, animation_component) in (&entities, &animations).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
-                completed.push((entity, animation.secondary));
+                completed.push(entity);
+                if let Some(post_event) = animation.post_event {
+                    needs_events.push(post_event);
+                }
             }
         }
     }
 
-    for (entity, _) in &completed {
-        ecs.write_storage::<AnimationComponent>().remove(*entity);
+    for need_events in needs_events {
+        ecs.raise_event(need_events.kind, need_events.target);
     }
 
-    Ok(completed)
+    for entity in &completed {
+        ecs.write_storage::<AnimationComponent>().remove(*entity);
+    }
 }
 
 #[cfg(test)]
@@ -141,7 +147,7 @@ pub fn complete_animations(ecs: &mut World) {
             ecs.read_resource::<crate::clash::FrameComponent>().current_frame
         };
 
-        super::battle_scene::process_tick_events(ecs, current_frame).unwrap();
+        super::battle_scene::process_tick_events(ecs, current_frame);
 
         let animations = ecs.read_storage::<AnimationComponent>();
         if (animations).join().count() == 0 {

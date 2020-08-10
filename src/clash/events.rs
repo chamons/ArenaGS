@@ -7,11 +7,25 @@ pub enum MoveState {
     Complete,
 }
 
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum BoltState {
+    BeginCast,
+    CompleteCast,
+    BeginFlying,
+    CompleteFlying,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum MeleeState {
+    Begin,
+    Complete,
+}
+
 #[derive(Copy, Clone)]
 pub enum EventKind {
     Move(MoveState),
-    Bolt(),
-    Melee(),
+    Bolt(BoltState),
+    Melee(MeleeState),
     Field(),
 
     #[cfg(test)]

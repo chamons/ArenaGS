@@ -15,9 +15,15 @@ impl MovementComponent {
     }
 }
 
-pub fn move_action(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
+pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     ecs.shovel(*entity, MovementComponent::init(new_position));
     ecs.raise_event(EventKind::Move(MoveState::Begin), Some(*entity));
+}
+
+pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Move(state) if state.is_complete()) {
+        complete_move(ecs, target.unwrap());
+    }
 }
 
 pub fn complete_move(ecs: &mut World, entity: Entity) {
@@ -31,12 +37,6 @@ pub fn complete_move(ecs: &mut World, entity: Entity) {
     let mut positions = ecs.write_storage::<PositionComponent>();
     let position = &mut positions.grab_mut(entity);
     position.move_to(new_position);
-}
-
-pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_complete()) {
-        complete_move(ecs, target.unwrap());
-    }
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
@@ -109,7 +109,7 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
         return false;
     }
 
-    move_action(ecs, &entity, new);
+    begin_move(ecs, &entity, new);
     spend_time(ecs, &entity, MOVE_ACTION_COST);
     if ecs.read_storage::<SkillResourceComponent>().get(entity).is_some() {
         spend_exhaustion(ecs, &entity, EXHAUSTION_COST_PER_MOVE);

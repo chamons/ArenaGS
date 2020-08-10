@@ -50,23 +50,6 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
             }
         }
     }
-
-    use super::combat;
-    for (entity, kind) in delayed_effects {
-        match kind {
-            DelayedEffectKind::ApplyBolt => {
-                combat::apply_bolt(ecs, &entity);
-                ecs.delete_entity(entity).unwrap();
-            }
-            DelayedEffectKind::ApplyMelee => {
-                combat::apply_melee(ecs, &entity);
-            }
-            DelayedEffectKind::Move => {}
-            #[cfg(test)]
-            DelayedEffectKind::None => {}
-        }
-        ecs.write_storage::<DelayedEffectComponent>().remove(entity);
-    }
 }
 
 #[cfg(test)]

@@ -64,15 +64,25 @@ impl AttackComponent {
     }
 }
 
-pub fn bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
+pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
     ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
-
-    ecs.raise_event(EventKind::Bolt(), Some(*source));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginCast), Some(*source));
 }
 
-pub fn start_bolt(ecs: &mut World, source: &Entity) -> Entity {
-    let source_position = ecs.get_position(source);
-    let attack = ecs.read_storage::<AttackComponent>().grab(*source).attack;
+pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Bolt(state) => match state {
+            BoltState::CompleteCast => start_bolt(ecs, target.unwrap()),
+            BoltState::CompleteFlying => apply_bolt(ecs, target.unwrap()),
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
+pub fn start_bolt(ecs: &mut World, source: Entity) {
+    let source_position = ecs.get_position(&source);
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     let bolt = ecs
         .create_entity()
@@ -80,29 +90,34 @@ pub fn start_bolt(ecs: &mut World, source: &Entity) -> Entity {
         .with(AttackComponent { attack })
         .build();
 
-    ecs.write_storage::<AttackComponent>().remove(*source);
-
-    bolt
+    ecs.write_storage::<AttackComponent>().remove(source);
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginFlying), Some(bolt));
 }
 
-pub fn apply_bolt(ecs: &mut World, bolt: &Entity) {
+pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(*bolt).attack
+        attacks.grab(bolt).attack
     };
     ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+    ecs.delete_entity(bolt).unwrap();
 }
 
 pub fn melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
-
-    ecs.raise_event(EventKind::Melee(), Some(*source));
+    ecs.raise_event(EventKind::Melee(MeleeState::Begin), Some(*source));
 }
 
-pub fn apply_melee(ecs: &mut World, character: &Entity) {
+pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Melee(state) if state.is_complete()) {
+        apply_melee(ecs, target.unwrap());
+    }
+}
+
+pub fn apply_melee(ecs: &mut World, character: Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(*character).attack
+        attacks.grab(character).attack
     };
     ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
 }
@@ -175,7 +190,7 @@ mod tests {
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
 
-        bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
+        begin_bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
