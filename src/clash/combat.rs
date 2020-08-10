@@ -120,6 +120,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
         attacks.grab(character).attack
     };
     ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+
+    ecs.write_storage::<AttackComponent>().remove(character);
 }
 
 pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, relative_squares: &Vec<Point>, strength: u32, kind: FieldKind) {
