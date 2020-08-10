@@ -56,6 +56,53 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
     ecs.shovel(bolt, animation);
 }
 
+pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Field(state) => match state {
+            FieldState::BeginCast => begin_ranged_cast_field_animation(ecs, target.unwrap()),
+            FieldState::BeginFlying => begin_ranged_field_animation(ecs, target.unwrap()),
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
+pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
+    let frame = ecs.get_current_frame();
+    let animation = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        match attacks.grab(target).attack.field_kind() {
+            FieldKind::Fire => CharacterAnimationState::Crouch,
+        }
+    };
+
+    const RANGED_CAST_LENGTH: u64 = 18;
+    let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, RANGED_CAST_LENGTH)
+        .with_post_event(EventKind::Field(FieldState::CompleteCast), Some(target));
+    ecs.shovel(target, cast_animation);
+}
+
+pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
+    let frame = ecs.get_current_frame();
+    let sprite = {
+        let attacks = ecs.write_storage::<AttackComponent>();
+        match attacks.grab(bolt).attack.field_kind() {
+            FieldKind::Fire => SpriteKinds::Bomb,
+        }
+    };
+    ecs.shovel(bolt, RenderComponent::init(sprite));
+
+    let source_position = ecs.get_position(&bolt);
+    let target_position = ecs.read_storage::<AttackComponent>().grab(bolt).attack.target;
+
+    let path_length = source_position.distance_to(target_position).unwrap() as u64;
+    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
+
+    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length)
+        .with_post_event(EventKind::Field(FieldState::CompleteFlying), Some(bolt));
+    ecs.shovel(bolt, animation);
+}
+
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     if matches!(kind, EventKind::Melee(state) if state.is_begin()) {
         begin_melee_animation(ecs, target.unwrap());

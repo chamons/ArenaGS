@@ -25,7 +25,7 @@ pub enum SkillEffect {
     RangedAttack(u32, BoltKind),
     MeleeAttack(u32, WeaponKind),
     Reload(AmmoKind),
-    FieldEffect(Vec<Point>, u32, FieldKind),
+    FieldEffect(u32, FieldKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug)]
@@ -227,10 +227,7 @@ lazy_static! {
                     .with_ammo(AmmoKind::Bullets, 1)
                     .with_exhaustion(25.0),
             );
-            m.insert(
-                "TestField",
-                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(vec![Point::init(0, 0)], 1, FieldKind::Fire)),
-            );
+            m.insert("TestField", SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire)));
         }
         m.insert(
             "Dash",
@@ -275,13 +272,7 @@ lazy_static! {
         );
         m.insert(
             "Delayed Blast",
-            SkillInfo::init_with_distance(
-                "en_craft_96.png",
-                TargetType::Any,
-                SkillEffect::FieldEffect(vec![Point::init(0, 0)], 1, FieldKind::Fire),
-                Some(3),
-                true,
-            ),
+            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), true),
         );
 
         m
@@ -364,9 +355,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             begin_move(ecs, invoker, position);
         }
         SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
-        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), *strength, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::FieldEffect(relative_squares, strength, kind) => field(ecs, &invoker, target, &relative_squares, *strength, *kind),
+        SkillEffect::FieldEffect(strength, kind) => begin_field(ecs, &invoker, target.unwrap(), *strength, *kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
@@ -720,10 +711,14 @@ mod tests {
         let other = find_at(&ecs, 2, 3);
         ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
         invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
 
         add_ticks(&mut ecs, 100);
         wait(&mut ecs, player);
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        add_ticks(&mut ecs, 100);
+        wait(&mut ecs, player);
+        tick_next_action(&mut ecs);
         tick_next_action(&mut ecs);
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
     }

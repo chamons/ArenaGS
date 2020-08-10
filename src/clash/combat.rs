@@ -25,6 +25,7 @@ pub enum WeaponKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
+    Field(FieldKind),
     Explode(u32),
 }
 
@@ -47,6 +48,13 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Melee(kind) => kind,
             _ => panic!("Wrong type in melee_kind"),
+        }
+    }
+
+    pub fn field_kind(&self) -> FieldKind {
+        match self.kind {
+            AttackKind::Field(kind) => kind,
+            _ => panic!("Wrong type in field_kind"),
         }
     }
 }
@@ -103,7 +111,7 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
     ecs.delete_entity(bolt).unwrap();
 }
 
-pub fn melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
+pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
     ecs.raise_event(EventKind::Melee(MeleeState::Begin), Some(*source));
 }
@@ -124,28 +132,53 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn field(ecs: &mut World, source: &Entity, target_position: Option<Point>, relative_squares: &[Point], strength: u32, kind: FieldKind) {
-    for p in relative_squares.iter() {
-        let p = if let Some(target_position) = target_position {
-            Point::init(target_position.x + p.x, target_position.y + p.y)
-        } else {
-            *p
-        };
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: FieldKind) {
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind)));
+    ecs.raise_event(EventKind::Field(FieldState::BeginCast), Some(*source));
+}
 
-        let (r, g, b) = match kind {
-            FieldKind::Fire => (255, 0, 0),
-        };
-
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(p.x, p.y)))
-            .with(AttackComponent::init(p, strength, AttackKind::Explode(0)))
-            .with(BehaviorComponent::init(BehaviorKind::Explode))
-            .with(FieldComponent::init(r, g, b))
-            .with(TimeComponent::init(0))
-            .build();
-
-        ecs.raise_event(EventKind::Field(FieldState::BeginCast), Some(*source));
+pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Field(state) => match state {
+            FieldState::CompleteCast => start_field(ecs, target.unwrap()),
+            FieldState::CompleteFlying => apply_field(ecs, target.unwrap()),
+            _ => {}
+        },
+        _ => {}
     }
+}
+
+pub fn start_field(ecs: &mut World, source: Entity) {
+    let source_position = ecs.get_position(&source);
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack.clone();
+
+    let field_projectile = ecs
+        .create_entity()
+        .with(PositionComponent::init(source_position))
+        .with(AttackComponent { attack })
+        .build();
+
+    ecs.write_storage::<AttackComponent>().remove(source);
+    ecs.raise_event(EventKind::Field(FieldState::BeginFlying), Some(field_projectile));
+}
+
+pub fn apply_field(ecs: &mut World, projectile: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(projectile).attack.clone()
+    };
+    let (r, g, b) = match attack.field_kind() {
+        FieldKind::Fire => (255, 0, 0),
+    };
+
+    ecs.create_entity()
+        .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
+        .with(AttackComponent::init(attack.target, attack.strength, AttackKind::Explode(0)))
+        .with(BehaviorComponent::init(BehaviorKind::Explode))
+        .with(FieldComponent::init(r, g, b))
+        .with(TimeComponent::init(-BASE_ACTION_COST))
+        .build();
+    ecs.delete_entity(projectile).unwrap();
 }
 
 pub fn explode(ecs: &mut World, source: &Entity) {
@@ -179,7 +212,7 @@ mod tests {
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
 
-        melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
+        begin_melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
@@ -227,7 +260,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
 
-        field(&mut ecs, &player, Some(Point::init(2, 3)), &vec![Point::init(0, 0)], 1, FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), 1, FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());

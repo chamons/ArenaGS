@@ -87,6 +87,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::physics::move_event);
     ecs.subscribe(super::combat::bolt_event);
     ecs.subscribe(super::combat::melee_event);
+    ecs.subscribe(super::combat::field_event);
 
     #[cfg(test)]
     {
