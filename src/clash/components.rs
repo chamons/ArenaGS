@@ -77,7 +77,6 @@ pub fn create_world() -> World {
     ecs.register::<super::EventComponent>();
     ecs.register::<super::MovementComponent>();
     ecs.register::<super::SkillResourceComponent>();
-    ecs.register::<super::DelayedEffectComponent>();
     ecs.register::<super::BehaviorComponent>();
 
     ecs.insert(FrameComponent::init());

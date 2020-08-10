@@ -36,9 +36,6 @@ pub use combat::*;
 mod events;
 pub use events::*;
 
-mod delayed_effect;
-pub use delayed_effect::{tick_delayed_effects, DelayedEffect, DelayedEffectComponent, DelayedEffectKind};
-
 #[cfg(test)]
 mod test_helpers;
 #[cfg(test)]
