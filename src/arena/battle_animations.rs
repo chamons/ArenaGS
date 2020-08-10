@@ -27,6 +27,21 @@ pub fn cast_animation(ecs: &mut World, target: Entity, animation: CharacterAnima
     ecs.shovel(target, cast_animation);
 }
 
+pub fn projectile_animation(ecs: &mut World, projectile: Entity, sprite: SpriteKinds, post_event: EventKind) {
+    let frame = ecs.get_current_frame();
+    ecs.shovel(projectile, RenderComponent::init(sprite));
+
+    let source_position = ecs.get_position(&projectile);
+    let target_position = ecs.read_storage::<AttackComponent>().grab(projectile).attack.target;
+
+    let path_length = source_position.distance_to(target_position).unwrap() as u64;
+    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
+
+    let animation =
+        AnimationComponent::movement(source_position.origin, target_position, frame, animation_length).with_post_event(post_event, Some(projectile));
+    ecs.shovel(projectile, animation);
+}
+
 pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
@@ -40,7 +55,6 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
-    let frame = ecs.get_current_frame();
     let sprite = {
         let attacks = ecs.write_storage::<AttackComponent>();
         match attacks.grab(bolt).attack.ranged_kind() {
@@ -48,17 +62,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
             BoltKind::Bullet => SpriteKinds::BulletBolt,
         }
     };
-    ecs.shovel(bolt, RenderComponent::init(sprite));
-
-    let source_position = ecs.get_position(&bolt);
-    let target_position = ecs.read_storage::<AttackComponent>().grab(bolt).attack.target;
-
-    let path_length = source_position.distance_to(target_position).unwrap() as u64;
-    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
-
-    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length)
-        .with_post_event(EventKind::Bolt(BoltState::CompleteFlying), Some(bolt));
-    ecs.shovel(bolt, animation);
+    projectile_animation(ecs, bolt, sprite, EventKind::Bolt(BoltState::CompleteFlying));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -83,24 +87,13 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
 }
 
 pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
-    let frame = ecs.get_current_frame();
     let sprite = {
         let attacks = ecs.write_storage::<AttackComponent>();
         match attacks.grab(bolt).attack.field_kind() {
             FieldKind::Fire => SpriteKinds::Bomb,
         }
     };
-    ecs.shovel(bolt, RenderComponent::init(sprite));
-
-    let source_position = ecs.get_position(&bolt);
-    let target_position = ecs.read_storage::<AttackComponent>().grab(bolt).attack.target;
-
-    let path_length = source_position.distance_to(target_position).unwrap() as u64;
-    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
-
-    let animation = AnimationComponent::movement(source_position.origin, target_position, frame, animation_length)
-        .with_post_event(EventKind::Field(FieldState::CompleteFlying), Some(bolt));
-    ecs.shovel(bolt, animation);
+    projectile_animation(ecs, bolt, sprite, EventKind::Field(FieldState::CompleteFlying));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -153,6 +146,7 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
     ecs.shovel(target, RenderComponent::init(SpriteKinds::Explosion));
+    ecs.write_storage::<FieldComponent>().remove(target);
 
     const EXPLOSION_LENGTH: u64 = 18;
     let attack_animation = AnimationComponent::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::Complete), Some(target));
