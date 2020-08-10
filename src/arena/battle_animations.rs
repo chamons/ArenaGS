@@ -18,8 +18,16 @@ pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     }
 }
 
-pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
+pub fn cast_animation(ecs: &mut World, target: Entity, animation: CharacterAnimationState, post_event: EventKind) {
     let frame = ecs.get_current_frame();
+
+    const CAST_LENGTH: u64 = 18;
+    let cast_animation =
+        AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, CAST_LENGTH).with_post_event(post_event, Some(target));
+    ecs.shovel(target, cast_animation);
+}
+
+pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
         match attacks.grab(target).attack.ranged_kind() {
@@ -28,10 +36,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
         }
     };
 
-    const RANGED_CAST_LENGTH: u64 = 18;
-    let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, RANGED_CAST_LENGTH)
-        .with_post_event(EventKind::Bolt(BoltState::CompleteCast), Some(target));
-    ecs.shovel(target, cast_animation);
+    cast_animation(ecs, target, animation, EventKind::Bolt(BoltState::CompleteCast));
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
@@ -68,18 +73,13 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
-    let frame = ecs.get_current_frame();
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
         match attacks.grab(target).attack.field_kind() {
             FieldKind::Fire => CharacterAnimationState::Crouch,
         }
     };
-
-    const RANGED_CAST_LENGTH: u64 = 18;
-    let cast_animation = AnimationComponent::sprite_state(animation, CharacterAnimationState::Idle, frame, RANGED_CAST_LENGTH)
-        .with_post_event(EventKind::Field(FieldState::CompleteCast), Some(target));
-    ecs.shovel(target, cast_animation);
+    cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCast));
 }
 
 pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
