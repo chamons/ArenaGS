@@ -52,7 +52,6 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
     }
 
     use super::combat;
-    use super::physics;
     for (entity, kind) in delayed_effects {
         match kind {
             DelayedEffectKind::ApplyBolt => {
@@ -62,9 +61,7 @@ pub fn tick_delayed_effects(ecs: &mut World, frame: u64) {
             DelayedEffectKind::ApplyMelee => {
                 combat::apply_melee(ecs, &entity);
             }
-            DelayedEffectKind::Move => {
-                physics::complete_move(ecs, &entity);
-            }
+            DelayedEffectKind::Move => {}
             #[cfg(test)]
             DelayedEffectKind::None => {}
         }

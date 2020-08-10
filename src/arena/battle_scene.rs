@@ -27,6 +27,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<AnimationComponent>();
 
     ecs.subscribe(BattleScene::on_event);
+    ecs.subscribe(super::battle_animations::move_event);
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
@@ -89,7 +90,7 @@ impl<'a> BattleScene<'a> {
         match kind {
             EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
             EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
-            EventKind::Move() => battle_animations::begin_move_animation(ecs, &target.unwrap()),
+            EventKind::Move(state) => {}
             EventKind::Field() => {}
             #[cfg(test)]
             EventKind::WaitForAnimations() => super::complete_animations(ecs),

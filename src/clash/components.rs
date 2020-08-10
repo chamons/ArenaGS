@@ -85,6 +85,8 @@ pub fn create_world() -> World {
 
     ecs.insert(super::EventComponent::init());
 
+    ecs.subscribe(super::physics::move_event);
+
     #[cfg(test)]
     {
         crate::arena::add_ui_extension(&mut ecs);

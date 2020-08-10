@@ -1,9 +1,15 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum MoveState {
+    Begin,
+    Complete,
+}
+
 #[derive(Copy, Clone)]
 pub enum EventKind {
-    Move(),
+    Move(MoveState),
     Bolt(),
     Melee(),
     Field(),
