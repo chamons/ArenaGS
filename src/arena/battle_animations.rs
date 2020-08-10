@@ -67,17 +67,20 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, target: &Entity) {
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     if matches!(kind, EventKind::Move(state) if state.is_begin()) {
-        let target = target.unwrap();
-        let new_position = {
-            let movements = ecs.read_storage::<MovementComponent>();
-            movements.grab(target).new_position
-        };
-
-        const MOVE_LENGTH: u64 = 8;
-        let frame = ecs.get_current_frame();
-        let position = ecs.get_position(&target);
-
-        ecs.shovel(target, AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH));
-        ecs.raise_event(EventKind::Move(MoveState::Complete), Some(target));
+        animate_move(ecs, target.unwrap());
     }
+}
+
+fn animate_move(ecs: &mut World, target: Entity) {
+    let new_position = {
+        let movements = ecs.read_storage::<MovementComponent>();
+        movements.grab(target).new_position
+    };
+
+    const MOVE_LENGTH: u64 = 8;
+    let frame = ecs.get_current_frame();
+    let position = ecs.get_position(&target);
+
+    ecs.shovel(target, AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH));
+    ecs.raise_event(EventKind::Move(MoveState::Complete), Some(target));
 }
