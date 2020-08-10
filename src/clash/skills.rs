@@ -715,10 +715,12 @@ mod tests {
 
         add_ticks(&mut ecs, 100);
         wait(&mut ecs, player);
+        tick_next_action(&mut ecs);
+        wait_for_animations(&mut ecs);
         assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+
         add_ticks(&mut ecs, 100);
         wait(&mut ecs, player);
-        tick_next_action(&mut ecs);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());
