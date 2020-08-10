@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use enum_iterator::IntoEnumIterator;
+use sdl2::rect::Point as SDLPoint;
 
 use super::components::*;
 use crate::after_image::*;
@@ -55,6 +56,11 @@ impl SpriteLoader {
                     1,
                 )?),
                 SpriteKinds::Bomb => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "object"), 4, 2)?),
+                SpriteKinds::Explosion => Box::new(
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "explosion"), 11, 8)?
+                        .with_render_offset(SDLPoint::new(0, 25))
+                        .with_scale(2.0),
+                ),
             };
             sprites.insert(s.into(), sprite);
         }

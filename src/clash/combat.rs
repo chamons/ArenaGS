@@ -181,24 +181,34 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
     ecs.delete_entity(projectile).unwrap();
 }
 
-pub fn explode(ecs: &mut World, source: &Entity) {
+pub fn begin_explode(ecs: &mut World, source: &Entity) {
+    ecs.raise_event(EventKind::Explode(ExplodeState::Begin), Some(*source));
+}
+
+pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Explode(state) if state.is_complete()) {
+        apply_explode(ecs, target.unwrap());
+    }
+}
+
+pub fn apply_explode(ecs: &mut World, source: Entity) {
     let (strength, range) = {
-        let attack_info = ecs.read_storage::<AttackComponent>().grab(*source).attack;
+        let attack_info = ecs.read_storage::<AttackComponent>().grab(source).attack;
         match attack_info.kind {
             AttackKind::Explode(range) => (attack_info.strength, range),
             _ => panic!("Explode with wrong AttackKind"),
         }
     };
 
-    for in_blast in ecs.get_position(source).origin.get_burst(range) {
+    for in_blast in ecs.get_position(&source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
-            if target != *source {
+            if target != source {
                 ecs.log(format!("Struct by blast ({}) at {}", strength, in_blast).as_str());
             }
         }
     }
 
-    ecs.delete_entity(*source).unwrap();
+    ecs.delete_entity(source).unwrap();
 }
 
 #[cfg(test)]
@@ -236,7 +246,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let exploder = find_at(&mut ecs, 2, 3);
         ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
-        explode(&mut ecs, &exploder);
+        begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().count());

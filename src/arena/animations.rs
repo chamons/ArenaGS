@@ -19,6 +19,7 @@ impl FPoint {
 
 #[derive(Clone, Copy)]
 pub enum AnimationKind {
+    None, // Example - A explosion that changes sprite but no movement
     Position {
         start: Point,
         end: Point,
@@ -68,6 +69,7 @@ impl Animation {
             AnimationKind::CharacterState { now, done: _ } => Some(now),
             // Bit of a hack since we can't have multiple animations stacked
             AnimationKind::Position { .. } => Some(&CharacterAnimationState::Walk),
+            AnimationKind::None => None,
         }
     }
 }
@@ -95,10 +97,22 @@ impl AnimationComponent {
             },
         }
     }
+
     pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, duration: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation {
                 kind: AnimationKind::CharacterState { now, done },
+                beginning,
+                duration,
+                post_event: None,
+            },
+        }
+    }
+
+    pub fn empty(beginning: u64, duration: u64) -> AnimationComponent {
+        AnimationComponent {
+            animation: Animation {
+                kind: AnimationKind::None,
                 beginning,
                 duration,
                 post_event: None,

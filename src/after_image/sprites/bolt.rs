@@ -12,6 +12,8 @@ pub struct Bolt {
     texture: Texture,
     start: usize,
     length: usize,
+    render_offset: Option<SDLPoint>,
+    scale: f32,
 }
 
 impl Bolt {
@@ -25,7 +27,19 @@ impl Bolt {
             texture: load_image(&folder, render_context)?,
             start,
             length,
+            render_offset: None,
+            scale: 1.0,
         })
+    }
+
+    pub fn with_render_offset(mut self, render_offset: SDLPoint) -> Self {
+        self.render_offset = Some(render_offset);
+        self
+    }
+
+    pub fn with_scale(mut self, scale: f32) -> Self {
+        self.scale = scale;
+        self
     }
 }
 
@@ -33,7 +47,12 @@ impl Sprite for Bolt {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, _: u32, frame: u64) -> BoxResult<()> {
         let offset = self.get_animation_frame(self.length, 30, frame);
 
-        let screen_rect = SDLRect::from_center(screen_position, (64.0) as u32, (64.0) as u32);
+        let mut screen_rect = SDLRect::from_center(screen_position, (self.scale * 64.0) as u32, (self.scale * 64.0) as u32);
+        if let Some(render_offset) = self.render_offset {
+            screen_rect.set_x(screen_rect.x() + render_offset.x());
+            screen_rect.set_y(screen_rect.y() + render_offset.y());
+        }
+
         let sprite_rect = get_sprite_sheet_rect_for_index(self.start + offset);
 
         canvas.copy(&self.texture, sprite_rect, screen_rect)?;

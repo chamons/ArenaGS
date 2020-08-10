@@ -59,7 +59,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
             }
         }
         BehaviorKind::Explode => {
-            explode(ecs, &enemy);
+            begin_explode(ecs, &enemy);
         }
     };
 }

@@ -30,6 +30,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.subscribe(super::battle_animations::bolt_event);
     ecs.subscribe(super::battle_animations::melee_event);
     ecs.subscribe(super::battle_animations::field_event);
+    ecs.subscribe(super::battle_animations::explode_event);
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());

@@ -143,3 +143,18 @@ fn animate_move(ecs: &mut World, target: Entity) {
     ecs.shovel(target, AnimationComponent::movement(position.origin, new_position.origin, frame, MOVE_LENGTH));
     ecs.raise_event(EventKind::Move(MoveState::Complete), Some(target));
 }
+
+pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Explode(state) if state.is_begin()) {
+        begin_explode_animation(ecs, target.unwrap());
+    }
+}
+
+pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
+    let frame = ecs.get_current_frame();
+    ecs.shovel(target, RenderComponent::init(SpriteKinds::Explosion));
+
+    const EXPLOSION_LENGTH: u64 = 18;
+    let attack_animation = AnimationComponent::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::Complete), Some(target));
+    ecs.shovel(target, attack_animation);
+}
