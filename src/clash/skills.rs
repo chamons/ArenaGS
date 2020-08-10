@@ -272,7 +272,7 @@ lazy_static! {
         );
         m.insert(
             "Delayed Blast",
-            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), true),
+            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), false),
         );
 
         m
