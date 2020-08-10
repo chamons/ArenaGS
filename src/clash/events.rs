@@ -21,12 +21,20 @@ pub enum MeleeState {
     Complete,
 }
 
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum FieldState {
+    BeginCast,
+    CompleteCast,
+    BeginFlying,
+    CompleteFlying,
+}
+
 #[derive(Copy, Clone)]
 pub enum EventKind {
     Move(MoveState),
     Bolt(BoltState),
     Melee(MeleeState),
-    Field(),
+    Field(FieldState),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();

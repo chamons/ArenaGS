@@ -54,6 +54,7 @@ impl SpriteLoader {
                     6,
                     1,
                 )?),
+                SpriteKinds::Bomb => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "object"), 4, 2)?),
             };
             sprites.insert(s.into(), sprite);
         }
