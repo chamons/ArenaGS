@@ -77,13 +77,18 @@ pub fn create_world() -> World {
     ecs.register::<super::EventComponent>();
     ecs.register::<super::MovementComponent>();
     ecs.register::<super::SkillResourceComponent>();
+    ecs.register::<super::BehaviorComponent>();
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
 
     ecs.insert(super::EventComponent::init());
-    ecs.subscribe(super::combat_on_event);
-    ecs.subscribe(super::physics_on_event);
+
+    ecs.subscribe(super::physics::move_event);
+    ecs.subscribe(super::combat::bolt_event);
+    ecs.subscribe(super::combat::melee_event);
+    ecs.subscribe(super::combat::field_event);
+    ecs.subscribe(super::combat::explode_event);
 
     #[cfg(test)]
     {

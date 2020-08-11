@@ -2,7 +2,7 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 #[derive(Component)]
 pub struct MovementComponent {
@@ -15,25 +15,27 @@ impl MovementComponent {
     }
 }
 
-pub fn move_action(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
-    {
-        let mut movements = ecs.write_storage::<MovementComponent>();
-        movements.shovel(*entity, MovementComponent::init(new_position));
-    }
-
-    ecs.raise_event(EventKind::Move(), Some(*entity));
+pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
+    ecs.shovel(*entity, MovementComponent::init(new_position));
+    ecs.raise_event(EventKind::Move(MoveState::Begin), Some(*entity));
 }
 
-pub fn complete_move(ecs: &World, entity: &Entity) {
+pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Move(state) if state.is_complete()) {
+        complete_move(ecs, target.unwrap());
+    }
+}
+
+pub fn complete_move(ecs: &mut World, entity: Entity) {
     let new_position = {
         let mut movements = ecs.write_storage::<MovementComponent>();
-        let new_position = movements.grab(*entity).new_position;
-        movements.remove(*entity);
+        let new_position = movements.grab(entity).new_position;
+        movements.remove(entity);
         new_position.origin
     };
 
     let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.grab_mut(*entity);
+    let position = &mut positions.grab_mut(entity);
     position.move_to(new_position);
 }
 
@@ -77,7 +79,6 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
     true
 }
 
-#[allow(dead_code)]
 pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
@@ -108,7 +109,7 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
         return false;
     }
 
-    move_action(ecs, &entity, new);
+    begin_move(ecs, &entity, new);
     spend_time(ecs, &entity, MOVE_ACTION_COST);
     if ecs.read_storage::<SkillResourceComponent>().get(entity).is_some() {
         spend_exhaustion(ecs, &entity, EXHAUSTION_COST_PER_MOVE);
@@ -118,18 +119,6 @@ pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool 
 
 pub fn wait(ecs: &mut World, entity: Entity) {
     spend_time(ecs, &entity, BASE_ACTION_COST);
-}
-
-pub fn physics_on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    match kind {
-        EventKind::AnimationComplete(effect) => match effect {
-            PostAnimationEffect::Move => {
-                complete_move(ecs, &target.unwrap());
-            }
-            _ => {}
-        },
-        _ => {}
-    }
 }
 
 pub const MAX_EXHAUSTION: f64 = 100.0;
@@ -145,14 +134,14 @@ pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
 
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
-    ecs.raise_event(EventKind::WaitForAnimations(), None);
+    crate::arena::complete_animations(ecs);
 }
 
 #[cfg(test)]
 mod tests {
     use super::create_test_state;
     use super::*;
-    use crate::atlas::SizedPoint;
+    use crate::atlas::{EasyMutWorld, SizedPoint};
     use assert_approx_eq::assert_approx_eq;
 
     fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
@@ -263,7 +252,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
-        add_test_resource(&mut ecs, &player, SkillResourceComponent::init(&[]));
+        ecs.shovel(player, SkillResourceComponent::init(&[]));
 
         assert_eq!(true, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
         wait_for_animations(&mut ecs);
@@ -277,14 +266,11 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
-        add_test_resource(
-            &mut ecs,
-            &player,
-            SkillResourceComponent {
-                exhaustion: MAX_EXHAUSTION,
-                ..SkillResourceComponent::init(&[])
-            },
-        );
+        let skill_resource = SkillResourceComponent {
+            exhaustion: MAX_EXHAUSTION,
+            ..SkillResourceComponent::init(&[])
+        };
+        ecs.shovel(player, skill_resource);
 
         assert_eq!(false, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
         let skills = ecs.read_storage::<SkillResourceComponent>();

@@ -20,6 +20,9 @@ pub enum SpriteKinds {
 
     FireBolt,
     BulletBolt,
+
+    Bomb,
+    Explosion,
 }
 
 #[derive(PartialEq, IntoEnumIterator)]

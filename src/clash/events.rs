@@ -1,24 +1,47 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-#[derive(Clone, Copy)]
-pub enum PostAnimationEffect {
-    None,
-    StartBolt,
-    Move,
-    ApplyBolt,
-    ApplyMelee,
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum MoveState {
+    Begin,
+    Complete,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum BoltState {
+    BeginCast,
+    CompleteCast,
+    BeginFlying,
+    CompleteFlying,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum MeleeState {
+    Begin,
+    Complete,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum FieldState {
+    BeginCast,
+    CompleteCast,
+    BeginFlying,
+    CompleteFlying,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum ExplodeState {
+    Begin,
+    Complete,
 }
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
-    Move(),
-    Bolt(),
-    Melee(),
-    AnimationComplete(PostAnimationEffect),
-
-    #[cfg(test)]
-    WaitForAnimations(),
+    Move(MoveState),
+    Bolt(BoltState),
+    Melee(MeleeState),
+    Field(FieldState),
+    Explode(ExplodeState),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();

@@ -6,10 +6,7 @@ use lazy_static::lazy_static;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{
-    bolt, is_area_clear, melee, move_action, spend_exhaustion, spend_focus, spend_time, BoltKind, Logger, Positions, WeaponKind, BASE_ACTION_COST,
-    MAX_EXHAUSTION,
-};
+use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, Point};
 
 #[allow(dead_code)]
@@ -18,6 +15,7 @@ pub enum TargetType {
     None,
     Tile,
     Enemy,
+    Any,
 }
 
 #[allow(dead_code)]
@@ -27,6 +25,7 @@ pub enum SkillEffect {
     RangedAttack(u32, BoltKind),
     MeleeAttack(u32, WeaponKind),
     Reload(AmmoKind),
+    FieldEffect(u32, FieldKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug)]
@@ -228,6 +227,7 @@ lazy_static! {
                     .with_ammo(AmmoKind::Bullets, 1)
                     .with_exhaustion(25.0),
             );
+            m.insert("TestField", SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire)));
         }
         m.insert(
             "Dash",
@@ -270,6 +270,10 @@ lazy_static! {
                 true,
             ),
         );
+        m.insert(
+            "Delayed Blast",
+            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), false),
+        );
 
         m
     };
@@ -284,8 +288,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile => true,
-        TargetType::Enemy => true,
+        TargetType::Tile | TargetType::Enemy | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -303,6 +306,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Any => !initial.contains_point(&target),
         TargetType::None => false,
     } {
         return false;
@@ -344,15 +348,16 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
-    match skill.effect {
+    match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            move_action(ecs, invoker, position);
+            begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => bolt(ecs, &invoker, target.unwrap(), strength, kind),
-        SkillEffect::MeleeAttack(strength, kind) => melee(ecs, &invoker, target.unwrap(), strength, kind),
-        SkillEffect::Reload(kind) => reload(ecs, &invoker, kind),
+        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
+        SkillEffect::FieldEffect(strength, kind) => begin_field(ecs, &invoker, target.unwrap(), *strength, *kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
@@ -391,11 +396,11 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 #[cfg(test)]
 mod tests {
     use super::super::{
-        add_test_resource, add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent,
-        LogComponent, PositionComponent,
+        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
+        PositionComponent,
     };
     use super::*;
-    use crate::atlas::{EasyMutECS, SizedPoint};
+    use crate::atlas::{EasyMutWorld, SizedPoint};
 
     #[test]
     #[should_panic]
@@ -471,6 +476,17 @@ mod tests {
             .build();
 
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+    }
+
+    #[test]
+    fn skill_info_any_target() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+
+        let info = SkillInfo::init_with_distance("", TargetType::Any, SkillEffect::None, Some(2), false);
+        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
@@ -556,8 +572,7 @@ mod tests {
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
         let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count)]);
-        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-        skill_resources.shovel(*player, resource);
+        ecs.shovel(*player, resource);
     }
 
     #[test]
@@ -660,7 +675,7 @@ mod tests {
     }
 
     fn add_focus(ecs: &mut World, player: &Entity, focus: f64) {
-        add_test_resource(ecs, &player, SkillResourceComponent::init(&[]).with_focus(focus));
+        ecs.shovel(*player, SkillResourceComponent::init(&[]).with_focus(focus));
     }
 
     #[test]
@@ -687,5 +702,27 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
         assert_eq!(true, get_skill("TestFocus").get_remaining_usages(&ecs, &player).unwrap() > 0);
+    }
+
+    #[test]
+    fn skill_with_field_explodes() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let other = find_at(&ecs, 2, 3);
+        ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        add_ticks(&mut ecs, 100);
+        wait(&mut ecs, player);
+        tick_next_action(&mut ecs);
+        wait_for_animations(&mut ecs);
+        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+
+        add_ticks(&mut ecs, 100);
+        wait(&mut ecs, player);
+        tick_next_action(&mut ecs);
+        wait_for_animations(&mut ecs);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
     }
 }

@@ -12,6 +12,24 @@ impl Point {
     pub const fn init(x: u32, y: u32) -> Point {
         Point { x, y }
     }
+
+    pub fn get_burst(&self, distance: u32) -> Vec<Point> {
+        let distance = distance as i32;
+        let mut points = vec![];
+        for i in -distance..=distance {
+            for j in -distance..=distance {
+                if i.abs() + j.abs() <= distance {
+                    let x = i + self.x as i32;
+                    let y = j + self.y as i32;
+                    if x >= 0 && y >= 0 {
+                        points.push(Point::init(x as u32, y as u32));
+                    }
+                }
+            }
+        }
+
+        points
+    }
 }
 
 impl fmt::Display for Point {
@@ -193,5 +211,19 @@ mod tests {
         let point = SizedPoint::init_multi(1, 2, 2, 1);
         let distance = point.distance_to(Point::init(4, 5)).unwrap();
         assert_eq!(5, distance);
+    }
+
+    #[test]
+    fn burst() {
+        let point = Point::init(3, 3);
+        assert_eq!(1, point.get_burst(0).len());
+        assert_eq!(5, point.get_burst(1).len());
+        assert_eq!(13, point.get_burst(2).len());
+    }
+
+    #[test]
+    fn burst_corner() {
+        let point = Point::init(0, 0);
+        assert_eq!(3, point.get_burst(1).len());
     }
 }

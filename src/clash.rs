@@ -28,14 +28,13 @@ mod log;
 pub use log::*;
 
 mod ai;
-pub use ai::take_enemy_action;
+pub use ai::{take_enemy_action, BehaviorComponent, BehaviorKind};
 
 mod combat;
-use combat::combat_on_event;
-pub use combat::{bolt, melee, start_bolt, AttackComponent, BoltKind, WeaponKind};
+pub use combat::*;
 
 mod events;
-pub use events::{EventComponent, EventCoordinator, EventKind, PostAnimationEffect};
+pub use events::*;
 
 #[cfg(test)]
 mod test_helpers;

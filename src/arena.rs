@@ -16,4 +16,6 @@ use sprite_loader::SpriteLoader;
 pub use battle_scene::BattleScene;
 
 #[cfg(test)]
+pub use animations::complete_animations;
+#[cfg(test)]
 pub use battle_scene::add_ui_extension;

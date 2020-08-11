@@ -2,9 +2,8 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::BoxResult;
 use crate::atlas::Point;
-use crate::clash::*;
+use crate::clash::{EventCoordinator, EventKind};
 
 #[derive(PartialEq)]
 pub struct FPoint {
@@ -20,6 +19,7 @@ impl FPoint {
 
 #[derive(Clone, Copy)]
 pub enum AnimationKind {
+    None, // Example - A explosion that changes sprite but no movement
     Position {
         start: Point,
         end: Point,
@@ -30,11 +30,17 @@ pub enum AnimationKind {
     },
 }
 
+#[derive(Clone, Copy)]
+pub struct PostAnimationEvent {
+    kind: EventKind,
+    target: Option<Entity>,
+}
+
 pub struct Animation {
     pub kind: AnimationKind,
     pub beginning: u64,
     pub duration: u64,
-    pub effect: PostAnimationEffect,
+    pub post_event: Option<PostAnimationEvent>,
 }
 
 impl Animation {
@@ -63,6 +69,7 @@ impl Animation {
             AnimationKind::CharacterState { now, done: _ } => Some(now),
             // Bit of a hack since we can't have multiple animations stacked
             AnimationKind::Position { .. } => Some(&CharacterAnimationState::Walk),
+            AnimationKind::None => None,
         }
     }
 }
@@ -86,29 +93,42 @@ impl AnimationComponent {
                 },
                 beginning,
                 duration,
-                effect: PostAnimationEffect::None,
+                post_event: None,
             },
         }
     }
+
     pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, duration: u64) -> AnimationComponent {
         AnimationComponent {
             animation: Animation {
                 kind: AnimationKind::CharacterState { now, done },
                 beginning,
                 duration,
-                effect: PostAnimationEffect::None,
+                post_event: None,
             },
         }
     }
 
-    pub fn with_effect(mut self, effect: PostAnimationEffect) -> AnimationComponent {
-        self.animation.effect = effect;
+    pub fn empty(beginning: u64, duration: u64) -> AnimationComponent {
+        AnimationComponent {
+            animation: Animation {
+                kind: AnimationKind::None,
+                beginning,
+                duration,
+                post_event: None,
+            },
+        }
+    }
+
+    pub fn with_post_event(mut self, kind: EventKind, target: Option<Entity>) -> AnimationComponent {
+        self.animation.post_event = Some(PostAnimationEvent { kind, target });
         self
     }
 }
 
-pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
+pub fn tick_animations(ecs: &mut World, frame: u64) {
     let mut completed = vec![];
+    let mut needs_events = vec![];
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let animations = ecs.read_storage::<AnimationComponent>();
@@ -116,27 +136,32 @@ pub fn tick_animations(ecs: &mut World, frame: u64) -> BoxResult<()> {
         for (entity, animation_component) in (&entities, &animations).join() {
             let animation = &animation_component.animation;
             if animation.is_complete(frame) {
-                completed.push((entity, animation.effect));
+                completed.push(entity);
+                if let Some(post_event) = animation.post_event {
+                    needs_events.push(post_event);
+                }
             }
         }
     }
 
-    for (entity, effect) in completed {
-        ecs.raise_event(EventKind::AnimationComplete(effect), Some(entity));
-        ecs.write_storage::<AnimationComponent>().remove(entity);
+    for need_events in needs_events {
+        ecs.raise_event(need_events.kind, need_events.target);
     }
 
-    Ok(())
+    for entity in &completed {
+        ecs.write_storage::<AnimationComponent>().remove(*entity);
+    }
 }
 
 #[cfg(test)]
 pub fn complete_animations(ecs: &mut World) {
     loop {
         let current_frame = {
-            ecs.write_resource::<FrameComponent>().current_frame += 1;
-            ecs.read_resource::<FrameComponent>().current_frame
+            ecs.write_resource::<crate::clash::FrameComponent>().current_frame += 1;
+            ecs.read_resource::<crate::clash::FrameComponent>().current_frame
         };
-        tick_animations(ecs, current_frame).unwrap();
+
+        super::battle_scene::process_tick_events(ecs, current_frame);
 
         let animations = ecs.read_storage::<AnimationComponent>();
         if (animations).join().count() == 0 {

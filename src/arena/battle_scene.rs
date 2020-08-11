@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, battle_animations, tick_animations, AnimationComponent};
+use super::{battle_actions, tick_animations, AnimationComponent};
 use crate::clash::*;
 
 use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
@@ -26,7 +26,11 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<MousePositionComponent>();
     ecs.register::<AnimationComponent>();
 
-    ecs.subscribe(BattleScene::on_event);
+    ecs.subscribe(super::battle_animations::move_event);
+    ecs.subscribe(super::battle_animations::bolt_event);
+    ecs.subscribe(super::battle_animations::melee_event);
+    ecs.subscribe(super::battle_animations::field_event);
+    ecs.subscribe(super::battle_animations::explode_event);
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
@@ -47,13 +51,14 @@ impl<'a> BattleScene<'a> {
             .with(PlayerComponent::init())
             .with(TimeComponent::init(0))
             .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
-            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot"]))
+            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot", "Delayed Blast"]))
             .build();
 
         ecs.create_entity()
             .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
             .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
             .with(CharacterInfoComponent::init(Character::init()))
+            .with(BehaviorComponent::init(BehaviorKind::Random))
             .with(TimeComponent::init(0))
             .build();
 
@@ -82,20 +87,6 @@ impl<'a> BattleScene<'a> {
         }
 
         Ok(BattleScene { ecs, views })
-    }
-
-    fn on_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-        match kind {
-            EventKind::Bolt() => battle_animations::begin_ranged_cast_animation(ecs, &target.unwrap()),
-            EventKind::Melee() => battle_animations::begin_melee_animation(ecs, &target.unwrap()),
-            EventKind::Move() => battle_animations::begin_move_animation(ecs, &target.unwrap()),
-            EventKind::AnimationComplete(effect) => match effect {
-                PostAnimationEffect::StartBolt => battle_animations::begin_ranged_bolt_animation(ecs, &target.unwrap()),
-                _ => {}
-            },
-            #[cfg(test)]
-            EventKind::WaitForAnimations() => super::complete_animations(ecs),
-        }
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
@@ -250,15 +241,18 @@ impl<'a> Scene for BattleScene<'a> {
     }
 
     fn tick(&mut self, frame: u64) -> BoxResult<()> {
-        self.ecs.maintain();
-        tick_animations(&mut self.ecs, frame)?;
-
+        process_tick_events(&mut self.ecs, frame);
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
 
         Ok(())
     }
+}
+
+pub fn process_tick_events(ecs: &mut World, frame: u64) {
+    ecs.maintain();
+    tick_animations(ecs, frame);
 }
 
 fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
