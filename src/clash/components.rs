@@ -69,6 +69,7 @@ impl FrameComponent {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct FieldComponent {
+    #[allow(clippy::type_complexity)]
     pub color: (u8, u8, u8, u8),
 }
 
