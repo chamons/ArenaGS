@@ -153,7 +153,6 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
     }
 }
 
-#[cfg(test)]
 pub fn complete_animations(ecs: &mut World) {
     loop {
         let current_frame = {

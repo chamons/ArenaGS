@@ -8,11 +8,12 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, tick_animations, AnimationComponent};
+use super::{battle_actions, complete_animations, tick_animations, AnimationComponent};
 use crate::clash::*;
 
-use crate::after_image::{CharacterAnimationState, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, EasyPath, Point, SizedPoint};
+use super::spawner;
+use crate::after_image::{RenderCanvas, RenderContext, TextRenderer};
+use crate::atlas::{get_exe_folder, BoxResult, EasyPath, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -41,34 +42,14 @@ impl<'a> BattleScene<'a> {
         let mut ecs = create_world();
         add_ui_extension(&mut ecs);
 
-        ecs.create_entity()
-            .with(RenderComponent::init_with_char_state(
-                SpriteKinds::MaleBrownHairBlueBody,
-                CharacterAnimationState::Idle,
-            ))
-            .with(PositionComponent::init(SizedPoint::init(4, 4)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(PlayerComponent::init())
-            .with(TimeComponent::init(0))
-            .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
-            .with(SkillsComponent::init(&["Dash", "Fire Bolt", "Slash", "Strong Shot", "Delayed Blast"]))
-            .build();
-
-        ecs.create_entity()
-            .with(RenderComponent::init(SpriteKinds::MonsterBirdBrown))
-            .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(BehaviorComponent::init(BehaviorKind::Random))
-            .with(TimeComponent::init(0))
-            .build();
+        spawner::player(&mut ecs);
+        spawner::bird_monster(&mut ecs);
 
         let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
         let map_data_path = map_data_path.stringify();
         ecs.insert(MapComponent::init(Map::init(map_data_path)?));
 
-        ecs.create_entity()
-            .with(RenderComponent::init_with_order(SpriteKinds::BeachBackground, RenderOrder::Background))
-            .build();
+        super::spawner::map_background(&mut ecs);
 
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(render_context)?),
@@ -245,6 +226,13 @@ impl<'a> Scene for BattleScene<'a> {
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
+
+        Ok(())
+    }
+
+    fn on_quit(&mut self) -> BoxResult<()> {
+        // Complete any outstanding animations to prevent any weirdness on load
+        complete_animations(&mut self.ecs);
 
         Ok(())
     }
