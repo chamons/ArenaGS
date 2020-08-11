@@ -1,8 +1,9 @@
 use std::fmt;
 
 use line_drawing::WalkGrid;
+use serde::{Deserialize, Serialize};
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -38,7 +39,7 @@ impl fmt::Display for Point {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct SizedPoint {
     pub origin: Point,
     pub width: u32,

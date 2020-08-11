@@ -4,19 +4,16 @@ pub use character::Character;
 
 mod skills;
 use skills::invoke_skill;
-pub use skills::{can_invoke_skill, get_skill, is_good_target, AmmoKind, SkillInfo, SkillResourceComponent, TargetType};
+pub use skills::{can_invoke_skill, get_skill, is_good_target, AmmoKind, SkillInfo, TargetType};
 
 mod components;
-pub use components::{create_world, CharacterInfoComponent, FieldComponent, FrameComponent, Framer, PlayerComponent, Positions, SkillsComponent};
+pub use components::*;
 
 mod map;
-pub use map::{element_at_location, Map, MapComponent, MapHitTestResult, MapTile, MAX_MAP_TILES};
+pub use map::{element_at_location, Map, MapHitTestResult, MapTile, MAX_MAP_TILES};
 
 mod physics;
 pub use physics::*;
-
-mod position_component;
-pub use position_component::PositionComponent;
 
 mod time;
 pub use time::*;
@@ -28,7 +25,7 @@ mod log;
 pub use log::*;
 
 mod ai;
-pub use ai::{take_enemy_action, BehaviorComponent, BehaviorKind};
+pub use ai::{take_enemy_action, BehaviorKind};
 
 mod combat;
 pub use combat::*;

@@ -3,8 +3,8 @@ use std::slice::from_ref;
 
 use enum_iterator::IntoEnumIterator;
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, Point};
@@ -28,7 +28,7 @@ pub enum SkillEffect {
     FieldEffect(u32, FieldKind),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
 }
@@ -36,15 +36,6 @@ pub enum AmmoKind {
 pub struct AmmoInfo {
     pub kind: AmmoKind,
     pub usage: u32,
-}
-
-#[derive(Component)]
-pub struct SkillResourceComponent {
-    pub ammo: HashMap<AmmoKind, u32>,
-    pub max: HashMap<AmmoKind, u32>,
-    pub exhaustion: f64,
-    pub focus: f64,
-    pub max_focus: f64,
 }
 
 impl SkillResourceComponent {

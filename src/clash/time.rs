@@ -3,21 +3,9 @@ use std::collections::BTreeMap;
 
 use ordered_float::*;
 use specs::prelude::*;
-use specs_derive::Component;
 
-use super::SkillResourceComponent;
+use super::{SkillResourceComponent, TimeComponent};
 use crate::atlas::{EasyECS, EasyMutECS};
-
-#[derive(Hash, PartialEq, Eq, Component)]
-pub struct TimeComponent {
-    pub ticks: i32,
-}
-
-impl TimeComponent {
-    pub fn init(ticks: i32) -> TimeComponent {
-        TimeComponent { ticks }
-    }
-}
 
 pub const BASE_ACTION_COST: i32 = 100;
 pub const MOVE_ACTION_COST: i32 = BASE_ACTION_COST;

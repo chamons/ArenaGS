@@ -32,7 +32,7 @@ fn get_render_frame(animation: Option<&AnimationComponent>, frame: u64) -> u64 {
     }
 }
 
-fn get_render_sprite_state(render: &RenderComponent, animation: Option<&AnimationComponent>) -> u32 {
+fn get_render_sprite_state(render: &RenderInfo, animation: Option<&AnimationComponent>) -> u32 {
     if let Some(animation_component) = animation {
         if let Some(state) = animation_component.animation.current_character_state() {
             return (*state).into();
@@ -84,6 +84,7 @@ impl MapView {
         // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
         for order in RenderOrder::into_enum_iter() {
             for (render, position, animation) in (&renderables, (&positions).maybe(), (&animations).maybe()).join() {
+                let render = &render.render;
                 if render.order == order {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
@@ -93,7 +94,7 @@ impl MapView {
                     let render_frame = get_render_frame(animation, frame);
                     if let Some(position) = position {
                         let offset = get_render_position(position, animation, frame);
-                        let state = get_render_sprite_state(render, animation);
+                        let state = get_render_sprite_state(&render, animation);
                         sprite.draw(canvas, offset, state, render_frame)?;
                     } else {
                         sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, render_frame)?;
@@ -112,7 +113,7 @@ impl MapView {
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
             for position in position.position.all_positions().iter() {
-                self.draw_overlay_tile(canvas, position, field.color)?;
+                self.draw_overlay_tile(canvas, position, Color::from(field.color))?;
             }
         }
 

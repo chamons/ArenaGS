@@ -1,6 +1,6 @@
 use specs::prelude::*;
-use specs_derive::Component;
 
+use super::AnimationComponent;
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::Point;
 use crate::clash::{EventCoordinator, EventKind};
@@ -44,6 +44,41 @@ pub struct Animation {
 }
 
 impl Animation {
+    pub fn movement(start_point: Point, end_point: Point, beginning: u64, duration: u64) -> Animation {
+        Animation {
+            kind: AnimationKind::Position {
+                start: start_point,
+                end: end_point,
+            },
+            beginning,
+            duration,
+            post_event: None,
+        }
+    }
+
+    pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, duration: u64) -> Animation {
+        Animation {
+            kind: AnimationKind::CharacterState { now, done },
+            beginning,
+            duration,
+            post_event: None,
+        }
+    }
+
+    pub fn empty(beginning: u64, duration: u64) -> Animation {
+        Animation {
+            kind: AnimationKind::None,
+            beginning,
+            duration,
+            post_event: None,
+        }
+    }
+
+    pub fn with_post_event(mut self, kind: EventKind, target: Option<Entity>) -> Animation {
+        self.post_event = Some(PostAnimationEvent { kind, target });
+        self
+    }
+
     pub fn is_complete(&self, current: u64) -> bool {
         (current - self.beginning) > self.duration
     }
@@ -76,54 +111,6 @@ impl Animation {
 
 fn lerp(start: f32, end: f32, t: f64) -> f32 {
     (start as f64 * (1.0f64 - t) + end as f64 * t) as f32
-}
-
-#[derive(Component)]
-pub struct AnimationComponent {
-    pub animation: Animation,
-}
-
-impl AnimationComponent {
-    pub fn movement(start_point: Point, end_point: Point, beginning: u64, duration: u64) -> AnimationComponent {
-        AnimationComponent {
-            animation: Animation {
-                kind: AnimationKind::Position {
-                    start: start_point,
-                    end: end_point,
-                },
-                beginning,
-                duration,
-                post_event: None,
-            },
-        }
-    }
-
-    pub fn sprite_state(now: CharacterAnimationState, done: CharacterAnimationState, beginning: u64, duration: u64) -> AnimationComponent {
-        AnimationComponent {
-            animation: Animation {
-                kind: AnimationKind::CharacterState { now, done },
-                beginning,
-                duration,
-                post_event: None,
-            },
-        }
-    }
-
-    pub fn empty(beginning: u64, duration: u64) -> AnimationComponent {
-        AnimationComponent {
-            animation: Animation {
-                kind: AnimationKind::None,
-                beginning,
-                duration,
-                post_event: None,
-            },
-        }
-    }
-
-    pub fn with_post_event(mut self, kind: EventKind, target: Option<Entity>) -> AnimationComponent {
-        self.animation.post_event = Some(PostAnimationEvent { kind, target });
-        self
-    }
 }
 
 pub fn tick_animations(ecs: &mut World, frame: u64) {

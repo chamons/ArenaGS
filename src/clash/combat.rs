@@ -1,27 +1,27 @@
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent, Logger};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
     Fire,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum BoltKind {
     Bullet,
     Fire,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum WeaponKind {
     Sword,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
@@ -29,7 +29,7 @@ pub enum AttackKind {
     Explode(u32),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct AttackInfo {
     pub strength: u32,
     pub target: Point,
@@ -57,11 +57,6 @@ impl AttackInfo {
             _ => panic!("Wrong type in field_kind"),
         }
     }
-}
-
-#[derive(Component)]
-pub struct AttackComponent {
-    pub attack: AttackInfo,
 }
 
 impl AttackComponent {

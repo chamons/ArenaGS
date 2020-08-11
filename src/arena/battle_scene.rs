@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, complete_animations, tick_animations, AnimationComponent};
+use super::{battle_actions, complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::spawner;
@@ -19,22 +19,6 @@ use crate::conductor::{EventStatus, Scene};
 pub struct BattleScene<'a> {
     ecs: World,
     views: Vec<Box<dyn View + 'a>>,
-}
-
-pub fn add_ui_extension(ecs: &mut World) {
-    ecs.register::<RenderComponent>();
-    ecs.register::<BattleSceneStateComponent>();
-    ecs.register::<MousePositionComponent>();
-    ecs.register::<AnimationComponent>();
-
-    ecs.subscribe(super::battle_animations::move_event);
-    ecs.subscribe(super::battle_animations::bolt_event);
-    ecs.subscribe(super::battle_animations::melee_event);
-    ecs.subscribe(super::battle_animations::field_event);
-    ecs.subscribe(super::battle_animations::explode_event);
-
-    ecs.insert(BattleSceneStateComponent::init());
-    ecs.insert(MousePositionComponent::init());
 }
 
 impl<'a> BattleScene<'a> {

@@ -4,7 +4,10 @@ mod animations;
 mod battle_actions;
 mod battle_animations;
 mod battle_scene;
+
 mod components;
+use components::*;
+
 mod icon_loader;
 mod sprite_loader;
 mod views;
@@ -16,6 +19,6 @@ use sprite_loader::SpriteLoader;
 pub use battle_scene::BattleScene;
 
 #[cfg(test)]
-pub use battle_scene::add_ui_extension;
+pub use components::add_ui_extension;
 
 mod spawner;
