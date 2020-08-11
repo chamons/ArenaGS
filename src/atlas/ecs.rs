@@ -35,3 +35,5 @@ impl<T: Component> EasyMutWorld<T> for World {
         self.write_storage::<T>().insert(entity, item).unwrap();
     }
 }
+
+pub struct ToSerialize {}
