@@ -34,7 +34,7 @@ impl<'a> Director<'a> {
             let start_frame = Instant::now();
             for event in render_context.event_pump.poll_iter() {
                 let status = match event {
-                    Event::Quit { .. } => { 
+                    Event::Quit { .. } => {
                         self.scene.on_quit()?;
                         EventStatus::Quit
                     }
