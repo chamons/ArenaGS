@@ -87,6 +87,8 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<BattleSceneStateComponent>();
     ecs.register::<MousePositionComponent>();
     ecs.register::<AnimationComponent>();
+    ecs.register::<super::saveload::SerializationHelper>();
+    // If you add additional components remember to update saveload.rs
 
     ecs.subscribe(super::battle_animations::move_event);
     ecs.subscribe(super::battle_animations::bolt_event);

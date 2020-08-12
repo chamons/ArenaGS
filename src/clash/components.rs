@@ -4,11 +4,12 @@ use serde::{Deserialize, Serialize};
 use specs::error::NoError;
 use specs::prelude::*;
 use specs::saveload::{ConvertSaveload, Marker};
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{EasyECS, Point, SizedPoint};
+use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, Character, Map};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
@@ -166,6 +167,8 @@ pub fn create_world() -> World {
     ecs.register::<MovementComponent>();
     ecs.register::<SkillResourceComponent>();
     ecs.register::<BehaviorComponent>();
+    ecs.register::<SimpleMarker<ToSerialize>>();
+    // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
     ecs.register::<super::EventComponent>();
@@ -173,6 +176,7 @@ pub fn create_world() -> World {
 
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+    ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
 
     ecs.subscribe(super::physics::move_event);
     ecs.subscribe(super::combat::bolt_event);

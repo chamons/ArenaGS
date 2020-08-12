@@ -21,4 +21,5 @@ pub use battle_scene::BattleScene;
 #[cfg(test)]
 pub use components::add_ui_extension;
 
+mod saveload;
 mod spawner;

@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
@@ -11,9 +9,9 @@ use super::views::*;
 use super::{battle_actions, complete_animations, tick_animations};
 use crate::clash::*;
 
-use super::spawner;
+use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{get_exe_folder, BoxResult, EasyPath, Point};
+use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene<'a> {
@@ -23,17 +21,7 @@ pub struct BattleScene<'a> {
 
 impl<'a> BattleScene<'a> {
     pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
-        let mut ecs = create_world();
-        add_ui_extension(&mut ecs);
-
-        spawner::player(&mut ecs);
-        spawner::bird_monster(&mut ecs);
-
-        let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
-        let map_data_path = map_data_path.stringify();
-        ecs.insert(MapComponent::init(Map::init(map_data_path)?));
-
-        super::spawner::map_background(&mut ecs);
+        let ecs = saveload::new_world().unwrap();
 
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(render_context)?),
@@ -71,6 +59,12 @@ impl<'a> BattleScene<'a> {
             Keycode::Down => battle_actions::move_action(&mut self.ecs, Direction::South),
             Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
             Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
+            Keycode::S => saveload::save(&mut self.ecs),
+            Keycode::L => {
+                if let Some(new_world) = saveload::load().ok() {
+                    self.ecs = new_world;
+                }
+            }
             _ => {}
         }
         EventStatus::Continue
