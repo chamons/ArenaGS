@@ -215,12 +215,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(3, 2, 10).build();
         let player = find_player(&ecs);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         begin_melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -228,12 +228,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(4, 2, 10).build();
         let player = find_player(&ecs);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         begin_bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -244,7 +244,7 @@ mod tests {
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {

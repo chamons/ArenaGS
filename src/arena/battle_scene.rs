@@ -61,7 +61,7 @@ impl<'a> BattleScene<'a> {
             Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
             Keycode::S => saveload::save(&mut self.ecs),
             Keycode::L => {
-                if let Some(new_world) = saveload::load().ok() {
+                if let Ok(new_world) = saveload::load() {
                     self.ecs = new_world;
                 }
             }

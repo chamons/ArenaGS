@@ -32,7 +32,7 @@ macro_rules! deserialize_individually {
         $(
         DeserializeComponents::<NoError, _>::deserialize(
             &mut ( &mut $ecs.write_storage::<$type>(), ),
-            &mut $data.0, // entities
+            &$data.0, // entities
             &mut $data.1, // marker
             &mut $data.2, // allocater
             &mut $de,
@@ -40,6 +40,21 @@ macro_rules! deserialize_individually {
         .unwrap();
         )*
     };
+}
+
+pub fn new_world() -> BoxResult<World> {
+    let mut ecs = create_world();
+    add_ui_extension(&mut ecs);
+    spawner::player(&mut ecs);
+    spawner::bird_monster(&mut ecs);
+
+    let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
+    let map_data_path = map_data_path.stringify();
+    ecs.insert(MapComponent::init(Map::init(map_data_path)?));
+
+    super::spawner::map_background(&mut ecs);
+
+    Ok(ecs)
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
@@ -82,21 +97,6 @@ pub fn save(ecs: &mut World) {
         BehaviorComponent,
         SerializationHelper
     );
-}
-
-pub fn new_world() -> BoxResult<World> {
-    let mut ecs = create_world();
-    add_ui_extension(&mut ecs);
-    spawner::player(&mut ecs);
-    spawner::bird_monster(&mut ecs);
-
-    let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
-    let map_data_path = map_data_path.stringify();
-    ecs.insert(MapComponent::init(Map::init(map_data_path)?));
-
-    super::spawner::map_background(&mut ecs);
-
-    Ok(ecs)
 }
 
 pub fn load() -> BoxResult<World> {

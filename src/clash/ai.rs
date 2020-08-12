@@ -100,6 +100,6 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 }
