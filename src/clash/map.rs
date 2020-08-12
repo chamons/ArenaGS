@@ -4,7 +4,6 @@ use std::io::Write;
 
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
 use crate::atlas::{BoxResult, Point};
@@ -17,7 +16,7 @@ pub struct MapTile {
     walkable: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Map {
     tiles: [[MapTile; MAX_MAP_TILES_SIZED]; MAX_MAP_TILES_SIZED],
 }
@@ -55,17 +54,6 @@ impl Map {
         let data = bincode::serialize(&self.tiles)?;
         file.write_all(&data)?;
         Ok(())
-    }
-}
-
-#[derive(Component)]
-pub struct MapComponent {
-    pub map: Map,
-}
-
-impl MapComponent {
-    pub const fn init(map: Map) -> MapComponent {
-        MapComponent { map }
     }
 }
 

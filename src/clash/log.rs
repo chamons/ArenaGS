@@ -1,19 +1,18 @@
 use std::cmp;
 
-use specs::prelude::*;
-use specs_derive::Component;
+use serde::{Deserialize, Serialize};
 
 const LOG_COUNT: usize = 10;
 
-#[derive(Component)]
-pub struct LogComponent {
+#[derive(Deserialize, Serialize, Clone)]
+pub struct Log {
     logs: Vec<String>,
     pub index: usize,
 }
 
-impl LogComponent {
-    pub fn init() -> LogComponent {
-        LogComponent { logs: vec![], index: 0 }
+impl Log {
+    pub fn init() -> Log {
+        Log { logs: vec![], index: 0 }
     }
 
     pub fn get(&self, index: usize, length: usize) -> &[String] {
@@ -58,7 +57,7 @@ mod tests {
 
     #[test]
     fn normal_get() {
-        let log = LogComponent {
+        let log = Log {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
             index: 0,
         };
@@ -74,7 +73,7 @@ mod tests {
 
     #[test]
     fn get_zero() {
-        let log = LogComponent {
+        let log = Log {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
             index: 0,
         };
@@ -84,7 +83,7 @@ mod tests {
 
     #[test]
     fn out_of_range() {
-        let log = LogComponent {
+        let log = Log {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
             index: 0,
         };
@@ -94,7 +93,7 @@ mod tests {
 
     #[test]
     fn get_too_far() {
-        let log = LogComponent {
+        let log = Log {
             logs: vec!["1".to_string(), "2".to_string(), "3".to_string()],
             index: 0,
         };
@@ -104,7 +103,7 @@ mod tests {
 
     #[test]
     fn add_can_bump_index() {
-        let mut log = LogComponent::init();
+        let mut log = Log::init();
         for _ in 0..10 {
             log.add("Test");
             assert_eq!(log.index, 0);
@@ -118,7 +117,7 @@ mod tests {
 
     #[test]
     fn scroll_forward() {
-        let mut log = LogComponent::init();
+        let mut log = Log::init();
         for _ in 0..15 {
             log.add("Test");
         }
@@ -134,7 +133,7 @@ mod tests {
 
     #[test]
     fn scroll_back() {
-        let mut log = LogComponent::init();
+        let mut log = Log::init();
         for _ in 0..15 {
             log.add("Test");
         }
@@ -146,26 +145,5 @@ mod tests {
             log.scroll_back();
         }
         assert_eq!(log.index, 0);
-    }
-}
-
-pub trait Logger {
-    fn log(&mut self, message: &str);
-    fn log_scroll_forward(&mut self);
-    fn log_scroll_back(&mut self);
-}
-
-impl Logger for World {
-    fn log(&mut self, message: &str) {
-        let mut log = self.write_resource::<LogComponent>();
-        log.add(message);
-    }
-    fn log_scroll_forward(&mut self) {
-        let mut log = self.write_resource::<LogComponent>();
-        log.scroll_forward();
-    }
-    fn log_scroll_back(&mut self) {
-        let mut log = self.write_resource::<LogComponent>();
-        log.scroll_back();
     }
 }

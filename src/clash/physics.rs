@@ -1,19 +1,7 @@
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
-
-#[derive(Component)]
-pub struct MovementComponent {
-    pub new_position: SizedPoint,
-}
-
-impl MovementComponent {
-    pub fn init(new_position: SizedPoint) -> MovementComponent {
-        MovementComponent { new_position }
-    }
-}
 
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     ecs.shovel(*entity, MovementComponent::init(new_position));

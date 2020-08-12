@@ -1,7 +1,6 @@
 use enum_iterator::IntoEnumIterator;
 use num_enum::IntoPrimitive;
-use specs::prelude::*;
-use specs_derive::Component;
+use serde::{Deserialize, Serialize};
 
 use crate::after_image::CharacterAnimationState;
 
@@ -25,7 +24,7 @@ pub enum SpriteKinds {
     Explosion,
 }
 
-#[derive(PartialEq, IntoEnumIterator)]
+#[derive(PartialEq, IntoEnumIterator, Serialize, Deserialize, Clone)]
 #[allow(dead_code)]
 pub enum RenderOrder {
     Background,
@@ -33,32 +32,32 @@ pub enum RenderOrder {
     Top,
 }
 
-#[derive(Component)]
-pub struct RenderComponent {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct RenderInfo {
     pub sprite_id: u32,
     pub sprite_state: u32,
     pub order: RenderOrder,
 }
 
-impl RenderComponent {
-    pub fn init(sprite_kind: SpriteKinds) -> RenderComponent {
-        RenderComponent {
+impl RenderInfo {
+    pub fn init(sprite_kind: SpriteKinds) -> RenderInfo {
+        RenderInfo {
             sprite_id: sprite_kind.into(),
             sprite_state: 0,
             order: RenderOrder::Normal,
         }
     }
 
-    pub fn init_with_char_state(sprite_kind: SpriteKinds, sprite_state: CharacterAnimationState) -> RenderComponent {
-        RenderComponent {
+    pub fn init_with_char_state(sprite_kind: SpriteKinds, sprite_state: CharacterAnimationState) -> RenderInfo {
+        RenderInfo {
             sprite_id: sprite_kind.into(),
             sprite_state: sprite_state.into(),
             order: RenderOrder::Normal,
         }
     }
 
-    pub fn init_with_order(sprite_kind: SpriteKinds, order: RenderOrder) -> RenderComponent {
-        RenderComponent {
+    pub fn init_with_order(sprite_kind: SpriteKinds, order: RenderOrder) -> RenderInfo {
+        RenderInfo {
             sprite_id: sprite_kind.into(),
             sprite_state: 0,
             order,

@@ -1,27 +1,27 @@
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent, Logger};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
     Fire,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum BoltKind {
     Bullet,
     Fire,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum WeaponKind {
     Sword,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
@@ -29,7 +29,7 @@ pub enum AttackKind {
     Explode(u32),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct AttackInfo {
     pub strength: u32,
     pub target: Point,
@@ -57,11 +57,6 @@ impl AttackInfo {
             _ => panic!("Wrong type in field_kind"),
         }
     }
-}
-
-#[derive(Component)]
-pub struct AttackComponent {
-    pub attack: AttackInfo,
 }
 
 impl AttackComponent {
@@ -220,12 +215,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(3, 2, 10).build();
         let player = find_player(&ecs);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         begin_melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -233,12 +228,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(4, 2, 10).build();
         let player = find_player(&ecs);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         begin_bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -249,7 +244,7 @@ mod tests {
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {

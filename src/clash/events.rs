@@ -46,7 +46,7 @@ pub enum EventKind {
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();
 
-#[derive(Component)]
+#[derive(Component)] // NotConvertSaveload
 pub struct EventComponent {
     pub on_event: Vec<EventCallback>,
 }

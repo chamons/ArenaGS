@@ -21,7 +21,7 @@ impl<'a> LogView<'a> {
     }
 
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        let log = ecs.read_resource::<LogComponent>();
+        let log = &ecs.read_resource::<LogComponent>().log;
         for (i, entry) in log.get(log.index, LOG_COUNT).iter().enumerate() {
             self.text.render_text(
                 entry,

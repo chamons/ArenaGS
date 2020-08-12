@@ -3,8 +3,8 @@ use std::slice::from_ref;
 
 use enum_iterator::IntoEnumIterator;
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, Point};
@@ -28,7 +28,7 @@ pub enum SkillEffect {
     FieldEffect(u32, FieldKind),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
 }
@@ -36,15 +36,6 @@ pub enum AmmoKind {
 pub struct AmmoInfo {
     pub kind: AmmoKind,
     pub usage: u32,
-}
-
-#[derive(Component)]
-pub struct SkillResourceComponent {
-    pub ammo: HashMap<AmmoKind, u32>,
-    pub max: HashMap<AmmoKind, u32>,
-    pub exhaustion: f64,
-    pub focus: f64,
-    pub max_focus: f64,
 }
 
 impl SkillResourceComponent {
@@ -519,11 +510,11 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(4, 2)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -535,11 +526,11 @@ mod tests {
             .build();
         let player = find_at(&ecs, 2, 2);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(2, 4)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -547,11 +538,11 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     #[test]
@@ -563,11 +554,11 @@ mod tests {
             .build();
         let player = find_at(&ecs, 2, 2);
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
@@ -717,12 +708,12 @@ mod tests {
         wait(&mut ecs, player);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
-        assert_eq!(0, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         add_ticks(&mut ecs, 100);
         wait(&mut ecs, player);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 }

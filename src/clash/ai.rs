@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs_derive::Component;
 
 use rand::{
     distributions::{Distribution, Standard},
@@ -9,23 +9,12 @@ use rand::{
 use super::*;
 use crate::atlas::EasyECS;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
     None,
     Random,
     Explode,
-}
-
-#[derive(Component)]
-pub struct BehaviorComponent {
-    behavior: BehaviorKind,
-}
-
-impl BehaviorComponent {
-    pub fn init(behavior: BehaviorKind) -> BehaviorComponent {
-        BehaviorComponent { behavior }
-    }
 }
 
 impl Distribution<Direction> for Standard {
@@ -111,6 +100,6 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
-        assert_eq!(1, ecs.read_resource::<LogComponent>().count());
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
 }

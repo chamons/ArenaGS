@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Health {
     pub current: u32,
     pub max: u32,
@@ -9,6 +12,7 @@ impl Health {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Character {
     pub health: Health,
 }
