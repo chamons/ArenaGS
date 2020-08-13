@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
+use rand::distributions::{Distribution, Standard};
+use rand::prelude::*;
 
 use super::*;
-use crate::atlas::EasyECS;
+use crate::atlas::{EasyECS, SizedPoint};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
@@ -29,22 +27,28 @@ impl Distribution<Direction> for Standard {
     }
 }
 
+fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    for _ in 0..5 {
+        let direction: Direction = random.gen();
+        if let Some(point) = point_in_direction(&position, direction) {
+            if can_move_character(ecs, enemy, point) {
+                return Some(direction);
+            }
+        }
+    }
+    None
+}
+
 pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
         BehaviorKind::Random => {
             let position = ecs.get_position(enemy);
-            for _ in 0..5 {
-                let direction: Direction = rand::random();
-                if let Some(point) = point_in_direction(&position, direction) {
-                    if can_move_character(ecs, enemy, point) {
-                        let did_move = move_character(ecs, *enemy, point);
-                        if did_move {
-                            return;
-                        }
-                    }
-                }
+            if let Some(direction) = get_random_direction(ecs, position, enemy) {
+                let point = point_in_direction(&position, direction).unwrap();
+                move_character(ecs, *enemy, point);
             }
         }
         BehaviorKind::Explode => {

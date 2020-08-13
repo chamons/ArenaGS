@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::error::NoError;
 use specs::prelude::*;
@@ -152,6 +153,17 @@ impl BehaviorComponent {
     }
 }
 
+#[derive(Component, Clone)] // NotConvertSaveload
+pub struct RandomComponent {
+    pub rand: StdRng,
+}
+
+impl RandomComponent {
+    pub fn init() -> RandomComponent {
+        RandomComponent { rand: StdRng::from_entropy() }
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -167,6 +179,7 @@ pub fn create_world() -> World {
     ecs.register::<MovementComponent>();
     ecs.register::<SkillResourceComponent>();
     ecs.register::<BehaviorComponent>();
+    ecs.register::<RandomComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
     // If you add additional components remember to update saveload.rs
 
@@ -174,6 +187,7 @@ pub fn create_world() -> World {
     ecs.register::<super::EventComponent>();
     ecs.insert(super::EventComponent::init());
 
+    ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());

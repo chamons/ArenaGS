@@ -1,4 +1,3 @@
-- RandomComponent (with save load)
 - Dice
 - Damage (1/2 dice fixed)
 - Defense (Dodge, Armor, Absorb)
