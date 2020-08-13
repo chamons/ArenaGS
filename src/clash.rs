@@ -40,3 +40,6 @@ pub use test_helpers::*;
 
 mod strength;
 pub use strength::*;
+
+mod defenses;
+pub use defenses::*;
