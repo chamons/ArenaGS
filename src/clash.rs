@@ -1,6 +1,6 @@
 // The game rules and logic for the games
-mod character;
-pub use character::Character;
+mod character_info;
+pub use character_info::CharacterInfo;
 
 mod skills;
 use skills::invoke_skill;

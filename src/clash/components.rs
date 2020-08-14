@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, Character, Map};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Map};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -50,11 +50,11 @@ impl PlayerComponent {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct CharacterInfoComponent {
-    pub character: Character,
+    pub character: CharacterInfo,
 }
 
 impl CharacterInfoComponent {
-    pub const fn init(character: Character) -> CharacterInfoComponent {
+    pub const fn init(character: CharacterInfo) -> CharacterInfoComponent {
         CharacterInfoComponent { character }
     }
 }

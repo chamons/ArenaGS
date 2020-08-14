@@ -80,7 +80,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
     ecs.create_entity()
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(Character::init(Defenses::init(0, 0, 0, 0, 1))))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(Defenses::init(0, 0, 0, 0, 1))))
         .with(SkillResourceComponent::init(&[]))
         .build();
 }
