@@ -131,9 +131,9 @@ fn animate_move(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
     let position = ecs.get_position(&target);
 
-    let animation = Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH);
+    let animation =
+        Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH).with_post_event(EventKind::Move(MoveState::Complete), Some(target));
     ecs.shovel(target, AnimationComponent::init(animation));
-    ecs.raise_event(EventKind::Move(MoveState::Complete), Some(target));
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
