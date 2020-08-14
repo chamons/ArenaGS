@@ -48,7 +48,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
             let position = ecs.get_position(enemy);
             if let Some(direction) = get_random_direction(ecs, position, enemy) {
                 let point = point_in_direction(&position, direction).unwrap();
-                move_character(ecs, *enemy, point);
+                move_character_action(ecs, *enemy, point);
             }
         }
         BehaviorKind::Explode => {
