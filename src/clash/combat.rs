@@ -69,14 +69,14 @@ impl AttackComponent {
 
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
     ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
-    ecs.raise_event(EventKind::Bolt(BoltState::BeginCast), Some(*source));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
 }
 
 pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Bolt(state) => match state {
-            BoltState::CompleteCast => start_bolt(ecs, target.unwrap()),
-            BoltState::CompleteFlying => apply_bolt(ecs, target.unwrap()),
+            BoltState::CompleteCastAnimation => start_bolt(ecs, target.unwrap()),
+            BoltState::CompleteFlyingAnimation => apply_bolt(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -94,7 +94,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
         .build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Bolt(BoltState::BeginFlying), Some(bolt));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
@@ -108,11 +108,11 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
 
 pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
-    ecs.raise_event(EventKind::Melee(MeleeState::Begin), Some(*source));
+    ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(*source));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Melee(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Melee(state) if state.is_complete_animation()) {
         apply_melee(ecs, target.unwrap());
     }
 }
@@ -129,14 +129,14 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
 
 pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: FieldKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind)));
-    ecs.raise_event(EventKind::Field(FieldState::BeginCast), Some(*source));
+    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Field(state) => match state {
-            FieldState::CompleteCast => start_field(ecs, target.unwrap()),
-            FieldState::CompleteFlying => apply_field(ecs, target.unwrap()),
+            FieldState::CompleteCastAnimation => start_field(ecs, target.unwrap()),
+            FieldState::CompleteFlyingAnimation => apply_field(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -154,7 +154,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
         .build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Field(FieldState::BeginFlying), Some(field_projectile));
+    ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
 }
 
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
@@ -177,11 +177,11 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 }
 
 pub fn begin_explode(ecs: &mut World, source: &Entity) {
-    ecs.raise_event(EventKind::Explode(ExplodeState::Begin), Some(*source));
+    ecs.raise_event(EventKind::Explode(ExplodeState::BeginAnimation), Some(*source));
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Explode(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Explode(state) if state.is_complete_animation()) {
         apply_explode(ecs, target.unwrap());
     }
 }

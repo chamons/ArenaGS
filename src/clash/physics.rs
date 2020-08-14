@@ -3,13 +3,14 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
+// Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     ecs.shovel(*entity, MovementComponent::init(new_position));
-    ecs.raise_event(EventKind::Move(MoveState::Begin), Some(*entity));
+    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation), Some(*entity));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Move(state) if state.is_complete_animation()) {
         complete_move(ecs, target.unwrap());
     }
 }
@@ -92,6 +93,7 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
     is_area_clear(ecs, &new.all_positions(), mover) && has_exhaustion
 }
 
+// Move a character, spending standard time and exhaustion
 pub fn move_character_action(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool {
     if !can_move_character(ecs, &entity, new) {
         return false;

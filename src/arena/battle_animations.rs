@@ -10,8 +10,8 @@ use crate::clash::*;
 pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Bolt(state) => match state {
-            BoltState::BeginCast => begin_ranged_cast_animation(ecs, target.unwrap()),
-            BoltState::BeginFlying => begin_ranged_bolt_animation(ecs, target.unwrap()),
+            BoltState::BeginCastAnimation => begin_ranged_cast_animation(ecs, target.unwrap()),
+            BoltState::BeginFlyingAnimation => begin_ranged_bolt_animation(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -49,7 +49,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
         }
     };
 
-    cast_animation(ecs, target, animation, EventKind::Bolt(BoltState::CompleteCast));
+    cast_animation(ecs, target, animation, EventKind::Bolt(BoltState::CompleteCastAnimation));
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
@@ -60,14 +60,14 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
             BoltKind::Bullet => SpriteKinds::BulletBolt,
         }
     };
-    projectile_animation(ecs, bolt, sprite, EventKind::Bolt(BoltState::CompleteFlying));
+    projectile_animation(ecs, bolt, sprite, EventKind::Bolt(BoltState::CompleteFlyingAnimation));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Field(state) => match state {
-            FieldState::BeginCast => begin_ranged_cast_field_animation(ecs, target.unwrap()),
-            FieldState::BeginFlying => begin_ranged_field_animation(ecs, target.unwrap()),
+            FieldState::BeginCastAnimation => begin_ranged_cast_field_animation(ecs, target.unwrap()),
+            FieldState::BeginFlyingAnimation => begin_ranged_field_animation(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -81,7 +81,7 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
             FieldKind::Fire => CharacterAnimationState::Crouch,
         }
     };
-    cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCast));
+    cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCastAnimation));
 }
 
 pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
@@ -91,11 +91,11 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
             FieldKind::Fire => SpriteKinds::Bomb,
         }
     };
-    projectile_animation(ecs, bolt, sprite, EventKind::Field(FieldState::CompleteFlying));
+    projectile_animation(ecs, bolt, sprite, EventKind::Field(FieldState::CompleteFlyingAnimation));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Melee(state) if state.is_begin()) {
+    if matches!(kind, EventKind::Melee(state) if state.is_begin_animation()) {
         begin_melee_animation(ecs, target.unwrap());
     }
 }
@@ -111,12 +111,12 @@ pub fn begin_melee_animation(ecs: &mut World, target: Entity) {
 
     const MELEE_ATTACK_LENGTH: u64 = 18;
     let attack_animation = Animation::sprite_state(animation, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH)
-        .with_post_event(EventKind::Melee(MeleeState::Complete), Some(target));
+        .with_post_event(EventKind::Melee(MeleeState::CompleteAnimation), Some(target));
     ecs.shovel(target, AnimationComponent::init(attack_animation));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_begin()) {
+    if matches!(kind, EventKind::Move(state) if state.is_begin_animation()) {
         animate_move(ecs, target.unwrap());
     }
 }
@@ -131,13 +131,13 @@ fn animate_move(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
     let position = ecs.get_position(&target);
 
-    let animation =
-        Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH).with_post_event(EventKind::Move(MoveState::Complete), Some(target));
+    let animation = Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH)
+        .with_post_event(EventKind::Move(MoveState::CompleteAnimation), Some(target));
     ecs.shovel(target, AnimationComponent::init(animation));
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Explode(state) if state.is_begin()) {
+    if matches!(kind, EventKind::Explode(state) if state.is_begin_animation()) {
         begin_explode_animation(ecs, target.unwrap());
     }
 }
@@ -148,6 +148,6 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
     ecs.write_storage::<FieldComponent>().remove(target);
 
     const EXPLOSION_LENGTH: u64 = 18;
-    let attack_animation = Animation::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::Complete), Some(target));
+    let attack_animation = Animation::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::CompleteAnimation), Some(target));
     ecs.shovel(target, AnimationComponent::init(attack_animation));
 }
