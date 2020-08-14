@@ -11,7 +11,7 @@ impl Strength {
         Strength { dice }
     }
 
-    pub fn roll<R: Rng + ?Sized>(self, rng: &mut R) -> u32 {
+    pub fn roll<R: Rng + ?Sized>(&self, rng: &mut R) -> u32 {
         let fixed_count = self.dice / 2;
         let open_count = self.dice - fixed_count;
         let fixed_value = fixed_count * STRENGTH_DICE_SIDES;
