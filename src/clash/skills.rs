@@ -386,10 +386,7 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{
-        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
-        PositionComponent,
-    };
+    use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, LogComponent};
     use super::*;
     use crate::atlas::{EasyMutWorld, SizedPoint};
 
@@ -461,10 +458,7 @@ mod tests {
 
         let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
+        make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
     }

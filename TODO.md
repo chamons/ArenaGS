@@ -1,4 +1,4 @@
-- Defense (Dodge, Armor, Absorb)
-   - Should dodge not regain over time by by character movement? 
+
+- Should dodge not regain over time by by character movement? 
 - When character life gone, remove. Setup fail state and repeat state (for now)
 - Movement Speed (how much of a turn do you spend moving one square)

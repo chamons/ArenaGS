@@ -1,14 +1,15 @@
 use std::cmp;
 
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use super::Strength;
 
-enum DamageKind {
+pub enum DamageKind {
     Physical,
 }
 
-struct Damage {
+pub struct Damage {
     pub amount: Strength,
     pub kind: DamageKind,
 }
@@ -23,7 +24,8 @@ impl Damage {
     }
 }
 
-struct Defenses {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Defenses {
     dodge: u32,
     armor: u32,
     absorb: u32,
