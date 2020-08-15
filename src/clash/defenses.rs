@@ -2,8 +2,9 @@ use std::cmp;
 
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+use specs::prelude::*;
 
-use super::Strength;
+use super::{CharacterInfoComponent, EventKind, MoveState, Strength};
 
 pub enum DamageKind {
     Physical,
@@ -26,11 +27,11 @@ impl Damage {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
-    dodge: u32,
-    max_dodge: u32,
-    armor: u32,
-    absorb: u32,
-    health: u32,
+    pub dodge: u32,
+    pub max_dodge: u32,
+    pub armor: u32,
+    pub absorb: u32,
+    pub health: u32,
 }
 
 impl Defenses {
@@ -71,6 +72,22 @@ impl Defenses {
     }
 }
 
+pub fn defense_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if let Some(target) = target {
+        match kind {
+            EventKind::Move(state) => match state {
+                MoveState::Complete(distance) => {
+                    if let Some(char_info) = ecs.write_storage::<CharacterInfoComponent>().get_mut(target) {
+                        char_info.character.defenses.regain_dodge(2 * distance);
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+}
+
 fn apply_with_remain(to_apply: u32, pool: u32) -> (u32, u32) {
     if to_apply <= pool {
         (to_apply, 0)
@@ -81,7 +98,10 @@ fn apply_with_remain(to_apply: u32, pool: u32) -> (u32, u32) {
 
 #[cfg(test)]
 mod tests {
+    use super::super::*;
     use super::*;
+    use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, SizedPoint};
+    use assert_approx_eq::assert_approx_eq;
 
     #[test]
     fn apply_remain() {
@@ -166,5 +186,16 @@ mod tests {
         assert!(def.absorb > 1);
         assert!(def.absorb < 5);
         assert_eq!(10, def.health);
+    }
+
+    #[test]
+    fn dodge_restored_by_movement() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::init(0, 10, 0, 0, 10);
+        move_character_action(&mut ecs, player, SizedPoint::init(2, 3));
+        wait_for_animations(&mut ecs);
+        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(player).character.defenses.dodge;
+        assert_eq!(2, dodge);
     }
 }

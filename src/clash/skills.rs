@@ -710,4 +710,17 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
     }
+
+    #[test]
+    fn dodge_restored_by_skill_movement() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = Defenses::init(0, 5, 0, 0, 10);
+
+        invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
+        wait_for_animations(&mut ecs);
+
+        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.dodge;
+        assert_eq!(4, dodge);
+    }
 }

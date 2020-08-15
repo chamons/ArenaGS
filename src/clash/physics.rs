@@ -16,16 +16,22 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn complete_move(ecs: &mut World, entity: Entity) {
+    let current_position = ecs.get_position(&entity);
     let new_position = {
         let mut movements = ecs.write_storage::<MovementComponent>();
         let new_position = movements.grab(entity).new_position;
         movements.remove(entity);
         new_position.origin
     };
+    let distance = current_position.distance_to(new_position).unwrap();
 
-    let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.grab_mut(entity);
-    position.move_to(new_position);
+    {
+        let mut positions = ecs.write_storage::<PositionComponent>();
+        let position = &mut positions.grab_mut(entity);
+        position.move_to(new_position);
+    }
+
+    ecs.raise_event(EventKind::Move(MoveState::Complete(distance)), Some(entity));
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
