@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Defenses, Strength};
+use super::Defenses;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CharacterInfo {

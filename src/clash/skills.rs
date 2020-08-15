@@ -22,10 +22,10 @@ pub enum TargetType {
 pub enum SkillEffect {
     None,
     Move,
-    RangedAttack(u32, BoltKind),
-    MeleeAttack(u32, WeaponKind),
+    RangedAttack(Damage, BoltKind),
+    MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    FieldEffect(u32, FieldKind),
+    FieldEffect(Damage, FieldKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -199,11 +199,11 @@ lazy_static! {
             );
             m.insert(
                 "TestRanged",
-                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::RangedAttack(2, BoltKind::Fire), Some(2), false),
+                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::RangedAttack(Damage::physical(2), BoltKind::Fire), Some(2), false),
             );
             m.insert(
                 "TestMelee",
-                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::MeleeAttack(2, WeaponKind::Sword), Some(1), false),
+                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::MeleeAttack(Damage::physical(2), WeaponKind::Sword), Some(1), false),
             );
             m.insert(
                 "TestAmmo",
@@ -218,7 +218,10 @@ lazy_static! {
                     .with_ammo(AmmoKind::Bullets, 1)
                     .with_exhaustion(25.0),
             );
-            m.insert("TestField", SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire)));
+            m.insert(
+                "TestField",
+                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::physical(1), FieldKind::Fire)),
+            );
         }
         m.insert(
             "Dash",
@@ -233,7 +236,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_37.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(10, BoltKind::Bullet),
+                SkillEffect::RangedAttack(Damage::physical(10), BoltKind::Bullet),
                 Some(10),
                 true,
             )
@@ -245,7 +248,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(5, BoltKind::Fire),
+                SkillEffect::RangedAttack(Damage::physical(5), BoltKind::Fire),
                 Some(15),
                 true,
             )
@@ -256,14 +259,20 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_76.png",
                 TargetType::Enemy,
-                SkillEffect::MeleeAttack(5, WeaponKind::Sword),
+                SkillEffect::MeleeAttack(Damage::physical(5), WeaponKind::Sword),
                 Some(1),
                 true,
             ),
         );
         m.insert(
             "Delayed Blast",
-            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), false),
+            SkillInfo::init_with_distance(
+                "en_craft_96.png",
+                TargetType::Any,
+                SkillEffect::FieldEffect(Damage::physical(5), FieldKind::Fire),
+                Some(3),
+                false,
+            ),
         );
 
         m
@@ -345,10 +354,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
-        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::FieldEffect(strength, kind) => begin_field(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 

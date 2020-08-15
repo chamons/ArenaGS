@@ -4,26 +4,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{CharacterInfoComponent, EventKind, MoveState, Strength};
-
-pub enum DamageKind {
-    Physical,
-}
-
-pub struct Damage {
-    pub amount: Strength,
-    pub kind: DamageKind,
-}
-
-impl Damage {
-    pub fn init(amount: Strength, kind: DamageKind) -> Damage {
-        Damage { amount, kind }
-    }
-
-    pub fn dice(&self) -> u32 {
-        self.amount.dice
-    }
-}
+use super::{CharacterInfoComponent, Damage, EventKind, MoveState, Strength};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
@@ -100,8 +81,7 @@ fn apply_with_remain(to_apply: u32, pool: u32) -> (u32, u32) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, SizedPoint};
-    use assert_approx_eq::assert_approx_eq;
+    use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
 
     #[test]
     fn apply_remain() {

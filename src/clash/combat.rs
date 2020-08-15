@@ -31,7 +31,7 @@ pub enum AttackKind {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct AttackInfo {
-    pub strength: u32,
+    pub strength: Damage,
     pub target: Point,
     pub kind: AttackKind,
 }
@@ -60,14 +60,14 @@ impl AttackInfo {
 }
 
 impl AttackComponent {
-    pub fn init(target: Point, strength: u32, kind: AttackKind) -> AttackComponent {
+    pub fn init(target: Point, strength: Damage, kind: AttackKind) -> AttackComponent {
         AttackComponent {
             attack: AttackInfo { target, strength, kind },
         }
     }
 }
 
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
+pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: BoltKind) {
     ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
     ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
 }
@@ -102,11 +102,11 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(bolt).attack
     };
-    ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+    ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength.dice(), attack.target.x, attack.target.y).as_str());
     ecs.delete_entity(bolt).unwrap();
 }
 
-pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
+pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: WeaponKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
     ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(*source));
 }
@@ -122,12 +122,20 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(character).attack
     };
-    ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+    ecs.log(
+        format!(
+            "Enemy was struck ({}) in melee at ({},{})!",
+            attack.strength.dice(),
+            attack.target.x,
+            attack.target.y
+        )
+        .as_str(),
+    );
 
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: FieldKind) {
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: FieldKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
@@ -198,7 +206,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     for in_blast in ecs.get_position(&source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
             if target != source {
-                ecs.log(format!("Struct by blast ({}) at {}", strength, in_blast).as_str());
+                ecs.log(format!("Struct by blast ({}) at {}", strength.dice(), in_blast).as_str());
             }
         }
     }
@@ -217,7 +225,7 @@ mod tests {
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
-        begin_melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
+        begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::physical(1), WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
@@ -230,7 +238,7 @@ mod tests {
 
         assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
-        begin_bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
+        begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::physical(1), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
@@ -240,7 +248,7 @@ mod tests {
     fn explode_logs_on_hit() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let exploder = find_at(&mut ecs, 2, 3);
-        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
+        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::physical(2), AttackKind::Explode(1)));
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
@@ -265,7 +273,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), 1, FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::physical(1), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());

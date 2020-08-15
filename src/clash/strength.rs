@@ -1,7 +1,9 @@
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub const STRENGTH_DICE_SIDES: u32 = 2;
 
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct Strength {
     pub dice: u32,
 }
@@ -17,6 +19,34 @@ impl Strength {
         let fixed_value = fixed_count * STRENGTH_DICE_SIDES;
         let open_value = rng.gen_range(open_count, (open_count * STRENGTH_DICE_SIDES) + 1);
         fixed_value + open_value
+    }
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum DamageKind {
+    Physical,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
+pub struct Damage {
+    pub amount: Strength,
+    pub kind: DamageKind,
+}
+
+impl Damage {
+    pub fn init(amount: Strength, kind: DamageKind) -> Damage {
+        Damage { amount, kind }
+    }
+
+    pub fn physical(amount: u32) -> Damage {
+        Damage {
+            amount: Strength::init(amount),
+            kind: DamageKind::Physical,
+        }
+    }
+
+    pub fn dice(&self) -> u32 {
+        self.amount.dice
     }
 }
 
