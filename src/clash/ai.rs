@@ -92,6 +92,7 @@ mod tests {
     #[test]
     fn explode_behavior() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
         let character = ecs
             .create_entity()
             .with(BehaviorComponent::init(BehaviorKind::Explode))
@@ -100,10 +101,11 @@ mod tests {
             .with(AttackComponent::init(Point::init(2, 2), Damage::physical(2), AttackKind::Explode(2)))
             .build();
 
+        let starting_health = ecs.get_defenses(&target).health;
         take_enemy_action(&mut ecs, &character);
         wait_for_animations(&mut ecs);
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 }

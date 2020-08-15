@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent, Logger};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -31,7 +31,7 @@ pub enum AttackKind {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct AttackInfo {
-    pub strength: Damage,
+    pub damage: Damage,
     pub target: Point,
     pub kind: AttackKind,
 }
@@ -60,9 +60,9 @@ impl AttackInfo {
 }
 
 impl AttackComponent {
-    pub fn init(target: Point, strength: Damage, kind: AttackKind) -> AttackComponent {
+    pub fn init(target: Point, damage: Damage, kind: AttackKind) -> AttackComponent {
         AttackComponent {
-            attack: AttackInfo { target, strength, kind },
+            attack: AttackInfo { target, damage, kind },
         }
     }
 }
@@ -97,12 +97,21 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
 }
 
+fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage) {
+    if let Some(target) = find_character_at_location(ecs, position) {
+        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+        let defenses = &mut character_infos.grab_mut(target).character.defenses;
+        let mut random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+        defenses.apply_damage(damage, &mut random);
+    }
+}
+
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(bolt).attack
     };
-    ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength.dice(), attack.target.x, attack.target.y).as_str());
+    apply_damage_to_location(ecs, attack.target, attack.damage);
     ecs.delete_entity(bolt).unwrap();
 }
 
@@ -122,15 +131,7 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(character).attack
     };
-    ecs.log(
-        format!(
-            "Enemy was struck ({}) in melee at ({},{})!",
-            attack.strength.dice(),
-            attack.target.x,
-            attack.target.y
-        )
-        .as_str(),
-    );
+    apply_damage_to_location(ecs, attack.target, attack.damage);
 
     ecs.write_storage::<AttackComponent>().remove(character);
 }
@@ -176,7 +177,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 
     ecs.create_entity()
         .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
-        .with(AttackComponent::init(attack.target, attack.strength, AttackKind::Explode(0)))
+        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0)))
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(FieldComponent::init(r, g, b))
         .with(TimeComponent::init(-BASE_ACTION_COST))
@@ -195,10 +196,10 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn apply_explode(ecs: &mut World, source: Entity) {
-    let (strength, range) = {
+    let (damage, range) = {
         let attack_info = ecs.read_storage::<AttackComponent>().grab(source).attack;
         match attack_info.kind {
-            AttackKind::Explode(range) => (attack_info.strength, range),
+            AttackKind::Explode(range) => (attack_info.damage, range),
             _ => panic!("Explode with wrong AttackKind"),
         }
     };
@@ -206,7 +207,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     for in_blast in ecs.get_position(&source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
             if target != source {
-                ecs.log(format!("Struct by blast ({}) at {}", strength.dice(), in_blast).as_str());
+                apply_damage_to_location(ecs, in_blast, damage);
             }
         }
     }
@@ -219,40 +220,42 @@ mod tests {
     use super::*;
 
     #[test]
-    fn melee_logs_on_hit() {
+    fn melee_hits() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(3, 2, 10).build();
         let player = find_player(&ecs);
-
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
+        let target = find_at(&ecs, 3, 2);
+        let starting_health = ecs.get_defenses(&target).health;
 
         begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::physical(1), WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
-    fn ranged_logs_on_hit() {
+    fn ranged_hits() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(4, 2, 10).build();
         let player = find_player(&ecs);
-
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
+        let target = find_at(&ecs, 4, 2);
+        let starting_health = ecs.get_defenses(&target).health;
 
         begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::physical(1), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
-    fn explode_logs_on_hit() {
+    fn explode_hits() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let target = find_at(&mut ecs, 2, 2);
         let exploder = find_at(&mut ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
         ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::physical(2), AttackKind::Explode(1)));
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {

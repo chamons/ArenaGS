@@ -13,7 +13,7 @@ use super::{HitTestResult, View};
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
 use crate::clash::{
-    element_at_location, find_player, get_skill, is_good_target, FieldComponent, MapHitTestResult, PositionComponent, Positions, SkillInfo, MAX_MAP_TILES,
+    element_at_location, find_player, get_skill, is_good_target, FieldComponent, MapHitTestResult, PositionComponent, ShortInfo, SkillInfo, MAX_MAP_TILES,
 };
 
 pub struct MapView {
