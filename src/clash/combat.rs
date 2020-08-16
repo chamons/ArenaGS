@@ -215,6 +215,32 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     ecs.delete_entity(source).unwrap();
 }
 
+pub fn reap_killed(ecs: &mut World) {
+    let mut dead = vec![];
+    let mut player_dead = false;
+    {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let players = ecs.read_storage::<PlayerComponent>();
+
+        for (entity, character_info, player) in (&entities, &character_infos, (&players).maybe()).join() {
+            if character_info.character.defenses.health == 0 {
+                if player.is_some() {
+                    player_dead = true;
+                }
+                dead.push(entity);
+            }
+        }
+    }
+
+    if player_dead {
+        ecs.insert(PlayerDeadComponent::init());
+    }
+    for d in dead {
+        ecs.delete_entity(d).unwrap();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -280,5 +306,26 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+    }
+
+    #[test]
+    fn killed_enemies_removed() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::physical(10), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, find_all_entities(&ecs).len());
+    }
+
+    #[test]
+    fn killed_player() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let enemy = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::physical(10), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, find_all_entities(&ecs).len());
+        let _ = ecs.fetch::<PlayerDeadComponent>();
     }
 }

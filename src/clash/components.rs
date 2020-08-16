@@ -164,6 +164,15 @@ impl RandomComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct PlayerDeadComponent {}
+
+impl PlayerDeadComponent {
+    pub fn init() -> PlayerDeadComponent {
+        PlayerDeadComponent {}
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -180,6 +189,7 @@ pub fn create_world() -> World {
     ecs.register::<SkillResourceComponent>();
     ecs.register::<BehaviorComponent>();
     ecs.register::<RandomComponent>();
+    ecs.register::<PlayerDeadComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
     // If you add additional components remember to update saveload.rs
 

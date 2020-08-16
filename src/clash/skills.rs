@@ -407,7 +407,7 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, LogComponent};
+    use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations};
     use super::*;
     use crate::atlas::{EasyMutWorld, SizedPoint};
 

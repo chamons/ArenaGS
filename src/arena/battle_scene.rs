@@ -218,7 +218,10 @@ impl<'a> Scene for BattleScene<'a> {
 
 pub fn process_tick_events(ecs: &mut World, frame: u64) {
     ecs.maintain();
-    tick_animations(ecs, frame);
+    if ecs.try_fetch::<PlayerDeadComponent>().is_none() {
+        tick_animations(ecs, frame);
+        reap_killed(ecs);
+    }
 }
 
 fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
