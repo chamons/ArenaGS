@@ -13,36 +13,43 @@ use crate::clash::*;
 
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::{BoxResult, EasyMutECS, Point};
 use crate::conductor::{EventStatus, Scene};
 
 pub struct BattleScene {
     ecs: World,
     views: Vec<Box<dyn View>>,
+    render_context: RenderContextHolder,
+    text_renderer: Rc<TextRenderer>,
 }
 
 impl BattleScene {
-    pub fn init(render_context: &RenderContextHolder, text: Rc<TextRenderer>) -> BoxResult<BattleScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
 
-        let render_context = &render_context.borrow();
+        let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(&render_context)?),
-            Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text))?),
-            Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text))?),
+            Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text_renderer))?),
+            Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text_renderer))?),
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
-                Rc::clone(&text),
+                Rc::clone(&text_renderer),
             )?),
         ];
 
         if cfg!(debug_assertions) {
-            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text))?));
+            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
         }
 
-        Ok(BattleScene { ecs, views })
+        Ok(BattleScene {
+            ecs,
+            views,
+            render_context: Rc::clone(render_context_holder),
+            text_renderer: Rc::clone(&text_renderer),
+        })
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
@@ -63,6 +70,14 @@ impl BattleScene {
             Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
             Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
             Keycode::S => saveload::save(&mut self.ecs),
+            Keycode::D => {
+                self.ecs
+                    .write_storage::<CharacterInfoComponent>()
+                    .grab_mut(find_player(&self.ecs))
+                    .character
+                    .defenses
+                    .health = 0
+            }
             Keycode::L => {
                 if let Ok(new_world) = saveload::load() {
                     self.ecs = new_world;
@@ -202,13 +217,17 @@ impl Scene for BattleScene {
         Ok(())
     }
 
-    fn tick(&mut self, frame: u64) -> BoxResult<()> {
-        process_tick_events(&mut self.ecs, frame);
+    fn tick(&mut self, frame: u64) -> BoxResult<EventStatus> {
+        let round_over = process_tick_events(&mut self.ecs, frame);
+        if round_over {
+            return Ok(EventStatus::NewScene(Box::new(BattleScene::init(&self.render_context, &self.text_renderer)?)));
+        }
+
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
 
-        Ok(())
+        Ok(EventStatus::Continue)
     }
 
     fn on_quit(&mut self) -> BoxResult<()> {
@@ -219,11 +238,14 @@ impl Scene for BattleScene {
     }
 }
 
-pub fn process_tick_events(ecs: &mut World, frame: u64) {
+pub fn process_tick_events(ecs: &mut World, frame: u64) -> bool {
     ecs.maintain();
     if ecs.try_fetch::<PlayerDeadComponent>().is_none() {
         tick_animations(ecs, frame);
         reap_killed(ecs);
+        false
+    } else {
+        true
     }
 }
 

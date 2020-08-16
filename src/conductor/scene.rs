@@ -14,8 +14,8 @@ pub trait Scene {
         Ok(())
     }
 
-    fn tick(&mut self, _frame: u64) -> BoxResult<()> {
-        Ok(())
+    fn tick(&mut self, _frame: u64) -> BoxResult<EventStatus> {
+        Ok(EventStatus::Continue)
     }
 
     fn on_quit(&mut self) -> BoxResult<()>;

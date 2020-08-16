@@ -225,10 +225,12 @@ pub fn reap_killed(ecs: &mut World) {
 
         for (entity, character_info, player) in (&entities, &character_infos, (&players).maybe()).join() {
             if character_info.character.defenses.health == 0 {
+                // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
                 if player.is_some() {
                     player_dead = true;
+                } else {
+                    dead.push(entity);
                 }
-                dead.push(entity);
             }
         }
     }
@@ -325,7 +327,8 @@ mod tests {
         begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::physical(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, find_all_entities(&ecs).len());
+        // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
+        assert_eq!(2, find_all_entities(&ecs).len());
         let _ = ecs.fetch::<PlayerDeadComponent>();
     }
 }

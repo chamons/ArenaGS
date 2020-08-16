@@ -56,7 +56,11 @@ impl<'a> Director<'a> {
                 }
             }
 
-            self.scene.tick(frame)?;
+            match self.scene.tick(frame)? {
+                EventStatus::Quit => return Ok(()),
+                EventStatus::NewScene(s) => self.change_scene(s),
+                EventStatus::Continue => {}
+            }
 
             self.scene.render(&mut render_context.borrow_mut().canvas, frame)?;
 
