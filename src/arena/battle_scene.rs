@@ -14,13 +14,11 @@ use crate::clash::*;
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, EasyMutECS, Point};
-use crate::conductor::{EventStatus, Scene};
+use crate::conductor::Scene;
 
 pub struct BattleScene {
     ecs: World,
     views: Vec<Box<dyn View>>,
-    render_context: RenderContextHolder,
-    text_renderer: Rc<TextRenderer>,
 }
 
 impl BattleScene {
@@ -44,15 +42,10 @@ impl BattleScene {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
         }
 
-        Ok(BattleScene {
-            ecs,
-            views,
-            render_context: Rc::clone(render_context_holder),
-            text_renderer: Rc::clone(&text_renderer),
-        })
+        Ok(BattleScene { ecs, views })
     }
 
-    fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
+    fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
             if keycode == Keycode::F1 {
                 battle_actions::set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
@@ -85,10 +78,9 @@ impl BattleScene {
             }
             _ => {}
         }
-        EventStatus::Continue
     }
 
-    fn handle_target_key(&mut self, keycode: Keycode) -> EventStatus {
+    fn handle_target_key(&mut self, keycode: Keycode) {
         if keycode == Keycode::Escape {
             battle_actions::reset_state(&mut self.ecs)
         }
@@ -99,13 +91,12 @@ impl BattleScene {
                 battle_actions::select_skill(&mut self.ecs, &name);
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) -> EventStatus {
+    fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) {
         if keycode == Keycode::Escape {
             battle_actions::reset_state(&mut self.ecs);
-            return EventStatus::Continue;
+            return;
         }
         if kind.is_map_overlay() {
             if keycode == Keycode::S {
@@ -113,23 +104,21 @@ impl BattleScene {
                 map.write_to_file().unwrap();
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::select_skill(&mut self.ecs, &name)
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Right {
             battle_actions::reset_state(&mut self.ecs);
-            return EventStatus::Continue;
+            return;
         }
 
         let target_info = match battle_actions::read_state(&self.ecs) {
@@ -146,11 +135,9 @@ impl BattleScene {
                 }
             }
         }
-
-        EventStatus::Continue
     }
 
-    fn handle_debug_mouse(&mut self, kind: DebugKind, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_debug_mouse(&mut self, kind: DebugKind, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Left {
             if kind.is_map_overlay() {
                 if let Some(map_position) = screen_to_map_position(x, y) {
@@ -159,12 +146,11 @@ impl BattleScene {
                 }
             }
         }
-        EventStatus::Continue
     }
 }
 
 impl Scene for BattleScene {
-    fn handle_key(&mut self, keycode: Keycode) -> EventStatus {
+    fn handle_key(&mut self, keycode: Keycode) {
         match keycode {
             Keycode::PageUp => self.ecs.log_scroll_back(),
             Keycode::PageDown => self.ecs.log_scroll_forward(),
@@ -176,10 +162,10 @@ impl Scene for BattleScene {
             BattleSceneState::Default() => self.handle_default_key(keycode),
             BattleSceneState::Targeting(_) => self.handle_target_key(keycode),
             BattleSceneState::Debug(kind) => self.handle_debug_key(kind, keycode),
-        }
+        };
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> EventStatus {
+    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
 
         if let Some(button) = button {
@@ -197,9 +183,7 @@ impl Scene for BattleScene {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
                 BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),
                 BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
-            }
-        } else {
-            EventStatus::Continue
+            };
         }
     }
 
@@ -217,17 +201,12 @@ impl Scene for BattleScene {
         Ok(())
     }
 
-    fn tick(&mut self, frame: u64) -> BoxResult<EventStatus> {
-        let round_over = process_tick_events(&mut self.ecs, frame);
-        if round_over {
-            return Ok(EventStatus::NewScene(Box::new(BattleScene::init(&self.render_context, &self.text_renderer)?)));
-        }
+    fn tick(&mut self, frame: u64) {
+        process_tick_events(&mut self.ecs, frame);
 
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
-
-        Ok(EventStatus::Continue)
     }
 
     fn on_quit(&mut self) -> BoxResult<()> {
@@ -238,14 +217,11 @@ impl Scene for BattleScene {
     }
 }
 
-pub fn process_tick_events(ecs: &mut World, frame: u64) -> bool {
+pub fn process_tick_events(ecs: &mut World, frame: u64) {
     ecs.maintain();
     if ecs.try_fetch::<PlayerDeadComponent>().is_none() {
         tick_animations(ecs, frame);
         reap_killed(ecs);
-        false
-    } else {
-        true
     }
 }
 

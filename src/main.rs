@@ -27,7 +27,7 @@ use conductor::Director;
 mod clash;
 
 mod arena;
-use arena::BattleScene;
+use arena::ArenaStoryteller;
 
 pub fn main() -> BoxResult<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -46,8 +46,8 @@ pub fn main() -> BoxResult<()> {
     let font_context = Box::from(FontContext::initialize()?).leak();
     let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
 
-    let scene = Box::new(BattleScene::init(&render_context, &text_renderer)?);
-    let mut director = Director::init(scene);
+    let storyteller = Box::new(ArenaStoryteller::init(&render_context, &text_renderer));
+    let mut director = Director::init(storyteller);
     director.run(render_context)?;
 
     Ok(())
