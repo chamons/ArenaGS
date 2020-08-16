@@ -5,7 +5,7 @@ use specs_derive::Component;
 pub enum MoveState {
     BeginAnimation,
     CompleteAnimation,
-    Complete (u32)
+    Complete(u32),
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
