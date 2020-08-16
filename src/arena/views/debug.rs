@@ -15,11 +15,11 @@ use crate::clash::MAX_MAP_TILES;
 
 pub struct DebugView<'a> {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: &'a TextRenderer,
 }
 
 impl<'a> DebugView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<DebugView> {
+    pub fn init(position: SDLPoint, text: &'a TextRenderer) -> BoxResult<DebugView> {
         Ok(DebugView { position, text })
     }
 }

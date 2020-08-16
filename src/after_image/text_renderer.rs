@@ -19,14 +19,21 @@ pub enum FontColor {
     Red,
 }
 
-pub struct TextRenderer<'a> {
-    small_font: sdl2::ttf::Font<'a, 'a>,
-    bold_font: sdl2::ttf::Font<'a, 'a>,
-    large_font: sdl2::ttf::Font<'a, 'a>,
+// So this is either a beautiful hack, or an abuse
+// The SDL font code wants two lifetimes, which requires
+// TextRenderer to have a lifeime, which causes a bunch
+// of other classes to require lifetime
+// By just leaking the fonts, which last the lifetime of
+// the game, all of this goes away.
+// This is safe, right?!?
+pub struct TextRenderer {
+    small_font: sdl2::ttf::Font<'static, 'static>,
+    bold_font: sdl2::ttf::Font<'static, 'static>,
+    large_font: sdl2::ttf::Font<'static, 'static>,
 }
 
-impl<'a> TextRenderer<'a> {
-    pub fn init(font_context: &'a FontContext) -> BoxResult<TextRenderer> {
+impl TextRenderer {
+    pub fn init(font_context: &'static FontContext) -> BoxResult<TextRenderer> {
         let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
 
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;

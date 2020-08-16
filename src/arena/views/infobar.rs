@@ -11,11 +11,11 @@ use crate::clash::{find_player, AmmoKind, SkillResourceComponent};
 
 pub struct InfoBarView<'a> {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: &'a TextRenderer,
 }
 
 impl<'a> InfoBarView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<InfoBarView> {
+    pub fn init(position: SDLPoint, text: &'a TextRenderer) -> BoxResult<InfoBarView> {
         Ok(InfoBarView { position, text })
     }
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {

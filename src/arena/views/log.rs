@@ -12,11 +12,11 @@ const LOG_COUNT: usize = 10;
 
 pub struct LogView<'a> {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: &'a TextRenderer,
 }
 
 impl<'a> LogView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<LogView> {
+    pub fn init(position: SDLPoint, text: &'a TextRenderer) -> BoxResult<LogView> {
         Ok(LogView { position, text })
     }
 

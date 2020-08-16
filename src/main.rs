@@ -1,6 +1,8 @@
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
 
+use leak::Leak;
+
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
 
@@ -38,7 +40,8 @@ pub fn main() -> BoxResult<()> {
     }
 
     let mut render_context = RenderContext::initialize()?;
-    let font_context = FontContext::initialize()?;
+    // See text_renderer.rs for details on this hack
+    let font_context = Box::from(FontContext::initialize()?).leak();
     let text_renderer = TextRenderer::init(&font_context)?;
 
     let scene = Box::new(BattleScene::init(&render_context, &text_renderer)?);
