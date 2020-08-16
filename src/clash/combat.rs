@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent, Logger};
+use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {

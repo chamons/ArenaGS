@@ -39,10 +39,7 @@ impl Damage {
     }
 
     pub fn physical(amount: u32) -> Damage {
-        Damage {
-            amount: Strength::init(amount),
-            kind: DamageKind::Physical,
-        }
+        Damage::init(Strength::init(amount), DamageKind::Physical)
     }
 
     pub fn dice(&self) -> u32 {
