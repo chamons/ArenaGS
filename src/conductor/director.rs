@@ -5,7 +5,7 @@ use sdl2::event::Event;
 
 use super::Scene;
 
-use crate::after_image::RenderContext;
+use crate::after_image::RenderContextHolder;
 use crate::atlas::BoxResult;
 
 #[allow(dead_code)]
@@ -27,12 +27,11 @@ impl<'a> Director<'a> {
     pub fn change_scene(&mut self, scene: Box<dyn Scene + 'a>) {
         self.scene = scene;
     }
-
-    pub fn run(&mut self, render_context: &'a mut RenderContext) -> BoxResult<()> {
+    pub fn run(&mut self, render_context: RenderContextHolder) -> BoxResult<()> {
         let mut frame = 0;
         loop {
             let start_frame = Instant::now();
-            for event in render_context.event_pump.poll_iter() {
+            for event in render_context.borrow_mut().event_pump.poll_iter() {
                 let status = match event {
                     Event::Quit { .. } => {
                         self.scene.on_quit()?;
@@ -59,7 +58,7 @@ impl<'a> Director<'a> {
 
             self.scene.tick(frame)?;
 
-            self.scene.render(&mut render_context.canvas, frame)?;
+            self.scene.render(&mut render_context.borrow_mut().canvas, frame)?;
 
             let end_frame = Instant::now();
             if let Some(duration) = end_frame.checked_duration_since(start_frame) {

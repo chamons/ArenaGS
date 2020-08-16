@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
@@ -10,33 +12,34 @@ use super::{battle_actions, complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::saveload;
-use crate::after_image::{RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene};
 
-pub struct BattleScene<'a> {
+pub struct BattleScene {
     ecs: World,
-    views: Vec<Box<dyn View + 'a>>,
+    views: Vec<Box<dyn View>>,
 }
 
-impl<'a> BattleScene<'a> {
-    pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
+impl BattleScene {
+    pub fn init(render_context: &RenderContextHolder, text: Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
 
+        let render_context = &render_context.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
-            Box::from(MapView::init(render_context)?),
-            Box::from(InfoBarView::init(SDLPoint::new(780, 20), text)?),
-            Box::from(LogView::init(SDLPoint::new(780, 450), text)?),
+            Box::from(MapView::init(&render_context)?),
+            Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text))?),
+            Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text))?),
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
-                text,
+                Rc::clone(&text),
             )?),
         ];
 
         if cfg!(debug_assertions) {
-            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), text)?));
+            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text))?));
         }
 
         Ok(BattleScene { ecs, views })
@@ -145,7 +148,7 @@ impl<'a> BattleScene<'a> {
     }
 }
 
-impl<'a> Scene for BattleScene<'a> {
+impl Scene for BattleScene {
     fn handle_key(&mut self, keycode: Keycode) -> EventStatus {
         match keycode {
             Keycode::PageUp => self.ecs.log_scroll_back(),

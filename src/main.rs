@@ -1,6 +1,8 @@
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
 
+use std::{cell::RefCell, rc::Rc};
+
 use leak::Leak;
 
 // Disable annoying black terminal
@@ -39,14 +41,14 @@ pub fn main() -> BoxResult<()> {
         }));
     }
 
-    let mut render_context = RenderContext::initialize()?;
+    let render_context = Rc::new(RefCell::new(RenderContext::initialize()?));
     // See text_renderer.rs for details on this hack
     let font_context = Box::from(FontContext::initialize()?).leak();
-    let text_renderer = TextRenderer::init(&font_context)?;
+    let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
 
-    let scene = Box::new(BattleScene::init(&render_context, &text_renderer)?);
+    let scene = Box::new(BattleScene::init(&render_context, text_renderer)?);
     let mut director = Director::init(scene);
-    director.run(&mut render_context)?;
+    director.run(render_context)?;
 
     Ok(())
 }
