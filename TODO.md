@@ -1,2 +1,0 @@
-- Restart scene on player OR all enemy death
-   - Create a storyteller component which detects and determins what to do 
