@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS};
 
 const TEMPERATURE_MIDPOINT: i32 = 0;
 const TEMPERATURE_BURN_POINT: i32 = 100;
@@ -18,6 +17,7 @@ pub struct Temperature {
 
 pub enum TemperatureDirection {
     Heat,
+    #[allow(dead_code)]
     Cool,
 }
 
@@ -37,7 +37,7 @@ impl Temperature {
 
         let delta = match direction {
             TemperatureDirection::Heat => dice * TEMPERATURE_PER_DICE_DAMAGE,
-            TemperatureDirection::Cool => -1 * dice * TEMPERATURE_PER_DICE_DAMAGE,
+            TemperatureDirection::Cool => -dice * TEMPERATURE_PER_DICE_DAMAGE,
         };
         self.current_temperature += delta;
     }
@@ -104,7 +104,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyMutECS, Point};
+    use crate::atlas::{EasyECS, EasyMutECS, Point};
 
     #[test]
     fn apply_temperature_based_upon_damage_dice() {

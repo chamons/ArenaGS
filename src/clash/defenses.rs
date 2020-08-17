@@ -17,6 +17,7 @@ pub struct Defenses {
 }
 
 impl Defenses {
+    #[allow(dead_code)]
     pub fn init(dodge: u32, armor: u32, absorb: u32, health: u32) -> Defenses {
         Defenses {
             dodge,
