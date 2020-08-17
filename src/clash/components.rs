@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::error::NoError;
 use specs::prelude::*;
@@ -10,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, Character, Map};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -49,11 +50,11 @@ impl PlayerComponent {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct CharacterInfoComponent {
-    pub character: Character,
+    pub character: CharacterInfo,
 }
 
 impl CharacterInfoComponent {
-    pub const fn init(character: Character) -> CharacterInfoComponent {
+    pub const fn init(character: CharacterInfo) -> CharacterInfoComponent {
         CharacterInfoComponent { character }
     }
 }
@@ -152,6 +153,26 @@ impl BehaviorComponent {
     }
 }
 
+#[derive(Component, Clone)] // NotConvertSaveload
+pub struct RandomComponent {
+    pub rand: StdRng,
+}
+
+impl RandomComponent {
+    pub fn init() -> RandomComponent {
+        RandomComponent { rand: StdRng::from_entropy() }
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct PlayerDeadComponent {}
+
+impl PlayerDeadComponent {
+    pub fn init() -> PlayerDeadComponent {
+        PlayerDeadComponent {}
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -167,6 +188,8 @@ pub fn create_world() -> World {
     ecs.register::<MovementComponent>();
     ecs.register::<SkillResourceComponent>();
     ecs.register::<BehaviorComponent>();
+    ecs.register::<RandomComponent>();
+    ecs.register::<PlayerDeadComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
     // If you add additional components remember to update saveload.rs
 
@@ -174,6 +197,7 @@ pub fn create_world() -> World {
     ecs.register::<super::EventComponent>();
     ecs.insert(super::EventComponent::init());
 
+    ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
@@ -183,6 +207,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::combat::melee_event);
     ecs.subscribe(super::combat::field_event);
     ecs.subscribe(super::combat::explode_event);
+    ecs.subscribe(super::defenses::defense_event);
 
     #[cfg(test)]
     {
@@ -192,13 +217,17 @@ pub fn create_world() -> World {
     ecs
 }
 
-pub trait Positions {
+pub trait ShortInfo {
     fn get_position(&self, entity: &Entity) -> SizedPoint;
+    fn get_defenses(&self, entity: &Entity) -> Defenses;
 }
 
-impl Positions for World {
+impl ShortInfo for World {
     fn get_position(&self, entity: &Entity) -> SizedPoint {
         self.read_storage::<PositionComponent>().grab(*entity).position
+    }
+    fn get_defenses(&self, entity: &Entity) -> Defenses {
+        self.read_storage::<CharacterInfoComponent>().grab(*entity).character.defenses.clone()
     }
 }
 

@@ -95,6 +95,7 @@ pub fn save(ecs: &mut World) {
         MovementComponent,
         SkillResourceComponent,
         BehaviorComponent,
+        PlayerDeadComponent,
         SerializationHelper
     );
 }
@@ -132,6 +133,7 @@ pub fn load() -> BoxResult<World> {
             MovementComponent,
             SkillResourceComponent,
             BehaviorComponent,
+            PlayerDeadComponent,
             SerializationHelper
         );
     }

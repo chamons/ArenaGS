@@ -3,28 +3,35 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
+// Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     ecs.shovel(*entity, MovementComponent::init(new_position));
-    ecs.raise_event(EventKind::Move(MoveState::Begin), Some(*entity));
+    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation), Some(*entity));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Move(state) if state.is_complete_animation()) {
         complete_move(ecs, target.unwrap());
     }
 }
 
 pub fn complete_move(ecs: &mut World, entity: Entity) {
+    let current_position = ecs.get_position(&entity);
     let new_position = {
         let mut movements = ecs.write_storage::<MovementComponent>();
         let new_position = movements.grab(entity).new_position;
         movements.remove(entity);
         new_position.origin
     };
+    let distance = current_position.distance_to(new_position).unwrap();
 
-    let mut positions = ecs.write_storage::<PositionComponent>();
-    let position = &mut positions.grab_mut(entity);
-    position.move_to(new_position);
+    {
+        let mut positions = ecs.write_storage::<PositionComponent>();
+        let position = &mut positions.grab_mut(entity);
+        position.move_to(new_position);
+    }
+
+    ecs.raise_event(EventKind::Move(MoveState::Complete(distance)), Some(entity));
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
@@ -92,7 +99,8 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
     is_area_clear(ecs, &new.all_positions(), mover) && has_exhaustion
 }
 
-pub fn move_character(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool {
+// Move a character, spending standard time and exhaustion
+pub fn move_character_action(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool {
     if !can_move_character(ecs, &entity, new) {
         return false;
     }
@@ -152,7 +160,7 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
         assert_position(&ecs, &entity, Point::init(2, 2));
 
-        let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
+        let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(true, success);
         wait_for_animations(&mut ecs);
 
@@ -171,7 +179,7 @@ mod tests {
 
         assert_position(&ecs, &entity, Point::init(2, 2));
 
-        let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
+        let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(true, success);
         wait_for_animations(&mut ecs);
 
@@ -188,7 +196,7 @@ mod tests {
 
         assert_position(&ecs, &entity, Point::init(2, 2));
 
-        let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
+        let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
@@ -202,7 +210,7 @@ mod tests {
 
         assert_position(&ecs, &entity, Point::init(2, 2));
 
-        let success = move_character(&mut ecs, entity, SizedPoint::init(2, 3));
+        let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
@@ -215,7 +223,7 @@ mod tests {
         let entity = find_at(&ecs, 13, 13);
         assert_position(&ecs, &entity, Point::init(13, 13));
 
-        let success = move_character(&mut ecs, entity, SizedPoint::init(13, 14));
+        let success = move_character_action(&mut ecs, entity, SizedPoint::init(13, 14));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
@@ -231,7 +239,7 @@ mod tests {
             .build();
         let bottom = find_at(&ecs, 2, 4);
 
-        assert_eq!(false, move_character(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
+        assert_eq!(false, move_character_action(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
         wait_for_animations(&mut ecs);
     }
 
@@ -242,7 +250,7 @@ mod tests {
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
         ecs.shovel(player, SkillResourceComponent::init(&[]));
 
-        assert_eq!(true, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
+        assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         wait_for_animations(&mut ecs);
 
         let skills = ecs.read_storage::<SkillResourceComponent>();
@@ -260,7 +268,7 @@ mod tests {
         };
         ecs.shovel(player, skill_resource);
 
-        assert_eq!(false, move_character(&mut ecs, player, SizedPoint::init(2, 3)));
+        assert_eq!(false, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         let skills = ecs.read_storage::<SkillResourceComponent>();
         assert_approx_eq!(100.0, skills.grab(player).exhaustion);
     }

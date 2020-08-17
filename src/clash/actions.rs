@@ -3,6 +3,7 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::Point;
 
+#[derive(Clone, Copy)]
 pub enum Direction {
     North,
     South,
@@ -35,7 +36,7 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
         point_in_direction(&position, direction)
     };
     if let Some(new_position) = new_position {
-        move_character(ecs, player, new_position);
+        move_character_action(ecs, player, new_position);
         true
     } else {
         false

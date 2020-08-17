@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
+use rand::distributions::{Distribution, Standard};
+use rand::prelude::*;
 
 use super::*;
-use crate::atlas::EasyECS;
+use crate::atlas::{EasyECS, SizedPoint};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
@@ -29,22 +27,28 @@ impl Distribution<Direction> for Standard {
     }
 }
 
+fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    for _ in 0..5 {
+        let direction: Direction = random.gen();
+        if let Some(point) = point_in_direction(&position, direction) {
+            if can_move_character(ecs, enemy, point) {
+                return Some(direction);
+            }
+        }
+    }
+    None
+}
+
 pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
         BehaviorKind::Random => {
             let position = ecs.get_position(enemy);
-            for _ in 0..5 {
-                let direction: Direction = rand::random();
-                if let Some(point) = point_in_direction(&position, direction) {
-                    if can_move_character(ecs, enemy, point) {
-                        let did_move = move_character(ecs, *enemy, point);
-                        if did_move {
-                            return;
-                        }
-                    }
-                }
+            if let Some(direction) = get_random_direction(ecs, position, enemy) {
+                let point = point_in_direction(&position, direction).unwrap();
+                move_character_action(ecs, *enemy, point);
             }
         }
         BehaviorKind::Explode => {
@@ -88,18 +92,20 @@ mod tests {
     #[test]
     fn explode_behavior() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
         let character = ecs
             .create_entity()
             .with(BehaviorComponent::init(BehaviorKind::Explode))
             .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(TimeComponent::init(100))
-            .with(AttackComponent::init(Point::init(2, 2), 2, AttackKind::Explode(2)))
+            .with(AttackComponent::init(Point::init(2, 2), Damage::physical(2), AttackKind::Explode(2)))
             .build();
 
+        let starting_health = ecs.get_defenses(&target).health;
         take_enemy_action(&mut ecs, &character);
         wait_for_animations(&mut ecs);
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 }

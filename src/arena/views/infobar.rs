@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use enum_iterator::IntoEnumIterator;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
@@ -9,13 +11,13 @@ use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, AmmoKind, SkillResourceComponent};
 
-pub struct InfoBarView<'a> {
+pub struct InfoBarView {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: Rc<TextRenderer>,
 }
 
-impl<'a> InfoBarView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<InfoBarView> {
+impl InfoBarView {
+    pub fn init(position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<InfoBarView> {
         Ok(InfoBarView { position, text })
     }
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
@@ -62,7 +64,7 @@ impl<'a> InfoBarView<'a> {
     }
 }
 
-impl<'a> View for InfoBarView<'a> {
+impl View for InfoBarView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((196, 196, 0)));
         canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 400))?;

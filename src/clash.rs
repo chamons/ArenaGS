@@ -1,6 +1,6 @@
 // The game rules and logic for the games
-mod character;
-pub use character::Character;
+mod character_info;
+pub use character_info::CharacterInfo;
 
 mod skills;
 use skills::invoke_skill;
@@ -37,3 +37,9 @@ pub use events::*;
 mod test_helpers;
 #[cfg(test)]
 pub use test_helpers::*;
+
+mod strength;
+pub use strength::*;
+
+mod defenses;
+pub use defenses::*;

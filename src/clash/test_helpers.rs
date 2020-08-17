@@ -1,10 +1,7 @@
 use specs::prelude::*;
 
-use super::{
-    create_world, find_character_at_location, Character, CharacterInfoComponent, Map, MapComponent, PlayerComponent, PositionComponent, SkillResourceComponent,
-    TimeComponent,
-};
-use crate::atlas::{Point, SizedPoint};
+use super::*;
+use crate::atlas::{EasyMutWorld, Point, SizedPoint};
 
 pub struct StateBuilder {
     ecs: World,
@@ -17,36 +14,19 @@ impl StateBuilder {
     }
 
     pub fn with_character<'a>(&'a mut self, x: u32, y: u32, time: i32) -> &'a mut Self {
-        self.ecs
-            .create_entity()
-            .with(TimeComponent::init(time))
-            .with(PositionComponent::init(SizedPoint::init(x, y)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(SkillResourceComponent::init(&[]))
-            .build();
+        make_test_character(&mut self.ecs, SizedPoint::init(x, y), time);
         self
     }
 
     pub fn with_sized_character<'a>(&'a mut self, position: SizedPoint, time: i32) -> &'a mut Self {
-        self.ecs
-            .create_entity()
-            .with(TimeComponent::init(time))
-            .with(PositionComponent::init(position))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(SkillResourceComponent::init(&[]))
-            .build();
+        make_test_character(&mut self.ecs, position, time);
         self
     }
 
     pub fn with_player<'a>(&'a mut self, x: u32, y: u32, time: i32) -> &'a mut Self {
-        self.ecs
-            .create_entity()
-            .with(TimeComponent::init(time))
-            .with(PositionComponent::init(SizedPoint::init(x, y)))
-            .with(PlayerComponent::init())
-            .with(CharacterInfoComponent::init(Character::init()))
-            .with(SkillResourceComponent::init(&[]))
-            .build();
+        make_test_character(&mut self.ecs, SizedPoint::init(x, y), time);
+        let player = find_at(&self.ecs, x, y);
+        self.ecs.shovel(player, PlayerComponent::init());
         self
     }
 
@@ -94,4 +74,13 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
         all.push(entity);
     }
     all
+}
+
+pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
+    ecs.create_entity()
+        .with(TimeComponent::init(time))
+        .with(PositionComponent::init(position))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(Defenses::init(0, 0, 0, 0, 10))))
+        .with(SkillResourceComponent::init(&[]))
+        .build();
 }

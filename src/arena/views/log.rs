@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -10,13 +12,13 @@ use crate::clash::LogComponent;
 
 const LOG_COUNT: usize = 10;
 
-pub struct LogView<'a> {
+pub struct LogView {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: Rc<TextRenderer>,
 }
 
-impl<'a> LogView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<LogView> {
+impl LogView {
+    pub fn init(position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<LogView> {
         Ok(LogView { position, text })
     }
 
@@ -37,7 +39,7 @@ impl<'a> LogView<'a> {
     }
 }
 
-impl<'a> View for LogView<'a> {
+impl View for LogView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 196, 196)));
         canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 300))?;

@@ -11,6 +11,6 @@ mod sprites;
 mod text_renderer;
 
 pub use image_loader::load_image;
-pub use render_context::{FontContext, RenderContext};
+pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::{Background, Bolt, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription};
 pub use text_renderer::{FontColor, FontSize, TextRenderer};

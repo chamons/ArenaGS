@@ -1,4 +1,5 @@
 use std::cmp;
+use std::rc::Rc;
 
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
@@ -22,9 +23,9 @@ const ICON_SIZE: i32 = 44;
 const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
-    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: &TextRenderer) -> BoxResult<SkillBarView> {
+    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
         let mut views = Vec::with_capacity(15);
-        let icons = IconLoader::init(render_context, "spell")?;
+        let icons = IconLoader::init(&render_context, "spell")?;
         for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
                 let view = SkillBarItemView::init(
@@ -33,7 +34,7 @@ impl SkillBarView {
                         position.y + BORDER_WIDTH + 1,
                     ),
                     render_context,
-                    text,
+                    Rc::clone(&text),
                     &icons,
                     i as u32,
                     skill_name.as_str(),
@@ -100,18 +101,18 @@ impl SkillBarItemView {
     pub fn init(
         position: SDLPoint,
         render_context: &RenderContext,
-        text: &TextRenderer,
+        text: Rc<TextRenderer>,
         icons: &IconLoader,
         index: u32,
         skill_name: &str,
     ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
         let skill = get_skill(&skill_name);
-        let image = icons.get(render_context, skill.image)?;
+        let image = icons.get(&render_context, skill.image)?;
         let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
         let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
         let alternate_image = match &skill.alternate {
-            Some(alternate) => Some(icons.get(render_context, get_skill(alternate).image)?),
+            Some(alternate) => Some(icons.get(&render_context, get_skill(alternate).image)?),
             None => None,
         };
 

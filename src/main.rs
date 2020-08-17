@@ -1,6 +1,10 @@
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
 
+use std::{cell::RefCell, rc::Rc};
+
+use leak::Leak;
+
 // Disable annoying black terminal
 //#![windows_subsystem = "windows"]
 
@@ -23,7 +27,7 @@ use conductor::Director;
 mod clash;
 
 mod arena;
-use arena::BattleScene;
+use arena::ArenaStoryteller;
 
 pub fn main() -> BoxResult<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -37,13 +41,14 @@ pub fn main() -> BoxResult<()> {
         }));
     }
 
-    let mut render_context = RenderContext::initialize()?;
-    let font_context = FontContext::initialize()?;
-    let text_renderer = TextRenderer::init(&font_context)?;
+    let render_context = Rc::new(RefCell::new(RenderContext::initialize()?));
+    // See text_renderer.rs for details on this hack
+    let font_context = Box::from(FontContext::initialize()?).leak();
+    let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
 
-    let scene = Box::new(BattleScene::init(&render_context, &text_renderer)?);
-    let mut director = Director::init(scene);
-    director.run(&mut render_context)?;
+    let storyteller = Box::new(ArenaStoryteller::init(&render_context, &text_renderer));
+    let mut director = Director::init(storyteller);
+    director.run(render_context)?;
 
     Ok(())
 }

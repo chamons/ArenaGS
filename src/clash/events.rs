@@ -3,36 +3,37 @@ use specs_derive::Component;
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MoveState {
-    Begin,
-    Complete,
+    BeginAnimation,
+    CompleteAnimation,
+    Complete(u32),
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum BoltState {
-    BeginCast,
-    CompleteCast,
-    BeginFlying,
-    CompleteFlying,
+    BeginCastAnimation,
+    CompleteCastAnimation,
+    BeginFlyingAnimation,
+    CompleteFlyingAnimation,
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MeleeState {
-    Begin,
-    Complete,
+    BeginAnimation,
+    CompleteAnimation,
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum FieldState {
-    BeginCast,
-    CompleteCast,
-    BeginFlying,
-    CompleteFlying,
+    BeginCastAnimation,
+    CompleteCastAnimation,
+    BeginFlyingAnimation,
+    CompleteFlyingAnimation,
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum ExplodeState {
-    Begin,
-    Complete,
+    BeginAnimation,
+    CompleteAnimation,
 }
 
 #[derive(Copy, Clone)]

@@ -2,7 +2,10 @@
 // - Director processes event loop and dispatches to the current Scene trait object for input/render
 
 mod director;
-mod scene;
-
 pub use director::{Director, EventStatus};
+
+mod scene;
 pub use scene::Scene;
+
+mod storyteller;
+pub use storyteller::Storyteller;

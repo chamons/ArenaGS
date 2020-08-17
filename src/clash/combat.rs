@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent, Logger};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
@@ -31,7 +31,7 @@ pub enum AttackKind {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct AttackInfo {
-    pub strength: u32,
+    pub damage: Damage,
     pub target: Point,
     pub kind: AttackKind,
 }
@@ -60,23 +60,23 @@ impl AttackInfo {
 }
 
 impl AttackComponent {
-    pub fn init(target: Point, strength: u32, kind: AttackKind) -> AttackComponent {
+    pub fn init(target: Point, damage: Damage, kind: AttackKind) -> AttackComponent {
         AttackComponent {
-            attack: AttackInfo { target, strength, kind },
+            attack: AttackInfo { target, damage, kind },
         }
     }
 }
 
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: u32, kind: BoltKind) {
+pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: BoltKind) {
     ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
-    ecs.raise_event(EventKind::Bolt(BoltState::BeginCast), Some(*source));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
 }
 
 pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Bolt(state) => match state {
-            BoltState::CompleteCast => start_bolt(ecs, target.unwrap()),
-            BoltState::CompleteFlying => apply_bolt(ecs, target.unwrap()),
+            BoltState::CompleteCastAnimation => start_bolt(ecs, target.unwrap()),
+            BoltState::CompleteFlyingAnimation => apply_bolt(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -94,7 +94,16 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
         .build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Bolt(BoltState::BeginFlying), Some(bolt));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
+}
+
+fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage) {
+    if let Some(target) = find_character_at_location(ecs, position) {
+        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+        let defenses = &mut character_infos.grab_mut(target).character.defenses;
+        let mut random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+        defenses.apply_damage(damage, &mut random);
+    }
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
@@ -102,17 +111,17 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(bolt).attack
     };
-    ecs.log(format!("Enemy was struck ({}) at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+    apply_damage_to_location(ecs, attack.target, attack.damage);
     ecs.delete_entity(bolt).unwrap();
 }
 
-pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: WeaponKind) {
+pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: WeaponKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
-    ecs.raise_event(EventKind::Melee(MeleeState::Begin), Some(*source));
+    ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(*source));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Melee(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Melee(state) if state.is_complete_animation()) {
         apply_melee(ecs, target.unwrap());
     }
 }
@@ -122,21 +131,21 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(character).attack
     };
-    ecs.log(format!("Enemy was struck ({}) in melee at ({},{})!", attack.strength, attack.target.x, attack.target.y).as_str());
+    apply_damage_to_location(ecs, attack.target, attack.damage);
 
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: u32, kind: FieldKind) {
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: FieldKind) {
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind)));
-    ecs.raise_event(EventKind::Field(FieldState::BeginCast), Some(*source));
+    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Field(state) => match state {
-            FieldState::CompleteCast => start_field(ecs, target.unwrap()),
-            FieldState::CompleteFlying => apply_field(ecs, target.unwrap()),
+            FieldState::CompleteCastAnimation => start_field(ecs, target.unwrap()),
+            FieldState::CompleteFlyingAnimation => apply_field(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -154,7 +163,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
         .build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Field(FieldState::BeginFlying), Some(field_projectile));
+    ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
 }
 
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
@@ -168,7 +177,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 
     ecs.create_entity()
         .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
-        .with(AttackComponent::init(attack.target, attack.strength, AttackKind::Explode(0)))
+        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0)))
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(FieldComponent::init(r, g, b))
         .with(TimeComponent::init(-BASE_ACTION_COST))
@@ -177,20 +186,20 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 }
 
 pub fn begin_explode(ecs: &mut World, source: &Entity) {
-    ecs.raise_event(EventKind::Explode(ExplodeState::Begin), Some(*source));
+    ecs.raise_event(EventKind::Explode(ExplodeState::BeginAnimation), Some(*source));
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Explode(state) if state.is_complete()) {
+    if matches!(kind, EventKind::Explode(state) if state.is_complete_animation()) {
         apply_explode(ecs, target.unwrap());
     }
 }
 
 pub fn apply_explode(ecs: &mut World, source: Entity) {
-    let (strength, range) = {
+    let (damage, range) = {
         let attack_info = ecs.read_storage::<AttackComponent>().grab(source).attack;
         match attack_info.kind {
-            AttackKind::Explode(range) => (attack_info.strength, range),
+            AttackKind::Explode(range) => (attack_info.damage, range),
             _ => panic!("Explode with wrong AttackKind"),
         }
     };
@@ -198,7 +207,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     for in_blast in ecs.get_position(&source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
             if target != source {
-                ecs.log(format!("Struct by blast ({}) at {}", strength, in_blast).as_str());
+                apply_damage_to_location(ecs, in_blast, damage);
             }
         }
     }
@@ -206,45 +215,75 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     ecs.delete_entity(source).unwrap();
 }
 
+pub fn reap_killed(ecs: &mut World) {
+    let mut dead = vec![];
+    let mut player_dead = false;
+    {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let players = ecs.read_storage::<PlayerComponent>();
+
+        for (entity, character_info, player) in (&entities, &character_infos, (&players).maybe()).join() {
+            if character_info.character.defenses.health == 0 {
+                // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
+                if player.is_some() {
+                    player_dead = true;
+                } else {
+                    dead.push(entity);
+                }
+            }
+        }
+    }
+
+    if player_dead {
+        ecs.insert(PlayerDeadComponent::init());
+    }
+    for d in dead {
+        ecs.delete_entity(d).unwrap();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn melee_logs_on_hit() {
+    fn melee_hits() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(3, 2, 10).build();
         let player = find_player(&ecs);
+        let target = find_at(&ecs, 3, 2);
+        let starting_health = ecs.get_defenses(&target).health;
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
-
-        begin_melee(&mut ecs, &player, Point::init(3, 2), 1, WeaponKind::Sword);
+        begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::physical(1), WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
-    fn ranged_logs_on_hit() {
+    fn ranged_hits() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(4, 2, 10).build();
         let player = find_player(&ecs);
+        let target = find_at(&ecs, 4, 2);
+        let starting_health = ecs.get_defenses(&target).health;
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
-
-        begin_bolt(&mut ecs, &player, Point::init(4, 2), 1, BoltKind::Fire);
+        begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::physical(1), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
-    fn explode_logs_on_hit() {
+    fn explode_hits() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let target = find_at(&mut ecs, 2, 2);
         let exploder = find_at(&mut ecs, 2, 3);
-        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), 2, AttackKind::Explode(1)));
+        let starting_health = ecs.get_defenses(&target).health;
+        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::physical(2), AttackKind::Explode(1)));
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {
@@ -265,9 +304,31 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), 1, FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::physical(1), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+    }
+
+    #[test]
+    fn killed_enemies_removed() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::physical(10), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(1, find_all_entities(&ecs).len());
+    }
+
+    #[test]
+    fn killed_player() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let enemy = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::physical(10), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
+        assert_eq!(2, find_all_entities(&ecs).len());
+        let _ = ecs.fetch::<PlayerDeadComponent>();
     }
 }

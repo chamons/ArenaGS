@@ -22,10 +22,10 @@ pub enum TargetType {
 pub enum SkillEffect {
     None,
     Move,
-    RangedAttack(u32, BoltKind),
-    MeleeAttack(u32, WeaponKind),
+    RangedAttack(Damage, BoltKind),
+    MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    FieldEffect(u32, FieldKind),
+    FieldEffect(Damage, FieldKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -199,11 +199,23 @@ lazy_static! {
             );
             m.insert(
                 "TestRanged",
-                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::RangedAttack(2, BoltKind::Fire), Some(2), false),
+                SkillInfo::init_with_distance(
+                    "",
+                    TargetType::Enemy,
+                    SkillEffect::RangedAttack(Damage::physical(2), BoltKind::Fire),
+                    Some(2),
+                    false,
+                ),
             );
             m.insert(
                 "TestMelee",
-                SkillInfo::init_with_distance("", TargetType::Enemy, SkillEffect::MeleeAttack(2, WeaponKind::Sword), Some(1), false),
+                SkillInfo::init_with_distance(
+                    "",
+                    TargetType::Enemy,
+                    SkillEffect::MeleeAttack(Damage::physical(2), WeaponKind::Sword),
+                    Some(1),
+                    false,
+                ),
             );
             m.insert(
                 "TestAmmo",
@@ -218,7 +230,10 @@ lazy_static! {
                     .with_ammo(AmmoKind::Bullets, 1)
                     .with_exhaustion(25.0),
             );
-            m.insert("TestField", SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire)));
+            m.insert(
+                "TestField",
+                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::physical(1), FieldKind::Fire)),
+            );
         }
         m.insert(
             "Dash",
@@ -233,7 +248,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_37.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(10, BoltKind::Bullet),
+                SkillEffect::RangedAttack(Damage::physical(10), BoltKind::Bullet),
                 Some(10),
                 true,
             )
@@ -245,7 +260,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(5, BoltKind::Fire),
+                SkillEffect::RangedAttack(Damage::physical(5), BoltKind::Fire),
                 Some(15),
                 true,
             )
@@ -256,14 +271,20 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_76.png",
                 TargetType::Enemy,
-                SkillEffect::MeleeAttack(5, WeaponKind::Sword),
+                SkillEffect::MeleeAttack(Damage::physical(5), WeaponKind::Sword),
                 Some(1),
                 true,
             ),
         );
         m.insert(
             "Delayed Blast",
-            SkillInfo::init_with_distance("en_craft_96.png", TargetType::Any, SkillEffect::FieldEffect(1, FieldKind::Fire), Some(3), false),
+            SkillInfo::init_with_distance(
+                "en_craft_96.png",
+                TargetType::Any,
+                SkillEffect::FieldEffect(Damage::physical(5), FieldKind::Fire),
+                Some(3),
+                false,
+            ),
         );
 
         m
@@ -345,10 +366,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position);
         }
-        SkillEffect::RangedAttack(strength, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *strength, *kind),
-        SkillEffect::MeleeAttack(strength, kind) => begin_melee(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::FieldEffect(strength, kind) => begin_field(ecs, &invoker, target.unwrap(), *strength, *kind),
+        SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
     }
 
@@ -386,10 +407,7 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{
-        add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations, Character, CharacterInfoComponent, LogComponent,
-        PositionComponent,
-    };
+    use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations};
     use super::*;
     use crate::atlas::{EasyMutWorld, SizedPoint};
 
@@ -461,10 +479,7 @@ mod tests {
 
         let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        ecs.create_entity()
-            .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(CharacterInfoComponent::init(Character::init()))
-            .build();
+        make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
     }
@@ -509,12 +524,13 @@ mod tests {
     fn ranged_effect() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 4, 2);
+        let starting_health = ecs.get_defenses(&target).health;
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(4, 2)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
@@ -525,24 +541,25 @@ mod tests {
             .with_map()
             .build();
         let player = find_at(&ecs, 2, 2);
-
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
+        let target = find_at(&ecs, 2, 5);
+        let starting_health = ecs.get_defenses(&target).health;
         invoke_skill(&mut ecs, &player, "TestRanged", Some(Point::init(2, 4)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
     fn melee_effect() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     #[test]
@@ -553,12 +570,13 @@ mod tests {
             .with_map()
             .build();
         let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 4);
+        let starting_health = ecs.get_defenses(&target).health;
 
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
         invoke_skill(&mut ecs, &player, "TestMelee", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
 
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
@@ -701,6 +719,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let other = find_at(&ecs, 2, 3);
         ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
+        let starting_health = ecs.get_defenses(&other).health;
         invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
 
@@ -708,12 +727,24 @@ mod tests {
         wait(&mut ecs, player);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
-        assert_eq!(0, ecs.read_resource::<LogComponent>().log.count());
 
         add_ticks(&mut ecs, 100);
         wait(&mut ecs, player);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
-        assert_eq!(1, ecs.read_resource::<LogComponent>().log.count());
+        assert!(ecs.get_defenses(&other).health < starting_health);
+    }
+
+    #[test]
+    fn dodge_restored_by_skill_movement() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = Defenses::init(0, 5, 0, 0, 10);
+
+        invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
+        wait_for_animations(&mut ecs);
+
+        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.dodge;
+        assert_eq!(4, dodge);
     }
 }

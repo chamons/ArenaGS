@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -13,18 +15,18 @@ use crate::clash::MapComponent;
 
 use crate::clash::MAX_MAP_TILES;
 
-pub struct DebugView<'a> {
+pub struct DebugView {
     position: SDLPoint,
-    text: &'a TextRenderer<'a>,
+    text: Rc<TextRenderer>,
 }
 
-impl<'a> DebugView<'a> {
-    pub fn init(position: SDLPoint, text: &'a TextRenderer<'a>) -> BoxResult<DebugView> {
+impl DebugView {
+    pub fn init(position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<DebugView> {
         Ok(DebugView { position, text })
     }
 }
 
-impl<'a> View for DebugView<'a> {
+impl View for DebugView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         if let BattleSceneState::Debug(kind) = battle_actions::read_state(&ecs) {
             let state = format!("Debug: {}", kind.to_string());

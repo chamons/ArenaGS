@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use sdl2::image::{self, InitFlag};
 
 pub struct FontContext {
@@ -10,6 +12,8 @@ impl FontContext {
         Ok(FontContext { ttf_context })
     }
 }
+
+pub type RenderContextHolder = Rc<RefCell<RenderContext>>;
 
 pub struct RenderContext {
     _image_context: sdl2::image::Sdl2ImageContext,

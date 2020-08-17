@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
@@ -10,39 +12,40 @@ use super::{battle_actions, complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::saveload;
-use crate::after_image::{RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, Point};
-use crate::conductor::{EventStatus, Scene};
+use crate::conductor::Scene;
 
-pub struct BattleScene<'a> {
+pub struct BattleScene {
     ecs: World,
-    views: Vec<Box<dyn View + 'a>>,
+    views: Vec<Box<dyn View>>,
 }
 
-impl<'a> BattleScene<'a> {
-    pub fn init(render_context: &RenderContext, text: &'a TextRenderer) -> BoxResult<BattleScene<'a>> {
+impl BattleScene {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
 
+        let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
-            Box::from(MapView::init(render_context)?),
-            Box::from(InfoBarView::init(SDLPoint::new(780, 20), text)?),
-            Box::from(LogView::init(SDLPoint::new(780, 450), text)?),
+            Box::from(MapView::init(&render_context)?),
+            Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text_renderer))?),
+            Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text_renderer))?),
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
-                text,
+                Rc::clone(&text_renderer),
             )?),
         ];
 
         if cfg!(debug_assertions) {
-            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), text)?));
+            views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
         }
 
         Ok(BattleScene { ecs, views })
     }
 
-    fn handle_default_key(&mut self, keycode: Keycode) -> EventStatus {
+    fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
             if keycode == Keycode::F1 {
                 battle_actions::set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
@@ -67,10 +70,9 @@ impl<'a> BattleScene<'a> {
             }
             _ => {}
         }
-        EventStatus::Continue
     }
 
-    fn handle_target_key(&mut self, keycode: Keycode) -> EventStatus {
+    fn handle_target_key(&mut self, keycode: Keycode) {
         if keycode == Keycode::Escape {
             battle_actions::reset_state(&mut self.ecs)
         }
@@ -81,13 +83,12 @@ impl<'a> BattleScene<'a> {
                 battle_actions::select_skill(&mut self.ecs, &name);
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) -> EventStatus {
+    fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) {
         if keycode == Keycode::Escape {
             battle_actions::reset_state(&mut self.ecs);
-            return EventStatus::Continue;
+            return;
         }
         if kind.is_map_overlay() {
             if keycode == Keycode::S {
@@ -95,23 +96,21 @@ impl<'a> BattleScene<'a> {
                 map.write_to_file().unwrap();
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::select_skill(&mut self.ecs, &name)
             }
         }
-        EventStatus::Continue
     }
 
-    fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Right {
             battle_actions::reset_state(&mut self.ecs);
-            return EventStatus::Continue;
+            return;
         }
 
         let target_info = match battle_actions::read_state(&self.ecs) {
@@ -128,11 +127,9 @@ impl<'a> BattleScene<'a> {
                 }
             }
         }
-
-        EventStatus::Continue
     }
 
-    fn handle_debug_mouse(&mut self, kind: DebugKind, x: i32, y: i32, button: MouseButton) -> EventStatus {
+    fn handle_debug_mouse(&mut self, kind: DebugKind, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Left {
             if kind.is_map_overlay() {
                 if let Some(map_position) = screen_to_map_position(x, y) {
@@ -141,12 +138,11 @@ impl<'a> BattleScene<'a> {
                 }
             }
         }
-        EventStatus::Continue
     }
 }
 
-impl<'a> Scene for BattleScene<'a> {
-    fn handle_key(&mut self, keycode: Keycode) -> EventStatus {
+impl Scene for BattleScene {
+    fn handle_key(&mut self, keycode: Keycode) {
         match keycode {
             Keycode::PageUp => self.ecs.log_scroll_back(),
             Keycode::PageDown => self.ecs.log_scroll_forward(),
@@ -158,10 +154,10 @@ impl<'a> Scene for BattleScene<'a> {
             BattleSceneState::Default() => self.handle_default_key(keycode),
             BattleSceneState::Targeting(_) => self.handle_target_key(keycode),
             BattleSceneState::Debug(kind) => self.handle_debug_key(kind, keycode),
-        }
+        };
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> EventStatus {
+    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
 
         if let Some(button) = button {
@@ -179,9 +175,7 @@ impl<'a> Scene for BattleScene<'a> {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
                 BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),
                 BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
-            }
-        } else {
-            EventStatus::Continue
+            };
         }
     }
 
@@ -199,13 +193,12 @@ impl<'a> Scene for BattleScene<'a> {
         Ok(())
     }
 
-    fn tick(&mut self, frame: u64) -> BoxResult<()> {
+    fn tick(&mut self, frame: u64) {
         process_tick_events(&mut self.ecs, frame);
+
         if !battle_actions::has_animations_blocking(&self.ecs) {
             tick_next_action(&mut self.ecs);
         }
-
-        Ok(())
     }
 
     fn on_quit(&mut self) -> BoxResult<()> {
@@ -214,11 +207,18 @@ impl<'a> Scene for BattleScene<'a> {
 
         Ok(())
     }
+
+    fn get_state(&self) -> &World {
+        &self.ecs
+    }
 }
 
 pub fn process_tick_events(ecs: &mut World, frame: u64) {
     ecs.maintain();
-    tick_animations(ecs, frame);
+    if ecs.try_fetch::<PlayerDeadComponent>().is_none() {
+        tick_animations(ecs, frame);
+        reap_killed(ecs);
+    }
 }
 
 fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
