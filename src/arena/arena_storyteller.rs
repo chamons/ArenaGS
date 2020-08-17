@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use specs::prelude::*;
 
-use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
+use crate::after_image::{RenderContextHolder, TextRenderer};
 use crate::clash::{CharacterInfoComponent, PlayerComponent, PlayerDeadComponent};
 use crate::conductor::{EventStatus, Scene, Storyteller};
 
