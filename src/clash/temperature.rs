@@ -12,7 +12,7 @@ const TEMPERATURE_FREEZE_POINT: i32 = -100;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Temperature {
-    current_temperature: i32,
+    pub current_temperature: i32,
     timer: TickTimer,
 }
 
