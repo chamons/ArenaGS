@@ -63,14 +63,6 @@ impl BattleScene {
             Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
             Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
             Keycode::S => saveload::save(&mut self.ecs),
-            Keycode::D => {
-                self.ecs
-                    .write_storage::<CharacterInfoComponent>()
-                    .grab_mut(find_player(&self.ecs))
-                    .character
-                    .defenses
-                    .health = 0
-            }
             Keycode::L => {
                 if let Ok(new_world) = saveload::load() {
                     self.ecs = new_world;
