@@ -1,7 +1,15 @@
+# TODO Buckets
+- Status effects, both limited (tick) and perm (traints)
+   - Characters need to have an arbitrary number at once
+- Character Overlays
+- Enemies with multiple phases of behavior
+- Shoot & Move
+- Knockback
+- Show damage in log
+- Content Developemnt (5 weapon skills, 1 accessory skill, 1 movement skill, Boss skills and phases) 
+
 # Temperature
 - Frost (needs status effect)
-
-- Show damage in log
 
 ## Overlay for each character
 - Life bar for enemy
@@ -17,7 +25,7 @@
 - Atune ammo [hard]
     - Status effect system
 - Showdown [hard]
-    - "Drama" resource
+    - "Adrenaline" resource
     - Trait system (with limited duration)
 - Bullets [very_hard]
     - Temperature system
