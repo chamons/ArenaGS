@@ -1,4 +1,15 @@
+# Temperature
+- Show temperature in player stats 
+- Frost (needs status effect)
+
+- Show damage in log
+
+## Overlay for each character
 - Life bar for enemy
+- Show icon when temperature high
+- CT?
+- Armor/Dodge?
+- White bracket frame?
 
 # GS Skills
 - Aimed shot [easy]
