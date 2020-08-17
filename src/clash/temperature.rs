@@ -104,7 +104,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyECS, EasyMutECS, Point};
+    use crate::atlas::{EasyMutECS, Point};
 
     #[test]
     fn apply_temperature_based_upon_damage_dice() {

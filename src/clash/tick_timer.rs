@@ -28,9 +28,7 @@ impl TickTimer {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
     use super::*;
-    use crate::atlas::EasyMutECS;
 
     #[test]
     fn large_ticks() {
