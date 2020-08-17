@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -222,6 +222,7 @@ pub fn create_world() -> World {
 pub trait ShortInfo {
     fn get_position(&self, entity: &Entity) -> SizedPoint;
     fn get_defenses(&self, entity: &Entity) -> Defenses;
+    fn get_temperature(&self, entity: &Entity) -> Temperature;
 }
 
 impl ShortInfo for World {
@@ -230,6 +231,9 @@ impl ShortInfo for World {
     }
     fn get_defenses(&self, entity: &Entity) -> Defenses {
         self.read_storage::<CharacterInfoComponent>().grab(*entity).character.defenses.clone()
+    }
+    fn get_temperature(&self, entity: &Entity) -> Temperature {
+        self.read_storage::<CharacterInfoComponent>().grab(*entity).character.temperature.clone()
     }
 }
 

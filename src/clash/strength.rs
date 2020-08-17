@@ -25,7 +25,7 @@ impl Strength {
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum DamageKind {
     Physical,
-    Heat,
+    Fire,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -43,8 +43,8 @@ impl Damage {
         Damage::init(Strength::init(amount), DamageKind::Physical)
     }
 
-    pub fn heat(amount: u32) -> Damage {
-        Damage::init(Strength::init(amount), DamageKind::Heat)
+    pub fn fire(amount: u32) -> Damage {
+        Damage::init(Strength::init(amount), DamageKind::Fire)
     }
 
     pub fn dice(&self) -> u32 {

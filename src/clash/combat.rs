@@ -104,9 +104,12 @@ pub fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage
 }
 
 pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entity) {
-    let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-    let defenses = &mut character_infos.grab_mut(*target).character.defenses;
-    defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand);
+    let applied_damage = {
+        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+        let defenses = &mut character_infos.grab_mut(*target).character.defenses;
+        defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
+    };
+    ecs.raise_event(EventKind::Damage(applied_damage, damage.kind), Some(*target));
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {

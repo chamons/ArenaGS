@@ -26,7 +26,7 @@ impl Defenses {
         }
     }
 
-    pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) {
+    pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> u32 {
         let damage_value = damage.amount.roll(rng);
 
         // Apply dodge first, burning charges up to matching dice
@@ -39,6 +39,9 @@ impl Defenses {
         let armor_value = Strength::init(self.armor).roll(rng);
         let (_, damage_value) = apply_with_remain(damage_value, armor_value);
 
+        // Report damage after mitigation applied
+        let total_applied_damage = damage_value;
+
         // Any absorb is burned first
         let (absorb_damage, damage_value) = apply_with_remain(damage_value, self.absorb);
         self.absorb -= absorb_damage;
@@ -46,6 +49,8 @@ impl Defenses {
         // Rest fall to health, ignore any overkill (since they are already dead)
         let (health_damage, _) = apply_with_remain(damage_value, self.health);
         self.health -= health_damage;
+
+        total_applied_damage
     }
 
     pub fn regain_dodge(&mut self, regain: u32) {
@@ -166,6 +171,18 @@ mod tests {
         assert!(def.absorb > 1);
         assert!(def.absorb < 5);
         assert_eq!(10, def.health);
+    }
+
+    #[test]
+    fn reports_damage_after_mitigation() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut def = Defenses::init(1, 1, 1, 10, 10);
+        let applied_damage = def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        // (2 * 2) + [2,4] = 6-8 damage
+        // Minus 2-4 Dodge/armor
+        // 2-6 damage
+        assert!(applied_damage >= 2);
+        assert!(applied_damage <= 6);
     }
 
     #[test]

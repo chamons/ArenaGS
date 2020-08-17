@@ -74,8 +74,9 @@ fn apply_temperature_effects(ecs: &mut World, target: &Entity, ticks: i32) {
         }
     }
     if apply_burn {
+        // If this is >= 5 we'll need to prevent burning from adding heat itself
         const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-        apply_damage_to_character(ecs, Damage::heat(TEMPERATURE_DAMAGE_PER_TICK), target);
+        apply_damage_to_character(ecs, Damage::fire(TEMPERATURE_DAMAGE_PER_TICK), target);
     }
     if apply_freeze {}
 }
@@ -83,6 +84,18 @@ fn apply_temperature_effects(ecs: &mut World, target: &Entity, ticks: i32) {
 pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Tick(ticks) => apply_temperature_effects(ecs, &target.unwrap(), ticks),
+        EventKind::Damage(damage, kind) => {
+            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+            if let Some(character_info) = character_infos.get_mut(target.unwrap()) {
+                match kind {
+                    DamageKind::Fire => character_info
+                        .character
+                        .temperature
+                        .change_from_incoming_damage(damage, TemperatureDirection::Heat),
+                    _ => {}
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -91,7 +104,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::EasyMutECS;
+    use crate::atlas::{EasyMutECS, Point};
 
     #[test]
     fn apply_temperature_based_upon_damage_dice() {
@@ -155,23 +168,23 @@ mod tests {
             .temperature
             .current_temperature = TEMPERATURE_BURN_POINT + 10;
 
-        let starting_temp = ecs
-            .read_storage::<CharacterInfoComponent>()
-            .grab(player)
-            .character
-            .temperature
-            .current_temperature;
+        let starting_temp = ecs.get_temperature(&player).current_temperature;
         add_ticks(&mut ecs, 100);
-        assert!(
-            ecs.read_storage::<CharacterInfoComponent>()
-                .grab(player)
-                .character
-                .temperature
-                .current_temperature
-                < starting_temp
-        );
+        assert!(ecs.get_temperature(&player).current_temperature < starting_temp);
     }
 
     #[test]
-    fn ranged_attack_adds_temperature() {}
+    fn ranged_attack_adds_temperature() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(3, 2, 0).build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 3, 2);
+        // Prevent target from dying
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).character.defenses = Defenses::init(0, 0, 0, 0, 200);
+
+        for _ in 0..4 {
+            begin_bolt(&mut ecs, &player, Point::init(3, 2), Damage::fire(10), BoltKind::Fire);
+            wait_for_animations(&mut ecs);
+        }
+        assert!(ecs.get_temperature(&target).current_temperature > TEMPERATURE_BURN_POINT);
+    }
 }
