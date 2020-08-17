@@ -13,16 +13,29 @@ pub struct Defenses {
     pub armor: u32,
     pub absorb: u32,
     pub health: u32,
+    pub max_health: u32,
 }
 
 impl Defenses {
-    pub fn init(dodge: u32, max_dodge: u32, armor: u32, absorb: u32, health: u32) -> Defenses {
+    pub fn init(dodge: u32, armor: u32, absorb: u32, health: u32) -> Defenses {
         Defenses {
             dodge,
-            max_dodge,
+            max_dodge: dodge,
             armor,
             absorb,
             health,
+            max_health: health,
+        }
+    }
+
+    pub fn just_health(health: u32) -> Defenses {
+        Defenses {
+            dodge: 0,
+            max_dodge: 0,
+            armor: 0,
+            absorb: 0,
+            health,
+            max_health: health,
         }
     }
 
@@ -98,7 +111,7 @@ mod tests {
     #[test]
     fn no_defense_full_damage() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(0, 0, 0, 0, 10);
+        let mut def = Defenses::just_health(10);
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.health > 1);
@@ -108,7 +121,7 @@ mod tests {
     #[test]
     fn no_defense_overkill_leaves_at_zero() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(0, 0, 0, 0, 10);
+        let mut def = Defenses::just_health(10);
         def.apply_damage(Damage::init(Strength::init(10), DamageKind::Physical), &mut rng);
         assert_eq!(0, def.health);
     }
@@ -116,7 +129,7 @@ mod tests {
     #[test]
     fn dodge_reduces_damage_up_to_strength() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(3, 3, 0, 0, 10);
+        let mut def = Defenses::init(3, 0, 0, 10);
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
@@ -129,14 +142,15 @@ mod tests {
     #[test]
     fn extra_dodge_saved_after_roll() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(5, 5, 0, 0, 10);
+        let mut def = Defenses::init(5, 0, 0, 10);
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
         assert_eq!(1, def.dodge);
     }
 
     #[test]
     fn regain_dodge() {
-        let mut def = Defenses::init(0, 2, 0, 0, 10);
+        let mut def = Defenses::just_health(10);
+        def.max_dodge = 2;
         def.regain_dodge(3);
         assert_eq!(2, def.dodge);
     }
@@ -144,7 +158,7 @@ mod tests {
     #[test]
     fn armor_reduces_every_hit() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(0, 0, 1, 0, 10);
+        let mut def = Defenses::init(0, 1, 0, 10);
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
@@ -157,7 +171,7 @@ mod tests {
     #[test]
     fn dodge_used_even_if_armor_would_cover() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(4, 4, 4, 0, 10);
+        let mut def = Defenses::init(4, 4, 0, 10);
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
         assert_eq!(0, def.dodge);
     }
@@ -165,7 +179,8 @@ mod tests {
     #[test]
     fn absorb_takes_all_damage_before_life() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(0, 0, 0, 10, 10);
+        let mut def = Defenses::just_health(10);
+        def.absorb = 10;
         def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.absorb > 1);
@@ -176,7 +191,7 @@ mod tests {
     #[test]
     fn reports_damage_after_mitigation() {
         let mut rng = StdRng::seed_from_u64(42);
-        let mut def = Defenses::init(1, 1, 1, 10, 10);
+        let mut def = Defenses::init(1, 1, 10, 10);
         let applied_damage = def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         // Minus 2-4 Dodge/armor
@@ -189,7 +204,9 @@ mod tests {
     fn dodge_restored_by_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::init(0, 10, 0, 0, 10);
+        let mut defenses = Defenses::just_health(10);
+        defenses.max_dodge = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = defenses;
         move_character_action(&mut ecs, player, SizedPoint::init(2, 3));
         wait_for_animations(&mut ecs);
         let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(player).character.defenses.dodge;

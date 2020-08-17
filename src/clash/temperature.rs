@@ -179,7 +179,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 3, 2);
         // Prevent target from dying
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).character.defenses = Defenses::init(0, 0, 0, 0, 200);
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).character.defenses = Defenses::just_health(200);
 
         for _ in 0..4 {
             begin_bolt(&mut ecs, &player, Point::init(3, 2), Damage::fire(10), BoltKind::Fire);

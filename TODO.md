@@ -1,5 +1,4 @@
 # Temperature
-- Show temperature in player stats 
 - Frost (needs status effect)
 
 - Show damage in log

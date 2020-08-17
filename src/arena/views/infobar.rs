@@ -20,6 +20,7 @@ impl InfoBarView {
     pub fn init(position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<InfoBarView> {
         Ok(InfoBarView { position, text })
     }
+
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         self.text
             .render_text("Info Bar", self.position.x, self.position.y, canvas, FontSize::Large, FontColor::Black)?;
@@ -28,60 +29,49 @@ impl InfoBarView {
         let player = find_player(&ecs);
         let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
         let char_info = char_infos.grab(player);
+        let defenses = &char_info.character.defenses;
+        let health_text = {
+            if defenses.absorb != 0 {
+                format!("Health: (+{:.2}) {:.2}/{:.2}", defenses.absorb, defenses.health, defenses.max_health)
+            } else {
+                format!("Health: {:.2}/{:.2}", defenses.health, defenses.max_health)
+            }
+        };
+        self.small_text(canvas, health_text.as_str(), &mut offset)?;
 
-        // Write out Dodge,Current Dodge, Armor, Absorb, and Health (if not zero)
-        let temperature = char_info.character.temperature.current_temperature;
-        if temperature != 0 {
-            self.text.render_text(
-                format!("Temperature: {:.2}", temperature).as_str(),
-                self.position.x + 4,
-                self.position.y + offset,
-                canvas,
-                FontSize::Small,
-                FontColor::Black,
-            )?;
-            offset += 20;
+        if defenses.max_dodge != 0 {
+            self.small_text(canvas, format!("Dodge : {:.2}/{:.2}", defenses.dodge, defenses.max_dodge).as_str(), &mut offset)?;
+        }
+        if defenses.armor != 0 {
+            self.small_text(canvas, format!("Armor: {:.2}", defenses.armor).as_str(), &mut offset)?;
         }
 
         let resources = &ecs.read_storage::<SkillResourceComponent>();
         let resource = resources.grab(player);
-        self.text.render_text(
-            format!("Exhaustion: {:.2}", resource.exhaustion).as_str(),
-            self.position.x + 4,
-            self.position.y + offset,
-            canvas,
-            FontSize::Small,
-            FontColor::Black,
-        )?;
-        offset += 20;
+        self.small_text(canvas, format!("Exhaustion: {:.2}", resource.exhaustion).as_str(), &mut offset)?;
 
-        self.text.render_text(
-            format!("Focus: {:.2}", resource.focus).as_str(),
-            self.position.x + 4,
-            self.position.y + offset,
-            canvas,
-            FontSize::Small,
-            FontColor::Black,
-        )?;
-        offset += 20;
+        self.small_text(canvas, format!("Focus: {:.2}", resource.focus).as_str(), &mut offset)?;
 
         for kind in AmmoKind::into_enum_iter() {
             match resource.max.get(&kind) {
                 Some(value) => {
-                    self.text.render_text(
-                        format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(),
-                        self.position.x + 4,
-                        self.position.y + offset,
-                        canvas,
-                        FontSize::Small,
-                        FontColor::Black,
-                    )?;
-                    offset += 20;
+                    self.small_text(canvas, format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(), &mut offset)?;
                 }
                 None => {}
             }
         }
 
+        let temperature = char_info.character.temperature.current_temperature;
+        if temperature != 0 {
+            self.small_text(canvas, format!("Temperature: {:.2}", temperature).as_str(), &mut offset)?;
+        }
+        Ok(())
+    }
+
+    fn small_text(&self, canvas: &mut RenderCanvas, text: &str, offset: &mut i32) -> BoxResult<()> {
+        self.text
+            .render_text(text, self.position.x + 4, self.position.y + *offset, canvas, FontSize::Small, FontColor::Black)?;
+        *offset += 20;
         Ok(())
     }
 }

@@ -763,7 +763,9 @@ mod tests {
     fn dodge_restored_by_skill_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = Defenses::init(0, 5, 0, 0, 10);
+        let mut defenses = Defenses::just_health(10);
+        defenses.max_dodge = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = defenses;
 
         invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);

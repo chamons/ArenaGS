@@ -81,7 +81,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
-            Defenses::init(0, 0, 0, 0, 10),
+            Defenses::just_health(10),
             Temperature::init(),
         )))
         .with(SkillResourceComponent::init(&[]))
