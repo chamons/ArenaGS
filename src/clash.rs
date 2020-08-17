@@ -43,3 +43,9 @@ pub use strength::*;
 
 mod defenses;
 pub use defenses::*;
+
+mod temperature;
+pub use temperature::*;
+
+mod tick_timer;
+pub use tick_timer::*;

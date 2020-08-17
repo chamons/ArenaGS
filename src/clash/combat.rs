@@ -97,13 +97,19 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
 }
 
-fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage) {
+pub fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage) {
     if let Some(target) = find_character_at_location(ecs, position) {
-        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-        let defenses = &mut character_infos.grab_mut(target).character.defenses;
-        let mut random = &mut ecs.fetch_mut::<RandomComponent>().rand;
-        defenses.apply_damage(damage, &mut random);
+        apply_damage_to_character(ecs, damage, &target);
     }
+}
+
+pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entity) {
+    let applied_damage = {
+        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+        let defenses = &mut character_infos.grab_mut(*target).character.defenses;
+        defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
+    };
+    ecs.raise_event(EventKind::Damage(applied_damage, damage.kind), Some(*target));
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {

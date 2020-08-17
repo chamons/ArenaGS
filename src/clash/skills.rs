@@ -1,8 +1,10 @@
+use std::cmp;
 use std::collections::HashMap;
 use std::slice::from_ref;
 
 use enum_iterator::IntoEnumIterator;
 use lazy_static::lazy_static;
+use ordered_float::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -405,11 +407,33 @@ fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
     set_ammo(ecs, invoker, kind, max_ammo);
 }
 
+fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
+    let exhaustion_to_remove = EXHAUSTION_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
+
+    let focus_to_add = FOCUS_PER_100_TICKS as f64 * (ticks_to_add as f64 / 100.0);
+    // Ordering f64 is hard _tm_
+    skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
+    skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
+}
+
+pub fn tick_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Tick(ticks) => {
+            let mut skills = ecs.write_storage::<SkillResourceComponent>();
+            if let Some(skill_resource) = skills.get_mut(target.unwrap()) {
+                add_ticks_for_skill(skill_resource, ticks);
+            }
+        }
+        _ => {}
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations};
     use super::*;
     use crate::atlas::{EasyMutWorld, SizedPoint};
+    use assert_approx_eq::assert_approx_eq;
 
     #[test]
     #[should_panic]
@@ -739,12 +763,66 @@ mod tests {
     fn dodge_restored_by_skill_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = Defenses::init(0, 5, 0, 0, 10);
+        let mut defenses = Defenses::just_health(10);
+        defenses.max_dodge = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = defenses;
 
         invoke_skill(&mut ecs, &entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);
 
         let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.dodge;
         assert_eq!(4, dodge);
+    }
+
+    #[test]
+    fn exhaustion_reduced_by_time() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<SkillResourceComponent>().grab_mut(player).exhaustion = 50.0;
+        // This works as long as there is no rounding, as 20 *(5 *.5) = 50.0
+        for _ in 0..20 {
+            add_ticks(&mut ecs, 50);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).exhaustion, 0.0);
+        }
+
+        // Keep going, make sure it doesn't drop below zero
+        for _ in 0..10 {
+            add_ticks(&mut ecs, 100);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).exhaustion, 0.0);
+        }
+    }
+
+    #[test]
+    fn focus_restored_by_time() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<SkillResourceComponent>().grab_mut(player).focus = 0.0;
+        ecs.write_storage::<SkillResourceComponent>().grab_mut(player).max_focus = 1.0;
+        for _ in 0..20 {
+            add_ticks(&mut ecs, 50);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).focus, 1.0);
+        }
+
+        // Keep going, make sure it doesn't go above max
+        for _ in 0..10 {
+            add_ticks(&mut ecs, 100);
+        }
+
+        {
+            let skills = ecs.read_storage::<SkillResourceComponent>();
+            assert_approx_eq!(skills.grab(player).focus, 1.0);
+        }
     }
 }
