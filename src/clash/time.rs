@@ -67,7 +67,7 @@ pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{create_test_state, create_world, find_all_entities, find_at, find_at_time, find_first_entity, SkillResourceComponent};
+    use super::super::{create_test_state, create_world, find_all_entities, find_at_time, find_first_entity};
     use super::*;
 
     #[test]

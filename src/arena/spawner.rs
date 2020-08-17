@@ -16,7 +16,10 @@ pub fn player(ecs: &mut World) {
             CharacterAnimationState::Idle,
         )))
         .with(PositionComponent::init(SizedPoint::init(4, 4)))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(Defenses::init(0, 0, 0, 0, 10))))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(
+            Defenses::init(0, 0, 0, 0, 10),
+            Temperature::init(),
+        )))
         .with(PlayerComponent::init())
         .with(TimeComponent::init(0))
         .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
@@ -29,7 +32,10 @@ pub fn bird_monster(ecs: &mut World) {
     ecs.create_entity()
         .with(RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown)))
         .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(Defenses::init(0, 0, 0, 0, 25))))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(
+            Defenses::init(0, 0, 0, 0, 25),
+            Temperature::init(),
+        )))
         .with(BehaviorComponent::init(BehaviorKind::Random))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
