@@ -3,7 +3,7 @@ use std::rc::Rc;
 use specs::prelude::*;
 
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::clash::PlayerDeadComponent;
+use crate::clash::{CharacterInfoComponent, PlayerComponent, PlayerDeadComponent};
 use crate::conductor::{EventStatus, Scene, Storyteller};
 
 use super::BattleScene;
@@ -25,6 +25,14 @@ impl ArenaStoryteller {
 impl Storyteller for ArenaStoryteller {
     fn check_place(&self, ecs: &World) -> EventStatus {
         if ecs.try_fetch::<PlayerDeadComponent>().is_some() {
+            return EventStatus::NewScene(self.initial_scene());
+        }
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let player = ecs.read_storage::<PlayerComponent>();
+
+        let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
+        if non_player_character_count == 0 {
             return EventStatus::NewScene(self.initial_scene());
         }
         EventStatus::Continue
