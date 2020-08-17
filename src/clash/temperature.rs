@@ -59,27 +59,30 @@ impl Temperature {
     }
 }
 
-fn apply_temperature_effects(character_info: &mut CharacterInfoComponent, random: &mut RandomComponent) {
-    let current_temperature = character_info.character.temperature.current_temperature;
-
-    if current_temperature > TEMPERATURE_BURN_POINT {
-        const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-        apply_damage(Damage::heat(TEMPERATURE_DAMAGE_PER_TICK), character_info, random);
-    } else if current_temperature < TEMPERATURE_FREEZE_POINT {
-    }
-}
-
-pub fn tick_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    match kind {
-        EventKind::Tick(ticks) => {
-            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            if let Some(character_info) = &mut character_infos.get_mut(target.unwrap()) {
-                if character_info.character.temperature.is_ready(ticks) {
-                    apply_temperature_effects(character_info, &mut ecs.fetch_mut::<RandomComponent>());
-                    character_info.character.temperature.reduce_temperature();
-                }
+fn apply_temperature_effects(ecs: &mut World, target: &Entity, ticks: i32) {
+    let mut apply_burn = false;
+    let mut apply_freeze = false;
+    {
+        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+        if let Some(character_info) = character_infos.get_mut(*target) {
+            let temperature = &mut character_info.character.temperature;
+            if temperature.is_ready(ticks) {
+                apply_burn = temperature.current_temperature > TEMPERATURE_BURN_POINT;
+                apply_freeze = temperature.current_temperature < TEMPERATURE_FREEZE_POINT;
+                temperature.reduce_temperature();
             }
         }
+    }
+    if apply_burn {
+        const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
+        apply_damage_to_character(ecs, Damage::heat(TEMPERATURE_DAMAGE_PER_TICK), target);
+    }
+    if apply_freeze {}
+}
+
+pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Tick(ticks) => apply_temperature_effects(ecs, &target.unwrap(), ticks),
         _ => {}
     }
 }
