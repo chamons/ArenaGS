@@ -215,6 +215,10 @@ impl Scene for BattleScene {
 
         Ok(())
     }
+
+    fn get_state(&self) -> &World {
+        &self.ecs
+    }
 }
 
 pub fn process_tick_events(ecs: &mut World, frame: u64) {

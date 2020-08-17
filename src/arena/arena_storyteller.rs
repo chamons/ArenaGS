@@ -1,6 +1,9 @@
 use std::rc::Rc;
 
+use specs::prelude::*;
+
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
+use crate::clash::PlayerDeadComponent;
 use crate::conductor::{EventStatus, Scene, Storyteller};
 
 use super::BattleScene;
@@ -20,7 +23,10 @@ impl ArenaStoryteller {
 }
 
 impl Storyteller for ArenaStoryteller {
-    fn check_place(&self) -> EventStatus {
+    fn check_place(&self, ecs: &World) -> EventStatus {
+        if ecs.try_fetch::<PlayerDeadComponent>().is_some() {
+            return EventStatus::NewScene(self.initial_scene());
+        }
         EventStatus::Continue
     }
 

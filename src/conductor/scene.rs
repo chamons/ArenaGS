@@ -1,3 +1,5 @@
+use specs::prelude::*;
+
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 
@@ -13,4 +15,5 @@ pub trait Scene {
     fn tick(&mut self, _frame: u64);
 
     fn on_quit(&mut self) -> BoxResult<()>;
+    fn get_state(&self) -> &World;
 }

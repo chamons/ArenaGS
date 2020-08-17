@@ -29,6 +29,7 @@ impl<'a> Director<'a> {
     pub fn change_scene(&mut self, scene: Box<dyn Scene + 'a>) {
         self.scene = scene;
     }
+
     pub fn run(&mut self, render_context: RenderContextHolder) -> BoxResult<()> {
         let mut frame = 0;
         loop {
@@ -51,6 +52,13 @@ impl<'a> Director<'a> {
             }
 
             self.scene.tick(frame);
+
+            match self.storyteller.check_place(self.scene.get_state()) {
+                EventStatus::NewScene(scene) => self.change_scene(scene),
+                EventStatus::Quit => return Ok(()),
+                EventStatus::Continue => {}
+            }
+
             self.scene.render(&mut render_context.borrow_mut().canvas, frame)?;
 
             let end_frame = Instant::now();
