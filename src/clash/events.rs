@@ -43,6 +43,7 @@ pub enum EventKind {
     Melee(MeleeState),
     Field(FieldState),
     Explode(ExplodeState),
+    Tick(i32),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();
