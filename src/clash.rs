@@ -43,3 +43,6 @@ pub use strength::*;
 
 mod defenses;
 pub use defenses::*;
+
+mod temperature;
+pub use temperature::*;
