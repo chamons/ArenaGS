@@ -7,6 +7,7 @@ use sdl2::render::Texture;
 use super::{FontContext, RenderCanvas};
 use crate::atlas::{get_exe_folder, BoxResult};
 
+#[allow(dead_code)]
 pub enum FontSize {
     Small,
     Large,
