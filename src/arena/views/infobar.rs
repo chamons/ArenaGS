@@ -22,10 +22,7 @@ impl InfoBarView {
     }
 
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
-        self.text
-            .render_text("Info Bar", self.position.x, self.position.y, canvas, FontSize::Large, FontColor::Black)?;
-
-        let mut offset = 30;
+        let mut offset = 5;
         let player = find_player(&ecs);
         let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
         let char_info = char_infos.grab(player);

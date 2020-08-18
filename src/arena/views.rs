@@ -3,6 +3,7 @@ use specs::prelude::*;
 use crate::after_image::RenderCanvas;
 use crate::atlas::{BoxResult, Point};
 
+mod character_overlay;
 mod debug;
 mod infobar;
 mod log;
@@ -25,6 +26,7 @@ pub trait View {
     }
 }
 
+pub use character_overlay::CharacterOverlay;
 pub use debug::DebugView;
 pub use infobar::InfoBarView;
 pub use log::LogView;

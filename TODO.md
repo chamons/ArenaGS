@@ -11,13 +11,6 @@
 # Temperature
 - Frost (needs status effect)
 
-## Overlay for each character
-- Life bar for enemy
-- Show icon when temperature high
-- CT?
-- Armor/Dodge?
-- White bracket frame?
-
 # GS Skills
 - Aimed shot [easy]
 - Triple shot [easy]
