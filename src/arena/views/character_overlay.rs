@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
@@ -34,20 +33,30 @@ impl CharacterOverlay {
     pub fn draw_character_overlay(&self, canvas: &mut RenderCanvas, ecs: &World, entity: &Entity, screen_position: SDLPoint) -> BoxResult<()> {
         let position = ecs.get_position(entity);
         if position.width == 1 && position.height == 1 {
-            let image_rect = SDLRect::new(0, 0, TILE_SIZE, TILE_SIZE);
-            let screen_rect = SDLRect::new(screen_position.x() - (TILE_SIZE as i32 / 2), screen_position.y(), TILE_SIZE, TILE_SIZE);
-            canvas.copy(&self.small_frame, image_rect, screen_rect)?;
+            self.draw_small_bracket(canvas, screen_position)?;
         } else if position.width == 2 && position.height == 2 {
-            let image_rect = SDLRect::new(0, 0, TILE_SIZE * 2, TILE_SIZE * 2);
-            let screen_rect = SDLRect::new(
-                screen_position.x() - TILE_SIZE as i32,
-                screen_position.y() - TILE_SIZE as i32,
-                TILE_SIZE * 2,
-                TILE_SIZE * 2,
-            );
-            canvas.copy(&self.large_frame, image_rect, screen_rect)?;
+            self.draw_large_bracket(canvas, screen_position)?;
         }
 
+        Ok(())
+    }
+
+    fn draw_large_bracket(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint) -> BoxResult<()> {
+        let image_rect = SDLRect::new(0, 0, TILE_SIZE * 2, TILE_SIZE * 2);
+        let screen_rect = SDLRect::new(
+            screen_position.x() - TILE_SIZE as i32,
+            screen_position.y() - TILE_SIZE as i32,
+            TILE_SIZE * 2,
+            TILE_SIZE * 2,
+        );
+        canvas.copy(&self.large_frame, image_rect, screen_rect)?;
+        Ok(())
+    }
+
+    fn draw_small_bracket(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint) -> BoxResult<()> {
+        let image_rect = SDLRect::new(0, 0, TILE_SIZE, TILE_SIZE);
+        let screen_rect = SDLRect::new(screen_position.x() - (TILE_SIZE as i32 / 2), screen_position.y(), TILE_SIZE, TILE_SIZE);
+        canvas.copy(&self.small_frame, image_rect, screen_rect)?;
         Ok(())
     }
 }
