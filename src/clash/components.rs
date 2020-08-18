@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, Temperature};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -173,6 +173,17 @@ impl PlayerDeadComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct StatusComponent {
+    status: StatusStore,
+}
+
+impl StatusComponent {
+    pub fn init() -> StatusComponent {
+        StatusComponent { status: StatusStore::init() }
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -191,6 +202,7 @@ pub fn create_world() -> World {
     ecs.register::<RandomComponent>();
     ecs.register::<PlayerDeadComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
+    ecs.register::<StatusComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
