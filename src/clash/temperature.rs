@@ -54,6 +54,14 @@ impl Temperature {
         }
     }
 
+    pub fn is_burning(&self) -> bool {
+        self.current_temperature > TEMPERATURE_BURN_POINT
+    }
+
+    pub fn is_freezing(&self) -> bool {
+        self.current_temperature < TEMPERATURE_FREEZE_POINT
+    }
+
     pub fn is_ready(&mut self, ticks_to_add: i32) -> bool {
         self.timer.apply_ticks(ticks_to_add)
     }
@@ -67,8 +75,8 @@ fn apply_temperature_effects(ecs: &mut World, target: &Entity, ticks: i32) {
         if let Some(character_info) = character_infos.get_mut(*target) {
             let temperature = &mut character_info.character.temperature;
             if temperature.is_ready(ticks) {
-                apply_burn = temperature.current_temperature > TEMPERATURE_BURN_POINT;
-                apply_freeze = temperature.current_temperature < TEMPERATURE_FREEZE_POINT;
+                apply_burn = temperature.is_burning();
+                apply_freeze = temperature.is_freezing();
                 temperature.reduce_temperature();
             }
         }

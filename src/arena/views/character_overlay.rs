@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
@@ -13,21 +14,27 @@ use crate::clash::ShortInfo;
 pub struct CharacterOverlay {
     large_frame: Texture,
     small_frame: Texture,
+    fire: Texture,
+    ice: Texture,
 }
 
 impl CharacterOverlay {
     pub fn init(render_context: &RenderContext) -> BoxResult<CharacterOverlay> {
-        let mut small_frame = load_image(
-            Path::new(&get_exe_folder()).join("images").join("frames").join("small_frame.png").stringify(),
+        Ok(CharacterOverlay {
+            small_frame: CharacterOverlay::load(render_context, "small_frame.png")?,
+            large_frame: CharacterOverlay::load(render_context, "large_frame.png")?,
+            fire: CharacterOverlay::load(render_context, "fire.png")?,
+            ice: CharacterOverlay::load(render_context, "ice.png")?,
+        })
+    }
+
+    fn load(render_context: &RenderContext, name: &str) -> BoxResult<Texture> {
+        let mut img = load_image(
+            Path::new(&get_exe_folder()).join("images").join("frames").join(name).stringify(),
             render_context,
         )?;
-        small_frame.set_alpha_mod(212);
-        let mut large_frame = load_image(
-            Path::new(&get_exe_folder()).join("images").join("frames").join("large_frame.png").stringify(),
-            render_context,
-        )?;
-        large_frame.set_alpha_mod(212);
-        Ok(CharacterOverlay { small_frame, large_frame })
+        img.set_alpha_mod(212);
+        Ok(img)
     }
 
     pub fn draw_character_overlay(&self, canvas: &mut RenderCanvas, ecs: &World, entity: &Entity, screen_position: SDLPoint) -> BoxResult<()> {
@@ -36,9 +43,38 @@ impl CharacterOverlay {
             self.draw_small_bracket(canvas, screen_position)?;
         } else if position.width == 2 && position.height == 2 {
             self.draw_large_bracket(canvas, screen_position)?;
+        } else {
+            panic!();
+        }
+
+        let temperature = ecs.get_temperature(entity);
+        let image_rect = SDLRect::new(0, 0, 32, 32);
+        let offset = self.status_offset(ecs, entity);
+        canvas.set_draw_color(Color::RGBA(0, 0, 0, 64));
+        if temperature.is_burning() {
+            let screen_rect = SDLRect::new(screen_position.x() + offset.x(), screen_position.y() + offset.y(), 32, 32);
+            let background_rect = SDLRect::new(screen_rect.x() + 7, screen_rect.y() + 2, 18, 28);
+            canvas.fill_rect(background_rect)?;
+            canvas.copy(&self.fire, image_rect, screen_rect)?;
+        } else if temperature.is_freezing() {
+            let screen_rect = SDLRect::new(screen_position.x() + offset.x() + 8, screen_position.y() + offset.y() + 6, 20, 20);
+            let background_rect = SDLRect::new(screen_rect.x() + 7 - 8, screen_rect.y() + 2 - 6, 22, 28);
+            canvas.fill_rect(background_rect)?;
+            canvas.copy(&self.ice, image_rect, screen_rect)?
         }
 
         Ok(())
+    }
+
+    fn status_offset(&self, ecs: &World, entity: &Entity) -> SDLPoint {
+        let position = ecs.get_position(entity);
+        if position.width == 1 && position.height == 1 {
+            SDLPoint::new(-28, 16)
+        } else if position.width == 2 && position.height == 2 {
+            SDLPoint::new(-52, 16)
+        } else {
+            panic!();
+        }
     }
 
     fn draw_large_bracket(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint) -> BoxResult<()> {
