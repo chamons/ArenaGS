@@ -85,5 +85,6 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
             Temperature::init(),
         )))
         .with(SkillResourceComponent::init(&[]))
+        .with(StatusComponent::init())
         .build();
 }

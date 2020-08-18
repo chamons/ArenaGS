@@ -175,7 +175,7 @@ impl PlayerDeadComponent {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct StatusComponent {
-    status: StatusStore,
+    pub status: StatusStore,
 }
 
 impl StatusComponent {
@@ -222,6 +222,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::defenses::defense_event);
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
+    ecs.subscribe(super::status::status_event);
 
     #[cfg(test)]
     {
@@ -246,6 +247,16 @@ impl ShortInfo for World {
     }
     fn get_temperature(&self, entity: &Entity) -> Temperature {
         self.read_storage::<CharacterInfoComponent>().grab(*entity).character.temperature.clone()
+    }
+}
+
+pub trait StatusInfo {
+    fn has_status(&self, entity: &Entity, name: &str) -> bool;
+}
+
+impl StatusInfo for World {
+    fn has_status(&self, entity: &Entity, name: &str) -> bool {
+        self.read_storage::<StatusComponent>().grab(*entity).status.has(name)
     }
 }
 

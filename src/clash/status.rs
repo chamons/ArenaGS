@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::TickTimer;
+use super::{EventKind, StatusComponent, TickTimer};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum StatusKind {
@@ -73,14 +73,24 @@ impl StatusStore {
                     if timer.apply_ticks(ticks) {
                         remove.push(k.to_string());
                     }
-                },
+                }
                 StatusKind::Trait => {}
             }
         }
-        
         for r in remove {
             self.store.remove(&r);
         }
+    }
+}
+
+pub fn status_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Tick(ticks) => {
+            if let Some(status) = ecs.write_storage::<StatusComponent>().get_mut(target.unwrap()) {
+                status.status.apply_ticks(ticks);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -88,6 +98,7 @@ impl StatusStore {
 mod tests {
     use super::super::*;
     use super::*;
+    use crate::atlas::EasyMutECS;
 
     #[test]
     fn add_status() {
@@ -175,5 +186,12 @@ mod tests {
     }
 
     #[test]
-    fn status_integration_with_ecs() {}
+    fn status_integration_with_ecs() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let entity = find_at(&ecs, 2, 2);
+        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.add_status("TestStatus", 100);
+        assert!(ecs.has_status(&entity, "TestStatus"));
+        add_ticks(&mut ecs, 100);
+        assert!(!ecs.has_status(&entity, "TestStatus"));
+    }
 }

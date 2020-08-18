@@ -20,6 +20,7 @@ pub fn player(ecs: &mut World) {
             Defenses::just_health(10),
             Temperature::init(),
         )))
+        .with(StatusComponent::init())
         .with(PlayerComponent::init())
         .with(TimeComponent::init(0))
         .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
@@ -36,6 +37,7 @@ pub fn bird_monster(ecs: &mut World) {
             Defenses::just_health(25),
             Temperature::init(),
         )))
+        .with(StatusComponent::init())
         .with(BehaviorComponent::init(BehaviorKind::Random))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
