@@ -9,6 +9,7 @@ mod infobar;
 mod log;
 mod map;
 mod skillbar;
+mod status_display;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone)]
@@ -32,3 +33,4 @@ pub use infobar::InfoBarView;
 pub use log::LogView;
 pub use map::{screen_rect_for_map_grid, screen_to_map_position, MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;
+pub use status_display::StatusBarView;
