@@ -1,7 +1,6 @@
 # TODO Buckets
 - Status effects, both limited (tick) and perm (traints)
    - Characters need to have an arbitrary number at once
-- Character Overlays
 - Enemies with multiple phases of behavior
 - Shoot & Move
 - Knockback
