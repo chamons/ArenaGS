@@ -8,7 +8,7 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
 use super::super::{battle_actions, AnimationComponent, SpriteLoader};
-use super::{HitTestResult, View};
+use super::{CharacterOverlay, HitTestResult, View};
 
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
@@ -18,6 +18,7 @@ use crate::clash::{
 
 pub struct MapView {
     sprites: SpriteLoader,
+    overlay: CharacterOverlay,
 }
 
 pub const MAP_CORNER_X: u32 = 50;
@@ -61,8 +62,8 @@ fn get_render_position(position: &PositionComponent, animation: Option<&Animatio
 impl MapView {
     pub fn init(render_context: &RenderContext) -> BoxResult<MapView> {
         let sprites = SpriteLoader::init(render_context)?;
-
-        Ok(MapView { sprites })
+        let overlay = CharacterOverlay::init(render_context)?;
+        Ok(MapView { sprites, overlay })
     }
 
     fn draw_grid(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
@@ -77,13 +78,14 @@ impl MapView {
     }
 
     fn render_entities(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let positions = ecs.read_storage::<PositionComponent>();
         let renderables = ecs.read_storage::<RenderComponent>();
         let animations = ecs.read_storage::<AnimationComponent>();
 
         // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
         for order in RenderOrder::into_enum_iter() {
-            for (render, position, animation) in (&renderables, (&positions).maybe(), (&animations).maybe()).join() {
+            for (entity, render, position, animation) in (&entities, &renderables, (&positions).maybe(), (&animations).maybe()).join() {
                 let render = &render.render;
                 if render.order == order {
                     let id = render.sprite_id;
@@ -96,6 +98,7 @@ impl MapView {
                         let offset = get_render_position(position, animation, frame);
                         let state = get_render_sprite_state(&render, animation);
                         sprite.draw(canvas, offset, state, render_frame)?;
+                        self.overlay.draw_character_overlay (canvas, ecs, &entity, offset)?;
                     } else {
                         sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, render_frame)?;
                     }
