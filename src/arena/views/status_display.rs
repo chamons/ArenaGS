@@ -1,35 +1,33 @@
-use std::rc::Rc;
-
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::super::IconLoader;
 use super::{ContextData, HitTestResult, View};
-use crate::after_image::{RenderCanvas, RenderContext, RenderContextHolder};
+use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, EventKind, StatusComponent};
 
 pub struct StatusBarView {
     position: SDLPoint,
     views: Vec<StatusBarItemView>,
+    icons: IconLoader,
 }
 
 impl StatusBarView {
-    pub fn init(render_context_holder: &RenderContextHolder, position: SDLPoint, ecs: &World) -> BoxResult<StatusBarView> {
-        let icons = Rc::new(IconLoader::init(Rc::clone(render_context_holder), "glass")?);
+    pub fn init(render_context: &RenderContext, position: SDLPoint, ecs: &World) -> BoxResult<StatusBarView> {
+        let icons = IconLoader::init(&render_context, "glass")?;
         let mut views = vec![];
         for i in 0..10 {
-            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 44, position.y()), Rc::clone(&icons)));
+            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 44, position.y()), i as u32));
         }
-        Ok(StatusBarView { position, views })
+        Ok(StatusBarView { position, views, icons })
     }
 }
 
 impl View for StatusBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
         let player = find_player(&ecs);
         let statuses = ecs.read_storage::<StatusComponent>();
         let status = &statuses.grab(player).status;
@@ -50,19 +48,14 @@ impl View for StatusBarView {
 
 struct StatusBarItemView {
     position: SDLPoint,
-    icons: Rc<IconLoader>,
+    index: u32,
+    pub name: Option<String>,
 }
 
 impl StatusBarItemView {
-    pub fn init(position: SDLPoint, icons: Rc<IconLoader>) -> StatusBarItemView {
-        StatusBarItemView { position, icons }
+    pub fn init(position: SDLPoint, index: u32) -> StatusBarItemView {
+        StatusBarItemView { position, index, name: None }
     }
-
-    // pub fn get_icon(&self, status_name: &str, canvas: &mut RenderCanvas) -> Texture {
-    //     match status_name {
-    //         "Fire Ammo" => self.icons.get(),
-    //     }
-    // }
 }
 
 impl View for StatusBarItemView {

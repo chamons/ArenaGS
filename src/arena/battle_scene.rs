@@ -34,12 +34,12 @@ impl BattleScene {
             Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text_renderer))?),
             Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text_renderer))?),
             Box::from(SkillBarView::init(
-                render_context_holder,
+                render_context,
                 &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
-            Box::from(StatusBarView::init(render_context_holder, SDLPoint::new(20, 20), &ecs)?),
+            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20), &ecs)?),
         ];
 
         if cfg!(debug_assertions) {
