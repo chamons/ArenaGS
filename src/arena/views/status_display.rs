@@ -3,9 +3,8 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::super::IconLoader;
 use super::{ContextData, HitTestResult, View};
-use crate::after_image::{RenderCanvas, RenderContext};
+use crate::after_image::{RenderCanvas, RenderContext, IconLoader};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, EventKind, StatusComponent};
 
