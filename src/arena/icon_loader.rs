@@ -13,10 +13,10 @@ pub struct IconLoader {
 }
 
 impl IconLoader {
-    pub fn init(render_context: &RenderContext, subfolder: &str) -> BoxResult<IconLoader> {
+    pub fn init(subfolder: &str) -> BoxResult<IconLoader> {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").join(subfolder).stringify_owned();
-        find_images(render_context, &mut images, &folder)?;
+        find_images(&mut images, &folder)?;
 
         Ok(IconLoader { images })
     }
@@ -31,12 +31,12 @@ impl IconLoader {
     }
 }
 
-fn find_images(render_context: &RenderContext, images: &mut HashMap<String, String>, location: &str) -> BoxResult<()> {
+fn find_images(images: &mut HashMap<String, String>, location: &str) -> BoxResult<()> {
     let entries = fs::read_dir(location)?;
     for entry in entries {
         let path = entry?.path();
         if path.is_dir() {
-            find_images(render_context, images, &Path::new(location).join(path).stringify())?;
+            find_images(images, &Path::new(location).join(path).stringify())?;
         } else {
             let name = path.file_name().unwrap().stringify().to_ascii_lowercase();
             if images.contains_key(&name) {

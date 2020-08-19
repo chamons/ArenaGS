@@ -17,7 +17,7 @@ pub struct StatusBarView {
 
 impl StatusBarView {
     pub fn init(render_context: &RenderContext, position: SDLPoint, ecs: &World) -> BoxResult<StatusBarView> {
-        let icons = IconLoader::init(&render_context, "glass")?;
+        let icons = IconLoader::init("glass")?;
         let mut views = vec![];
         for i in 0..10 {
             views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 44, position.y()), i as u32));
