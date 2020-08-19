@@ -5,11 +5,15 @@
 
 pub type RenderCanvas = sdl2::render::Canvas<sdl2::video::Window>;
 
+mod icon_cache;
+mod icon_loader;
 mod image_loader;
 mod render_context;
 mod sprites;
 mod text_renderer;
 
+pub use icon_cache::IconCache;
+pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::{Background, Bolt, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription};

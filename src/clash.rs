@@ -49,3 +49,6 @@ pub use temperature::*;
 
 mod tick_timer;
 pub use tick_timer::*;
+
+mod status;
+pub use status::*;

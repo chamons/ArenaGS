@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, Temperature};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -173,6 +173,17 @@ impl PlayerDeadComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct StatusComponent {
+    pub status: StatusStore,
+}
+
+impl StatusComponent {
+    pub fn init() -> StatusComponent {
+        StatusComponent { status: StatusStore::init() }
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -191,6 +202,7 @@ pub fn create_world() -> World {
     ecs.register::<RandomComponent>();
     ecs.register::<PlayerDeadComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
+    ecs.register::<StatusComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
@@ -210,6 +222,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::defenses::defense_event);
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
+    ecs.subscribe(super::status::status_event);
 
     #[cfg(test)]
     {
@@ -234,6 +247,16 @@ impl ShortInfo for World {
     }
     fn get_temperature(&self, entity: &Entity) -> Temperature {
         self.read_storage::<CharacterInfoComponent>().grab(*entity).character.temperature.clone()
+    }
+}
+
+pub trait StatusInfo {
+    fn has_status(&self, entity: &Entity, name: &str) -> bool;
+}
+
+impl StatusInfo for World {
+    fn has_status(&self, entity: &Entity, name: &str) -> bool {
+        self.read_storage::<StatusComponent>().grab(*entity).status.has(name)
     }
 }
 

@@ -9,6 +9,7 @@ mod infobar;
 mod log;
 mod map;
 mod skillbar;
+mod status_display;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone)]
@@ -19,8 +20,13 @@ pub enum HitTestResult {
     Field(Point),
 }
 
+pub enum ContextData {
+    None,
+    String(String),
+}
+
 pub trait View {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()>;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()>;
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }
@@ -32,3 +38,4 @@ pub use infobar::InfoBarView;
 pub use log::LogView;
 pub use map::{screen_rect_for_map_grid, screen_to_map_position, MapView, MAP_CORNER_Y, TILE_SIZE};
 pub use skillbar::SkillBarView;
+pub use status_display::StatusBarView;
