@@ -16,6 +16,7 @@ pub struct StatusStore {
     store: HashMap<String, StatusKind>,
 }
 
+#[allow(dead_code)]
 impl StatusStore {
     pub fn init() -> StatusStore {
         StatusStore { store: HashMap::new() }

@@ -1,7 +1,4 @@
 # TODO Buckets
-- Status effects, both limited (tick) and perm (traints)
-   - Characters need to have an arbitrary number at once
-   - UI to show player status
 - UI to show enemy info in side bar
     All stats + status 
 - Enemies with multiple phases of behavior
