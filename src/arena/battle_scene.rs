@@ -26,6 +26,7 @@ impl BattleScene {
         let ecs = saveload::new_world().unwrap();
         {
             ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Fire Ammo");
+            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Ice Ammo");
         }
 
         let render_context = &render_context_holder.borrow();
@@ -39,7 +40,7 @@ impl BattleScene {
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
-            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20), &ecs)?),
+            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20))?),
         ];
 
         if cfg!(debug_assertions) {

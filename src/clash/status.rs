@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
-use crate::atlas::EasyMutECS;
+use super::{EventKind, StatusComponent, TickTimer};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum StatusKind {

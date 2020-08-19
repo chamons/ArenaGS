@@ -1,27 +1,27 @@
+use std::rc::Rc;
+
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::{ContextData, HitTestResult, View};
-use crate::after_image::{RenderCanvas, RenderContext, IconLoader};
+use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_player, EventKind, StatusComponent};
+use crate::clash::{find_player, StatusComponent};
 
 pub struct StatusBarView {
-    position: SDLPoint,
     views: Vec<StatusBarItemView>,
-    icons: IconLoader,
 }
 
 impl StatusBarView {
-    pub fn init(render_context: &RenderContext, position: SDLPoint, ecs: &World) -> BoxResult<StatusBarView> {
-        let icons = IconLoader::init("glass")?;
+    pub fn init(render_context: &RenderContext, position: SDLPoint) -> BoxResult<StatusBarView> {
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init("glass")?, all_icon_names())?);
         let mut views = vec![];
         for i in 0..10 {
-            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 44, position.y()), i as u32));
+            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 144, position.y()), &cache));
         }
-        Ok(StatusBarView { position, views, icons })
+        Ok(StatusBarView { views })
     }
 }
 
@@ -47,24 +47,50 @@ impl View for StatusBarView {
 
 struct StatusBarItemView {
     position: SDLPoint,
-    index: u32,
-    pub name: Option<String>,
+    icons: Rc<IconCache>,
 }
 
 impl StatusBarItemView {
-    pub fn init(position: SDLPoint, index: u32) -> StatusBarItemView {
-        StatusBarItemView { position, index, name: None }
+    pub fn init(position: SDLPoint, icons: &Rc<IconCache>) -> StatusBarItemView {
+        StatusBarItemView {
+            position,
+            icons: Rc::clone(icons),
+        }
     }
 }
 
 impl View for StatusBarItemView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
+        let name = match context {
+            ContextData::String(name) => name,
+            _ => panic!("StatusBarItemView context wrong type?"),
+        };
+        let icon = self.icons.get(get_icon_name_for_status(name));
+
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.fill_rect(SDLRect::new(self.position.x(), self.position.y(), 32, 32))?;
+        canvas.copy(
+            &icon,
+            SDLRect::new(0, 0, 256, 256),
+            SDLRect::new(self.position.x(), self.position.y(), 128, 128),
+        )?;
+
         Ok(())
     }
 
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }
+}
+
+pub fn get_icon_name_for_status(status_name: &str) -> &'static str {
+    match status_name {
+        "Fire Ammo" => "SpellBook08_130.png",
+        "Ice Ammo" => "SpellBook08_117.png",
+        _ => panic!("Unknown status icon {} for display", status_name),
+    }
+}
+
+pub fn all_icon_names() -> &'static [&'static str] {
+    &["SpellBook08_130.png", "SpellBook08_117.png"]
 }
