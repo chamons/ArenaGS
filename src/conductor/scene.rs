@@ -10,7 +10,7 @@ pub trait Scene {
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>);
     fn handle_key(&mut self, keycode: Keycode);
 
-    fn render(&mut self, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()>;
+    fn render(&self, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()>;
 
     fn tick(&mut self, _frame: u64);
 

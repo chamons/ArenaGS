@@ -20,8 +20,13 @@ pub enum HitTestResult {
     Field(Point),
 }
 
+pub enum ContextData {
+    None,
+    String(String),
+}
+
 pub trait View {
-    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()>;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()>;
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }

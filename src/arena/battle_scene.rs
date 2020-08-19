@@ -180,14 +180,14 @@ impl Scene for BattleScene {
         }
     }
 
-    fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.ecs.write_resource::<FrameComponent>().current_frame = frame;
 
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        for view in self.views.iter_mut() {
-            view.render(&self.ecs, canvas, frame)?;
+        for view in self.views.iter() {
+            &view.render(&self.ecs, canvas, frame, &ContextData::None)?;
         }
 
         canvas.present();

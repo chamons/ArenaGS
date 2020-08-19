@@ -4,7 +4,7 @@ use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::super::IconLoader;
-use super::{HitTestResult, View};
+use super::{ContextData, HitTestResult, View};
 use crate::after_image::{RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, EventKind, StatusComponent};
@@ -27,20 +27,17 @@ impl StatusBarView {
 }
 
 impl View for StatusBarView {
-    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
         let player = find_player(&ecs);
         let statuses = ecs.read_storage::<StatusComponent>();
         let status = &statuses.grab(player).status;
         let status_names = status.get_all();
         for i in 0..10 {
             if let Some(name) = status_names.get(i) {
-                self.views[i].name = Some(name.to_string());
+                self.views[i].render(ecs, canvas, frame, &ContextData::String(name.to_string()))?;
             }
         }
 
-        for view in self.views.iter_mut() {
-            view.render(ecs, canvas, frame)?;
-        }
         Ok(())
     }
 
@@ -62,9 +59,9 @@ impl StatusBarItemView {
 }
 
 impl View for StatusBarItemView {
-    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 0, 0)));
-        canvas.fill_rect(SDLRect::new(self.position.x(), self.position.y(), 32, 32));
+        canvas.fill_rect(SDLRect::new(self.position.x(), self.position.y(), 32, 32))?;
         Ok(())
     }
 

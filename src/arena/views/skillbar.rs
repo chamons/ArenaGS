@@ -8,7 +8,7 @@ use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::super::{battle_actions, IconLoader};
-use super::{HitTestResult, View};
+use super::{ContextData, HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, get_skill, SkillsComponent};
@@ -58,7 +58,7 @@ fn get_skill_count(ecs: &World) -> usize {
 }
 
 impl View for SkillBarView {
-    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((22, 22, 22)));
 
         let skill_count = get_skill_count(ecs);
@@ -69,8 +69,8 @@ impl View for SkillBarView {
             (ICON_SIZE + BORDER_WIDTH * 2) as u32,
         ))?;
 
-        for view in self.views.iter_mut() {
-            view.render(ecs, canvas, frame)?;
+        for view in self.views.iter() {
+            view.render(ecs, canvas, frame, context)?;
         }
 
         Ok(())
@@ -141,7 +141,7 @@ impl SkillBarItemView {
 }
 
 impl View for SkillBarItemView {
-    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
         let (((width, height), hotkey_texture), texture, disable_overlay) = self.get_render_params(ecs);
 
         canvas.copy(texture, SDLRect::new(0, 0, 256, 256), self.rect)?;
