@@ -18,8 +18,8 @@ pub struct SkillBarView {
     views: Vec<SkillBarItemView>,
 }
 
-const BORDER_WIDTH: i32 = 5;
-const ICON_SIZE: i32 = 44;
+const BORDER_WIDTH: i32 = 4;
+const ICON_SIZE: i32 = 48;
 const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
@@ -59,11 +59,11 @@ fn get_skill_count(ecs: &World) -> usize {
 
 impl View for SkillBarView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        canvas.set_draw_color(Color::from((22, 22, 22)));
+        canvas.set_draw_color(Color::from((33, 33, 33)));
 
         let skill_count = get_skill_count(ecs);
         canvas.fill_rect(SDLRect::new(
-            get_skillbar_offset(ecs, self.position),
+            get_skillbar_offset(ecs, self.position) - (BORDER_WIDTH / 2),
             self.position.y,
             ((ICON_SIZE + BORDER_WIDTH) * skill_count as i32 + BORDER_WIDTH) as u32,
             (ICON_SIZE + BORDER_WIDTH * 2) as u32,
@@ -144,7 +144,7 @@ impl View for SkillBarItemView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
         let (((width, height), hotkey_texture), texture, disable_overlay) = self.get_render_params(ecs);
 
-        canvas.copy(texture, SDLRect::new(0, 0, 256, 256), self.rect)?;
+        canvas.copy(texture, SDLRect::new(0, 0, ICON_SIZE as u32, ICON_SIZE as u32), self.rect)?;
         let hotkey_bounds = SDLRect::new(2 + self.rect.x() as i32, 24 + self.rect.y() as i32, *width, *height);
         let hotkey_background_bounds = SDLRect::new(hotkey_bounds.x() - 2, hotkey_bounds.y(), hotkey_bounds.width() + 4, hotkey_bounds.height());
         canvas.set_draw_color(Color::RGBA(32, 32, 32, 200));

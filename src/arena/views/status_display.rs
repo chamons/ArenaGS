@@ -19,14 +19,14 @@ impl StatusBarView {
         let cache = Rc::new(IconCache::init(render_context, IconLoader::init("glass")?, all_icon_names())?);
         let mut views = vec![];
         for i in 0..10 {
-            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 144, position.y()), &cache));
+            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 58, position.y()), &cache));
         }
         Ok(StatusBarView { views })
     }
 }
 
 impl View for StatusBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, _context: &ContextData) -> BoxResult<()> {
         let player = find_player(&ecs);
         let statuses = ecs.read_storage::<StatusComponent>();
         let status = &statuses.grab(player).status;
@@ -60,20 +60,14 @@ impl StatusBarItemView {
 }
 
 impl View for StatusBarItemView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
         let name = match context {
             ContextData::String(name) => name,
             _ => panic!("StatusBarItemView context wrong type?"),
         };
         let icon = self.icons.get(get_icon_name_for_status(name));
 
-        canvas.set_draw_color(Color::from((0, 0, 0)));
-        canvas.fill_rect(SDLRect::new(self.position.x(), self.position.y(), 32, 32))?;
-        canvas.copy(
-            &icon,
-            SDLRect::new(0, 0, 256, 256),
-            SDLRect::new(self.position.x(), self.position.y(), 128, 128),
-        )?;
+        canvas.copy(&icon, SDLRect::new(0, 0, 48, 48), SDLRect::new(self.position.x(), self.position.y(), 48, 48))?;
 
         Ok(())
     }
