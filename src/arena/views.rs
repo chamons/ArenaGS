@@ -22,7 +22,7 @@ pub enum HitTestResult {
 
 pub enum ContextData {
     None,
-    String(String),
+    Number(u32),
 }
 
 pub trait View {

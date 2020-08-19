@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use num_traits::FromPrimitive;
+
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
@@ -7,7 +9,7 @@ use specs::prelude::*;
 use super::{ContextData, HitTestResult, View};
 use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_player, StatusComponent};
+use crate::clash::{find_player, StatusComponent, StatusKind};
 
 pub struct StatusBarView {
     views: Vec<StatusBarItemView>,
@@ -31,8 +33,8 @@ impl View for StatusBarView {
         let status = &statuses.grab(player).status;
         let status_names = status.get_all();
         for i in 0..10 {
-            if let Some(name) = status_names.get(i) {
-                self.views[i].render(ecs, canvas, frame, &ContextData::String(name.to_string()))?;
+            if let Some(kind) = status_names.get(i) {
+                self.views[i].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
             }
         }
 
@@ -60,11 +62,11 @@ impl StatusBarItemView {
 
 impl View for StatusBarItemView {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
-        let name = match context {
-            ContextData::String(name) => name,
+        let kind = match context {
+            ContextData::Number(value) => StatusKind::from_u32(*value).unwrap(),
             _ => panic!("StatusBarItemView context wrong type?"),
         };
-        let icon = self.icons.get(get_icon_name_for_status(name));
+        let icon = self.icons.get(get_icon_name_for_status(kind));
 
         canvas.copy(&icon, SDLRect::new(0, 0, 48, 48), SDLRect::new(self.position.x(), self.position.y(), 48, 48))?;
 
