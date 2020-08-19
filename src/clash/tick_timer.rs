@@ -20,7 +20,7 @@ impl TickTimer {
     }
 
     pub fn init_with_duration(duration: i32) -> TickTimer {
-        TickTimer { ticks: 0, duration: duration }
+        TickTimer { ticks: 0, duration }
     }
 
     pub fn apply_ticks(&mut self, ticks_to_add: i32) -> bool {

@@ -28,7 +28,7 @@ impl StatusStore {
                 StatusKind::Status(timer) => timer.extend_to_duration(timer.duration()),
                 StatusKind::Trait => panic!("Status insert of {} but already in as a trait?", name),
             })
-            .or_insert(StatusKind::Status(TickTimer::init_with_duration(length)));
+            .or_insert_with(|| StatusKind::Status(TickTimer::init_with_duration(length)));
     }
 
     pub fn add_trait(&mut self, name: &str) {
@@ -38,7 +38,7 @@ impl StatusStore {
                 StatusKind::Status(_) => panic!("Status insert of {} but already as a status?", name),
                 StatusKind::Trait => {}
             })
-            .or_insert(StatusKind::Trait);
+            .or_insert_with(|| StatusKind::Trait);
 
         self.store.insert(name.to_string(), StatusKind::Trait);
     }
