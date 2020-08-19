@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{EventKind, StatusComponent, TickTimer};
+use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
+use crate::atlas::EasyMutECS;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum StatusKind {
@@ -80,6 +81,12 @@ impl StatusStore {
         for r in remove {
             self.store.remove(&r);
         }
+    }
+
+    pub fn get_all(&self) -> Vec<&String> {
+        let mut names: Vec<&String> = self.store.keys().collect();
+        names.sort_by(|a, b| a.cmp(b));
+        names
     }
 }
 
@@ -183,6 +190,18 @@ mod tests {
         store.apply_ticks(100);
         assert!(!store.has("TestStatus"));
         assert!(store.has("TestTrait"));
+    }
+
+    #[test]
+    fn get_all_names() {
+        let mut store = StatusStore::init();
+        store.add_trait("CTestTrait");
+        store.add_status("BTestStatus", 100);
+        store.add_trait("ATestTrait");
+        let all = store.get_all();
+        assert_eq!("ATestTrait", *all[0]);
+        assert_eq!("BTestStatus", *all[1]);
+        assert_eq!("CTestTrait", *all[2]);
     }
 
     #[test]

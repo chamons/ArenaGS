@@ -27,7 +27,7 @@ impl DebugView {
 }
 
 impl View for DebugView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         if let BattleSceneState::Debug(kind) = battle_actions::read_state(&ecs) {
             let state = format!("Debug: {}", kind.to_string());
             self.text

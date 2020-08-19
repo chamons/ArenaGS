@@ -171,7 +171,7 @@ impl MapView {
 }
 
 impl View for MapView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;

@@ -58,7 +58,7 @@ fn get_skill_count(ecs: &World) -> usize {
 }
 
 impl View for SkillBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((22, 22, 22)));
 
         let skill_count = get_skill_count(ecs);
@@ -69,7 +69,7 @@ impl View for SkillBarView {
             (ICON_SIZE + BORDER_WIDTH * 2) as u32,
         ))?;
 
-        for view in self.views.iter() {
+        for view in self.views.iter_mut() {
             view.render(ecs, canvas, frame)?;
         }
 
@@ -141,7 +141,7 @@ impl SkillBarItemView {
 }
 
 impl View for SkillBarItemView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         let (((width, height), hotkey_texture), texture, disable_overlay) = self.get_render_params(ecs);
 
         canvas.copy(texture, SDLRect::new(0, 0, 256, 256), self.rect)?;

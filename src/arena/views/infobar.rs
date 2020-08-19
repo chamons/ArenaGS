@@ -74,7 +74,7 @@ impl InfoBarView {
 }
 
 impl View for InfoBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((196, 196, 0)));
         canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 400))?;
         self.render_character_info(ecs, canvas)?;

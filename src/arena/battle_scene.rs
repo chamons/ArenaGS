@@ -36,6 +36,7 @@ impl BattleScene {
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
+            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20), &ecs)?),
         ];
 
         if cfg!(debug_assertions) {
@@ -179,13 +180,13 @@ impl Scene for BattleScene {
         }
     }
 
-    fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.ecs.write_resource::<FrameComponent>().current_frame = frame;
 
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        for view in self.views.iter() {
+        for view in self.views.iter_mut() {
             view.render(&self.ecs, canvas, frame)?;
         }
 

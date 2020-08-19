@@ -40,7 +40,7 @@ impl LogView {
 }
 
 impl View for LogView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&mut self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 196, 196)));
         canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 300))?;
         self.render_log(ecs, canvas)?;
