@@ -26,6 +26,7 @@ impl Strength {
 pub enum DamageKind {
     Physical,
     Fire,
+    Ice,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]

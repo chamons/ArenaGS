@@ -25,8 +25,11 @@ impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
         {
-            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Fire Ammo");
-            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Ice Ammo");
+            ecs.write_storage::<CharacterInfoComponent>()
+                .grab_mut(find_player(&ecs))
+                .character
+                .temperature
+                .current_temperature = 110;
         }
 
         let render_context = &render_context_holder.borrow();

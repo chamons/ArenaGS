@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::DamageKind;
+use super::{DamageKind, StatusKind};
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MoveState {
@@ -47,6 +47,7 @@ pub enum EventKind {
     Explode(ExplodeState),
     Tick(i32),
     Damage(u32, DamageKind),
+    StatusExpired(StatusKind),
 }
 
 type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();

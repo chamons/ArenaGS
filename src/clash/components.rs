@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusStore, Temperature};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -223,6 +223,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
     ecs.subscribe(super::status::status_event);
+    ecs.subscribe(super::effects::effect_event);
 
     #[cfg(test)]
     {
@@ -251,12 +252,12 @@ impl ShortInfo for World {
 }
 
 pub trait StatusInfo {
-    fn has_status(&self, entity: &Entity, name: &str) -> bool;
+    fn has_status(&self, entity: &Entity, kind: StatusKind) -> bool;
 }
 
 impl StatusInfo for World {
-    fn has_status(&self, entity: &Entity, name: &str) -> bool {
-        self.read_storage::<StatusComponent>().grab(*entity).status.has(name)
+    fn has_status(&self, entity: &Entity, kind: StatusKind) -> bool {
+        self.read_storage::<StatusComponent>().grab(*entity).status.has(kind)
     }
 }
 

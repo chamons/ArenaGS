@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
+use crate::atlas::{EasyECS, EasyMutECS};
 
 const TEMPERATURE_MIDPOINT: i32 = 0;
 const TEMPERATURE_BURN_POINT: i32 = 100;
@@ -67,43 +68,63 @@ impl Temperature {
     }
 }
 
-fn apply_temperature_effects(ecs: &mut World, target: &Entity, ticks: i32) {
-    let mut apply_burn = false;
-    let mut apply_freeze = false;
-    {
-        let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-        if let Some(character_info) = character_infos.get_mut(*target) {
+fn toggle_status_to(ecs: &mut World, target: &Entity, kind: StatusKind, state: bool) {
+    let mut statuses = ecs.write_storage::<StatusComponent>();
+    let status = &mut statuses.grab_mut(*target).status;
+    if state {
+        status.add_trait(kind);
+    } else {
+        if status.has(kind) {
+            status.remove_trait(kind);
+        }
+    }
+}
+
+fn check_temperature_state(ecs: &mut World, target: &Entity) {
+    toggle_status_to(ecs, target, StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
+    toggle_status_to(ecs, target, StatusKind::Burning, ecs.get_temperature(target).is_burning());
+}
+
+fn reduce_temperature(ecs: &mut World, target: &Entity, ticks: i32) {
+    if ecs.read_storage::<CharacterInfoComponent>().has(*target) {
+        {
+            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+            let character_info = character_infos.grab_mut(*target);
             let temperature = &mut character_info.character.temperature;
             if temperature.is_ready(ticks) {
-                apply_burn = temperature.is_burning();
-                apply_freeze = temperature.is_freezing();
                 temperature.reduce_temperature();
             }
         }
+
+        // reduce_temperature could have changed burning/frozen
+        check_temperature_state(ecs, target);
     }
-    if apply_burn {
-        // If this is >= 5 we'll need to prevent burning from adding heat itself
-        const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-        apply_damage_to_character(ecs, Damage::fire(TEMPERATURE_DAMAGE_PER_TICK), target);
+}
+
+fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, damage: u32, kind: DamageKind) {
+    if ecs.read_storage::<CharacterInfoComponent>().has(*target) {
+        {
+            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
+            let character_info = character_infos.grab_mut(*target);
+            let direction = match kind {
+                DamageKind::Fire => Some(TemperatureDirection::Heat),
+                DamageKind::Ice => Some(TemperatureDirection::Cool),
+                _ => None,
+            };
+
+            if let Some(direction) = direction {
+                character_info.character.temperature.change_from_incoming_damage(damage, direction);
+            }
+        }
+        // change_from_incoming_damage could have changed burning/frozen
+        check_temperature_state(ecs, target);
     }
-    if apply_freeze {}
 }
 
 pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
-        EventKind::Tick(ticks) => apply_temperature_effects(ecs, &target.unwrap(), ticks),
-        EventKind::Damage(damage, kind) => {
-            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            if let Some(character_info) = character_infos.get_mut(target.unwrap()) {
-                match kind {
-                    DamageKind::Fire => character_info
-                        .character
-                        .temperature
-                        .change_from_incoming_damage(damage, TemperatureDirection::Heat),
-                    _ => {}
-                }
-            }
-        }
+        EventKind::Tick(ticks) => reduce_temperature(ecs, &target.unwrap(), ticks),
+        EventKind::Damage(damage, kind) => apply_temperature_damage_delta(ecs, &target.unwrap(), damage, kind),
         _ => {}
     }
 }
@@ -156,15 +177,27 @@ mod tests {
             .grab_mut(player)
             .character
             .temperature
-            .current_temperature = TEMPERATURE_BURN_POINT + 10;
+            .current_temperature = TEMPERATURE_BURN_POINT + 20;
 
         let starting_health = ecs.get_defenses(&player).health;
         add_ticks(&mut ecs, 100);
+        assert!(ecs.has_status(&player, StatusKind::Burning));
         assert!(ecs.get_defenses(&player).health < starting_health);
     }
 
     #[test]
-    fn temperature_can_cause_frost() {}
+    fn temperature_can_cause_frost() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<CharacterInfoComponent>()
+            .grab_mut(player)
+            .character
+            .temperature
+            .current_temperature = TEMPERATURE_FREEZE_POINT - 20;
+
+        add_ticks(&mut ecs, 100);
+        assert!(ecs.has_status(&player, StatusKind::Frozen));
+    }
 
     #[test]
     fn reductions_happen_over_game_turns() {

@@ -78,14 +78,17 @@ impl View for StatusBarItemView {
     }
 }
 
-pub fn get_icon_name_for_status(status_name: &str) -> &'static str {
-    match status_name {
-        "Fire Ammo" => "SpellBook08_130.png",
-        "Ice Ammo" => "SpellBook08_117.png",
-        _ => panic!("Unknown status icon {} for display", status_name),
+pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
+    match kind {
+        StatusKind::Burning => "SpellBook08_130.png",
+        StatusKind::Frozen => "SpellBook08_111.png",
+        StatusKind::FireAmmo => "SpellBook08_103.png",
+        StatusKind::IceAmmo => "SpellBook08_70.png",
+        #[cfg(test)]
+        _ => "",
     }
 }
 
 pub fn all_icon_names() -> &'static [&'static str] {
-    &["SpellBook08_130.png", "SpellBook08_117.png"]
+    &["SpellBook08_130.png", "SpellBook08_117.png", "SpellBook08_111.png"]
 }
