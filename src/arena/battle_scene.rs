@@ -13,7 +13,7 @@ use crate::clash::*;
 
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::{BoxResult, EasyMutECS, Point};
 use crate::conductor::Scene;
 
 pub struct BattleScene {
@@ -24,6 +24,9 @@ pub struct BattleScene {
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
+        {
+            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Fire Ammo");
+        }
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -31,12 +34,12 @@ impl BattleScene {
             Box::from(InfoBarView::init(SDLPoint::new(780, 20), Rc::clone(&text_renderer))?),
             Box::from(LogView::init(SDLPoint::new(780, 450), Rc::clone(&text_renderer))?),
             Box::from(SkillBarView::init(
-                render_context,
+                render_context_holder,
                 &ecs,
                 SDLPoint::new(137, 40 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
-            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20), &ecs)?),
+            Box::from(StatusBarView::init(render_context_holder, SDLPoint::new(20, 20), &ecs)?),
         ];
 
         if cfg!(debug_assertions) {

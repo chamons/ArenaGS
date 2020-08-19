@@ -9,7 +9,7 @@ use specs::prelude::*;
 
 use super::super::{battle_actions, IconLoader};
 use super::{ContextData, HitTestResult, View};
-use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{FontColor, FontSize, RenderCanvas, RenderContext, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, get_skill, SkillsComponent};
 
@@ -23,11 +23,12 @@ const ICON_SIZE: i32 = 44;
 const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
-    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
+    pub fn init(render_context_holder: &RenderContextHolder, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
         let mut views = Vec::with_capacity(15);
-        let icons = IconLoader::init(&render_context, "spell")?;
+        let icons = IconLoader::init(Rc::clone(render_context_holder), "spell")?;
         for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
+                let render_context = &render_context_holder.borrow();
                 let view = SkillBarItemView::init(
                     SDLPoint::new(
                         get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
@@ -108,11 +109,11 @@ impl SkillBarItemView {
     ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
         let skill = get_skill(&skill_name);
-        let image = icons.get(&render_context, skill.image)?;
+        let image = icons.get(skill.image)?;
         let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
         let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
         let alternate_image = match &skill.alternate {
-            Some(alternate) => Some(icons.get(&render_context, get_skill(alternate).image)?),
+            Some(alternate) => Some(icons.get(get_skill(alternate).image)?),
             None => None,
         };
 
