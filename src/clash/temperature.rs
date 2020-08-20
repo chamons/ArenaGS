@@ -69,20 +69,11 @@ impl Temperature {
     }
 }
 
-fn toggle_status_to(ecs: &mut World, target: &Entity, kind: StatusKind, state: bool) {
-    let mut statuses = ecs.write_storage::<StatusComponent>();
-    let status = &mut statuses.grab_mut(*target).status;
-    if state {
-        status.add_trait(kind);
-    } else {
-        if status.has(kind) {
-            status.remove_trait(kind);
-        }
-    }
-}
-
 fn check_temperature_state(ecs: &mut World, target: &Entity) {
-    toggle_status_to(ecs, target, StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
+    ecs.write_storage::<StatusComponent>()
+        .grab_mut(*target)
+        .status
+        .toggle_trait(StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
 
     if ecs.get_temperature(target).is_burning() && !ecs.has_status(target, StatusKind::Burning) {
         ecs.write_storage::<StatusComponent>()

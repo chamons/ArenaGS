@@ -69,6 +69,21 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
+    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
+            _ => {}
+        };
+
+        if state {
+            self.add_trait(kind);
+        } else {
+            if self.has(kind) {
+                self.remove_trait(kind);
+            }
+        }
+    }
+
     pub fn has(&self, kind: StatusKind) -> bool {
         self.store.contains_key(&kind)
     }
@@ -238,5 +253,43 @@ mod tests {
         assert!(ecs.has_status(&entity, StatusKind::TestStatus));
         add_ticks(&mut ecs, 100);
         assert!(!ecs.has_status(&entity, StatusKind::TestStatus));
+    }
+
+    #[test]
+    fn toggle_inactive_false_trait() {
+        let mut store = StatusStore::init();
+        store.toggle_trait(StatusKind::TestTrait, false);
+        assert!(!store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_inactive_true_trait() {
+        let mut store = StatusStore::init();
+        store.toggle_trait(StatusKind::TestTrait, true);
+        assert!(store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_active_false_trait() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.toggle_trait(StatusKind::TestTrait, false);
+        assert!(!store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_active_true_trait() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.toggle_trait(StatusKind::TestTrait, true);
+        assert!(store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    #[should_panic]
+    fn toggle_status() {
+        let mut store = StatusStore::init();
+        store.add_status(StatusKind::TestStatus, 100);
+        store.toggle_trait(StatusKind::TestStatus, false);
     }
 }
