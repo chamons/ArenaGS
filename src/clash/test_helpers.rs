@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 pub struct StateBuilder {
     ecs: World,
@@ -87,4 +87,16 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
         .with(SkillResourceComponent::init(&[]))
         .with(StatusComponent::init())
         .build();
+}
+
+pub fn set_temperature(ecs: &mut World, player: Entity, temperature: i32) {
+    ecs.write_storage::<CharacterInfoComponent>()
+        .grab_mut(player)
+        .character
+        .temperature
+        .current_temperature = temperature;
+}
+
+pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
+    ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::just_health(health);
 }

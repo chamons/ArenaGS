@@ -7,12 +7,12 @@ use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{EventKind, StatusComponent, TickTimer};
+use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive)]
 #[repr(u32)]
 pub enum StatusKind {
-    Burning,
+    Burning, // Retriggers as long as temperature is high enough
     Frozen,
     FireAmmo,
     IceAmmo,
@@ -111,11 +111,15 @@ impl StatusStore {
 pub fn status_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Tick(ticks) => {
-            if let Some(status) = ecs.write_storage::<StatusComponent>().get_mut(target.unwrap()) {
-                let removed = status.status.apply_ticks(ticks);
-                for r in removed {
-                    //ecs.raise_event(EventKind::StatusExpired(r))
+            let removed = {
+                if let Some(status) = ecs.write_storage::<StatusComponent>().get_mut(target.unwrap()) {
+                    status.status.apply_ticks(ticks)
+                } else {
+                    vec![]
                 }
+            };
+            for r in removed {
+                ecs.raise_event(EventKind::StatusExpired(r), target);
             }
         }
         _ => {}

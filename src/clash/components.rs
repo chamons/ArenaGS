@@ -223,7 +223,6 @@ pub fn create_world() -> World {
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
     ecs.subscribe(super::status::status_event);
-    ecs.subscribe(super::effects::effect_event);
 
     #[cfg(test)]
     {
