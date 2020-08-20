@@ -18,6 +18,20 @@ pub fn find_player(ecs: &World) -> Entity {
     entity
 }
 
+pub fn find_enemies(ecs: &World) -> Vec<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let players = ecs.read_storage::<PlayerComponent>();
+
+    let mut enemies = vec![];
+    for (entity, _, player) in (&entities, &char_infos, (&players).maybe()).join() {
+        if player.is_none() {
+            enemies.push(entity);
+        }
+    }
+    enemies
+}
+
 fn can_act(ecs: &World) -> bool {
     let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
