@@ -6,12 +6,17 @@ use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 // Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
     ecs.shovel(*entity, MovementComponent::init(new_position));
-    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation), Some(*entity));
+    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation, PostMoveAction::None), Some(*entity));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_complete_animation()) {
-        complete_move(ecs, target.unwrap());
+    match kind {
+        EventKind::Move(state, action) => {
+            if state.is_complete_animation() {
+                complete_move(ecs, target.unwrap());
+            }
+        }
+        _ => {}
     }
 }
 

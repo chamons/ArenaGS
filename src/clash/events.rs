@@ -10,6 +10,12 @@ pub enum MoveState {
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
+pub enum PostMoveAction {
+    None,
+    Shoot,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
 pub enum BoltState {
     BeginCastAnimation,
     CompleteCastAnimation,
@@ -39,7 +45,7 @@ pub enum ExplodeState {
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
-    Move(MoveState),
+    Move(MoveState, PostMoveAction),
     Bolt(BoltState),
     Melee(MeleeState),
     Field(FieldState),
