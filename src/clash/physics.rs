@@ -31,7 +31,7 @@ pub fn complete_move(ecs: &mut World, entity: Entity) {
         position.move_to(new_position);
     }
 
-    ecs.raise_event(EventKind::Move(MoveState::Complete(distance)), Some(entity));
+    ecs.raise_event(EventKind::MoveComplete(distance), Some(entity));
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {

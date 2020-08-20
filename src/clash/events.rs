@@ -7,7 +7,6 @@ use super::{DamageKind, StatusKind};
 pub enum MoveState {
     BeginAnimation,
     CompleteAnimation,
-    Complete(u32),
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
@@ -45,6 +44,7 @@ pub enum EventKind {
     Melee(MeleeState),
     Field(FieldState),
     Explode(ExplodeState),
+    MoveComplete(u32),
     Tick(i32),
     Damage(u32, DamageKind),
     StatusExpired(StatusKind),
