@@ -9,7 +9,7 @@ use specs::prelude::*;
 use super::{ContextData, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent};
+use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent};
 
 pub struct InfoBarView {
     position: SDLPoint,
@@ -23,18 +23,20 @@ impl InfoBarView {
 
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let mut offset = 5;
-        let player = find_player(&ecs);
+        self.render_character(canvas, ecs, find_player(&ecs), &mut offset)?;
+        offset += 40;
 
-        self.render_character(canvas, ecs, player, &mut offset)?;
-
+        for e in find_enemies(&ecs) {
+            self.small_text(canvas, "Enemy:", &mut offset)?;
+            self.render_character(canvas, ecs, e, &mut offset)?;
+            offset += 20;
+        }
         Ok(())
     }
 
     fn render_character(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, offset: &mut i32) -> BoxResult<()> {
         let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
         let char_info = char_infos.grab(entity);
-        let resources = &ecs.read_storage::<SkillResourceComponent>();
-        let resource = resources.grab(entity);
         let defenses = &char_info.character.defenses;
         let health_text = {
             if defenses.absorb != 0 {
@@ -52,16 +54,19 @@ impl InfoBarView {
             self.small_text(canvas, format!("Armor: {:.2}", defenses.armor).as_str(), offset)?;
         }
 
-        self.small_text(canvas, format!("Exhaustion: {:.2}", resource.exhaustion).as_str(), offset)?;
+        let resources = &ecs.read_storage::<SkillResourceComponent>();
+        if let Some(resource) = resources.get(entity) {
+            self.small_text(canvas, format!("Exhaustion: {:.2}", resource.exhaustion).as_str(), offset)?;
 
-        self.small_text(canvas, format!("Focus: {:.2}", resource.focus).as_str(), offset)?;
+            self.small_text(canvas, format!("Focus: {:.2}", resource.focus).as_str(), offset)?;
 
-        for kind in AmmoKind::into_enum_iter() {
-            match resource.max.get(&kind) {
-                Some(value) => {
-                    self.small_text(canvas, format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(), offset)?;
+            for kind in AmmoKind::into_enum_iter() {
+                match resource.max.get(&kind) {
+                    Some(value) => {
+                        self.small_text(canvas, format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(), offset)?;
+                    }
+                    None => {}
                 }
-                None => {}
             }
         }
 
