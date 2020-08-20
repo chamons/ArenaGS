@@ -293,7 +293,6 @@ mod tests {
         ecs.shovel(player, skill_resource);
 
         assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
-        let skills = ecs.read_storage::<SkillResourceComponent>();
         assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, &player));
     }
 }
