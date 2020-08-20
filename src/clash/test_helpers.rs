@@ -94,7 +94,7 @@ pub fn set_temperature(ecs: &mut World, player: Entity, temperature: i32) {
         .grab_mut(player)
         .character
         .temperature
-        .current_temperature = temperature;
+        .set_temperature(temperature);
 }
 
 pub fn set_health(ecs: &mut World, player: Entity, health: u32) {

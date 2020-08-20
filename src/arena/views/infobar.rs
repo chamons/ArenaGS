@@ -58,7 +58,7 @@ impl InfoBarView {
             }
         }
 
-        let temperature = char_info.character.temperature.current_temperature;
+        let temperature = char_info.character.temperature.current_temperature();
         if temperature != 0 {
             self.small_text(canvas, format!("Temperature: {:.2}", temperature).as_str(), &mut offset)?;
         }

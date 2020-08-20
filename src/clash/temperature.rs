@@ -13,7 +13,7 @@ pub const BURN_DURATION: i32 = 100;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Temperature {
-    pub current_temperature: i32,
+    current_temperature: i32,
     timer: TickTimer,
 }
 
@@ -66,6 +66,15 @@ impl Temperature {
 
     pub fn is_ready(&mut self, ticks_to_add: i32) -> bool {
         self.timer.apply_ticks(ticks_to_add)
+    }
+
+    pub fn current_temperature(&self) -> i32 {
+        self.current_temperature
+    }
+
+    #[cfg(test)]
+    pub fn set_temperature(&mut self, temperature: i32) {
+        self.current_temperature = temperature;
     }
 }
 

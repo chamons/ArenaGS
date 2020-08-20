@@ -106,7 +106,14 @@ pub fn move_character_action(ecs: &mut World, entity: Entity, new: SizedPoint) -
     }
 
     begin_move(ecs, &entity, new);
-    spend_time(ecs, &entity, MOVE_ACTION_COST);
+
+    let time_cost = if ecs.has_status(&entity, StatusKind::Frozen) {
+        MOVE_ACTION_COST + (MOVE_ACTION_COST / 2)
+    } else {
+        MOVE_ACTION_COST
+    };
+
+    spend_time(ecs, &entity, time_cost);
     if ecs.read_storage::<SkillResourceComponent>().get(entity).is_some() {
         spend_exhaustion(ecs, &entity, EXHAUSTION_COST_PER_MOVE);
     }
@@ -271,5 +278,22 @@ mod tests {
         assert_eq!(false, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         let skills = ecs.read_storage::<SkillResourceComponent>();
         assert_approx_eq!(100.0, skills.grab(player).exhaustion);
+    }
+
+    #[test]
+    fn frozen_slows_movement() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<StatusComponent>().grab_mut(player).status.add_trait(StatusKind::Frozen);
+        // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
+        let skill_resource = SkillResourceComponent {
+            exhaustion: 0.0,
+            ..SkillResourceComponent::init(&[])
+        };
+        ecs.shovel(player, skill_resource);
+
+        assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
+        let skills = ecs.read_storage::<SkillResourceComponent>();
+        assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, &player));
     }
 }

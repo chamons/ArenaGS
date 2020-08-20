@@ -262,7 +262,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::physical(5), BoltKind::Fire),
+                SkillEffect::RangedAttack(Damage::fire(5), BoltKind::Fire),
                 Some(15),
                 true,
             )
