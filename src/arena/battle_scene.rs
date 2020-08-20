@@ -13,7 +13,7 @@ use crate::clash::*;
 
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, EasyMutECS, Point};
+use crate::atlas::{BoxResult, Point};
 use crate::conductor::Scene;
 
 pub struct BattleScene {
@@ -24,10 +24,6 @@ pub struct BattleScene {
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
         let ecs = saveload::new_world().unwrap();
-        {
-            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Fire Ammo");
-            ecs.write_storage::<StatusComponent>().grab_mut(find_player(&ecs)).status.add_trait("Ice Ammo");
-        }
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![

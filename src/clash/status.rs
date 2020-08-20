@@ -1,19 +1,37 @@
 use std::collections::HashMap;
+use std::convert::*;
 
+use num_derive::FromPrimitive;
+use num_enum::IntoPrimitive;
+use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{EventKind, StatusComponent, TickTimer};
+use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
+
+#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive)]
+#[repr(u32)]
+pub enum StatusKind {
+    Burning, // Retriggers as long as temperature is high enough
+    Frozen,
+    FireAmmo,
+    IceAmmo,
+
+    #[cfg(test)]
+    TestStatus,
+    #[cfg(test)]
+    TestTrait,
+}
 
 #[derive(Serialize, Deserialize, Clone)]
-pub enum StatusKind {
+pub enum StatusType {
     Status(TickTimer),
     Trait,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct StatusStore {
-    store: HashMap<String, StatusKind>,
+    store: HashMap<StatusKind, StatusType>,
 }
 
 #[allow(dead_code)]
@@ -22,79 +40,101 @@ impl StatusStore {
         StatusStore { store: HashMap::new() }
     }
 
-    pub fn add_status(&mut self, name: &str, length: i32) {
+    pub fn add_status(&mut self, kind: StatusKind, length: i32) {
         self.store
-            .entry(name.to_string())
+            .entry(kind)
             .and_modify(|e| match e {
-                StatusKind::Status(timer) => timer.extend_to_duration(timer.duration()),
-                StatusKind::Trait => panic!("Status insert of {} but already in as a trait?", name),
+                StatusType::Status(timer) => timer.extend_to_duration(timer.duration()),
+                StatusType::Trait => panic!("Status insert of {:?} but already in as a trait?", kind),
             })
-            .or_insert_with(|| StatusKind::Status(TickTimer::init_with_duration(length)));
+            .or_insert_with(|| StatusType::Status(TickTimer::init_with_duration(length)));
     }
 
-    pub fn add_trait(&mut self, name: &str) {
+    pub fn add_trait(&mut self, kind: StatusKind) {
         self.store
-            .entry(name.to_string())
+            .entry(kind)
             .and_modify(|e| match e {
-                StatusKind::Status(_) => panic!("Status insert of {} but already as a status?", name),
-                StatusKind::Trait => {}
+                StatusType::Status(_) => panic!("Status insert of {:?} but already as a status?", kind),
+                StatusType::Trait => {}
             })
-            .or_insert_with(|| StatusKind::Trait);
-
-        self.store.insert(name.to_string(), StatusKind::Trait);
+            .or_insert_with(|| StatusType::Trait);
     }
 
-    pub fn remote_trait(&mut self, name: &str) {
-        match self.store.get(name) {
-            Some(StatusKind::Status(_)) => panic!("Status removal of trait {} but already as a status?", name),
-            None => panic!("Status remove of trait {} but not found?", name),
-            Some(StatusKind::Trait) => {}
+    pub fn remove_trait(&mut self, kind: StatusKind) {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(_)) => panic!("Status removal of trait {:?} but already as a status?", kind),
+            None => panic!("Status remove of trait {:?} but not found?", kind),
+            Some(StatusType::Trait) => {}
         };
-        self.store.remove(name);
+        self.store.remove(&kind);
     }
 
-    pub fn has(&self, name: &str) -> bool {
-        self.store.contains_key(name)
+    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
+            _ => {}
+        };
+
+        if state {
+            self.add_trait(kind);
+        } else {
+            if self.has(kind) {
+                self.remove_trait(kind);
+            }
+        }
     }
 
-    pub fn duration(&self, name: &str) -> Option<i32> {
-        match self.store.get(name) {
-            Some(StatusKind::Status(timer)) => Some(timer.duration()),
-            Some(StatusKind::Trait) => None,
+    pub fn has(&self, kind: StatusKind) -> bool {
+        self.store.contains_key(&kind)
+    }
+
+    pub fn duration(&self, kind: StatusKind) -> Option<i32> {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(timer)) => Some(timer.duration()),
+            Some(StatusType::Trait) => None,
             None => None,
         }
     }
 
-    pub fn apply_ticks(&mut self, ticks: i32) {
+    // Need notification or return list to event
+    pub fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
         let mut remove = vec![];
 
         for (k, v) in self.store.iter_mut() {
             match v {
-                StatusKind::Status(timer) => {
+                StatusType::Status(timer) => {
                     if timer.apply_ticks(ticks) {
-                        remove.push(k.to_string());
+                        remove.push(*k);
                     }
                 }
-                StatusKind::Trait => {}
+                StatusType::Trait => {}
             }
         }
-        for r in remove {
-            self.store.remove(&r);
+        for r in &remove {
+            self.store.remove(r);
         }
+        remove
     }
 
-    pub fn get_all(&self) -> Vec<&String> {
-        let mut names: Vec<&String> = self.store.keys().collect();
+    pub fn get_all(&self) -> Vec<StatusKind> {
+        let mut names: Vec<u32> = self.store.keys().map(|x| (*x).into()).collect();
         names.sort_by(|a, b| a.cmp(b));
-        names
+        names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
     }
 }
 
 pub fn status_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Tick(ticks) => {
-            if let Some(status) = ecs.write_storage::<StatusComponent>().get_mut(target.unwrap()) {
-                status.status.apply_ticks(ticks);
+            let removed = {
+                if let Some(status) = ecs.write_storage::<StatusComponent>().get_mut(target.unwrap()) {
+                    status.status.apply_ticks(ticks)
+                } else {
+                    vec![]
+                }
+            };
+            for r in removed {
+                ecs.raise_event(EventKind::StatusExpired(r), target);
             }
         }
         _ => {}
@@ -110,107 +150,146 @@ mod tests {
     #[test]
     fn add_status() {
         let mut store = StatusStore::init();
-        assert!(!store.has("TestStatus"));
-        store.add_status("TestStatus", 200);
-        assert!(store.has("TestStatus"));
-        assert_eq!(200, store.duration("TestStatus").unwrap());
+        assert!(!store.has(StatusKind::TestStatus));
+        store.add_status(StatusKind::TestStatus, 200);
+        assert!(store.has(StatusKind::TestStatus));
+        assert_eq!(200, store.duration(StatusKind::TestStatus).unwrap());
     }
 
     #[test]
     fn add_duplicate_status() {
         let mut store = StatusStore::init();
-        assert!(!store.has("TestStatus"));
-        store.add_status("TestStatus", 300);
-        store.add_status("TestStatus", 200);
-        assert!(store.has("TestStatus"));
-        assert_eq!(300, store.duration("TestStatus").unwrap());
+        assert!(!store.has(StatusKind::TestStatus));
+        store.add_status(StatusKind::TestStatus, 300);
+        store.add_status(StatusKind::TestStatus, 200);
+        assert!(store.has(StatusKind::TestStatus));
+        assert_eq!(300, store.duration(StatusKind::TestStatus).unwrap());
     }
 
     #[test]
     fn add_trait() {
         let mut store = StatusStore::init();
-        assert!(!store.has("TestTrait"));
-        store.add_trait("TestTrait");
-        assert!(store.has("TestTrait"));
+        assert!(!store.has(StatusKind::TestTrait));
+        store.add_trait(StatusKind::TestTrait);
+        assert!(store.has(StatusKind::TestTrait));
     }
 
     #[test]
     fn add_duplicate_trait() {
         let mut store = StatusStore::init();
-        store.add_trait("TestTrait");
-        store.add_trait("TestTrait");
-        assert!(store.has("TestTrait"));
+        store.add_trait(StatusKind::TestTrait);
+        store.add_trait(StatusKind::TestTrait);
+        assert!(store.has(StatusKind::TestTrait));
     }
 
     #[should_panic]
     #[test]
     fn add_trait_existing_status() {
         let mut store = StatusStore::init();
-        store.add_status("TestTrait", 100);
-        store.add_trait("TestTrait");
+        store.add_status(StatusKind::TestTrait, 100);
+        store.add_trait(StatusKind::TestTrait);
     }
 
     #[should_panic]
     #[test]
     fn add_status_existing_trait() {
         let mut store = StatusStore::init();
-        store.add_trait("TestTrait");
-        store.add_status("TestTrait", 100);
+        store.add_trait(StatusKind::TestTrait);
+        store.add_status(StatusKind::TestTrait, 100);
     }
 
     #[test]
     fn remove_trait() {
         let mut store = StatusStore::init();
-        store.add_trait("TestTrait");
-        assert!(store.has("TestTrait"));
-        store.remote_trait("TestTrait");
-        assert!(!store.has("TestTrait"));
+        store.add_trait(StatusKind::TestTrait);
+        assert!(store.has(StatusKind::TestTrait));
+        store.remove_trait(StatusKind::TestTrait);
+        assert!(!store.has(StatusKind::TestTrait));
     }
 
     #[should_panic]
     #[test]
     fn remove_trait_but_was_status() {
         let mut store = StatusStore::init();
-        store.add_status("TestTrait", 100);
-        store.remote_trait("TestTrait");
+        store.add_status(StatusKind::TestTrait, 100);
+        store.remove_trait(StatusKind::TestTrait);
     }
 
     #[test]
     #[should_panic]
     fn remove_non_existant_trait() {
         let mut store = StatusStore::init();
-        store.remote_trait("TestTrait");
+        store.remove_trait(StatusKind::TestTrait);
     }
 
     #[test]
     fn tick_statuses() {
         let mut store = StatusStore::init();
-        store.add_trait("TestTrait");
-        store.add_status("TestStatus", 100);
+        store.add_trait(StatusKind::TestTrait);
+        store.add_status(StatusKind::TestStatus, 100);
         store.apply_ticks(100);
-        assert!(!store.has("TestStatus"));
-        assert!(store.has("TestTrait"));
+        assert!(!store.has(StatusKind::TestStatus));
+        assert!(store.has(StatusKind::TestTrait));
     }
 
     #[test]
     fn get_all_names() {
         let mut store = StatusStore::init();
-        store.add_trait("CTestTrait");
-        store.add_status("BTestStatus", 100);
-        store.add_trait("ATestTrait");
+        store.add_trait(StatusKind::TestTrait);
+        store.add_status(StatusKind::TestStatus, 100);
         let all = store.get_all();
-        assert_eq!("ATestTrait", *all[0]);
-        assert_eq!("BTestStatus", *all[1]);
-        assert_eq!("CTestTrait", *all[2]);
+        assert_eq!(StatusKind::TestStatus, all[0]);
+        assert_eq!(StatusKind::TestTrait, all[1]);
     }
 
     #[test]
     fn status_integration_with_ecs() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let entity = find_at(&ecs, 2, 2);
-        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.add_status("TestStatus", 100);
-        assert!(ecs.has_status(&entity, "TestStatus"));
+        ecs.write_storage::<StatusComponent>()
+            .grab_mut(entity)
+            .status
+            .add_status(StatusKind::TestStatus, 100);
+        assert!(ecs.has_status(&entity, StatusKind::TestStatus));
         add_ticks(&mut ecs, 100);
-        assert!(!ecs.has_status(&entity, "TestStatus"));
+        assert!(!ecs.has_status(&entity, StatusKind::TestStatus));
+    }
+
+    #[test]
+    fn toggle_inactive_false_trait() {
+        let mut store = StatusStore::init();
+        store.toggle_trait(StatusKind::TestTrait, false);
+        assert!(!store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_inactive_true_trait() {
+        let mut store = StatusStore::init();
+        store.toggle_trait(StatusKind::TestTrait, true);
+        assert!(store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_active_false_trait() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.toggle_trait(StatusKind::TestTrait, false);
+        assert!(!store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn toggle_active_true_trait() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.toggle_trait(StatusKind::TestTrait, true);
+        assert!(store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    #[should_panic]
+    fn toggle_status() {
+        let mut store = StatusStore::init();
+        store.add_status(StatusKind::TestStatus, 100);
+        store.toggle_trait(StatusKind::TestStatus, false);
     }
 }

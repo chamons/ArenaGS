@@ -62,7 +62,6 @@ pub fn get_ticks(ecs: &World, entity: &Entity) -> i32 {
 pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
     let mut times = ecs.write_storage::<TimeComponent>();
     times.grab_mut(*element).ticks -= ticks_to_spend;
-    assert!(times.grab(*element).ticks >= 0);
 }
 
 #[cfg(test)]

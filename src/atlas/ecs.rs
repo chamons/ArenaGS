@@ -2,17 +2,24 @@ use specs::prelude::*;
 
 pub trait EasyECS<T: Component> {
     fn grab(&self, entity: Entity) -> &T;
+    fn has(&self, entity: Entity) -> bool;
 }
 
 impl<'a, T: Component> EasyECS<T> for ReadStorage<'a, T> {
     fn grab(&self, entity: Entity) -> &T {
         self.get(entity).unwrap()
     }
+    fn has(&self, entity: Entity) -> bool {
+        self.get(entity).is_some()
+    }
 }
 
 impl<'a, T: Component> EasyECS<T> for WriteStorage<'a, T> {
     fn grab(&self, entity: Entity) -> &T {
         self.get(entity).unwrap()
+    }
+    fn has(&self, entity: Entity) -> bool {
+        self.get(entity).is_some()
     }
 }
 
