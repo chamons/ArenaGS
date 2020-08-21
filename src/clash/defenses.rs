@@ -4,7 +4,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{CharacterInfoComponent, Damage, EventKind, MoveState, Strength};
+use super::{CharacterInfoComponent, Damage, EventKind, Strength};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {

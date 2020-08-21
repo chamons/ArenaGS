@@ -28,6 +28,7 @@ pub enum SkillEffect {
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
     FieldEffect(Damage, FieldKind),
+    MoveAndShoot(Damage, BoltKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -236,6 +237,16 @@ lazy_static! {
                 "TestField",
                 SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::physical(1), FieldKind::Fire)),
             );
+            m.insert(
+                "TestMoveAndShoot",
+                SkillInfo::init_with_distance(
+                    "",
+                    TargetType::Tile,
+                    SkillEffect::MoveAndShoot(Damage::physical(1), BoltKind::Fire),
+                    Some(5),
+                    true,
+                ),
+            );
         }
         m.insert(
             "Dash",
@@ -366,7 +377,12 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            begin_move(ecs, invoker, position);
+            begin_move(ecs, invoker, position, PostMoveAction::None);
+        }
+        SkillEffect::MoveAndShoot(damage, kind) => {
+            // Targeting only gives us a point, so clone their position to get size as well
+            let position = ecs.get_position(invoker).move_to(target.unwrap());
+            begin_shoot_and_move(ecs, invoker, position, skill.distance, *damage, *kind)
         }
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
@@ -824,5 +840,45 @@ mod tests {
             let skills = ecs.read_storage::<SkillResourceComponent>();
             assert_approx_eq!(skills.grab(player).focus, 1.0);
         }
+    }
+
+    #[test]
+    fn move_and_shoot() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 3, 0)
+            .with_character(2, 4, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        let other = find_at(&mut ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 1));
+        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn move_and_shoot_out_of_range() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 6, 0)
+            .with_character(2, 7, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        let other = find_at(&mut ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 1));
+        assert_eq!(ecs.get_defenses(&target).health, starting_health);
+        assert_eq!(ecs.get_defenses(&other).health, starting_health);
     }
 }

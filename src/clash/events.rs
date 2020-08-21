@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{DamageKind, StatusKind};
+use super::{BoltKind, Damage, DamageKind, StatusKind};
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MoveState {
@@ -12,7 +12,7 @@ pub enum MoveState {
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum PostMoveAction {
     None,
-    Shoot,
+    Shoot(Damage, Option<u32>, BoltKind),
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
