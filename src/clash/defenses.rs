@@ -4,7 +4,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{CharacterInfoComponent, Damage, EventKind, MoveState, Strength};
+use super::{CharacterInfoComponent, Damage, EventKind, Strength};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
@@ -75,14 +75,11 @@ impl Defenses {
 pub fn defense_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     if let Some(target) = target {
         match kind {
-            EventKind::Move(state) => match state {
-                MoveState::Complete(distance) => {
-                    if let Some(char_info) = ecs.write_storage::<CharacterInfoComponent>().get_mut(target) {
-                        char_info.character.defenses.regain_dodge(2 * distance);
-                    }
+            EventKind::MoveComplete(distance) => {
+                if let Some(char_info) = ecs.write_storage::<CharacterInfoComponent>().get_mut(target) {
+                    char_info.character.defenses.regain_dodge(2 * distance);
                 }
-                _ => {}
-            },
+            }
             _ => {}
         }
     }

@@ -67,6 +67,30 @@ impl AttackComponent {
     }
 }
 
+pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Option<u32>, strength: Damage, kind: BoltKind) {
+    let targets = {
+        if find_player(ecs) == *source {
+            find_enemies(&ecs)
+        } else {
+            // ALLIES_TODO
+            vec![find_player(&ecs)]
+        }
+    };
+    let source_position = ecs.get_position(source);
+    let target = targets.iter().min_by(|first, second| {
+        let first = source_position.distance_to_multi(ecs.get_position(first));
+        let second = source_position.distance_to_multi(ecs.get_position(second));
+        first.cmp(&second)
+    });
+    if let Some(target) = target {
+        if let Some((_, target_position, distance)) = source_position.distance_to_multi_with_endpoints(ecs.get_position(target)) {
+            if range.is_none() || range.unwrap() > distance {
+                begin_bolt(ecs, source, target_position, strength, kind);
+            }
+        }
+    }
+}
+
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: BoltKind) {
     ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
     ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
@@ -221,6 +245,10 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     ecs.delete_entity(source).unwrap();
 }
 
+pub fn begin_shoot_and_move(ecs: &mut World, source: &Entity, new_position: SizedPoint, range: Option<u32>, strength: Damage, kind: BoltKind) {
+    begin_move(ecs, source, new_position, PostMoveAction::Shoot(strength, range, kind));
+}
+
 pub fn reap_killed(ecs: &mut World) {
     let mut dead = vec![];
     let mut player_dead = false;
@@ -336,5 +364,58 @@ mod tests {
         // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
         assert_eq!(2, find_all_entities(&ecs).len());
         let _ = ecs.fetch::<PlayerDeadComponent>();
+    }
+
+    #[test]
+    fn move_and_shoot() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::physical(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 1));
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn move_and_shoot_multiple_targets() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 3, 0)
+            .with_character(2, 4, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        let other = find_at(&mut ecs, 2, 4);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::physical(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 1));
+        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn move_and_shoot_out_of_range() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 6, 0)
+            .with_character(2, 7, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 6);
+        let other = find_at(&mut ecs, 2, 7);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::physical(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 1));
+        assert_eq!(ecs.get_defenses(&target).health, starting_health);
+        assert_eq!(ecs.get_defenses(&other).health, starting_health);
     }
 }

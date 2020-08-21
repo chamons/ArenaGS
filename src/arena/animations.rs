@@ -131,12 +131,14 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
         }
     }
 
-    for need_events in needs_events {
-        ecs.raise_event(need_events.kind, need_events.target);
-    }
-
+    // Remove must occur before notification, in case a notification
+    // adds a new animatino
     for entity in &completed {
         ecs.write_storage::<AnimationComponent>().remove(*entity);
+    }
+
+    for need_events in needs_events {
+        ecs.raise_event(need_events.kind, need_events.target);
     }
 }
 

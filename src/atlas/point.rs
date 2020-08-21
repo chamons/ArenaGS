@@ -111,9 +111,45 @@ impl SizedPoint {
         }
     }
 
-    pub fn distance_to(&self, point: Point) -> Option<u32> {
+    pub fn distance_with_initial(&self, point: Point) -> Option<(Point, u32)> {
         if let Some(path) = self.line_to(point) {
-            Some(path.len() as u32 - 1) // Path includes both end points
+            Some((*path.first().unwrap(), path.len() as u32 - 1)) // Path includes both end points
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        if let Some((_, first)) = self.distance_with_initial(point) {
+            Some(first)
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to_multi_with_endpoints(&self, point: SizedPoint) -> Option<(Point, Point, u32)> {
+        // TODO - Can we be smarter than checking every point?
+        let target_positions = point.all_positions();
+        let shortest_target = target_positions.iter().min_by(|first, second| {
+            let first = point.distance_to(**first);
+            let second = point.distance_to(**second);
+            first.cmp(&second)
+        });
+
+        if let Some(shortest_target) = shortest_target {
+            if let Some((source, distance)) = self.distance_with_initial(*shortest_target) {
+                Some((source, *shortest_target, distance))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to_multi(&self, point: SizedPoint) -> Option<u32> {
+        if let Some((_, _, first)) = self.distance_to_multi_with_endpoints(point) {
+            Some(first)
         } else {
             None
         }
@@ -127,8 +163,16 @@ impl fmt::Display for SizedPoint {
 }
 
 #[cfg(test)]
+pub fn assert_points_equal(a: Point, b: Point) {
+    assert_eq!(a.x, b.x);
+    assert_eq!(a.y, b.y);
+}
+
+#[cfg(test)]
 mod tests {
+    use super::super::assert_points_equal;
     use super::*;
+
     #[test]
     fn all_positions() {
         //  (2,0) (3,0)
@@ -203,6 +247,9 @@ mod tests {
     #[test]
     fn distance_to_single() {
         let point = SizedPoint::init(2, 2);
+        let (initial, distance) = point.distance_with_initial(Point::init(4, 5)).unwrap();
+        assert_eq!(5, distance);
+        assert_points_equal(initial, Point::init(2, 2));
         let distance = point.distance_to(Point::init(4, 5)).unwrap();
         assert_eq!(5, distance);
     }
@@ -210,7 +257,21 @@ mod tests {
     #[test]
     fn distance_to_multi() {
         let point = SizedPoint::init_multi(1, 2, 2, 1);
+        let (initial, distance) = point.distance_with_initial(Point::init(4, 5)).unwrap();
+        assert_eq!(5, distance);
+        assert_points_equal(initial, Point::init(2, 2));
         let distance = point.distance_to(Point::init(4, 5)).unwrap();
+        assert_eq!(5, distance);
+    }
+
+    #[test]
+    fn multi_distance_to_multi() {
+        let point = SizedPoint::init_multi(1, 2, 2, 1);
+        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
+        assert_eq!(5, distance);
+        assert_points_equal(Point::init(2, 2), initial);
+        assert_points_equal(Point::init(4, 5), end);
+        let distance = point.distance_to_multi(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
         assert_eq!(5, distance);
     }
 

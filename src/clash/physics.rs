@@ -4,14 +4,23 @@ use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 // Begin the move itself, does not spend time
-pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint) {
+pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint, action: PostMoveAction) {
     ecs.shovel(*entity, MovementComponent::init(new_position));
-    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation), Some(*entity));
+    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation, action), Some(*entity));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_complete_animation()) {
-        complete_move(ecs, target.unwrap());
+    match kind {
+        EventKind::Move(state, action) => {
+            if state.is_complete_animation() {
+                complete_move(ecs, target.unwrap());
+                match action {
+                    PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, &target.unwrap(), range, damage, kind),
+                    PostMoveAction::None => {}
+                }
+            }
+        }
+        _ => {}
     }
 }
 
@@ -31,7 +40,7 @@ pub fn complete_move(ecs: &mut World, entity: Entity) {
         position.move_to(new_position);
     }
 
-    ecs.raise_event(EventKind::Move(MoveState::Complete(distance)), Some(entity));
+    ecs.raise_event(EventKind::MoveComplete(distance), Some(entity));
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
@@ -105,7 +114,7 @@ pub fn move_character_action(ecs: &mut World, entity: Entity, new: SizedPoint) -
         return false;
     }
 
-    begin_move(ecs, &entity, new);
+    begin_move(ecs, &entity, new, PostMoveAction::None);
 
     let time_cost = if ecs.has_status(&entity, StatusKind::Frozen) {
         MOVE_ACTION_COST + (MOVE_ACTION_COST / 2)
@@ -146,12 +155,6 @@ mod tests {
     use super::*;
     use crate::atlas::{EasyMutWorld, SizedPoint};
     use assert_approx_eq::assert_approx_eq;
-
-    fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
-        let position = ecs.get_position(entity);
-        assert_eq!(position.single_position().x, expected.x);
-        assert_eq!(position.single_position().y, expected.y);
-    }
 
     #[test]
     fn point_off_map() {

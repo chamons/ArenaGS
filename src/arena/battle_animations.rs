@@ -116,12 +116,17 @@ pub fn begin_melee_animation(ecs: &mut World, target: Entity) {
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Move(state) if state.is_begin_animation()) {
-        animate_move(ecs, target.unwrap());
+    match kind {
+        EventKind::Move(state, action) => {
+            if state.is_begin_animation() {
+                animate_move(ecs, target.unwrap(), action);
+            }
+        }
+        _ => {}
     }
 }
 
-fn animate_move(ecs: &mut World, target: Entity) {
+fn animate_move(ecs: &mut World, target: Entity, action: PostMoveAction) {
     let new_position = {
         let movements = ecs.read_storage::<MovementComponent>();
         movements.grab(target).new_position
@@ -132,7 +137,7 @@ fn animate_move(ecs: &mut World, target: Entity) {
     let position = ecs.get_position(&target);
 
     let animation = Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH)
-        .with_post_event(EventKind::Move(MoveState::CompleteAnimation), Some(target));
+        .with_post_event(EventKind::Move(MoveState::CompleteAnimation, action), Some(target));
     ecs.shovel(target, AnimationComponent::init(animation));
 }
 

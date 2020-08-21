@@ -1,13 +1,18 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{DamageKind, StatusKind};
+use super::{BoltKind, Damage, DamageKind, StatusKind};
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MoveState {
     BeginAnimation,
     CompleteAnimation,
-    Complete(u32),
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
+pub enum PostMoveAction {
+    None,
+    Shoot(Damage, Option<u32>, BoltKind),
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
@@ -40,11 +45,12 @@ pub enum ExplodeState {
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
-    Move(MoveState),
+    Move(MoveState, PostMoveAction),
     Bolt(BoltState),
     Melee(MeleeState),
     Field(FieldState),
     Explode(ExplodeState),
+    MoveComplete(u32),
     Tick(i32),
     Damage(u32, DamageKind),
     StatusExpired(StatusKind),
