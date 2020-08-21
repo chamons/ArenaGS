@@ -108,19 +108,22 @@ fn reduce_temperature(ecs: &mut World, target: &Entity, ticks: i32) {
     }
 }
 
-fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, damage: u32, kind: DamageKind) {
+fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damage: RolledDamage) {
     if ecs.read_storage::<CharacterInfoComponent>().has(*target) {
         {
             let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
             let character_info = character_infos.grab_mut(*target);
-            let direction = match kind {
-                DamageKind::Fire => Some(TemperatureDirection::Heat),
-                DamageKind::Ice => Some(TemperatureDirection::Cool),
+            let direction = match rolled_damage.options {
+                DamageOptions::RAISE_TEMPERATURE => Some(TemperatureDirection::Heat),
+                DamageOptions::LOWER_TEMPERATURE => Some(TemperatureDirection::Cool),
                 _ => None,
             };
 
             if let Some(direction) = direction {
-                character_info.character.temperature.change_from_incoming_damage(damage, direction);
+                character_info
+                    .character
+                    .temperature
+                    .change_from_incoming_damage(rolled_damage.amount, direction);
             }
         }
         // change_from_incoming_damage could have changed burning/frozen
@@ -131,11 +134,11 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, damage: u32,
 pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Tick(ticks) => reduce_temperature(ecs, &target.unwrap(), ticks),
-        EventKind::Damage(damage, kind) => apply_temperature_damage_delta(ecs, &target.unwrap(), damage, kind),
+        EventKind::Damage(rolled_damage) => apply_temperature_damage_delta(ecs, &target.unwrap(), rolled_damage),
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-                apply_damage_to_character(ecs, Damage::burning(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap());
+                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap());
 
                 if ecs.get_temperature(&target.unwrap()).is_burning() {
                     ecs.write_storage::<StatusComponent>()
@@ -243,7 +246,7 @@ mod tests {
         set_health(&mut ecs, target, 200);
 
         for _ in 0..4 {
-            begin_bolt(&mut ecs, &player, Point::init(3, 2), Damage::fire(10), BoltKind::Fire);
+            begin_bolt(&mut ecs, &player, Point::init(3, 2), Damage::init(10).with_raise_temp(), BoltKind::Fire);
             wait_for_animations(&mut ecs);
         }
         assert!(ecs.get_temperature(&target).current_temperature > TEMPERATURE_BURN_POINT);

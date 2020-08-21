@@ -2,43 +2,56 @@ use serde::{Deserialize, Serialize};
 
 use super::Strength;
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub enum DamageKind {
-    Physical,
-    Fire,
-    Burning, // Fire, but doesn't change temperature
-    Ice,
+bitflags! {
+    #[derive(Serialize, Deserialize)]
+    pub struct DamageOptions: u32 {
+        const RAISE_TEMPERATURE = 0b00000001;
+        const LOWER_TEMPERATURE = 0b00000010;
+    }
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct Damage {
     pub amount: Strength,
-    pub kind: DamageKind,
+    pub options: DamageOptions,
 }
 
-#[allow(dead_code)]
 impl Damage {
-    pub fn init(amount: Strength, kind: DamageKind) -> Damage {
-        Damage { amount, kind }
+    pub fn init(dice: u32) -> Damage {
+        Damage {
+            amount: Strength::init(dice),
+            options: DamageOptions::empty(),
+        }
     }
 
-    pub fn physical(amount: u32) -> Damage {
-        Damage::init(Strength::init(amount), DamageKind::Physical)
+    pub fn with_raise_temp(mut self) -> Damage {
+        self.options.insert(DamageOptions::RAISE_TEMPERATURE);
+        self
     }
 
-    pub fn fire(amount: u32) -> Damage {
-        Damage::init(Strength::init(amount), DamageKind::Fire)
-    }
-
-    pub fn burning(amount: u32) -> Damage {
-        Damage::init(Strength::init(amount), DamageKind::Burning)
-    }
-
-    pub fn ice(amount: u32) -> Damage {
-        Damage::init(Strength::init(amount), DamageKind::Ice)
+    #[allow(dead_code)]
+    pub fn with_lower_temp(mut self) -> Damage {
+        self.options.insert(DamageOptions::LOWER_TEMPERATURE);
+        self
     }
 
     pub fn dice(&self) -> u32 {
         self.amount.dice
+    }
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
+pub struct RolledDamage {
+    pub amount: u32,
+    pub options: DamageOptions,
+}
+
+// A representation of a Damage after final roll, with a fixed value
+impl RolledDamage {
+    pub fn init(amount: u32, initial_damage: &Damage) -> RolledDamage {
+        RolledDamage {
+            amount,
+            options: initial_damage.options,
+        }
     }
 }

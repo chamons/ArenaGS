@@ -4,7 +4,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{CharacterInfoComponent, Damage, EventKind, Strength};
+use super::{CharacterInfoComponent, Damage, EventKind, RolledDamage, Strength};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
@@ -40,7 +40,7 @@ impl Defenses {
         }
     }
 
-    pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> u32 {
+    pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> RolledDamage {
         let damage_value = damage.amount.roll(rng);
 
         // Apply dodge first, burning charges up to matching dice
@@ -64,7 +64,7 @@ impl Defenses {
         let (health_damage, _) = apply_with_remain(damage_value, self.health);
         self.health -= health_damage;
 
-        total_applied_damage
+        RolledDamage::init(total_applied_damage, &damage)
     }
 
     pub fn regain_dodge(&mut self, regain: u32) {
@@ -110,7 +110,7 @@ mod tests {
     fn no_defense_full_damage() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.health > 1);
         assert!(def.health < 5);
@@ -120,7 +120,7 @@ mod tests {
     fn no_defense_overkill_leaves_at_zero() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
-        def.apply_damage(Damage::init(Strength::init(10), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(10), &mut rng);
         assert_eq!(0, def.health);
     }
 
@@ -128,7 +128,7 @@ mod tests {
     fn dodge_reduces_damage_up_to_strength() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(3, 0, 0, 10);
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 2 + [2,4] = 4-6 dodge
@@ -141,7 +141,7 @@ mod tests {
     fn extra_dodge_saved_after_roll() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(5, 0, 0, 10);
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
         assert_eq!(1, def.dodge);
     }
 
@@ -157,7 +157,7 @@ mod tests {
     fn armor_reduces_every_hit() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(0, 1, 0, 10);
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 1-2 armor
@@ -170,7 +170,7 @@ mod tests {
     fn dodge_used_even_if_armor_would_cover() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(4, 4, 0, 10);
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
         assert_eq!(0, def.dodge);
     }
 
@@ -179,7 +179,7 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
         def.absorb = 10;
-        def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        def.apply_damage(Damage::init(4), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.absorb > 1);
         assert!(def.absorb < 5);
@@ -190,12 +190,12 @@ mod tests {
     fn reports_damage_after_mitigation() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(1, 1, 10, 10);
-        let applied_damage = def.apply_damage(Damage::init(Strength::init(4), DamageKind::Physical), &mut rng);
+        let applied_damage = def.apply_damage(Damage::init(4), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         // Minus 2-4 Dodge/armor
         // 2-6 damage
-        assert!(applied_damage >= 2);
-        assert!(applied_damage <= 6);
+        assert!(applied_damage.amount >= 2);
+        assert!(applied_damage.amount <= 6);
     }
 
     #[test]

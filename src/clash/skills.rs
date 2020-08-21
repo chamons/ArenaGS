@@ -205,7 +205,7 @@ lazy_static! {
                 SkillInfo::init_with_distance(
                     "",
                     TargetType::Enemy,
-                    SkillEffect::RangedAttack(Damage::physical(2), BoltKind::Fire),
+                    SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
                     Some(2),
                     false,
                 ),
@@ -215,7 +215,7 @@ lazy_static! {
                 SkillInfo::init_with_distance(
                     "",
                     TargetType::Enemy,
-                    SkillEffect::MeleeAttack(Damage::physical(2), WeaponKind::Sword),
+                    SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword),
                     Some(1),
                     false,
                 ),
@@ -235,14 +235,14 @@ lazy_static! {
             );
             m.insert(
                 "TestField",
-                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::physical(1), FieldKind::Fire)),
+                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::init(1), FieldKind::Fire)),
             );
             m.insert(
                 "TestMoveAndShoot",
                 SkillInfo::init_with_distance(
                     "",
                     TargetType::Tile,
-                    SkillEffect::MoveAndShoot(Damage::physical(1), Some(5), BoltKind::Fire),
+                    SkillEffect::MoveAndShoot(Damage::init(1), Some(5), BoltKind::Fire),
                     Some(1),
                     true,
                 ),
@@ -261,7 +261,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_37.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::physical(10), BoltKind::Bullet),
+                SkillEffect::RangedAttack(Damage::init(10), BoltKind::Bullet),
                 Some(10),
                 true,
             )
@@ -273,7 +273,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_63.png",
                 TargetType::Tile,
-                SkillEffect::MoveAndShoot(Damage::physical(10), Some(10), BoltKind::Bullet),
+                SkillEffect::MoveAndShoot(Damage::init(10), Some(10), BoltKind::Bullet),
                 Some(1),
                 true,
             )
@@ -285,7 +285,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook06_117.png",
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::fire(5), BoltKind::Fire),
+                SkillEffect::RangedAttack(Damage::init(5).with_raise_temp(), BoltKind::Fire),
                 Some(15),
                 true,
             )
@@ -296,7 +296,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "SpellBook01_76.png",
                 TargetType::Enemy,
-                SkillEffect::MeleeAttack(Damage::physical(5), WeaponKind::Sword),
+                SkillEffect::MeleeAttack(Damage::init(5), WeaponKind::Sword),
                 Some(1),
                 true,
             ),
@@ -306,7 +306,7 @@ lazy_static! {
             SkillInfo::init_with_distance(
                 "en_craft_96.png",
                 TargetType::Any,
-                SkillEffect::FieldEffect(Damage::physical(5), FieldKind::Fire),
+                SkillEffect::FieldEffect(Damage::init(5), FieldKind::Fire),
                 Some(3),
                 false,
             ),
