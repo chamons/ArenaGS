@@ -52,3 +52,6 @@ pub use tick_timer::*;
 
 mod status;
 pub use status::*;
+
+mod damage;
+pub use damage::*;
