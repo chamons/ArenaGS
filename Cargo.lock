@@ -12,6 +12,7 @@ version = "0.1.0"
 dependencies = [
  "assert_approx_eq",
  "bincode",
+ "bitflags",
  "derive_is_enum_variant",
  "enum-iterator",
  "lazy_static",

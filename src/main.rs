@@ -11,6 +11,9 @@ use leak::Leak;
 #[macro_use]
 extern crate derive_is_enum_variant;
 
+#[macro_use]
+extern crate bitflags;
+
 #[cfg(debug_assertions)]
 use std::panic;
 

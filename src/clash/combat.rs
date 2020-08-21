@@ -128,12 +128,12 @@ pub fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage
 }
 
 pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entity) {
-    let applied_damage = {
+    let rolled_damage = {
         let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
         defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
     };
-    ecs.raise_event(EventKind::Damage(applied_damage, damage.kind), Some(*target));
+    ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
@@ -288,7 +288,7 @@ mod tests {
         let target = find_at(&ecs, 3, 2);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::physical(1), WeaponKind::Sword);
+        begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::init(1), WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -301,7 +301,7 @@ mod tests {
         let target = find_at(&ecs, 4, 2);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::physical(1), BoltKind::Fire);
+        begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::init(1), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -313,7 +313,7 @@ mod tests {
         let target = find_at(&mut ecs, 2, 2);
         let exploder = find_at(&mut ecs, 2, 3);
         let starting_health = ecs.get_defenses(&target).health;
-        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::physical(2), AttackKind::Explode(1)));
+        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::init(2), AttackKind::Explode(1)));
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
@@ -338,7 +338,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::physical(1), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -348,7 +348,7 @@ mod tests {
     fn killed_enemies_removed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
-        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::physical(10), BoltKind::Fire);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, find_all_entities(&ecs).len());
@@ -358,7 +358,7 @@ mod tests {
     fn killed_player() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let enemy = find_at(&mut ecs, 2, 3);
-        begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::physical(10), BoltKind::Fire);
+        begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
@@ -373,7 +373,7 @@ mod tests {
         let target = find_at(&mut ecs, 2, 3);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::physical(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 1));
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -392,7 +392,7 @@ mod tests {
         let other = find_at(&mut ecs, 2, 4);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::physical(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 1));
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -412,7 +412,7 @@ mod tests {
         let other = find_at(&mut ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::physical(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
