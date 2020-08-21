@@ -367,7 +367,7 @@ mod tests {
     }
 
     #[test]
-    fn xxx_move_and_shoot() {
+    fn move_and_shoot() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
@@ -389,7 +389,7 @@ mod tests {
             .build();
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 3);
+        let other = find_at(&mut ecs, 2, 4);
         let starting_health = ecs.get_defenses(&target).health;
 
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::physical(1), BoltKind::Bullet);
@@ -408,8 +408,8 @@ mod tests {
             .with_map()
             .build();
         let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 3);
+        let target = find_at(&mut ecs, 2, 6);
+        let other = find_at(&mut ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::physical(1), BoltKind::Bullet);

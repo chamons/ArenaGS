@@ -28,7 +28,7 @@ pub enum SkillEffect {
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
     FieldEffect(Damage, FieldKind),
-    MoveAndShoot(Damage, BoltKind),
+    MoveAndShoot(Damage, Option<u32>, BoltKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -242,8 +242,8 @@ lazy_static! {
                 SkillInfo::init_with_distance(
                     "",
                     TargetType::Tile,
-                    SkillEffect::MoveAndShoot(Damage::physical(1), BoltKind::Fire),
-                    Some(5),
+                    SkillEffect::MoveAndShoot(Damage::physical(1), Some(5), BoltKind::Fire),
+                    Some(1),
                     true,
                 ),
             );
@@ -263,6 +263,18 @@ lazy_static! {
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(Damage::physical(10), BoltKind::Bullet),
                 Some(10),
+                true,
+            )
+            .with_ammo(AmmoKind::Bullets, 1)
+            .with_alternate("Reload"),
+        );
+        m.insert(
+            "Move and Shoot",
+            SkillInfo::init_with_distance(
+                "SpellBook01_63.png",
+                TargetType::Tile,
+                SkillEffect::MoveAndShoot(Damage::physical(10), Some(10), BoltKind::Bullet),
+                Some(1),
                 true,
             )
             .with_ammo(AmmoKind::Bullets, 1)
@@ -379,10 +391,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
             let position = ecs.get_position(invoker).move_to(target.unwrap());
             begin_move(ecs, invoker, position, PostMoveAction::None);
         }
-        SkillEffect::MoveAndShoot(damage, kind) => {
+        SkillEffect::MoveAndShoot(damage, range, kind) => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            begin_shoot_and_move(ecs, invoker, position, skill.distance, *damage, *kind)
+            begin_shoot_and_move(ecs, invoker, position, *range, *damage, *kind)
         }
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
@@ -852,7 +864,7 @@ mod tests {
             .build();
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 3);
+        let other = find_at(&mut ecs, 2, 4);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
@@ -871,8 +883,8 @@ mod tests {
             .with_map()
             .build();
         let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 3);
+        let target = find_at(&mut ecs, 2, 6);
+        let other = find_at(&mut ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
