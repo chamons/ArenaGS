@@ -133,6 +133,11 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
         defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
     };
+
+    if rolled_damage.options.contains(DamageOptions::KNOCKBACK) {
+        // Need to find source, then create vector between, extend other way, move in that direction
+    }
+
     ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
 }
 
@@ -417,5 +422,37 @@ mod tests {
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn knockback() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        assert_position(&ecs, &target, Point::init(2, 4));
+    }
+
+    #[test]
+    fn knockback_against_a_wall() {
+        let mut ecs = create_test_state().with_player(2, 1, 100).with_character(2, 0, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 1);
+        let target = find_at(&mut ecs, 2, 0);
+        begin_bolt(&mut ecs, &player, Point::init(2, 0), Damage::init(1).with_knockback(), BoltKind::Fire);
+        assert_position(&ecs, &target, Point::init(2, 0));
+    }
+
+    #[test]
+    fn knockback_against_another() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 3, 0)
+            .with_character(2, 4, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        assert_position(&ecs, &target, Point::init(2, 3));
     }
 }

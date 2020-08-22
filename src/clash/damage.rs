@@ -7,6 +7,7 @@ bitflags! {
     pub struct DamageOptions: u32 {
         const RAISE_TEMPERATURE = 0b00000001;
         const LOWER_TEMPERATURE = 0b00000010;
+        const KNOCKBACK =         0b00000100;
     }
 }
 
@@ -32,6 +33,11 @@ impl Damage {
     #[allow(dead_code)]
     pub fn with_lower_temp(mut self) -> Damage {
         self.options.insert(DamageOptions::LOWER_TEMPERATURE);
+        self
+    }
+
+    pub fn with_knockback(mut self) -> Damage {
+        self.options.insert(DamageOptions::KNOCKBACK);
         self
     }
 

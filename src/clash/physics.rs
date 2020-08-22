@@ -49,6 +49,7 @@ pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<
         Direction::South => p.y < MAX_MAP_TILES - 1,
         Direction::East => p.x < MAX_MAP_TILES - 1,
         Direction::West => p.x > 0,
+        _ => false,
     });
 
     if is_valid {
@@ -57,6 +58,7 @@ pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<
             Direction::South => Some(SizedPoint::init_multi(initial.origin.x, initial.origin.y + 1, initial.width, initial.height)),
             Direction::East => Some(SizedPoint::init_multi(initial.origin.x + 1, initial.origin.y, initial.width, initial.height)),
             Direction::West => Some(SizedPoint::init_multi(initial.origin.x - 1, initial.origin.y, initial.width, initial.height)),
+            _ => None,
         }
     } else {
         None
