@@ -73,7 +73,7 @@ impl Direction {
         }
     }
 
-    pub fn from_point(&self, point: Point) -> Point {
+    pub fn point_in_direction(&self, point: Point) -> Point {
         match self {
             Direction::North => Point::init(point.x, point.y - 1),
             Direction::NorthEast => Point::init(point.x + 1, point.y - 1),

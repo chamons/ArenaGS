@@ -142,7 +142,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap());
+                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap(), None);
 
                 if ecs.get_temperature(&target.unwrap()).is_burning() {
                     ecs.write_storage::<StatusComponent>()
