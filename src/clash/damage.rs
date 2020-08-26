@@ -17,6 +17,7 @@ pub struct Damage {
     pub options: DamageOptions,
 }
 
+#[allow(dead_code)]
 impl Damage {
     pub fn init(dice: u32) -> Damage {
         Damage {
@@ -30,7 +31,6 @@ impl Damage {
         self
     }
 
-    #[allow(dead_code)]
     pub fn with_lower_temp(mut self) -> Damage {
         self.options.insert(DamageOptions::LOWER_TEMPERATURE);
         self
