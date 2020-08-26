@@ -55,3 +55,6 @@ pub use status::*;
 
 mod damage;
 pub use damage::*;
+
+mod direction;
+pub use direction::*;

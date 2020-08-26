@@ -44,22 +44,9 @@ pub fn complete_move(ecs: &mut World, entity: Entity) {
 }
 
 pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<SizedPoint> {
-    let is_valid = initial.all_positions().iter().all(|&p| match direction {
-        Direction::North => p.y > 0,
-        Direction::South => p.y < MAX_MAP_TILES - 1,
-        Direction::East => p.x < MAX_MAP_TILES - 1,
-        Direction::West => p.x > 0,
-    });
-
-    if is_valid {
-        match direction {
-            Direction::North => Some(SizedPoint::init_multi(initial.origin.x, initial.origin.y - 1, initial.width, initial.height)),
-            Direction::South => Some(SizedPoint::init_multi(initial.origin.x, initial.origin.y + 1, initial.width, initial.height)),
-            Direction::East => Some(SizedPoint::init_multi(initial.origin.x + 1, initial.origin.y, initial.width, initial.height)),
-            Direction::West => Some(SizedPoint::init_multi(initial.origin.x - 1, initial.origin.y, initial.width, initial.height)),
-        }
-    } else {
-        None
+    match direction {
+        Direction::North | Direction::South | Direction::East | Direction::West => direction.sized_point_in_direction(initial),
+        _ => None,
     }
 }
 

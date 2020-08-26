@@ -3,14 +3,6 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::Point;
 
-#[derive(Clone, Copy)]
-pub enum Direction {
-    North,
-    South,
-    East,
-    West,
-}
-
 pub fn find_player(ecs: &World) -> Entity {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let players = ecs.read_storage::<PlayerComponent>();

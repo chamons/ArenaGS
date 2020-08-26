@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent};
+use crate::clash::{Direction, EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
@@ -34,6 +34,7 @@ pub struct AttackInfo {
     pub damage: Damage,
     pub target: Point,
     pub kind: AttackKind,
+    pub source: Option<Point>,
 }
 
 impl AttackInfo {
@@ -60,9 +61,9 @@ impl AttackInfo {
 }
 
 impl AttackComponent {
-    pub fn init(target: Point, damage: Damage, kind: AttackKind) -> AttackComponent {
+    pub fn init(target: Point, damage: Damage, kind: AttackKind, source: Option<Point>) -> AttackComponent {
         AttackComponent {
-            attack: AttackInfo { target, damage, kind },
+            attack: AttackInfo { target, damage, kind, source },
         }
     }
 }
@@ -92,7 +93,11 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
 }
 
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: BoltKind) {
-    ecs.shovel(*source, AttackComponent::init(target_position, strength, AttackKind::Ranged(kind)));
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(
+        *source,
+        AttackComponent::init(target_position, strength, AttackKind::Ranged(kind), source_position),
+    );
     ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
 }
 
@@ -121,18 +126,32 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
 }
 
-pub fn apply_damage_to_location(ecs: &mut World, position: Point, damage: Damage) {
-    if let Some(target) = find_character_at_location(ecs, position) {
-        apply_damage_to_character(ecs, damage, &target);
+pub fn apply_damage_to_location(ecs: &mut World, target_position: Point, source_position: Option<Point>, damage: Damage) {
+    if let Some(target) = find_character_at_location(ecs, target_position) {
+        apply_damage_to_character(ecs, damage, &target, source_position);
     }
 }
 
-pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entity) {
+pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entity, source_position: Option<Point>) {
     let rolled_damage = {
         let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
         defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
     };
+
+    if rolled_damage.options.contains(DamageOptions::KNOCKBACK) {
+        if let Some(source_position) = source_position {
+            let current_position = ecs.get_position(target);
+            let direction_of_impact = Direction::from_two_points(&source_position, &current_position.origin);
+            if let Some(new_origin) = direction_of_impact.point_in_direction(&current_position.origin) {
+                let new_position = current_position.move_to(new_origin);
+                if is_area_clear(ecs, &new_position.all_positions(), target) {
+                    begin_move(ecs, target, new_position, PostMoveAction::None);
+                }
+            }
+        }
+    }
+
     ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
 }
 
@@ -141,12 +160,13 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(bolt).attack
     };
-    apply_damage_to_location(ecs, attack.target, attack.damage);
+    apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
     ecs.delete_entity(bolt).unwrap();
 }
 
 pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: WeaponKind) {
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind)));
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind), source_position));
     ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(*source));
 }
 
@@ -161,13 +181,13 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(character).attack
     };
-    apply_damage_to_location(ecs, attack.target, attack.damage);
+    apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
 
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
 pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: FieldKind) {
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind)));
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind), Some(target)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
@@ -207,7 +227,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 
     ecs.create_entity()
         .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
-        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0)))
+        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0), None))
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(FieldComponent::init(r, g, b))
         .with(TimeComponent::init(-BASE_ACTION_COST))
@@ -226,10 +246,10 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn apply_explode(ecs: &mut World, source: Entity) {
-    let (damage, range) = {
+    let (damage, range, source_position) = {
         let attack_info = ecs.read_storage::<AttackComponent>().grab(source).attack;
         match attack_info.kind {
-            AttackKind::Explode(range) => (attack_info.damage, range),
+            AttackKind::Explode(range) => (attack_info.damage, range, attack_info.source),
             _ => panic!("Explode with wrong AttackKind"),
         }
     };
@@ -237,7 +257,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     for in_blast in ecs.get_position(&source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
             if target != source {
-                apply_damage_to_location(ecs, in_blast, damage);
+                apply_damage_to_location(ecs, in_blast, source_position, damage);
             }
         }
     }
@@ -313,7 +333,10 @@ mod tests {
         let target = find_at(&mut ecs, 2, 2);
         let exploder = find_at(&mut ecs, 2, 3);
         let starting_health = ecs.get_defenses(&target).health;
-        ecs.shovel(exploder, AttackComponent::init(Point::init(2, 3), Damage::init(2), AttackKind::Explode(1)));
+        ecs.shovel(
+            exploder,
+            AttackComponent::init(Point::init(2, 3), Damage::init(2), AttackKind::Explode(1), Some(Point::init(2, 3))),
+        );
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);
 
@@ -417,5 +440,40 @@ mod tests {
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn knockback() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &target, Point::init(2, 4));
+    }
+
+    #[test]
+    fn knockback_against_a_wall() {
+        let mut ecs = create_test_state().with_player(2, 1, 100).with_character(2, 0, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 1);
+        let target = find_at(&mut ecs, 2, 0);
+        begin_bolt(&mut ecs, &player, Point::init(2, 0), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &target, Point::init(2, 0));
+    }
+
+    #[test]
+    fn knockback_against_another() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 3, 0)
+            .with_character(2, 4, 0)
+            .with_map()
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &target, Point::init(2, 3));
     }
 }

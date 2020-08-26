@@ -113,10 +113,14 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damag
         {
             let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
             let character_info = character_infos.grab_mut(*target);
-            let direction = match rolled_damage.options {
-                DamageOptions::RAISE_TEMPERATURE => Some(TemperatureDirection::Heat),
-                DamageOptions::LOWER_TEMPERATURE => Some(TemperatureDirection::Cool),
-                _ => None,
+            let direction = {
+                if rolled_damage.options.contains(DamageOptions::RAISE_TEMPERATURE) {
+                    Some(TemperatureDirection::Heat)
+                } else if rolled_damage.options.contains(DamageOptions::LOWER_TEMPERATURE) {
+                    Some(TemperatureDirection::Cool)
+                } else {
+                    None
+                }
             };
 
             if let Some(direction) = direction {
@@ -138,7 +142,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap());
+                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap(), None);
 
                 if ecs.get_temperature(&target.unwrap()).is_burning() {
                     ecs.write_storage::<StatusComponent>()

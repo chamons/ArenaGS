@@ -98,7 +98,12 @@ mod tests {
             .with(BehaviorComponent::init(BehaviorKind::Explode))
             .with(PositionComponent::init(SizedPoint::init(2, 2)))
             .with(TimeComponent::init(100))
-            .with(AttackComponent::init(Point::init(2, 2), Damage::init(2), AttackKind::Explode(2)))
+            .with(AttackComponent::init(
+                Point::init(2, 2),
+                Damage::init(2),
+                AttackKind::Explode(2),
+                Some(Point::init(2, 2)),
+            ))
             .build();
 
         let starting_health = ecs.get_defenses(&target).health;
