@@ -1,4 +1,4 @@
-use crate::atlas::Point;
+use crate::atlas::{Point, SizedPoint};
 
 #[derive(Clone, Copy)]
 pub enum Direction {
@@ -73,17 +73,37 @@ impl Direction {
         }
     }
 
-    pub fn point_in_direction(&self, point: Point) -> Point {
+    pub fn point_in_direction(&self, point: &Point) -> Option<Point> {
+        let x: i32 = point.x as i32;
+        let y: i32 = point.y as i32;
         match self {
-            Direction::North => Point::init(point.x, point.y - 1),
-            Direction::NorthEast => Point::init(point.x + 1, point.y - 1),
-            Direction::East => Point::init(point.x + 1, point.y),
-            Direction::SouthEast => Point::init(point.x + 1, point.y + 1),
-            Direction::South => Point::init(point.x, point.y + 1),
-            Direction::SouthWest => Point::init(point.x - 1, point.y + 1),
-            Direction::West => Point::init(point.x - 1, point.y),
-            Direction::NorthWest => Point::init(point.x - 1, point.y - 1),
-            Direction::None => point,
+            Direction::North => constrained_point(x, y - 1),
+            Direction::NorthEast => constrained_point(x + 1, y - 1),
+            Direction::East => constrained_point(x + 1, y),
+            Direction::SouthEast => constrained_point(x + 1, y + 1),
+            Direction::South => constrained_point(x, y + 1),
+            Direction::SouthWest => constrained_point(x - 1, y + 1),
+            Direction::West => constrained_point(x - 1, y),
+            Direction::NorthWest => constrained_point(x - 1, y - 1),
+            Direction::None => Some(*point),
         }
+    }
+
+    pub fn sized_point_in_direction(&self, point: &SizedPoint) -> Option<SizedPoint> {
+        if let Some(new_origin) = self.point_in_direction(&point.origin) {
+            Some(SizedPoint::init_multi(new_origin.x, new_origin.y, point.width, point.height))
+        } else {
+            None
+        }
+    }
+}
+
+use crate::clash::MAX_MAP_TILES;
+
+fn constrained_point(x: i32, y: i32) -> Option<Point> {
+    if x >= 0 && y >= 0 && y < MAX_MAP_TILES as i32 && x < MAX_MAP_TILES as i32 {
+        Some(Point::init(x as u32, y as u32))
+    } else {
+        None
     }
 }

@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent};
+use crate::clash::{Direction, EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
@@ -140,8 +140,16 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
     };
 
     if rolled_damage.options.contains(DamageOptions::KNOCKBACK) {
-        //let knockback_force_direction =
-        // Need to find source, then create vector between, extend other way, move in that direction
+        if let Some(source_position) = source_position {
+            let current_position = ecs.get_position(target);
+            let direction_of_impact = Direction::from_two_points(&source_position, &current_position.origin);
+            if let Some(new_origin) = direction_of_impact.point_in_direction(&current_position.origin) {
+                let new_position = current_position.move_to(new_origin);
+                if is_area_clear(ecs, &new_position.all_positions(), target) {
+                    begin_move(ecs, target, new_position, PostMoveAction::None);
+                }
+            }
+        }
     }
 
     ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
@@ -440,6 +448,7 @@ mod tests {
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
         begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 4));
     }
 
@@ -449,6 +458,7 @@ mod tests {
         let player = find_at(&mut ecs, 2, 1);
         let target = find_at(&mut ecs, 2, 0);
         begin_bolt(&mut ecs, &player, Point::init(2, 0), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 0));
     }
 
@@ -463,6 +473,7 @@ mod tests {
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
         begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 3));
     }
 }
