@@ -1,6 +1,6 @@
 use crate::atlas::{Point, SizedPoint};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction {
     None,
     North,
@@ -31,7 +31,7 @@ impl Direction {
         Direction::from_delta(x, y)
     }
 
-    pub fn from_delta(delta_x: i32, delta_y: i32) -> Direction {
+    fn from_delta(delta_x: i32, delta_y: i32) -> Direction {
         if delta_x == 1 {
             if delta_y == 1 {
                 Direction::SouthEast
@@ -105,5 +105,29 @@ fn constrained_point(x: i32, y: i32) -> Option<Point> {
         Some(Point::init(x as u32, y as u32))
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn off_map() {
+        assert!(Direction::North.point_in_direction(&Point::init(0, 0)).is_none());
+        assert!(Direction::North.sized_point_in_direction(&SizedPoint::init(0, 0)).is_none());
+    }
+
+    #[test]
+    fn constrained() {
+        assert!(constrained_point(0, 0).is_some());
+        assert!(constrained_point(12, 12).is_some());
+        assert!(constrained_point(13, 12).is_none());
+        assert!(constrained_point(-1, 0).is_none());
+    }
+
+    #[test]
+    fn from_two_points() {
+        assert_eq!(Direction::North, Direction::from_two_points(&Point::init(2, 2), &Point::init(2, 1)));
     }
 }
