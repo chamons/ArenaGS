@@ -25,7 +25,7 @@ pub fn player(ecs: &mut World) {
         .with(PlayerComponent::init())
         .with(TimeComponent::init(0))
         .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
-        .with(SkillsComponent::init(&[]))
+        .with(SkillsComponent::init(&crate::clash::content::gunslinger::get_weapon_skills()))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
 }
