@@ -29,6 +29,7 @@ pub enum SkillEffect {
     Reload(AmmoKind),
     FieldEffect(Damage, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
+    GunslingerAmmo,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -270,6 +271,20 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         ecs.log(format!("{} used {}.", player_name.as_str(), name));
     }
 
+    process_skill(ecs, invoker, name, skill, target);
+
+    spend_time(ecs, invoker, BASE_ACTION_COST);
+    spend_ammo(ecs, invoker, skill);
+
+    if let Some(exhaustion) = skill.exhaustion {
+        spend_exhaustion(ecs, invoker, exhaustion);
+    }
+    if let Some(focus_use) = skill.focus_use {
+        spend_focus(ecs, invoker, focus_use);
+    }
+}
+
+fn process_skill(ecs: &mut World, invoker: &Entity, skill_name: &str, skill: &SkillInfo, target: Option<Point>) {
     match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
@@ -285,17 +300,11 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::GunslingerAmmo => {
+            let specific_skill = super::content::gunslinger::process_gunslinger_skill(ecs, invoker, skill_name);
+            process_skill(ecs, invoker, skill_name, &specific_skill, target);
+        }
         SkillEffect::None => {}
-    }
-
-    spend_time(ecs, invoker, BASE_ACTION_COST);
-    spend_ammo(ecs, invoker, skill);
-
-    if let Some(exhaustion) = skill.exhaustion {
-        spend_exhaustion(ecs, invoker, exhaustion);
-    }
-    if let Some(focus_use) = skill.focus_use {
-        spend_focus(ecs, invoker, focus_use);
     }
 }
 
