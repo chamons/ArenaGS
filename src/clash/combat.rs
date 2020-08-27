@@ -138,6 +138,12 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
         defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
     };
+    ecs.log(format!(
+        "{} took {} damage (Str {}).",
+        ecs.get_name(&target).unwrap().as_str(),
+        rolled_damage.amount,
+        damage.dice()
+    ));
 
     if rolled_damage.options.contains(DamageOptions::KNOCKBACK) {
         if let Some(source_position) = source_position {

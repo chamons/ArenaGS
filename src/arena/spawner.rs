@@ -17,6 +17,7 @@ pub fn player(ecs: &mut World) {
         )))
         .with(PositionComponent::init(SizedPoint::init(4, 4)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
+            "Player",
             Defenses::just_health(10),
             Temperature::init(),
         )))
@@ -41,6 +42,7 @@ pub fn bird_monster(ecs: &mut World) {
         .with(RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown)))
         .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
+            "Giant Bird",
             Defenses::just_health(25),
             Temperature::init(),
         )))
