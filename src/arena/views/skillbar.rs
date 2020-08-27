@@ -25,7 +25,7 @@ const MAX_ICON_COUNT: i32 = 10;
 impl SkillBarView {
     pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
         let mut views = Vec::with_capacity(15);
-        let icons = IconLoader::init("spell")?;
+        let icons = IconLoader::init()?;
         for i in 0..get_skill_count(ecs) {
             if let Some(skill_name) = battle_actions::get_skill_name(ecs, i as usize) {
                 let view = SkillBarItemView::init(
