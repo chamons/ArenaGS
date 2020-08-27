@@ -8,9 +8,7 @@ use specs::prelude::*;
 use super::{ContextData, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::BoxResult;
-use crate::clash::LogComponent;
-
-const LOG_COUNT: usize = 10;
+use crate::clash::{LogComponent, LOG_COUNT};
 
 pub struct LogView {
     position: SDLPoint,
@@ -28,7 +26,7 @@ impl LogView {
             self.text.render_text(
                 entry,
                 self.position.x,
-                self.position.y + (i as i32 * 30),
+                self.position.y + (i as i32 * 22),
                 canvas,
                 FontSize::Small,
                 FontColor::Black,
@@ -42,7 +40,7 @@ impl LogView {
 impl View for LogView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 196, 196)));
-        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 300))?;
+        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 310))?;
         self.render_log(ecs, canvas)?;
 
         Ok(())

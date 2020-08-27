@@ -2,7 +2,7 @@ use std::cmp;
 
 use serde::{Deserialize, Serialize};
 
-const LOG_COUNT: usize = 10;
+pub const LOG_COUNT: usize = 14;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Log {
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn add_can_bump_index() {
         let mut log = Log::init();
-        for _ in 0..10 {
+        for _ in 0..LOG_COUNT {
             log.add("Test");
             assert_eq!(log.index, 0);
         }

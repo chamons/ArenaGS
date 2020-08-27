@@ -385,6 +385,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
+    if let Some(player_name) = ecs.get_name(&invoker) {
+        ecs.log(format!("{} used {}.", player_name.as_str(), name));
+    }
+
     match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
@@ -400,7 +404,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
-        SkillEffect::None => ecs.log(&format!("Invoking {}", name)),
+        SkillEffect::None => {}
     }
 
     spend_time(ecs, invoker, BASE_ACTION_COST);

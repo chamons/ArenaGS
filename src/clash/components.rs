@@ -236,6 +236,7 @@ pub trait ShortInfo {
     fn get_position(&self, entity: &Entity) -> SizedPoint;
     fn get_defenses(&self, entity: &Entity) -> Defenses;
     fn get_temperature(&self, entity: &Entity) -> Temperature;
+    fn get_name(&self, entity: &Entity) -> Option<String>;
 }
 
 impl ShortInfo for World {
@@ -247,6 +248,13 @@ impl ShortInfo for World {
     }
     fn get_temperature(&self, entity: &Entity) -> Temperature {
         self.read_storage::<CharacterInfoComponent>().grab(*entity).character.temperature.clone()
+    }
+    fn get_name(&self, entity: &Entity) -> Option<String> {
+        if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(*entity) {
+            Some(character_info.character.name.to_string())
+        } else {
+            None
+        }
     }
 }
 
@@ -271,15 +279,15 @@ impl Framer for World {
 }
 
 pub trait Logger {
-    fn log(&mut self, message: &str);
+    fn log<T: AsRef<str>>(&mut self, message: T);
     fn log_scroll_forward(&mut self);
     fn log_scroll_back(&mut self);
 }
 
 impl Logger for World {
-    fn log(&mut self, message: &str) {
+    fn log<T: AsRef<str>>(&mut self, message: T) {
         let log = &mut self.write_resource::<LogComponent>().log;
-        log.add(message);
+        log.add(message.as_ref());
     }
     fn log_scroll_forward(&mut self) {
         let log = &mut self.write_resource::<LogComponent>().log;
