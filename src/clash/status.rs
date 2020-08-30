@@ -14,8 +14,9 @@ use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
 pub enum StatusKind {
     Burning, // Retriggers as long as temperature is high enough
     Frozen,
-    FireAmmo,
-    IceAmmo,
+    Magnum,
+    Ignite,
+    Cyclone,
 
     #[cfg(test)]
     TestStatus,
@@ -67,6 +68,12 @@ impl StatusStore {
             Some(StatusType::Trait) => {}
         };
         self.store.remove(&kind);
+    }
+
+    pub fn remove_trait_if_found(&mut self, kind: StatusKind) {
+        if self.has(kind) {
+            self.remove_trait(kind);
+        }
     }
 
     pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) {
@@ -291,5 +298,20 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_status(StatusKind::TestStatus, 100);
         store.toggle_trait(StatusKind::TestStatus, false);
+    }
+
+    #[test]
+    fn rmeove_trait_found() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.remove_trait_if_found(StatusKind::TestTrait);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn rmeove_trait_missing() {
+        let mut store = StatusStore::init();
+        store.remove_trait_if_found(StatusKind::TestTrait);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
     }
 }

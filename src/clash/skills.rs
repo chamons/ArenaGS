@@ -29,7 +29,7 @@ pub enum SkillEffect {
     Reload(AmmoKind),
     FieldEffect(Damage, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
-    GunslingerAmmo,
+    RotateAmmo(),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -62,7 +62,7 @@ impl SkillResourceComponent {
 }
 
 pub struct SkillInfo {
-    pub image: &'static str,
+    pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
     pub distance: Option<u32>,
@@ -75,7 +75,7 @@ pub struct SkillInfo {
 
 impl SkillInfo {
     #[allow(dead_code)]
-    pub fn init(image: &'static str, target: TargetType, effect: SkillEffect) -> SkillInfo {
+    pub fn init(image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
         SkillInfo {
             image,
             target,
@@ -89,7 +89,7 @@ impl SkillInfo {
         }
     }
 
-    pub fn init_with_distance(image: &'static str, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
         SkillInfo {
             image,
             target,
@@ -192,7 +192,12 @@ lazy_static! {
         #[cfg(test)]
         super::content::test::add_test_skills(&mut m);
 
-        super::content::gunslinger::add_gunslinger_skills(&mut m);
+        super::content::gunslinger::gunslinger_skills(&mut m);
+
+        m.insert(
+            "Dash",
+            SkillInfo::init_with_distance(Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
+        );
 
         m
     };
@@ -200,6 +205,10 @@ lazy_static! {
 
 pub fn get_skill(name: &str) -> &'static SkillInfo {
     &SKILLS[name]
+}
+
+pub fn all_skill_image_filesnames() -> Vec<&'static str> {
+    SKILLS.values().filter_map(|s| s.image).collect()
 }
 
 fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
@@ -300,10 +309,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, skill_name: &str, skill: &Sk
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
-        SkillEffect::GunslingerAmmo => {
-            let specific_skill = super::content::gunslinger::process_gunslinger_skill(ecs, invoker, skill_name);
-            process_skill(ecs, invoker, skill_name, &specific_skill, target);
-        }
+        SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::None => {}
     }
 }
@@ -404,7 +410,7 @@ mod tests {
         let info = get_skill("TestWithRange");
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
-        let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
+        let info = SkillInfo::init(None, TargetType::Tile, SkillEffect::None);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
     }
 
@@ -423,7 +429,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
+        let info = SkillInfo::init_with_distance(None, TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
@@ -435,7 +441,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance("", TargetType::Any, SkillEffect::None, Some(2), false);
+        let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
