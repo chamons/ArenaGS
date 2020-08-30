@@ -73,8 +73,8 @@ pub struct SkillInfo {
     pub focus_use: Option<f64>,
 }
 
+#[allow(dead_code)]
 impl SkillInfo {
-    #[allow(dead_code)]
     pub fn init(image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
         SkillInfo {
             image,
@@ -280,7 +280,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         ecs.log(format!("{} used {}.", player_name.as_str(), name));
     }
 
-    process_skill(ecs, invoker, name, skill, target);
+    process_skill(ecs, invoker, skill, target);
 
     spend_time(ecs, invoker, BASE_ACTION_COST);
     spend_ammo(ecs, invoker, skill);
@@ -293,7 +293,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
 }
 
-fn process_skill(ecs: &mut World, invoker: &Entity, skill_name: &str, skill: &SkillInfo, target: Option<Point>) {
+fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) {
     match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well

@@ -125,7 +125,7 @@ impl StatusStore {
 
     pub fn get_all(&self) -> Vec<StatusKind> {
         let mut names: Vec<u32> = self.store.keys().map(|x| (*x).into()).collect();
-        names.sort_by(|a, b| a.cmp(b));
+        names.sort();
         names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
     }
 }

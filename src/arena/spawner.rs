@@ -24,7 +24,7 @@ pub fn player(ecs: &mut World) {
         )))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
-        .with(SkillsComponent::init(&vec![]))
+        .with(SkillsComponent::init(&[]))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
