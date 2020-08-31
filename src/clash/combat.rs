@@ -160,7 +160,7 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
         }
     }
     if rolled_damage.options.contains(DamageOptions::ADD_CHARGE_STATUS) {
-        ecs.log(format!("{:?} crackles with static electricity", ecs.get_name(target)));
+        ecs.log(format!("{} crackles with static electricity", ecs.get_name(target).unwrap()));
         ecs.write_storage::<StatusComponent>()
             .grab_mut(*target)
             .status

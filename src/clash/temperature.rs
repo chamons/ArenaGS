@@ -86,11 +86,11 @@ fn check_temperature_state(ecs: &mut World, target: &Entity) {
         .toggle_trait(StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
 
     if did_freeze {
-        ecs.log(format!("{:?} freezes over", ecs.get_name(target)));
+        ecs.log(format!("{} freezes over", ecs.get_name(target).unwrap()));
     }
 
     if ecs.get_temperature(target).is_burning() && !ecs.has_status(target, StatusKind::Burning) {
-        ecs.log(format!("{:?} begins to burn", ecs.get_name(target)));
+        ecs.log(format!("{} begins to burn", ecs.get_name(target).unwrap()));
         ecs.write_storage::<StatusComponent>()
             .grab_mut(*target)
             .status
@@ -157,7 +157,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                         .status
                         .add_status(StatusKind::Burning, BURN_DURATION);
                 } else {
-                    ecs.log(format!("{:?} stops burning", ecs.get_name(&target.unwrap())));
+                    ecs.log(format!("{} stops burning", ecs.get_name(&target.unwrap()).unwrap()));
                 }
 
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
