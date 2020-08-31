@@ -164,7 +164,7 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
         ecs.write_storage::<StatusComponent>()
             .grab_mut(*target)
             .status
-            .add_status(StatusKind::StaticCharge, 100);
+            .add_status(StatusKind::StaticCharge, 300);
     }
     if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE) && ecs.has_status(target, StatusKind::StaticCharge) {
         const STATIC_CHARGE_DAMAGE: u32 = 4;

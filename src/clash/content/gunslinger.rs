@@ -75,7 +75,7 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    const AIMED_SHOT_BASE_RANGE: u32 = 4;
+    const AIMED_SHOT_BASE_RANGE: u32 = 7;
     const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
 
     m.insert(

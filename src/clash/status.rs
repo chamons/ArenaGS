@@ -25,6 +25,15 @@ pub enum StatusKind {
     TestTrait,
 }
 
+impl StatusKind {
+    fn description(&self) -> String {
+        match self {
+            StatusKind::StaticCharge => "Charge with Static".to_string(),
+            _ => format!("{:?}", self),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub enum StatusType {
     Status(TickTimer),
@@ -139,6 +148,16 @@ impl StatusStore {
         let mut names: Vec<u32> = self.store.keys().map(|x| (*x).into()).collect();
         names.sort();
         names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
+    }
+
+    pub fn get_all_status(&self) -> Vec<String> {
+        self.store
+            .iter()
+            .filter_map(|(k, v)| match v {
+                StatusType::Status(_) => Some(k.description()),
+                StatusType::Trait => None,
+            })
+            .collect()
     }
 }
 

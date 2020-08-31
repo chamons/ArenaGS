@@ -9,7 +9,7 @@ use specs::prelude::*;
 use super::{ContextData, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent};
+use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent, StatusComponent};
 
 pub struct InfoBarView {
     position: SDLPoint,
@@ -23,18 +23,18 @@ impl InfoBarView {
 
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let mut offset = 5;
-        self.render_character(canvas, ecs, find_player(&ecs), &mut offset)?;
+        self.render_character(canvas, ecs, find_player(&ecs), &mut offset, false)?;
         offset += 40;
 
         for e in find_enemies(&ecs) {
             self.small_text(canvas, "Enemy:", &mut offset)?;
-            self.render_character(canvas, ecs, e, &mut offset)?;
+            self.render_character(canvas, ecs, e, &mut offset, true)?;
             offset += 20;
         }
         Ok(())
     }
 
-    fn render_character(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, offset: &mut i32) -> BoxResult<()> {
+    fn render_character(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, offset: &mut i32, show_status_effect: bool) -> BoxResult<()> {
         let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
         let char_info = char_infos.grab(entity);
         let defenses = &char_info.character.defenses;
@@ -73,6 +73,16 @@ impl InfoBarView {
         let temperature = char_info.character.temperature.current_temperature();
         if temperature != 0 {
             self.small_text(canvas, format!("Temperature: {:.2}", temperature).as_str(), offset)?;
+        }
+
+        if show_status_effect {
+            let statuses = &ecs.read_storage::<StatusComponent>();
+            if let Some(status) = statuses.get(entity) {
+                let all = status.status.get_all_status();
+                if all.len() > 0 {
+                    self.small_text(canvas, &format!("Status: {}", status.status.get_all_status().join(" ")), offset)?;
+                }
+            }
         }
         Ok(())
     }
