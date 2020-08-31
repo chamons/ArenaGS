@@ -28,10 +28,12 @@ impl SkillBarView {
         let cache = Rc::new(IconCache::init(render_context, IconLoader::init()?, &all_skill_image_filesnames())?);
 
         for i in 0..get_skill_count(ecs) {
+            let i = skill_index_to_hotkey(i);
             let position = SDLPoint::new(
                 get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
                 position.y + BORDER_WIDTH + 1,
             );
+
             let view = SkillBarItemView::init(position, render_context, Rc::clone(&text), i, &cache)?;
             views.push(view);
         }
@@ -100,8 +102,9 @@ impl SkillBarItemView {
     ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 44, 44);
 
-        let hotkey = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::White)?;
-        let hotkey_inactive = text.render_texture(&render_context.canvas, &index.to_string(), FontSize::Bold, FontColor::Red)?;
+        let hotkey_number = skill_index_to_hotkey(index);
+        let hotkey = text.render_texture(&render_context.canvas, &hotkey_number.to_string(), FontSize::Bold, FontColor::White)?;
+        let hotkey_inactive = text.render_texture(&render_context.canvas, &hotkey_number.to_string(), FontSize::Bold, FontColor::Red)?;
 
         Ok(SkillBarItemView {
             rect,
@@ -155,5 +158,54 @@ impl View for SkillBarItemView {
         } else {
             None
         }
+    }
+}
+
+fn skill_index_to_hotkey(index: usize) -> usize {
+    assert!(index < 10);
+    if index == 9 {
+        0
+    } else {
+        index + 1
+    }
+}
+
+pub fn hotkey_to_skill_index(hotkey: usize) -> usize {
+    assert!(hotkey <= 10);
+    if hotkey == 0 {
+        9
+    } else {
+        hotkey - 1
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn skill_hotkey_mapping() {
+        assert_eq!(1, skill_index_to_hotkey(0));
+        assert_eq!(2, skill_index_to_hotkey(1));
+        assert_eq!(9, skill_index_to_hotkey(8));
+        assert_eq!(0, skill_index_to_hotkey(9));
+    }
+
+    #[test]
+    #[should_panic]
+    fn skill_hotkey_out_of_range() {
+        skill_index_to_hotkey(10);
+    }
+
+    #[test]
+    fn hotkey_to_skill_mapping() {
+        assert_eq!(0, hotkey_to_skill_index(1));
+        assert_eq!(6, hotkey_to_skill_index(7));
+        assert_eq!(9, hotkey_to_skill_index(0));
+    }
+
+    #[test]
+    fn hotkey_to_skill_out_of_range() {
+        hotkey_to_skill_index(10);
     }
 }

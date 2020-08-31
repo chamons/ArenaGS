@@ -83,7 +83,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
             Some(6),
             true,
-        ),
+        )
+        .with_ammo(AmmoKind::Bullets, 1),
     );
 
     m.insert(
