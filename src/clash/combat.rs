@@ -160,6 +160,7 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
         }
     }
     if rolled_damage.options.contains(DamageOptions::ADD_CHARGE_STATUS) {
+        ecs.log(format!("{:?} crackles with static electricity", ecs.get_name(target)));
         ecs.write_storage::<StatusComponent>()
             .grab_mut(*target)
             .status
@@ -524,6 +525,7 @@ mod tests {
         );
         wait_for_animations(&mut ecs);
 
-        assert!(ecs.has_status(&target, StatusKind::StaticCharge))
+        assert!(ecs.has_status(&target, StatusKind::StaticCharge));
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("crackles with static electricity"));
     }
 }

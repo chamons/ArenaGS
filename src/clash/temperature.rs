@@ -79,12 +79,18 @@ impl Temperature {
 }
 
 fn check_temperature_state(ecs: &mut World, target: &Entity) {
-    ecs.write_storage::<StatusComponent>()
+    let did_freeze = ecs
+        .write_storage::<StatusComponent>()
         .grab_mut(*target)
         .status
         .toggle_trait(StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
 
+    if did_freeze {
+        ecs.log(format!("{:?} freezes over", ecs.get_name(target)));
+    }
+
     if ecs.get_temperature(target).is_burning() && !ecs.has_status(target, StatusKind::Burning) {
+        ecs.log(format!("{:?} begins to burn", ecs.get_name(target)));
         ecs.write_storage::<StatusComponent>()
             .grab_mut(*target)
             .status
@@ -143,6 +149,17 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         EventKind::Damage(rolled_damage) => apply_temperature_damage_delta(ecs, &target.unwrap(), rolled_damage),
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
+                // Order matter here - must re-apply burning status before apply damage,
+                // else we'll repeat "began burning" log
+                if ecs.get_temperature(&target.unwrap()).is_burning() {
+                    ecs.write_storage::<StatusComponent>()
+                        .grab_mut(target.unwrap())
+                        .status
+                        .add_status(StatusKind::Burning, BURN_DURATION);
+                } else {
+                    ecs.log(format!("{:?} stops burning", ecs.get_name(&target.unwrap())));
+                }
+
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
                 apply_damage_to_character(
                     ecs,
@@ -150,13 +167,6 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                     &target.unwrap(),
                     None,
                 );
-
-                if ecs.get_temperature(&target.unwrap()).is_burning() {
-                    ecs.write_storage::<StatusComponent>()
-                        .grab_mut(target.unwrap())
-                        .status
-                        .add_status(StatusKind::Burning, BURN_DURATION);
-                }
             }
         }
         _ => {}
@@ -214,6 +224,7 @@ mod tests {
 
         let starting_health = ecs.get_defenses(&player).health;
         add_ticks(&mut ecs, 100);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
         assert!(ecs.has_status(&player, StatusKind::Burning));
         assert!(ecs.get_defenses(&player).health < starting_health);
     }
@@ -228,6 +239,8 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
         assert!(!ecs.has_status(&player, StatusKind::Burning));
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("stops burning"));
     }
 
     #[test]
@@ -238,6 +251,7 @@ mod tests {
 
         add_ticks(&mut ecs, 100);
         assert!(ecs.has_status(&player, StatusKind::Frozen));
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("freezes over"));
     }
 
     #[test]
@@ -270,6 +284,7 @@ mod tests {
             wait_for_animations(&mut ecs);
         }
         assert!(ecs.get_temperature(&target).current_temperature > TEMPERATURE_BURN_POINT);
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
     }
 
     #[test]

@@ -77,7 +77,7 @@ impl StatusStore {
         }
     }
 
-    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) {
+    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
             _ => {}
@@ -85,11 +85,13 @@ impl StatusStore {
 
         if state {
             self.add_trait(kind);
+            return true;
         } else {
             if self.has(kind) {
                 self.remove_trait(kind);
             }
         }
+        false
     }
 
     pub fn has(&self, kind: StatusKind) -> bool {

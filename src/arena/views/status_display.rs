@@ -85,11 +85,19 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
         StatusKind::Ignite => "b_31_1.png",
         StatusKind::Cyclone => "b_40_02.png",
         StatusKind::Magnum => "b_30.png",
+        StatusKind::StaticCharge => "SpellBook06_89.png",
         #[cfg(test)]
         _ => "",
     }
 }
 
 pub fn all_icon_filenames() -> &'static [&'static str] {
-    &["SpellBook08_130.png", "SpellBook08_111.png", "b_31_1.png", "b_40_02.png", "b_30.png"]
+    &[
+        "SpellBook08_130.png",
+        "SpellBook08_111.png",
+        "b_31_1.png",
+        "b_40_02.png",
+        "b_30.png",
+        "SpellBook06_89.png",
+    ]
 }
