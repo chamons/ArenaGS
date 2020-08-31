@@ -144,7 +144,12 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
                 const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
-                apply_damage_to_character(ecs, Damage::init(TEMPERATURE_DAMAGE_PER_TICK), &target.unwrap(), None);
+                apply_damage_to_character(
+                    ecs,
+                    Damage::init(TEMPERATURE_DAMAGE_PER_TICK).with_option(DamageOptions::PIERCE_DEFENSES),
+                    &target.unwrap(),
+                    None,
+                );
 
                 if ecs.get_temperature(&target.unwrap()).is_burning() {
                     ecs.write_storage::<StatusComponent>()
@@ -203,6 +208,9 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
         set_temperature(&mut ecs, player, TEMPERATURE_BURN_POINT + 20);
+
+        // Set armor so high burning must pierce to do actual damage
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.armor = 100;
 
         let starting_health = ecs.get_defenses(&player).health;
         add_ticks(&mut ecs, 100);

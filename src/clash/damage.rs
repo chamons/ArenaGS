@@ -10,6 +10,7 @@ bitflags! {
         const LARGE_TEMPERATURE_DELTA = 0b00000100;
         const KNOCKBACK =               0b00001000;
         const ADD_CHARGE_STATUS =       0b00010000;
+        const PIERCE_DEFENSES   =       0b00100000;
     }
 }
 
