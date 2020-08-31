@@ -28,7 +28,6 @@ impl SkillBarView {
         let cache = Rc::new(IconCache::init(render_context, IconLoader::init()?, &all_skill_image_filesnames())?);
 
         for i in 0..get_skill_count(ecs) {
-            let i = skill_index_to_hotkey(i);
             let position = SDLPoint::new(
                 get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
                 position.y + BORDER_WIDTH + 1,

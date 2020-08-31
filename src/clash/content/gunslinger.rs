@@ -75,13 +75,16 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+    const AIMED_SHOT_BASE_RANGE: u32 = 6;
+    const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
+
     m.insert(
         "Aimed Shot",
         SkillInfo::init_with_distance(
             Some("SpellBook01_63.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
-            Some(6),
+            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::Bullet),
+            Some(AIMED_SHOT_BASE_RANGE),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1),
@@ -92,10 +95,11 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("SpellBook01_37.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
-            Some(6),
+            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::FireBullet),
+            Some(AIMED_SHOT_BASE_RANGE),
             true,
-        ),
+        )
+        .with_ammo(AmmoKind::Bullets, 1),
     );
 
     m.insert(
@@ -103,10 +107,11 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("SpellBook06_46.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
-            Some(6),
+            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::AirBullet),
+            Some(AIMED_SHOT_BASE_RANGE),
             true,
-        ),
+        )
+        .with_ammo(AmmoKind::Bullets, 1),
     );
 
     m.insert("Swap Ammo Kind", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));

@@ -12,8 +12,10 @@ pub enum FieldKind {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum BoltKind {
-    Bullet,
     Fire,
+    Bullet,
+    FireBullet,
+    AirBullet,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
