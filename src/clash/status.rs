@@ -62,6 +62,15 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Trait);
     }
 
+    pub fn remove_status(&mut self, kind: StatusKind) {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(_)) => {}
+            None => panic!("Status remove of status {:?} but not found?", kind),
+            Some(StatusType::Trait) => panic!("Status removal of status {:?} but already as a trait?", kind),
+        };
+        self.store.remove(&kind);
+    }
+
     pub fn remove_trait(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status removal of trait {:?} but already as a status?", kind),
@@ -304,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn rmeove_trait_found() {
+    fn remove_trait_found() {
         let mut store = StatusStore::init();
         store.add_trait(StatusKind::TestTrait);
         store.remove_trait_if_found(StatusKind::TestTrait);
@@ -312,9 +321,32 @@ mod tests {
     }
 
     #[test]
-    fn rmeove_trait_missing() {
+    fn remove_trait_missing() {
         let mut store = StatusStore::init();
         store.remove_trait_if_found(StatusKind::TestTrait);
         assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn remove_status_found() {
+        let mut store = StatusStore::init();
+        store.add_status(StatusKind::TestStatus, 100);
+        store.remove_status(StatusKind::TestStatus);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_status_missing() {
+        let mut store = StatusStore::init();
+        store.remove_status(StatusKind::TestStatus);
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_status_wrong_kind() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestStatus);
+        store.remove_status(StatusKind::TestStatus);
     }
 }
