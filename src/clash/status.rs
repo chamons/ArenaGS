@@ -17,6 +17,7 @@ pub enum StatusKind {
     Magnum,
     Ignite,
     Cyclone,
+    StaticCharge,
 
     #[cfg(test)]
     TestStatus,

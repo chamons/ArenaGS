@@ -5,9 +5,11 @@ use super::Strength;
 bitflags! {
     #[derive(Serialize, Deserialize)]
     pub struct DamageOptions: u32 {
-        const RAISE_TEMPERATURE = 0b00000001;
-        const LOWER_TEMPERATURE = 0b00000010;
-        const KNOCKBACK =         0b00000100;
+        const RAISE_TEMPERATURE =       0b00000001;
+        const LOWER_TEMPERATURE =       0b00000010;
+        const LARGE_TEMPERATURE_DELTA = 0b00000100;
+        const KNOCKBACK =               0b00001000;
+        const ADD_CHARGE_STATUS =       0b00010000;
     }
 }
 
@@ -17,7 +19,6 @@ pub struct Damage {
     pub options: DamageOptions,
 }
 
-#[allow(dead_code)]
 impl Damage {
     pub fn init(dice: u32) -> Damage {
         Damage {
@@ -26,18 +27,8 @@ impl Damage {
         }
     }
 
-    pub fn with_raise_temp(mut self) -> Damage {
-        self.options.insert(DamageOptions::RAISE_TEMPERATURE);
-        self
-    }
-
-    pub fn with_lower_temp(mut self) -> Damage {
-        self.options.insert(DamageOptions::LOWER_TEMPERATURE);
-        self
-    }
-
-    pub fn with_knockback(mut self) -> Damage {
-        self.options.insert(DamageOptions::KNOCKBACK);
+    pub fn with_option(mut self, option: DamageOptions) -> Damage {
+        self.options.insert(option);
         self
     }
 

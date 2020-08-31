@@ -123,11 +123,13 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damag
                 }
             };
 
+            let mut amount = rolled_damage.amount;
+            if rolled_damage.options.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
+                amount *= 4;
+            }
+
             if let Some(direction) = direction {
-                character_info
-                    .character
-                    .temperature
-                    .change_from_incoming_damage(rolled_damage.amount, direction);
+                character_info.character.temperature.change_from_incoming_damage(amount, direction);
             }
         }
         // change_from_incoming_damage could have changed burning/frozen
@@ -250,9 +252,53 @@ mod tests {
         set_health(&mut ecs, target, 200);
 
         for _ in 0..4 {
-            begin_bolt(&mut ecs, &player, Point::init(3, 2), Damage::init(10).with_raise_temp(), BoltKind::Fire);
+            begin_bolt(
+                &mut ecs,
+                &player,
+                Point::init(3, 2),
+                Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
+                BoltKind::Fire,
+            );
             wait_for_animations(&mut ecs);
         }
         assert!(ecs.get_temperature(&target).current_temperature > TEMPERATURE_BURN_POINT);
+    }
+
+    #[test]
+    fn large_delta_raises_more() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(3, 2, 0).build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 3, 2);
+        // Prevent target from dying
+        set_health(&mut ecs, target, 200);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(3, 2),
+            Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        let basic_delta = ecs.get_temperature(&target).current_temperature;
+        ecs.write_storage::<CharacterInfoComponent>()
+            .grab_mut(target)
+            .character
+            .temperature
+            .current_temperature = 0;
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(3, 2),
+            Damage::init(10)
+                .with_option(DamageOptions::RAISE_TEMPERATURE)
+                .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+        let large_delta = ecs.get_temperature(&target).current_temperature;
+        assert!(large_delta > basic_delta * 2);
     }
 }

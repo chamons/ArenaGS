@@ -75,7 +75,7 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    const AIMED_SHOT_BASE_RANGE: u32 = 6;
+    const AIMED_SHOT_BASE_RANGE: u32 = 4;
     const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
 
     m.insert(
@@ -83,8 +83,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("SpellBook01_63.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::Bullet),
-            Some(AIMED_SHOT_BASE_RANGE),
+            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH + 2), BoltKind::Bullet),
+            Some(AIMED_SHOT_BASE_RANGE - 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1),
@@ -95,7 +95,12 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("SpellBook01_37.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::FireBullet),
+            SkillEffect::RangedAttack(
+                Damage::init(AIMED_SHOT_BASE_STRENGTH)
+                    .with_option(DamageOptions::RAISE_TEMPERATURE)
+                    .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
+                BoltKind::FireBullet,
+            ),
             Some(AIMED_SHOT_BASE_RANGE),
             true,
         )
@@ -107,8 +112,11 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("SpellBook06_46.png"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH), BoltKind::AirBullet),
-            Some(AIMED_SHOT_BASE_RANGE),
+            SkillEffect::RangedAttack(
+                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                BoltKind::AirBullet,
+            ),
+            Some(AIMED_SHOT_BASE_RANGE + 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1),
