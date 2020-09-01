@@ -137,7 +137,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some("SpellBook06_22.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(TRIPLE_SHOT_BASE_STRENGTH).with_option(DamageOptions::TRIPLE_SHOT),
+                Damage::init(TRIPLE_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::TRIPLE_SHOT),
                 BoltKind::Bullet,
             ),
             Some(TRIPLE_SHOT_BASE_RANGE),
@@ -158,7 +158,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
                     .with_option(DamageOptions::RAISE_TEMPERATURE),
                 BoltKind::FireBullet,
             ),
-            Some(TRIPLE_SHOT_BASE_RANGE - 1),
+            Some(TRIPLE_SHOT_BASE_RANGE + 1),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 3)
@@ -176,7 +176,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
                     .with_option(DamageOptions::CONSUMES_CHARGE),
                 BoltKind::AirBullet,
             ),
-            Some(TRIPLE_SHOT_BASE_RANGE),
+            Some(TRIPLE_SHOT_BASE_RANGE + 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 3)
