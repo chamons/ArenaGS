@@ -79,7 +79,7 @@ impl InfoBarView {
             let statuses = &ecs.read_storage::<StatusComponent>();
             if let Some(status) = statuses.get(entity) {
                 let all = status.status.get_all_status();
-                if all.len() > 0 {
+                if !all.is_empty() {
                     self.small_text(canvas, &format!("Status: {}", status.status.get_all_status().join(" ")), offset)?;
                 }
             }
