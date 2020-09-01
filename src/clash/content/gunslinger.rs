@@ -87,7 +87,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(AIMED_SHOT_BASE_RANGE - 2),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1),
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5),
     );
 
     m.insert(
@@ -104,7 +105,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(AIMED_SHOT_BASE_RANGE),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1),
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5),
     );
 
     m.insert(
@@ -119,7 +121,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(AIMED_SHOT_BASE_RANGE + 2),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1),
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5),
     );
 
     m.insert("Swap Ammo Kind", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
