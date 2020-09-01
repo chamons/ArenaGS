@@ -177,12 +177,25 @@ impl SkillInfo {
         usages.iter().filter_map(|x| *x).min()
     }
 
-    pub fn is_usable(&self, ecs: &World, entity: &Entity) -> bool {
-        match self.get_remaining_usages(ecs, entity) {
-            Some(amount) => amount > 0,
-            None => true,
+    pub fn is_usable(&self, ecs: &World, entity: &Entity) -> UsableResults {
+        if self.get_focus_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::LacksFocus;
         }
+        if self.get_exhaustion_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::Exhaustion;
+        }
+        if self.get_ammo_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::LacksAmmo;
+        }
+        UsableResults::Usable
     }
+}
+
+pub enum UsableResults {
+    Usable,
+    LacksAmmo,
+    Exhaustion,
+    LacksFocus,
 }
 
 lazy_static! {
@@ -324,7 +337,7 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         Some(ammo_info) => {
             let kind = ammo_info.kind;
             let current_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).ammo[&kind] };
-            set_ammo(ecs, invoker, kind, current_ammo - 1);
+            set_ammo(ecs, invoker, kind, current_ammo - ammo_info.usage);
         }
         None => {}
     }
@@ -584,6 +597,16 @@ mod tests {
         }
 
         assert_eq!(false, can_invoke_skill(&mut ecs, &player, &skill, None));
+    }
+
+    #[test]
+    fn skills_with_multiple_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 6);
+
+        invoke_skill(&mut ecs, &player, "TestMultiAmmo", None);
+        assert_eq!(1, get_skill("TestMultiAmmo").get_remaining_usages(&ecs, &player).unwrap());
     }
 
     #[test]

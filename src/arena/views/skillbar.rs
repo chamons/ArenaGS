@@ -11,7 +11,7 @@ use super::super::battle_actions;
 use super::{ContextData, HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent};
+use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
 
 pub struct SkillBarView {
     position: SDLPoint,
@@ -118,13 +118,13 @@ impl SkillBarItemView {
         if let Some(skill_name) = battle_actions::get_skill_name(ecs, self.index) {
             let skill = get_skill(&skill_name);
 
-            if skill.is_usable(ecs, &find_player(&ecs)) {
-                Some((&self.hotkey, self.icons.get(&skill.image.unwrap()), false))
-            } else if let Some(alt_skill_name) = &skill.alternate {
-                let alternate_skill = get_skill(&alt_skill_name);
-                Some((&self.hotkey, self.icons.get(&alternate_skill.image.unwrap()), false))
-            } else {
-                Some((&self.hotkey_inactive, self.icons.get(&skill.image.unwrap()), true))
+            match skill.is_usable(ecs, &find_player(&ecs)) {
+                UsableResults::LacksAmmo if skill.alternate.is_some() => {
+                    let alternate_skill = get_skill(skill.alternate.as_ref().unwrap());
+                    Some((&self.hotkey, self.icons.get(&alternate_skill.image.unwrap()), false))
+                }
+                UsableResults::Usable => Some((&self.hotkey, self.icons.get(&skill.image.unwrap()), false)),
+                _ => Some((&self.hotkey_inactive, self.icons.get(&skill.image.unwrap()), true)),
             }
         } else {
             None

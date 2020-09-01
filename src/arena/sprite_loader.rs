@@ -5,6 +5,7 @@ use enum_iterator::IntoEnumIterator;
 use sdl2::rect::Point as SDLPoint;
 
 use super::components::*;
+use super::views::TILE_SIZE;
 use crate::after_image::*;
 use crate::atlas::BoxResult;
 
@@ -49,19 +50,15 @@ impl SpriteLoader {
                     1.5,
                 )?),
                 SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
-                SpriteKinds::Bullet => Box::new(Bolt::init(
-                    render_context,
-                    &SpriteFolderDescription::init_without_set(&folder, "weapons_2"),
-                    6,
-                    1,
-                )?),
-                SpriteKinds::FireBullet => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
-                SpriteKinds::AirBullet => Box::new(Bolt::init(
-                    render_context,
-                    &SpriteFolderDescription::init_without_set(&folder, "weapons_2"),
-                    17,
-                    2,
-                )?),
+                SpriteKinds::Bullet => Box::new(
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "weapons_2"), 6, 1)?.with_render_offset(bullet_offset()),
+                ),
+                SpriteKinds::FireBullet => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?.with_render_offset(bullet_offset()))
+                }
+                SpriteKinds::AirBullet => Box::new(
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "weapons_2"), 17, 2)?.with_render_offset(bullet_offset()),
+                ),
                 SpriteKinds::Bomb => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "object"), 4, 2)?),
                 SpriteKinds::Explosion => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "explosion"), 11, 8)?
@@ -73,4 +70,8 @@ impl SpriteLoader {
         }
         Ok(sprites)
     }
+}
+
+fn bullet_offset() -> SDLPoint {
+    SDLPoint::new(0, (TILE_SIZE / 2) as i32)
 }

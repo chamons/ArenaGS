@@ -20,12 +20,9 @@ pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
 pub fn get_current_skill(ecs: &World, skill_name: &str) -> String {
     let skill = get_skill(skill_name);
 
-    if skill.is_usable(ecs, &find_player(&ecs)) {
-        skill_name.to_string()
-    } else if let Some(alt_skill) = &skill.alternate {
-        alt_skill.to_string()
-    } else {
-        skill_name.to_string()
+    match skill.is_usable(ecs, &find_player(&ecs)) {
+        UsableResults::LacksAmmo if skill.alternate.is_some() => skill.alternate.as_ref().unwrap().to_string(),
+        _ => skill_name.to_string(),
     }
 }
 
@@ -36,8 +33,9 @@ pub fn select_skill(ecs: &mut World, name: &str) {
 
     let skill = get_skill(name);
 
-    if !skill.is_usable(ecs, &find_player(&ecs)) {
-        return;
+    match skill.is_usable(ecs, &find_player(&ecs)) {
+        UsableResults::Usable => {}
+        _ => return,
     }
 
     let target_required = skill.target;
