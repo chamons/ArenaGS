@@ -38,7 +38,7 @@ pub fn bird_monster(ecs: &mut World) {
         .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Giant Bird",
-            Defenses::just_health(25),
+            Defenses::just_health(150),
             Temperature::init(),
         )))
         .with(StatusComponent::init())

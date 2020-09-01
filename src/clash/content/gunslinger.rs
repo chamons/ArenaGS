@@ -13,9 +13,9 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
 
 fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Swap Ammo Kind"],
-        TargetAmmo::Ignite => vec!["Explosive Blast", "Swap Ammo Kind"],
-        TargetAmmo::Cyclone => vec!["Air Lance", "Swap Ammo Kind"],
+        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Swap Ammo"],
+        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Swap Ammo"],
+        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Swap Ammo"],
     }
 }
 
@@ -81,14 +81,15 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
         "Aimed Shot",
         SkillInfo::init_with_distance(
-            Some("SpellBook01_63.png"),
+            Some("gun_06_b.PNG"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH + 2), BoltKind::Bullet),
             Some(AIMED_SHOT_BASE_RANGE - 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5),
+        .with_focus_use(0.5)
+        .with_alternate("Reload"),
     );
 
     m.insert(
@@ -106,7 +107,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5),
+        .with_focus_use(0.5)
+        .with_alternate("Reload"),
     );
 
     m.insert(
@@ -122,10 +124,70 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5),
+        .with_focus_use(0.5)
+        .with_alternate("Reload"),
     );
 
-    m.insert("Swap Ammo Kind", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
+    const TRIPLE_SHOT_BASE_RANGE: u32 = 4;
+    const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
+
+    m.insert(
+        "Triple Shot",
+        SkillInfo::init_with_distance(
+            Some("SpellBook06_22.png"),
+            TargetType::Enemy,
+            SkillEffect::RangedAttack(
+                Damage::init(TRIPLE_SHOT_BASE_STRENGTH).with_option(DamageOptions::TRIPLE_SHOT),
+                BoltKind::Bullet,
+            ),
+            Some(TRIPLE_SHOT_BASE_RANGE),
+            true,
+        )
+        .with_ammo(AmmoKind::Bullets, 3)
+        .with_alternate("Reload"),
+    );
+
+    m.insert(
+        "Dragon's Breath",
+        SkillInfo::init_with_distance(
+            Some("r_16.png"),
+            TargetType::Enemy,
+            SkillEffect::RangedAttack(
+                Damage::init(TRIPLE_SHOT_BASE_STRENGTH)
+                    .with_option(DamageOptions::TRIPLE_SHOT)
+                    .with_option(DamageOptions::RAISE_TEMPERATURE),
+                BoltKind::FireBullet,
+            ),
+            Some(TRIPLE_SHOT_BASE_RANGE - 1),
+            true,
+        )
+        .with_ammo(AmmoKind::Bullets, 3)
+        .with_alternate("Reload"),
+    );
+
+    m.insert(
+        "Tornado Shot",
+        SkillInfo::init_with_distance(
+            Some("SpellBookPage09_66.png"),
+            TargetType::Enemy,
+            SkillEffect::RangedAttack(
+                Damage::init(TRIPLE_SHOT_BASE_RANGE)
+                    .with_option(DamageOptions::TRIPLE_SHOT)
+                    .with_option(DamageOptions::CONSUMES_CHARGE),
+                BoltKind::AirBullet,
+            ),
+            Some(TRIPLE_SHOT_BASE_RANGE),
+            true,
+        )
+        .with_ammo(AmmoKind::Bullets, 3)
+        .with_alternate("Reload"),
+    );
+
+    m.insert(
+        "Reload",
+        SkillInfo::init(Some("b_45.png"), TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
+    );
+    m.insert("Swap Ammo", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
 }
 
 #[cfg(test)]
@@ -140,7 +202,7 @@ mod tests {
         setup_gunslinger(&mut ecs, &player);
 
         assert!(ecs.has_status(&player, StatusKind::Magnum));
-        assert_eq!(2, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
+        assert_eq!(3, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
     }
 
     #[test]

@@ -38,6 +38,10 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "TestAmmo",
         SkillInfo::init(None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1),
     );
+    m.insert(
+        "TestMultiAmmo",
+        SkillInfo::init(None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 3),
+    );
     m.insert("TestReload", SkillInfo::init(None, TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
     m.insert(
         "TestExhaustion",

@@ -177,12 +177,25 @@ impl SkillInfo {
         usages.iter().filter_map(|x| *x).min()
     }
 
-    pub fn is_usable(&self, ecs: &World, entity: &Entity) -> bool {
-        match self.get_remaining_usages(ecs, entity) {
-            Some(amount) => amount > 0,
-            None => true,
+    pub fn is_usable(&self, ecs: &World, entity: &Entity) -> UsableResults {
+        if self.get_focus_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::LacksFocus;
         }
+        if self.get_exhaustion_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::Exhaustion;
+        }
+        if self.get_ammo_usage(ecs, entity).unwrap_or(1) == 0 {
+            return UsableResults::LacksAmmo;
+        }
+        UsableResults::Usable
     }
+}
+
+pub enum UsableResults {
+    Usable,
+    LacksAmmo,
+    Exhaustion,
+    LacksFocus,
 }
 
 lazy_static! {
