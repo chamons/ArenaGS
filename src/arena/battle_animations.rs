@@ -34,7 +34,7 @@ pub fn projectile_animation(ecs: &mut World, projectile: Entity, sprite: SpriteK
     let target_position = ecs.read_storage::<AttackComponent>().grab(projectile).attack.target;
 
     let path_length = source_position.distance_to(target_position).unwrap() as u64;
-    let animation_length = if frame < 4 { 4 * path_length } else { 2 * path_length };
+    let animation_length = if frame < 4 { 6 * path_length } else { 3 * path_length };
 
     let animation = Animation::movement(source_position.origin, target_position, frame, animation_length).with_post_event(post_event, Some(projectile));
     ecs.shovel(projectile, AnimationComponent::init(animation));
