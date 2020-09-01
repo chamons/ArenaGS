@@ -12,8 +12,10 @@ pub enum FieldKind {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum BoltKind {
-    Bullet,
     Fire,
+    Bullet,
+    FireBullet,
+    AirBullet,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -156,6 +158,26 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
                 }
             }
         }
+    }
+    if rolled_damage.options.contains(DamageOptions::ADD_CHARGE_STATUS) {
+        ecs.log(format!("{} crackles with static electricity", ecs.get_name(target).unwrap()));
+        ecs.write_storage::<StatusComponent>()
+            .grab_mut(*target)
+            .status
+            .add_status(StatusKind::StaticCharge, 300);
+    }
+    if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE) && ecs.has_status(target, StatusKind::StaticCharge) {
+        const STATIC_CHARGE_DAMAGE: u32 = 4;
+        apply_damage_to_character(
+            ecs,
+            Damage::init(STATIC_CHARGE_DAMAGE).with_option(DamageOptions::PIERCE_DEFENSES),
+            target,
+            None,
+        );
+        ecs.write_storage::<StatusComponent>()
+            .grab_mut(*target)
+            .status
+            .remove_status(StatusKind::StaticCharge);
     }
 
     ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
@@ -453,7 +475,13 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
-        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 3),
+            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 4));
     }
@@ -463,7 +491,13 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 1, 100).with_character(2, 0, 0).with_map().build();
         let player = find_at(&mut ecs, 2, 1);
         let target = find_at(&mut ecs, 2, 0);
-        begin_bolt(&mut ecs, &player, Point::init(2, 0), Damage::init(1).with_knockback(), BoltKind::Fire);
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 0),
+            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 0));
     }
@@ -478,8 +512,76 @@ mod tests {
             .build();
         let player = find_at(&mut ecs, 2, 2);
         let target = find_at(&mut ecs, 2, 3);
-        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(1).with_knockback(), BoltKind::Fire);
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 3),
+            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &target, Point::init(2, 3));
+    }
+
+    #[test]
+    fn add_charge_on_hit() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 3),
+            Damage::init(1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.has_status(&target, StatusKind::StaticCharge));
+        assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("crackles with static electricity"));
+    }
+
+    #[test]
+    fn consumes_charge_for_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+
+        ecs.write_storage::<StatusComponent>()
+            .grab_mut(target)
+            .status
+            .add_status(StatusKind::StaticCharge, 100);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 3),
+            Damage::init(0).with_option(DamageOptions::CONSUMES_CHARGE),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(false, ecs.has_status(&target, StatusKind::StaticCharge));
+        assert_ne!(ecs.get_defenses(&target).max_health, ecs.get_defenses(&target).health);
+    }
+
+    #[test]
+    fn consumes_no_status_for_no_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&mut ecs, 2, 2);
+        let target = find_at(&mut ecs, 2, 3);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 3),
+            Damage::init(0).with_option(DamageOptions::CONSUMES_CHARGE),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(false, ecs.has_status(&target, StatusKind::StaticCharge));
+        assert_eq!(ecs.get_defenses(&target).max_health, ecs.get_defenses(&target).health);
     }
 }

@@ -49,11 +49,18 @@ impl SpriteLoader {
                     1.5,
                 )?),
                 SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
-                SpriteKinds::BulletBolt => Box::new(Bolt::init(
+                SpriteKinds::Bullet => Box::new(Bolt::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "weapons_2"),
                     6,
                     1,
+                )?),
+                SpriteKinds::FireBullet => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
+                SpriteKinds::AirBullet => Box::new(Bolt::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "weapons_2"),
+                    17,
+                    2,
                 )?),
                 SpriteKinds::Bomb => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "object"), 4, 2)?),
                 SpriteKinds::Explosion => Box::new(

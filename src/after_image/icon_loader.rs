@@ -13,9 +13,9 @@ pub struct IconLoader {
 }
 
 impl IconLoader {
-    pub fn init(subfolder: &str) -> BoxResult<IconLoader> {
+    pub fn init() -> BoxResult<IconLoader> {
         let mut images = HashMap::new();
-        let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").join(subfolder).stringify_owned();
+        let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").stringify_owned();
         find_images(&mut images, &folder)?;
 
         Ok(IconLoader { images })

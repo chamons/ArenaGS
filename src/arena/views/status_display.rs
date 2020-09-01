@@ -17,7 +17,7 @@ pub struct StatusBarView {
 
 impl StatusBarView {
     pub fn init(render_context: &RenderContext, position: SDLPoint) -> BoxResult<StatusBarView> {
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init("glass")?, all_icon_names())?);
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init()?, all_icon_filenames())?);
         let mut views = vec![];
         for i in 0..10 {
             views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 58, position.y()), &cache));
@@ -82,13 +82,22 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
     match kind {
         StatusKind::Burning => "SpellBook08_130.png",
         StatusKind::Frozen => "SpellBook08_111.png",
-        StatusKind::FireAmmo => "SpellBook08_103.png",
-        StatusKind::IceAmmo => "SpellBook08_70.png",
+        StatusKind::Ignite => "b_31_1.png",
+        StatusKind::Cyclone => "b_40_02.png",
+        StatusKind::Magnum => "b_30.png",
+        StatusKind::StaticCharge => "SpellBook06_89.png",
         #[cfg(test)]
         _ => "",
     }
 }
 
-pub fn all_icon_names() -> &'static [&'static str] {
-    &["SpellBook08_130.png", "SpellBook08_117.png", "SpellBook08_111.png"]
+pub fn all_icon_filenames() -> &'static [&'static str] {
+    &[
+        "SpellBook08_130.png",
+        "SpellBook08_111.png",
+        "b_31_1.png",
+        "b_40_02.png",
+        "b_30.png",
+        "SpellBook06_89.png",
+    ]
 }

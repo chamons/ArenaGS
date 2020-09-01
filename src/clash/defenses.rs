@@ -4,7 +4,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{CharacterInfoComponent, Damage, EventKind, RolledDamage, Strength};
+use super::{CharacterInfoComponent, Damage, DamageOptions, EventKind, RolledDamage, Strength};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
@@ -40,18 +40,27 @@ impl Defenses {
         }
     }
 
+    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, rng: &mut R) -> u32 {
+        if !damage.options.contains(DamageOptions::PIERCE_DEFENSES) {
+            // Apply dodge first, burning charges up to matching dice
+            let dodge_to_apply = cmp::min(self.dodge, damage.dice());
+            self.dodge -= dodge_to_apply;
+            let dodge_value = Strength::init(dodge_to_apply).roll(rng);
+            let (_, damage_value) = apply_with_remain(damage_value, dodge_value);
+
+            // Then soak with armor, all of it applies
+            let armor_value = Strength::init(self.armor).roll(rng);
+            let (_, damage_value) = apply_with_remain(damage_value, armor_value);
+            damage_value
+        } else {
+            damage_value
+        }
+    }
+
     pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> RolledDamage {
         let damage_value = damage.amount.roll(rng);
 
-        // Apply dodge first, burning charges up to matching dice
-        let dodge_to_apply = cmp::min(self.dodge, damage.dice());
-        self.dodge -= dodge_to_apply;
-        let dodge_value = Strength::init(dodge_to_apply).roll(rng);
-        let (_, damage_value) = apply_with_remain(damage_value, dodge_value);
-
-        // Then soak with armor, all of it applies
-        let armor_value = Strength::init(self.armor).roll(rng);
-        let (_, damage_value) = apply_with_remain(damage_value, armor_value);
+        let damage_value = self.apply_defenses(damage_value, damage, rng);
 
         // Report damage after mitigation applied
         let total_applied_damage = damage_value;

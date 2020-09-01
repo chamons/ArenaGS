@@ -14,13 +14,24 @@ use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
 pub enum StatusKind {
     Burning, // Retriggers as long as temperature is high enough
     Frozen,
-    FireAmmo,
-    IceAmmo,
+    Magnum,
+    Ignite,
+    Cyclone,
+    StaticCharge,
 
     #[cfg(test)]
     TestStatus,
     #[cfg(test)]
     TestTrait,
+}
+
+impl StatusKind {
+    fn description(&self) -> String {
+        match self {
+            StatusKind::StaticCharge => "Charge with Static".to_string(),
+            _ => format!("{:?}", self),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -60,6 +71,15 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Trait);
     }
 
+    pub fn remove_status(&mut self, kind: StatusKind) {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(_)) => {}
+            None => panic!("Status remove of status {:?} but not found?", kind),
+            Some(StatusType::Trait) => panic!("Status removal of status {:?} but already as a trait?", kind),
+        };
+        self.store.remove(&kind);
+    }
+
     pub fn remove_trait(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status removal of trait {:?} but already as a status?", kind),
@@ -69,7 +89,13 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) {
+    pub fn remove_trait_if_found(&mut self, kind: StatusKind) {
+        if self.has(kind) {
+            self.remove_trait(kind);
+        }
+    }
+
+    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
             _ => {}
@@ -77,11 +103,13 @@ impl StatusStore {
 
         if state {
             self.add_trait(kind);
+            return true;
         } else {
             if self.has(kind) {
                 self.remove_trait(kind);
             }
         }
+        false
     }
 
     pub fn has(&self, kind: StatusKind) -> bool {
@@ -118,8 +146,18 @@ impl StatusStore {
 
     pub fn get_all(&self) -> Vec<StatusKind> {
         let mut names: Vec<u32> = self.store.keys().map(|x| (*x).into()).collect();
-        names.sort_by(|a, b| a.cmp(b));
+        names.sort();
         names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
+    }
+
+    pub fn get_all_status(&self) -> Vec<String> {
+        self.store
+            .iter()
+            .filter_map(|(k, v)| match v {
+                StatusType::Status(_) => Some(k.description()),
+                StatusType::Trait => None,
+            })
+            .collect()
     }
 }
 
@@ -291,5 +329,43 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_status(StatusKind::TestStatus, 100);
         store.toggle_trait(StatusKind::TestStatus, false);
+    }
+
+    #[test]
+    fn remove_trait_found() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestTrait);
+        store.remove_trait_if_found(StatusKind::TestTrait);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn remove_trait_missing() {
+        let mut store = StatusStore::init();
+        store.remove_trait_if_found(StatusKind::TestTrait);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    fn remove_status_found() {
+        let mut store = StatusStore::init();
+        store.add_status(StatusKind::TestStatus, 100);
+        store.remove_status(StatusKind::TestStatus);
+        assert_eq!(false, store.has(StatusKind::TestTrait));
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_status_missing() {
+        let mut store = StatusStore::init();
+        store.remove_status(StatusKind::TestStatus);
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_status_wrong_kind() {
+        let mut store = StatusStore::init();
+        store.add_trait(StatusKind::TestStatus);
+        store.remove_status(StatusKind::TestStatus);
     }
 }

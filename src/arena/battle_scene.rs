@@ -222,13 +222,13 @@ pub fn process_tick_events(ecs: &mut World, frame: u64) {
     }
 }
 
-fn is_keystroke_skill(keycode: Keycode) -> Option<u32> {
+fn is_keystroke_skill(keycode: Keycode) -> Option<usize> {
     let name = keycode.name();
     let chars: Vec<char> = name.chars().collect();
 
     if chars.len() == 1 {
         match chars[0] {
-            '0'..='9' => Some(chars[0].to_string().parse().unwrap()),
+            '0'..='9' => Some(hotkey_to_skill_index(chars[0].to_string().parse().unwrap())),
             _ => None,
         }
     } else {

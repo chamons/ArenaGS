@@ -10,7 +10,8 @@ use crate::clash::*;
 // so we make sure they are marked with ToSerialize
 
 pub fn player(ecs: &mut World) {
-    ecs.create_entity()
+    let player = ecs
+        .create_entity()
         .with(RenderComponent::init(RenderInfo::init_with_char_state(
             SpriteKinds::MaleBrownHairBlueBody,
             CharacterAnimationState::Idle,
@@ -23,18 +24,12 @@ pub fn player(ecs: &mut World) {
         )))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
+        .with(SkillsComponent::init(&[]))
         .with(TimeComponent::init(0))
-        .with(SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0))
-        .with(SkillsComponent::init(&[
-            "Dash",
-            "Fire Bolt",
-            "Slash",
-            "Strong Shot",
-            "Delayed Blast",
-            "Move and Shoot",
-        ]))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
+
+    content::gunslinger::setup_gunslinger(ecs, &player);
 }
 
 pub fn bird_monster(ecs: &mut World) {

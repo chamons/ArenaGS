@@ -18,7 +18,9 @@ pub enum SpriteKinds {
     MonsterBirdRed,
 
     FireBolt,
-    BulletBolt,
+    Bullet,
+    FireBullet,
+    AirBullet,
 
     Bomb,
     Explosion,

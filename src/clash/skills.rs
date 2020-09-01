@@ -29,6 +29,7 @@ pub enum SkillEffect {
     Reload(AmmoKind),
     FieldEffect(Damage, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
+    RotateAmmo(),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -61,7 +62,7 @@ impl SkillResourceComponent {
 }
 
 pub struct SkillInfo {
-    pub image: &'static str,
+    pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
     pub distance: Option<u32>,
@@ -72,9 +73,9 @@ pub struct SkillInfo {
     pub focus_use: Option<f64>,
 }
 
+#[allow(dead_code)]
 impl SkillInfo {
-    #[allow(dead_code)]
-    pub fn init(image: &'static str, target: TargetType, effect: SkillEffect) -> SkillInfo {
+    pub fn init(image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
         SkillInfo {
             image,
             target,
@@ -88,7 +89,7 @@ impl SkillInfo {
         }
     }
 
-    pub fn init_with_distance(image: &'static str, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
         SkillInfo {
             image,
             target,
@@ -187,129 +188,15 @@ impl SkillInfo {
 lazy_static! {
     static ref SKILLS: HashMap<&'static str, SkillInfo> = {
         let mut m = HashMap::new();
+
         #[cfg(test)]
-        {
-            m.insert("TestNone", SkillInfo::init("", TargetType::None, SkillEffect::None));
-            m.insert("TestTile", SkillInfo::init("", TargetType::Tile, SkillEffect::None));
-            m.insert("TestEnemy", SkillInfo::init("", TargetType::Enemy, SkillEffect::None));
-            m.insert(
-                "TestWithRange",
-                SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), false),
-            );
-            m.insert(
-                "TestMove",
-                SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::Move, Some(2), false),
-            );
-            m.insert(
-                "TestRanged",
-                SkillInfo::init_with_distance(
-                    "",
-                    TargetType::Enemy,
-                    SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
-                    Some(2),
-                    false,
-                ),
-            );
-            m.insert(
-                "TestMelee",
-                SkillInfo::init_with_distance(
-                    "",
-                    TargetType::Enemy,
-                    SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword),
-                    Some(1),
-                    false,
-                ),
-            );
-            m.insert(
-                "TestAmmo",
-                SkillInfo::init("", TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1),
-            );
-            m.insert("TestReload", SkillInfo::init("", TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
-            m.insert("TestExhaustion", SkillInfo::init("", TargetType::None, SkillEffect::None).with_exhaustion(25.0));
-            m.insert("TestFocus", SkillInfo::init("", TargetType::None, SkillEffect::None).with_focus_use(0.5));
-            m.insert(
-                "TestMultiple",
-                SkillInfo::init("", TargetType::None, SkillEffect::None)
-                    .with_ammo(AmmoKind::Bullets, 1)
-                    .with_exhaustion(25.0),
-            );
-            m.insert(
-                "TestField",
-                SkillInfo::init("", TargetType::Any, SkillEffect::FieldEffect(Damage::init(1), FieldKind::Fire)),
-            );
-            m.insert(
-                "TestMoveAndShoot",
-                SkillInfo::init_with_distance(
-                    "",
-                    TargetType::Tile,
-                    SkillEffect::MoveAndShoot(Damage::init(1), Some(5), BoltKind::Fire),
-                    Some(1),
-                    true,
-                ),
-            );
-        }
+        super::content::test::add_test_skills(&mut m);
+
+        super::content::gunslinger::gunslinger_skills(&mut m);
+
         m.insert(
             "Dash",
-            SkillInfo::init_with_distance("SpellBookPage09_39.png", TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
-        );
-        m.insert(
-            "Reload",
-            SkillInfo::init("SpellBook06_22.png", TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
-        );
-        m.insert(
-            "Strong Shot",
-            SkillInfo::init_with_distance(
-                "SpellBook01_37.png",
-                TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(10), BoltKind::Bullet),
-                Some(10),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 1)
-            .with_alternate("Reload"),
-        );
-        m.insert(
-            "Move and Shoot",
-            SkillInfo::init_with_distance(
-                "SpellBook01_63.png",
-                TargetType::Tile,
-                SkillEffect::MoveAndShoot(Damage::init(10), Some(10), BoltKind::Bullet),
-                Some(1),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 1)
-            .with_alternate("Reload"),
-        );
-        m.insert(
-            "Fire Bolt",
-            SkillInfo::init_with_distance(
-                "SpellBook06_117.png",
-                TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(5).with_raise_temp(), BoltKind::Fire),
-                Some(15),
-                true,
-            )
-            .with_focus_use(0.5),
-        );
-        m.insert(
-            "Slash",
-            SkillInfo::init_with_distance(
-                "SpellBook01_76.png",
-                TargetType::Enemy,
-                SkillEffect::MeleeAttack(Damage::init(5), WeaponKind::Sword),
-                Some(1),
-                true,
-            ),
-        );
-        m.insert(
-            "Delayed Blast",
-            SkillInfo::init_with_distance(
-                "en_craft_96.png",
-                TargetType::Any,
-                SkillEffect::FieldEffect(Damage::init(5), FieldKind::Fire),
-                Some(3),
-                false,
-            ),
+            SkillInfo::init_with_distance(Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
         );
 
         m
@@ -318,6 +205,10 @@ lazy_static! {
 
 pub fn get_skill(name: &str) -> &'static SkillInfo {
     &SKILLS[name]
+}
+
+pub fn all_skill_image_filesnames() -> Vec<&'static str> {
+    SKILLS.values().filter_map(|s| s.image).collect()
 }
 
 fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
@@ -389,6 +280,20 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         ecs.log(format!("{} used {}.", player_name.as_str(), name));
     }
 
+    process_skill(ecs, invoker, skill, target);
+
+    spend_time(ecs, invoker, BASE_ACTION_COST);
+    spend_ammo(ecs, invoker, skill);
+
+    if let Some(exhaustion) = skill.exhaustion {
+        spend_exhaustion(ecs, invoker, exhaustion);
+    }
+    if let Some(focus_use) = skill.focus_use {
+        spend_focus(ecs, invoker, focus_use);
+    }
+}
+
+fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) {
     match &skill.effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
@@ -404,17 +309,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::None => {}
-    }
-
-    spend_time(ecs, invoker, BASE_ACTION_COST);
-    spend_ammo(ecs, invoker, skill);
-
-    if let Some(exhaustion) = skill.exhaustion {
-        spend_exhaustion(ecs, invoker, exhaustion);
-    }
-    if let Some(focus_use) = skill.focus_use {
-        spend_focus(ecs, invoker, focus_use);
     }
 }
 
@@ -514,7 +410,7 @@ mod tests {
         let info = get_skill("TestWithRange");
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
-        let info = SkillInfo::init("", TargetType::Tile, SkillEffect::None);
+        let info = SkillInfo::init(None, TargetType::Tile, SkillEffect::None);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
     }
 
@@ -533,7 +429,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance("", TargetType::Tile, SkillEffect::None, Some(2), true);
+        let info = SkillInfo::init_with_distance(None, TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
@@ -545,7 +441,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance("", TargetType::Any, SkillEffect::None, Some(2), false);
+        let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
