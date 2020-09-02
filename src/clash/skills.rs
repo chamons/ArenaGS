@@ -306,6 +306,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     if let Some(focus_use) = skill.focus_use {
         spend_focus(ecs, invoker, focus_use);
     }
+
+    gain_adrenaline(ecs, invoker, skill);
 }
 
 fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) {
@@ -326,6 +328,27 @@ fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: O
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::None => {}
+    }
+}
+
+fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    let amount = match &skill.effect {
+        SkillEffect::Move => 1,
+        SkillEffect::MoveAndShoot(_, _, _) => 3,
+        SkillEffect::RangedAttack(_, _) => 3,
+        SkillEffect::MeleeAttack(_, _) => 3,
+        SkillEffect::Reload(_) => 2,
+        SkillEffect::FieldEffect(_, _) => 2,
+        SkillEffect::RotateAmmo() => 1,
+        SkillEffect::None => 0,
+    };
+
+    let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+    if let Some(resources) = &mut skill_resources.get_mut(*invoker) {
+        if resources.ammo.contains_key(&AmmoKind::Adrenaline) {
+            let new_total = cmp::min(resources.ammo[&AmmoKind::Adrenaline] + amount, resources.max[&AmmoKind::Adrenaline]);
+            *resources.ammo.get_mut(&AmmoKind::Adrenaline).unwrap() = new_total;
+        }
     }
 }
 
@@ -817,5 +840,21 @@ mod tests {
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn gain_adrenaline_when_has_resource() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        {
+            let resource = SkillResourceComponent::init(&[(AmmoKind::Adrenaline, 0, 100)]);
+            ecs.shovel(player, resource);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Adrenaline] > 0);
     }
 }
