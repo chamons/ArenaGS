@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -94,7 +94,12 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
     }
 }
 
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: BoltKind) {
+pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, mut strength: Damage, kind: BoltKind) {
+    if ecs.has_status(source, StatusKind::Aimed) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*source).status.remove_status(StatusKind::Aimed);
+        strength = strength.copy_more_strength(2);
+    }
+
     let source_position = Some(ecs.get_position(source).origin);
     ecs.shovel(
         *source,
@@ -303,8 +308,8 @@ mod tests {
     #[test]
     fn explode_hits() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
-        let target = find_at(&mut ecs, 2, 2);
-        let exploder = find_at(&mut ecs, 2, 3);
+        let target = find_at(&ecs, 2, 2);
+        let exploder = find_at(&ecs, 2, 3);
         let starting_health = ecs.get_defenses(&target).health;
         ecs.shovel(
             exploder,
@@ -332,7 +337,7 @@ mod tests {
     #[test]
     fn field_is_placed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
-        let player = find_at(&mut ecs, 2, 2);
+        let player = find_at(&ecs, 2, 2);
 
         begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
         wait_for_animations(&mut ecs);
@@ -343,7 +348,7 @@ mod tests {
     #[test]
     fn killed_enemies_removed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
-        let player = find_at(&mut ecs, 2, 2);
+        let player = find_at(&ecs, 2, 2);
         begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
@@ -353,7 +358,7 @@ mod tests {
     #[test]
     fn killed_player() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
-        let enemy = find_at(&mut ecs, 2, 3);
+        let enemy = find_at(&ecs, 2, 3);
         begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
@@ -365,8 +370,8 @@ mod tests {
     #[test]
     fn move_and_shoot() {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
-        let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 3);
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
         let starting_health = ecs.get_defenses(&target).health;
 
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
@@ -383,9 +388,9 @@ mod tests {
             .with_character(2, 4, 0)
             .with_map()
             .build();
-        let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 4);
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+        let other = find_at(&ecs, 2, 4);
         let starting_health = ecs.get_defenses(&target).health;
 
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::init(1), BoltKind::Bullet);
@@ -403,9 +408,9 @@ mod tests {
             .with_character(2, 7, 0)
             .with_map()
             .build();
-        let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 6);
-        let other = find_at(&mut ecs, 2, 7);
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let other = find_at(&ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
