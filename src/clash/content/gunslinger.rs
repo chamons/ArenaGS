@@ -5,7 +5,10 @@ use super::super::*;
 use crate::atlas::{EasyMutECS, EasyMutWorld};
 
 pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
-    ecs.shovel(*invoker, SkillResourceComponent::init(&[(AmmoKind::Bullets, 6)]).with_focus(1.0));
+    ecs.shovel(
+        *invoker,
+        SkillResourceComponent::init(&[(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]).with_focus(1.0),
+    );
 
     add_skills_to_front(ecs, invoker, &get_weapon_skills(TargetAmmo::Magnum));
     set_weapon_trait(ecs, invoker, TargetAmmo::Magnum);

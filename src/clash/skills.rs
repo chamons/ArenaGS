@@ -35,6 +35,7 @@ pub enum SkillEffect {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
+    Adrenaline,
 }
 
 pub struct AmmoInfo {
@@ -43,11 +44,12 @@ pub struct AmmoInfo {
 }
 
 impl SkillResourceComponent {
-    pub fn init(starting_ammo: &[(AmmoKind, u32)]) -> SkillResourceComponent {
-        let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(k, a)| (*k, *a)).collect();
+    pub fn init(starting_ammo: &[(AmmoKind, u32, u32)]) -> SkillResourceComponent {
+        let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(kind, starting, _)| (*kind, *starting)).collect();
+        let max: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(kind, _, max)| (*kind, *max)).collect();
         SkillResourceComponent {
-            max: ammo.clone(),
             ammo,
+            max,
             exhaustion: 0.0,
             focus: 0.0,
             max_focus: 0.0,
@@ -545,7 +547,7 @@ mod tests {
     }
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
-        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count)]);
+        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count, count)]);
         ecs.shovel(*player, resource);
     }
 
