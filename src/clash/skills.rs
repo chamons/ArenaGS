@@ -629,7 +629,7 @@ mod tests {
     fn get_exhaustion_usage() {
         let ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
-        assert_eq!(4, get_skill("TestExhaustion").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(2, get_skill("TestExhaustion").get_remaining_usages(&ecs, &player).unwrap());
     }
 
     #[test]
@@ -646,7 +646,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         add_bullets(&mut ecs, &player, 3);
 
-        for _ in 0..4 {
+        for _ in 0..2 {
             invoke_skill(&mut ecs, &player, "TestExhaustion", None);
             add_ticks(&mut ecs, 100);
         }
@@ -785,9 +785,9 @@ mod tests {
             .with_character(2, 4, 0)
             .with_map()
             .build();
-        let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 3);
-        let other = find_at(&mut ecs, 2, 4);
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+        let other = find_at(&ecs, 2, 4);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
@@ -805,9 +805,9 @@ mod tests {
             .with_character(2, 7, 0)
             .with_map()
             .build();
-        let player = find_at(&mut ecs, 2, 2);
-        let target = find_at(&mut ecs, 2, 6);
-        let other = find_at(&mut ecs, 2, 7);
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let other = find_at(&ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
