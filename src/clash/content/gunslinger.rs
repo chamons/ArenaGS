@@ -13,9 +13,9 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
 
 fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Move & Shoot", "Swap Ammo"],
-        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Move & Shoot", "Swap Ammo"],
-        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Move & Shoot", "Swap Ammo"],
+        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Swap Ammo"],
+        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Swap Ammo"],
+        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Swap Ammo"],
     }
 }
 
@@ -186,14 +186,54 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    const MOVE_AND_SHOOT_BASE_RANGE: Option<u32> = Some(5);
+    const MOVE_AND_SHOOT_BASE_RANGE: u32 = 5;
     const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
     m.insert(
-        "Move & Shoot",
+        "Quick Shot",
         SkillInfo::init_with_distance(
             Some("SpellBook03_10.png"),
             TargetType::Tile,
-            SkillEffect::MoveAndShoot(Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH), MOVE_AND_SHOOT_BASE_RANGE, BoltKind::Bullet),
+            SkillEffect::MoveAndShoot(
+                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH + 1),
+                Some(MOVE_AND_SHOOT_BASE_RANGE),
+                BoltKind::Bullet,
+            ),
+            Some(1),
+            true,
+        )
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_exhaustion(25.0)
+        .with_alternate("Reload"),
+    );
+
+    m.insert(
+        "Hot Hands",
+        SkillInfo::init_with_distance(
+            Some("SpellBook01_15.png"),
+            TargetType::Tile,
+            SkillEffect::MoveAndShoot(
+                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH).with_option(DamageOptions::RAISE_TEMPERATURE),
+                Some(MOVE_AND_SHOOT_BASE_RANGE),
+                BoltKind::Bullet,
+            ),
+            Some(1),
+            true,
+        )
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_exhaustion(25.0)
+        .with_alternate("Reload"),
+    );
+
+    m.insert(
+        "Lightning Speed",
+        SkillInfo::init_with_distance(
+            Some("SpellBookPage09_39.png"),
+            TargetType::Tile,
+            SkillEffect::MoveAndShoot(
+                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                Some(MOVE_AND_SHOOT_BASE_RANGE + 1),
+                BoltKind::Bullet,
+            ),
             Some(1),
             true,
         )
