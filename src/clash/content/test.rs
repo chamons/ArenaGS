@@ -45,7 +45,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert("TestReload", SkillInfo::init(None, TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
     m.insert(
         "TestExhaustion",
-        SkillInfo::init(None, TargetType::None, SkillEffect::None).with_exhaustion(50.0),
+        SkillInfo::init(None, TargetType::None, SkillEffect::None).with_exhaustion(25.0),
     );
     m.insert("TestFocus", SkillInfo::init(None, TargetType::None, SkillEffect::None).with_focus_use(0.5));
     m.insert(

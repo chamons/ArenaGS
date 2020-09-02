@@ -13,9 +13,9 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
 
 fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Move & Shoot", "Swap Ammo"],
-        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Move & Shoot", "Swap Ammo"],
-        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Move & Shoot", "Swap Ammo"],
+        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Swap Ammo"],
+        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Swap Ammo"],
+        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Swap Ammo"],
     }
 }
 
@@ -83,11 +83,8 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("gun_06_b.PNG"),
             TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
-                BoltKind::Bullet,
-            ),
-            Some(AIMED_SHOT_BASE_RANGE - 1),
+            SkillEffect::RangedAttack(Damage::init(AIMED_SHOT_BASE_STRENGTH + 2), BoltKind::Bullet),
+            Some(AIMED_SHOT_BASE_RANGE - 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
@@ -120,7 +117,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some("SpellBook06_46.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
                 BoltKind::AirBullet,
             ),
             Some(AIMED_SHOT_BASE_RANGE + 2),
@@ -131,7 +128,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    const TRIPLE_SHOT_BASE_RANGE: u32 = 5;
+    const TRIPLE_SHOT_BASE_RANGE: u32 = 4;
     const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
 
     m.insert(
@@ -143,7 +140,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
                 Damage::init(TRIPLE_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::TRIPLE_SHOT),
                 BoltKind::Bullet,
             ),
-            Some(TRIPLE_SHOT_BASE_RANGE - 1),
+            Some(TRIPLE_SHOT_BASE_RANGE),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 3)
@@ -176,29 +173,13 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             SkillEffect::RangedAttack(
                 Damage::init(TRIPLE_SHOT_BASE_RANGE)
                     .with_option(DamageOptions::TRIPLE_SHOT)
-                    .with_option(DamageOptions::CONSUMES_CHARGE_DMG),
+                    .with_option(DamageOptions::CONSUMES_CHARGE),
                 BoltKind::AirBullet,
             ),
-            Some(TRIPLE_SHOT_BASE_RANGE + 1),
+            Some(TRIPLE_SHOT_BASE_RANGE + 2),
             true,
         )
         .with_ammo(AmmoKind::Bullets, 3)
-        .with_alternate("Reload"),
-    );
-
-    const MOVE_AND_SHOOT_BASE_RANGE: Option<u32> = Some(5);
-    const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
-    m.insert(
-        "Move & Shoot",
-        SkillInfo::init_with_distance(
-            Some("SpellBook03_10.png"),
-            TargetType::Tile,
-            SkillEffect::MoveAndShoot(Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH), MOVE_AND_SHOOT_BASE_RANGE, BoltKind::Bullet),
-            Some(1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(25.0)
         .with_alternate("Reload"),
     );
 
@@ -221,7 +202,7 @@ mod tests {
         setup_gunslinger(&mut ecs, &player);
 
         assert!(ecs.has_status(&player, StatusKind::Magnum));
-        assert_eq!(4, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
+        assert_eq!(3, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
     }
 
     #[test]
