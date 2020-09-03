@@ -91,10 +91,7 @@ fn check_temperature_state(ecs: &mut World, target: &Entity) {
 
     if ecs.get_temperature(target).is_burning() && !ecs.has_status(target, StatusKind::Burning) {
         ecs.log(format!("{} begins to burn", ecs.get_name(target).unwrap()));
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(*target)
-            .status
-            .add_status(StatusKind::Burning, BURN_DURATION);
+        ecs.add_status(target, StatusKind::Burning, BURN_DURATION);
     }
 }
 
@@ -152,10 +149,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 // Order matter here - must re-apply burning status before apply damage,
                 // else we'll repeat "began burning" log
                 if ecs.get_temperature(&target.unwrap()).is_burning() {
-                    ecs.write_storage::<StatusComponent>()
-                        .grab_mut(target.unwrap())
-                        .status
-                        .add_status(StatusKind::Burning, BURN_DURATION);
+                    ecs.add_status(&target.unwrap(), StatusKind::Burning, BURN_DURATION);
                 } else {
                     ecs.log(format!("{} stops burning", ecs.get_name(&target.unwrap()).unwrap()));
                 }

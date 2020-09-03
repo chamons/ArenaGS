@@ -19,6 +19,7 @@ pub enum StatusKind {
     Cyclone,
     StaticCharge,
     Aimed,
+    Armored,
 
     #[cfg(test)]
     TestStatus,
@@ -184,7 +185,6 @@ pub fn status_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::EasyMutECS;
 
     #[test]
     fn add_status() {
@@ -285,10 +285,7 @@ mod tests {
     fn status_integration_with_ecs() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let entity = find_at(&ecs, 2, 2);
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(entity)
-            .status
-            .add_status(StatusKind::TestStatus, 100);
+        ecs.add_status(&entity, StatusKind::TestStatus, 100);
         assert!(ecs.has_status(&entity, StatusKind::TestStatus));
         add_ticks(&mut ecs, 100);
         assert!(!ecs.has_status(&entity, StatusKind::TestStatus));

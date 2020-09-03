@@ -87,6 +87,7 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
         StatusKind::Magnum => "b_30.png",
         StatusKind::StaticCharge => "SpellBook06_89.png",
         StatusKind::Aimed => "SpellBook08_83.png",
+        StatusKind::Armored => "SpellBook08_122.png",
         #[cfg(test)]
         _ => "",
     }
@@ -101,5 +102,6 @@ pub fn all_icon_filenames() -> &'static [&'static str] {
         "b_30.png",
         "SpellBook06_89.png",
         "SpellBook08_83.png",
+        "SpellBook08_122.png",
     ]
 }

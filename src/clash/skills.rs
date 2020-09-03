@@ -30,11 +30,14 @@ pub enum SkillEffect {
     FieldEffect(Damage, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     RotateAmmo(),
+    BuffThen(StatusKind, i32, Box<SkillEffect>),
+    ThenBuff(Box<SkillEffect>, StatusKind, i32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
+    Adrenaline,
 }
 
 pub struct AmmoInfo {
@@ -43,11 +46,12 @@ pub struct AmmoInfo {
 }
 
 impl SkillResourceComponent {
-    pub fn init(starting_ammo: &[(AmmoKind, u32)]) -> SkillResourceComponent {
-        let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(k, a)| (*k, *a)).collect();
+    pub fn init(starting_ammo: &[(AmmoKind, u32, u32)]) -> SkillResourceComponent {
+        let ammo: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(kind, starting, _)| (*kind, *starting)).collect();
+        let max: HashMap<AmmoKind, u32> = starting_ammo.iter().map(|(kind, _, max)| (*kind, *max)).collect();
         SkillResourceComponent {
-            max: ammo.clone(),
             ammo,
+            max,
             exhaustion: 0.0,
             focus: 0.0,
             max_focus: 0.0,
@@ -71,6 +75,7 @@ pub struct SkillInfo {
     pub alternate: Option<String>,
     pub exhaustion: Option<f64>,
     pub focus_use: Option<f64>,
+    pub no_time: bool,
 }
 
 #[allow(dead_code)]
@@ -86,6 +91,7 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            no_time: false,
         }
     }
 
@@ -100,6 +106,7 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            no_time: false,
         }
     }
 
@@ -120,6 +127,11 @@ impl SkillInfo {
 
     pub fn with_focus_use(mut self, focus: f64) -> SkillInfo {
         self.focus_use = Some(focus);
+        self
+    }
+
+    pub fn with_no_time(mut self) -> SkillInfo {
+        self.no_time = true;
         self
     }
 
@@ -293,9 +305,11 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         ecs.log(format!("{} used {}.", player_name.as_str(), name));
     }
 
-    process_skill(ecs, invoker, skill, target);
+    process_skill(ecs, invoker, &skill.effect, target);
 
-    spend_time(ecs, invoker, BASE_ACTION_COST);
+    if !skill.no_time {
+        spend_time(ecs, invoker, BASE_ACTION_COST);
+    }
     spend_ammo(ecs, invoker, skill);
 
     if let Some(exhaustion) = skill.exhaustion {
@@ -304,10 +318,12 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     if let Some(focus_use) = skill.focus_use {
         spend_focus(ecs, invoker, focus_use);
     }
+
+    gain_adrenaline(ecs, invoker, skill);
 }
 
-fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) {
-    match &skill.effect {
+fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target: Option<Point>) {
+    match effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
@@ -323,7 +339,38 @@ fn process_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: O
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
+        SkillEffect::BuffThen(buff, duration, next_skill) => {
+            ecs.add_status(invoker, *buff, *duration);
+            process_skill(ecs, invoker, next_skill, target);
+        }
+        SkillEffect::ThenBuff(next_skill, buff, duration) => {
+            process_skill(ecs, invoker, next_skill, target);
+            ecs.add_status(invoker, *buff, *duration);
+        }
         SkillEffect::None => {}
+    }
+}
+
+fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    let amount = match &skill.effect {
+        SkillEffect::Move => 1,
+        SkillEffect::MoveAndShoot(_, _, _) => 3,
+        SkillEffect::RangedAttack(_, _) => 3,
+        SkillEffect::MeleeAttack(_, _) => 3,
+        SkillEffect::Reload(_) => 2,
+        SkillEffect::FieldEffect(_, _) => 2,
+        SkillEffect::RotateAmmo() => 1,
+        SkillEffect::None => 0,
+        SkillEffect::BuffThen(_, _, _) => 1,
+        SkillEffect::ThenBuff(_, _, _) => 1,
+    };
+
+    let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+    if let Some(resources) = &mut skill_resources.get_mut(*invoker) {
+        if resources.ammo.contains_key(&AmmoKind::Adrenaline) {
+            let new_total = cmp::min(resources.ammo[&AmmoKind::Adrenaline] + amount, resources.max[&AmmoKind::Adrenaline]);
+            *resources.ammo.get_mut(&AmmoKind::Adrenaline).unwrap() = new_total;
+        }
     }
 }
 
@@ -545,7 +592,7 @@ mod tests {
     }
 
     fn add_bullets(ecs: &mut World, player: &Entity, count: u32) {
-        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count)]);
+        let resource = SkillResourceComponent::init(&[(AmmoKind::Bullets, count, count)]);
         ecs.shovel(*player, resource);
     }
 
@@ -815,5 +862,57 @@ mod tests {
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn gain_adrenaline_when_has_resource() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        {
+            let resource = SkillResourceComponent::init(&[(AmmoKind::Adrenaline, 0, 100)]);
+            ecs.shovel(player, resource);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Adrenaline] > 0);
+    }
+
+    #[test]
+    fn buff_then_move() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "BuffAndMove", Some(Point::init(2, 1)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
+        assert_position(&ecs, &player, Point::init(2, 1));
+    }
+
+    #[test]
+    fn shoot_and_buff() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+
+        invoke_skill(&mut ecs, &player, "ShootThenBuff", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        let health = ecs.get_defenses(&target);
+        assert_ne!(health.health, health.max_health);
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn no_time() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "TestNoTime", None);
+        wait_for_animations(&mut ecs);
+        assert_eq!(100, get_ticks(&ecs, &player));
     }
 }

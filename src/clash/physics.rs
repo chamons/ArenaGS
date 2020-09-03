@@ -274,7 +274,8 @@ mod tests {
     fn frozen_slows_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        ecs.write_storage::<StatusComponent>().grab_mut(player).status.add_trait(StatusKind::Frozen);
+        ecs.add_trait(&player, StatusKind::Frozen);
+
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
         let skill_resource = SkillResourceComponent {
             exhaustion: 0.0,
