@@ -40,7 +40,7 @@ impl Defenses {
         }
     }
 
-    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, rng: &mut R) -> u32 {
+    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> u32 {
         if !damage.options.contains(DamageOptions::PIERCE_DEFENSES) {
             // Apply dodge first, burning charges up to matching dice
             let dodge_to_apply = cmp::min(self.dodge, damage.dice());
@@ -49,7 +49,7 @@ impl Defenses {
             let (_, damage_value) = apply_with_remain(damage_value, dodge_value);
 
             // Then soak with armor, all of it applies
-            let armor_value = Strength::init(self.armor).roll(rng);
+            let armor_value = Strength::init(self.armor + additional_armor).roll(rng);
             let (_, damage_value) = apply_with_remain(damage_value, armor_value);
             damage_value
         } else {
@@ -58,9 +58,13 @@ impl Defenses {
     }
 
     pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> RolledDamage {
+        self.apply_damage_with_addditional_armor(damage, 0, rng)
+    }
+
+    pub fn apply_damage_with_addditional_armor<R: Rng + ?Sized>(&mut self, damage: Damage, additional_armor: u32, rng: &mut R) -> RolledDamage {
         let damage_value = damage.amount.roll(rng);
 
-        let damage_value = self.apply_defenses(damage_value, damage, rng);
+        let damage_value = self.apply_defenses(damage_value, damage, additional_armor, rng);
 
         // Report damage after mitigation applied
         let total_applied_damage = damage_value;
@@ -173,6 +177,19 @@ mod tests {
         // 4 - 7 damage taken
         assert!(def.health > 2);
         assert_eq!(1, def.armor);
+    }
+
+    #[test]
+    fn additional_armor() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut def = Defenses::init(0, 0, 0, 10);
+        def.apply_damage_with_addditional_armor(Damage::init(4), 4, &mut rng);
+
+        // (2 * 2) + [2,4] = 6-8 damage
+        // 4-8 armor
+        // 0 - 4 damage taken
+        assert!(def.health > 5);
+        assert_eq!(0, def.armor);
     }
 
     #[test]

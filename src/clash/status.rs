@@ -19,6 +19,7 @@ pub enum StatusKind {
     Cyclone,
     StaticCharge,
     Aimed,
+    Armored,
 
     #[cfg(test)]
     TestStatus,
@@ -184,7 +185,6 @@ pub fn status_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::EasyMutECS;
 
     #[test]
     fn add_status() {

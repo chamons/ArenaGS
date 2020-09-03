@@ -91,7 +91,13 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
     let rolled_damage = {
         let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
-        defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
+
+        if ecs.has_status(target, StatusKind::Armored) {
+            const ADDITIONAL_ARMOR: u32 = 3;
+            defenses.apply_damage_with_addditional_armor(damage, ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
+        } else {
+            defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
+        }
     };
     ecs.log(format!(
         "{} took {} damage (Str {}).",
@@ -374,5 +380,24 @@ mod tests {
 
         // We assume removal = more damage, since it's a bit tricky to test due to RNG
         assert!(!ecs.has_status(&player, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn armored_adds_armor_one_hit() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+
+        ecs.add_status(&target, StatusKind::Armored, 300);
+
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        // 3 armor, 3 damage
+        // Damage: 2 + [2,4] = 4-6
+        // Armor: 2 + [2,4] = 4-6
+        // 0 - 2 damage
+        let health = &ecs.get_defenses(&target);
+        assert!(health.health > 7);
     }
 }

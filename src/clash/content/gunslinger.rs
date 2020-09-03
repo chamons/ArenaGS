@@ -266,11 +266,18 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
         "Trick Shot",
-        SkillInfo::init_with_distance(Some("SpellBook06_118.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+        SkillInfo::init_with_distance(Some("SpellBook06_118.png"), TargetType::Enemy, SkillEffect::Move, Some(7), true).with_ammo(AmmoKind::Adrenaline, 50),
     );
     m.insert(
         "Showdown",
-        SkillInfo::init_with_distance(Some("SpellBook03_54.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+        SkillInfo::init_with_distance(
+            Some("SpellBook03_54.png"),
+            TargetType::None,
+            SkillEffect::BuffThen(StatusKind::Armored, 300, Box::from(SkillEffect::Reload(AmmoKind::Bullets))),
+            Some(3),
+            true,
+        )
+        .with_ammo(AmmoKind::Adrenaline, 50),
     );
     m.insert(
         "Dive",
