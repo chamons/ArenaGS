@@ -274,8 +274,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_no_time()
-        .with_ammo(AmmoKind::Adrenaline, 50)
-        .with_ammo(AmmoKind::Bullets, 1),
+        .with_ammo(AmmoKind::Adrenaline, 50),
     );
     m.insert(
         "Showdown",
