@@ -16,7 +16,7 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
 
 fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Trick Shot", "Swap Ammo"],
+        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Blink Shot", "Swap Ammo"],
         TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Showdown", "Swap Ammo"],
         TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Dive", "Swap Ammo"],
     }
@@ -265,15 +265,32 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 
 fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
-        "Trick Shot",
-        SkillInfo::init_with_distance(Some("SpellBook06_118.png"), TargetType::Enemy, SkillEffect::Move, Some(7), true).with_ammo(AmmoKind::Adrenaline, 50),
+        "Blink Shot",
+        SkillInfo::init_with_distance(
+            Some("SpellBook06_118.png"),
+            TargetType::Enemy,
+            SkillEffect::ThenBuff(Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)), StatusKind::Aimed, 300),
+            Some(7),
+            true,
+        )
+        .with_no_time()
+        .with_ammo(AmmoKind::Adrenaline, 50)
+        .with_ammo(AmmoKind::Bullets, 1),
     );
     m.insert(
         "Showdown",
         SkillInfo::init_with_distance(
             Some("SpellBook03_54.png"),
             TargetType::None,
-            SkillEffect::BuffThen(StatusKind::Armored, 300, Box::from(SkillEffect::Reload(AmmoKind::Bullets))),
+            SkillEffect::BuffThen(
+                StatusKind::Aimed,
+                300,
+                Box::from(SkillEffect::BuffThen(
+                    StatusKind::Armored,
+                    300,
+                    Box::from(SkillEffect::Reload(AmmoKind::Bullets)),
+                )),
+            ),
             Some(3),
             true,
         )
@@ -281,7 +298,14 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert(
         "Dive",
-        SkillInfo::init_with_distance(Some("SpellBook08_121.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+        SkillInfo::init_with_distance(
+            Some("SpellBook08_121.png"),
+            TargetType::Tile,
+            SkillEffect::BuffThen(StatusKind::Armored, 300, Box::from(SkillEffect::Move)),
+            Some(3),
+            true,
+        )
+        .with_ammo(AmmoKind::Adrenaline, 50),
     );
 }
 

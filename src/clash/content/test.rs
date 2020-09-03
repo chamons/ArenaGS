@@ -78,4 +78,16 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         ),
     );
+
+    m.insert(
+        "ShootThenBuff",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Enemy,
+            SkillEffect::ThenBuff(Box::from(SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire)), StatusKind::Aimed, 200),
+            Some(1),
+            true,
+        ),
+    );
+    m.insert("TestNoTime", SkillInfo::init(None, TargetType::None, SkillEffect::None).with_no_time());
 }

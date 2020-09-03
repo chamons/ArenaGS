@@ -31,6 +31,7 @@ pub enum SkillEffect {
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     RotateAmmo(),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
+    ThenBuff(Box<SkillEffect>, StatusKind, i32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -74,6 +75,7 @@ pub struct SkillInfo {
     pub alternate: Option<String>,
     pub exhaustion: Option<f64>,
     pub focus_use: Option<f64>,
+    pub no_time: bool,
 }
 
 #[allow(dead_code)]
@@ -89,6 +91,7 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            no_time: false,
         }
     }
 
@@ -103,6 +106,7 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            no_time: false,
         }
     }
 
@@ -123,6 +127,11 @@ impl SkillInfo {
 
     pub fn with_focus_use(mut self, focus: f64) -> SkillInfo {
         self.focus_use = Some(focus);
+        self
+    }
+
+    pub fn with_no_time(mut self) -> SkillInfo {
+        self.no_time = true;
         self
     }
 
@@ -298,7 +307,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 
     process_skill(ecs, invoker, &skill.effect, target);
 
-    spend_time(ecs, invoker, BASE_ACTION_COST);
+    if !skill.no_time {
+        spend_time(ecs, invoker, BASE_ACTION_COST);
+    }
     spend_ammo(ecs, invoker, skill);
 
     if let Some(exhaustion) = skill.exhaustion {
@@ -332,6 +343,10 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             ecs.add_status(invoker, *buff, *duration);
             process_skill(ecs, invoker, next_skill, target);
         }
+        SkillEffect::ThenBuff(next_skill, buff, duration) => {
+            process_skill(ecs, invoker, next_skill, target);
+            ecs.add_status(invoker, *buff, *duration);
+        }
         SkillEffect::None => {}
     }
 }
@@ -347,6 +362,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::RotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::BuffThen(_, _, _) => 1,
+        SkillEffect::ThenBuff(_, _, _) => 1,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
@@ -874,5 +890,29 @@ mod tests {
 
         assert!(ecs.has_status(&player, StatusKind::Aimed));
         assert_position(&ecs, &player, Point::init(2, 1));
+    }
+
+    #[test]
+    fn shoot_and_buff() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+
+        invoke_skill(&mut ecs, &player, "ShootThenBuff", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        let health = ecs.get_defenses(&target);
+        assert_ne!(health.health, health.max_health);
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn no_time() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "TestNoTime", None);
+        wait_for_animations(&mut ecs);
+        assert_eq!(100, get_ticks(&ecs, &player));
     }
 }
