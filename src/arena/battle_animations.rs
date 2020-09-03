@@ -48,6 +48,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
             BoltKind::Bullet => CharacterAnimationState::Crouch,
             BoltKind::FireBullet => CharacterAnimationState::Crouch,
             BoltKind::AirBullet => CharacterAnimationState::Crouch,
+            BoltKind::Smoke => CharacterAnimationState::Magic,
         }
     };
 
@@ -62,6 +63,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
             BoltKind::Bullet => SpriteKinds::Bullet,
             BoltKind::FireBullet => SpriteKinds::FireBullet,
             BoltKind::AirBullet => SpriteKinds::AirBullet,
+            BoltKind::Smoke => SpriteKinds::Smoke,
         }
     };
     projectile_animation(ecs, bolt, sprite, EventKind::Bolt(BoltState::CompleteFlyingAnimation));

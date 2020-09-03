@@ -16,6 +16,7 @@ pub enum BoltKind {
     Bullet,
     FireBullet,
     AirBullet,
+    Smoke,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]

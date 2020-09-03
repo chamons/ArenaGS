@@ -16,6 +16,7 @@ use crate::atlas::{EasyECS, EasyMutECS, Point};
 pub enum TargetType {
     None,
     Tile,
+    Player,
     Enemy,
     Any,
 }
@@ -218,6 +219,7 @@ lazy_static! {
         super::content::test::add_test_skills(&mut m);
 
         super::content::gunslinger::gunslinger_skills(&mut m);
+        super::content::bird::bird_skills(&mut m);
 
         m.insert(
             "Dash",
@@ -241,7 +243,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile | TargetType::Enemy | TargetType::Any => true,
+        TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -259,6 +261,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
         TargetType::Any => !initial.contains_point(&target),
         TargetType::None => false,
     } {
