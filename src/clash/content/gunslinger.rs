@@ -78,30 +78,42 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+    add_aimed_skills(m);
+    add_triple_shot_skills(m);
+    add_move_and_shoot_skills(m);
+
+    m.insert(
+        "Reload",
+        SkillInfo::init(Some("b_45.png"), TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
+    );
+    m.insert("Swap Ammo", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
+}
+
+fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const AIMED_SHOT_BASE_RANGE: u32 = 7;
     const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
 
     m.insert(
         "Aimed Shot",
         SkillInfo::init_with_distance(
-            Some("gun_06_b.PNG"),
+            Some("gun_05_b.PNG"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
+                Damage::init(AIMED_SHOT_BASE_STRENGTH + 0).with_option(DamageOptions::AIMED_SHOT),
                 BoltKind::Bullet,
             ),
-            Some(AIMED_SHOT_BASE_RANGE - 1),
+            Some(AIMED_SHOT_BASE_RANGE - 0),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
+        .with_ammo(AmmoKind::Bullets, 0)
+        .with_focus_use(-1.5)
         .with_alternate("Reload"),
     );
 
     m.insert(
         "Explosive Blast",
         SkillInfo::init_with_distance(
-            Some("SpellBook01_37.png"),
+            Some("SpellBook00_37.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
                 Damage::init(AIMED_SHOT_BASE_STRENGTH)
@@ -112,28 +124,30 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(AIMED_SHOT_BASE_RANGE),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
+        .with_ammo(AmmoKind::Bullets, 0)
+        .with_focus_use(-1.5)
         .with_alternate("Reload"),
     );
 
     m.insert(
         "Air Lance",
         SkillInfo::init_with_distance(
-            Some("SpellBook06_46.png"),
+            Some("SpellBook05_46.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+                Damage::init(AIMED_SHOT_BASE_STRENGTH - 0).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
                 BoltKind::AirBullet,
             ),
-            Some(AIMED_SHOT_BASE_RANGE + 2),
+            Some(AIMED_SHOT_BASE_RANGE + 1),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
+        .with_ammo(AmmoKind::Bullets, 0)
+        .with_focus_use(-1.5)
         .with_alternate("Reload"),
     );
+}
 
+fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const TRIPLE_SHOT_BASE_RANGE: u32 = 5;
     const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
 
@@ -188,7 +202,9 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_ammo(AmmoKind::Bullets, 3)
         .with_alternate("Reload"),
     );
+}
 
+fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const MOVE_AND_SHOOT_BASE_RANGE: u32 = 5;
     const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
     m.insert(
@@ -244,12 +260,6 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_exhaustion(25.0)
         .with_alternate("Reload"),
     );
-
-    m.insert(
-        "Reload",
-        SkillInfo::init(Some("b_45.png"), TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
-    );
-    m.insert("Swap Ammo", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
 }
 
 #[cfg(test)]
