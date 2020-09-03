@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -96,7 +96,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
 
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, mut strength: Damage, kind: BoltKind) {
     if ecs.has_status(source, StatusKind::Aimed) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*source).status.remove_status(StatusKind::Aimed);
+        ecs.remove_status(source, StatusKind::Aimed);
         strength = strength.copy_more_strength(2);
     }
 

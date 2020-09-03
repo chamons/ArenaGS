@@ -16,9 +16,9 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
 
 fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Swap Ammo"],
-        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Swap Ammo"],
-        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Swap Ammo"],
+        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Trick Shot", "Swap Ammo"],
+        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Showdown", "Swap Ammo"],
+        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Dive", "Swap Ammo"],
     }
 }
 
@@ -81,6 +81,7 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     add_aimed_skills(m);
     add_triple_shot_skills(m);
     add_move_and_shoot_skills(m);
+    add_utility_skills(m);
 
     m.insert(
         "Reload",
@@ -96,24 +97,24 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
         "Aimed Shot",
         SkillInfo::init_with_distance(
-            Some("gun_05_b.PNG"),
+            Some("gun_06_b.PNG"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH + 0).with_option(DamageOptions::AIMED_SHOT),
+                Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
                 BoltKind::Bullet,
             ),
-            Some(AIMED_SHOT_BASE_RANGE - 0),
+            Some(AIMED_SHOT_BASE_RANGE - 1),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 0)
-        .with_focus_use(-1.5)
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5)
         .with_alternate("Reload"),
     );
 
     m.insert(
         "Explosive Blast",
         SkillInfo::init_with_distance(
-            Some("SpellBook00_37.png"),
+            Some("SpellBook01_37.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
                 Damage::init(AIMED_SHOT_BASE_STRENGTH)
@@ -124,25 +125,25 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(AIMED_SHOT_BASE_RANGE),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 0)
-        .with_focus_use(-1.5)
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5)
         .with_alternate("Reload"),
     );
 
     m.insert(
         "Air Lance",
         SkillInfo::init_with_distance(
-            Some("SpellBook05_46.png"),
+            Some("SpellBook06_46.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH - 0).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
                 BoltKind::AirBullet,
             ),
-            Some(AIMED_SHOT_BASE_RANGE + 1),
+            Some(AIMED_SHOT_BASE_RANGE + 2),
             true,
         )
-        .with_ammo(AmmoKind::Bullets, 0)
-        .with_focus_use(-1.5)
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5)
         .with_alternate("Reload"),
     );
 }
@@ -262,6 +263,21 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
+fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+    m.insert(
+        "Trick Shot",
+        SkillInfo::init_with_distance(Some("SpellBook06_118.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+    );
+    m.insert(
+        "Showdown",
+        SkillInfo::init_with_distance(Some("SpellBook03_54.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+    );
+    m.insert(
+        "Dive",
+        SkillInfo::init_with_distance(Some("SpellBook08_121.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_ammo(AmmoKind::Adrenaline, 50),
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -274,7 +290,7 @@ mod tests {
         setup_gunslinger(&mut ecs, &player);
 
         assert!(ecs.has_status(&player, StatusKind::Magnum));
-        assert_eq!(4, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
+        assert_eq!(5, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
     }
 
     #[test]

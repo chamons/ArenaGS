@@ -104,10 +104,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         if rolled_damage.options.contains(DamageOptions::KNOCKBACK) {
             true
         } else if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE_KNOCKBACK) && ecs.has_status(target, StatusKind::StaticCharge) {
-            ecs.write_storage::<StatusComponent>()
-                .grab_mut(*target)
-                .status
-                .remove_status(StatusKind::StaticCharge);
+            ecs.remove_status(target, StatusKind::StaticCharge);
             true
         } else {
             false
@@ -129,10 +126,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
     }
     if rolled_damage.options.contains(DamageOptions::ADD_CHARGE_STATUS) && !ecs.has_status(target, StatusKind::StaticCharge) {
         ecs.log(format!("{} crackles with static electricity", ecs.get_name(target).unwrap()));
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(*target)
-            .status
-            .add_status(StatusKind::StaticCharge, 300);
+        ecs.add_status(target, StatusKind::StaticCharge, 300);
     }
     if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE_DMG) && ecs.has_status(target, StatusKind::StaticCharge) {
         const STATIC_CHARGE_DAMAGE: u32 = 4;
@@ -142,10 +136,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
             target,
             None,
         );
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(*target)
-            .status
-            .remove_status(StatusKind::StaticCharge);
+        ecs.remove_status(target, StatusKind::StaticCharge);
     }
 
     if rolled_damage.options.contains(DamageOptions::AIMED_SHOT) {
@@ -153,10 +144,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
             if let Some(source) = find_character_at_location(ecs, source_position) {
                 if !ecs.has_status(&source, StatusKind::Aimed) {
                     ecs.log(format!("{} takes aim", ecs.get_name(&source).unwrap()));
-                    ecs.write_storage::<StatusComponent>()
-                        .grab_mut(source)
-                        .status
-                        .add_status(StatusKind::Aimed, 300);
+                    ecs.add_status(&source, StatusKind::Aimed, 300);
                 }
             }
         }
@@ -260,10 +248,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 3);
 
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(target)
-            .status
-            .add_status(StatusKind::StaticCharge, 100);
+        ecs.add_status(&target, StatusKind::StaticCharge, 300);
 
         begin_bolt(
             &mut ecs,
@@ -285,10 +270,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 3);
 
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(target)
-            .status
-            .add_status(StatusKind::StaticCharge, 100);
+        ecs.add_status(&target, StatusKind::StaticCharge, 300);
 
         begin_bolt(
             &mut ecs,
@@ -385,10 +367,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        ecs.write_storage::<StatusComponent>()
-            .grab_mut(player)
-            .status
-            .add_status(StatusKind::Aimed, 300);
+        ecs.add_status(&player, StatusKind::Aimed, 300);
 
         begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
         wait_for_animations(&mut ecs);

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::super::{AmmoKind, BoltKind, Damage, FieldKind, SkillEffect, SkillInfo, TargetType, WeaponKind};
+use super::super::*;
 
 pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert("TestNone", SkillInfo::init(None, TargetType::None, SkillEffect::None));
@@ -64,6 +64,16 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             None,
             TargetType::Tile,
             SkillEffect::MoveAndShoot(Damage::init(1), Some(5), BoltKind::Fire),
+            Some(1),
+            true,
+        ),
+    );
+    m.insert(
+        "BuffAndMove",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Tile,
+            SkillEffect::BuffThen(StatusKind::Aimed, 200, Box::from(SkillEffect::Move)),
             Some(1),
             true,
         ),

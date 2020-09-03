@@ -10,7 +10,7 @@ use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
+use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
@@ -275,6 +275,23 @@ pub trait Framer {
 impl Framer for World {
     fn get_current_frame(&self) -> u64 {
         self.read_resource::<FrameComponent>().current_frame
+    }
+}
+
+pub trait StatusApplier {
+    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32);
+    fn remove_status(&self, entity: &Entity, kind: StatusKind);
+    fn add_trait(&mut self, entity: &Entity, kind: StatusKind);
+}
+impl StatusApplier for World {
+    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32) {
+        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+    }
+    fn remove_status(&self, entity: &Entity, kind: StatusKind) {
+        self.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+    }
+    fn add_trait(&mut self, entity: &Entity, kind: StatusKind) {
+        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
     }
 }
 
