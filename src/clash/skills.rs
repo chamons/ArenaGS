@@ -70,7 +70,7 @@ pub struct SkillInfo {
     pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
-    pub distance: Option<u32>,
+    pub range: Option<u32>,
     pub must_be_clear: bool,
     pub ammo_info: Option<AmmoInfo>,
     pub alternate: Option<String>,
@@ -86,7 +86,7 @@ impl SkillInfo {
             image,
             target,
             effect,
-            distance: None,
+            range: None,
             must_be_clear: false,
             ammo_info: None,
             alternate: None,
@@ -96,12 +96,12 @@ impl SkillInfo {
         }
     }
 
-    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, range: Option<u32>, must_be_clear: bool) -> SkillInfo {
         SkillInfo {
             image,
             target,
             effect,
-            distance,
+            range,
             must_be_clear,
             ammo_info: None,
             alternate: None,
@@ -268,7 +268,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         return false;
     }
 
-    if let Some(skill_range) = skill.distance {
+    if let Some(skill_range) = skill.range {
         if let Some(range_to_target) = initial.distance_to(target) {
             if range_to_target > skill_range {
                 return false;
