@@ -44,6 +44,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
     } else {
         match target_required {
             TargetType::Any | TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
+            TargetType::Player => panic!("TargetType::Player should not have reached here in select_skill"),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
     }
@@ -66,6 +67,7 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
                 player_use_skill(ecs, name, Some(*position));
             }
         }
+        TargetType::Player => panic!("TargetType::Player should not have reached select_skill_with_target"),
         TargetType::None => panic!("TargetType::None should not have reached select_skill_with_target"),
     }
 }

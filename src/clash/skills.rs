@@ -16,6 +16,7 @@ use crate::atlas::{EasyECS, EasyMutECS, Point};
 pub enum TargetType {
     None,
     Tile,
+    Player,
     Enemy,
     Any,
 }
@@ -69,7 +70,7 @@ pub struct SkillInfo {
     pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
-    pub distance: Option<u32>,
+    pub range: Option<u32>,
     pub must_be_clear: bool,
     pub ammo_info: Option<AmmoInfo>,
     pub alternate: Option<String>,
@@ -85,7 +86,7 @@ impl SkillInfo {
             image,
             target,
             effect,
-            distance: None,
+            range: None,
             must_be_clear: false,
             ammo_info: None,
             alternate: None,
@@ -95,12 +96,12 @@ impl SkillInfo {
         }
     }
 
-    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, distance: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, range: Option<u32>, must_be_clear: bool) -> SkillInfo {
         SkillInfo {
             image,
             target,
             effect,
-            distance,
+            range,
             must_be_clear,
             ammo_info: None,
             alternate: None,
@@ -218,6 +219,7 @@ lazy_static! {
         super::content::test::add_test_skills(&mut m);
 
         super::content::gunslinger::gunslinger_skills(&mut m);
+        super::content::bird::bird_skills(&mut m);
 
         m.insert(
             "Dash",
@@ -241,7 +243,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile | TargetType::Enemy | TargetType::Any => true,
+        TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -259,13 +261,14 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
         TargetType::Any => !initial.contains_point(&target),
         TargetType::None => false,
     } {
         return false;
     }
 
-    if let Some(skill_range) = skill.distance {
+    if let Some(skill_range) = skill.range {
         if let Some(range_to_target) = initial.distance_to(target) {
             if range_to_target > skill_range {
                 return false;
@@ -275,10 +278,10 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
 
     if skill.must_be_clear {
         if let Some(mut path) = initial.line_to(target) {
-            // If we are targeting an enemy we can safely
+            // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
             // have the target (from checks above)
-            if skill.target.is_enemy() {
+            if skill.target.is_enemy() || skill.target.is_player() {
                 path.pop();
             }
             if !is_area_clear(ecs, &path, invoker) {

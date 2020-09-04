@@ -65,6 +65,9 @@ impl SpriteLoader {
                         .with_render_offset(SDLPoint::new(0, 25))
                         .with_scale(2.0),
                 ),
+                SpriteKinds::Smoke => Box::new(
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?.with_render_offset(bullet_offset()),
+                ),
             };
             sprites.insert(s.into(), sprite);
         }

@@ -35,14 +35,14 @@ pub fn player(ecs: &mut World) {
 pub fn bird_monster(ecs: &mut World) {
     ecs.create_entity()
         .with(RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown)))
-        .with(PositionComponent::init(SizedPoint::init_multi(5, 5, 2, 2)))
+        .with(PositionComponent::init(SizedPoint::init_multi(5, 8, 2, 2)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Giant Bird",
             Defenses::just_health(150),
             Temperature::init(),
         )))
         .with(StatusComponent::init())
-        .with(BehaviorComponent::init(BehaviorKind::Random))
+        .with(BehaviorComponent::init(BehaviorKind::Bird(0)))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();

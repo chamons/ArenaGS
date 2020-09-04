@@ -77,6 +77,15 @@ impl TextRenderer {
             SDLRect::new(x, y, text_width, text_height),
         )?;
 
+        // Due to unsafe_textures feature texture is not
+        // dropped by default. Because most things are created only
+        // once (and not text that continually needs to be blit)
+        // this makes using SDL sane in rust, but dynamically
+        // created content such as texts must handle this
+        unsafe {
+            texture.destroy();
+        }
+
         Ok(())
     }
 }

@@ -12,7 +12,22 @@ use crate::atlas::{EasyECS, SizedPoint};
 pub enum BehaviorKind {
     None,
     Random,
+    Bird(u32),
     Explode,
+}
+
+pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
+    let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
+    match behavior {
+        BehaviorKind::None => wait(ecs, *enemy),
+        BehaviorKind::Random => {
+            move_randomly(ecs, enemy);
+        }
+        BehaviorKind::Bird(phase) => super::content::bird::take_action(ecs, enemy, phase),
+        BehaviorKind::Explode => {
+            begin_explode(ecs, &enemy);
+        }
+    };
 }
 
 impl Distribution<Direction> for Standard {
@@ -40,19 +55,46 @@ fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -
     None
 }
 
-pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
-    let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
-    match behavior {
-        BehaviorKind::None => wait(ecs, *enemy),
-        BehaviorKind::Random => {
-            let position = ecs.get_position(enemy);
-            if let Some(direction) = get_random_direction(ecs, position, enemy) {
-                let point = point_in_direction(&position, direction).unwrap();
-                move_character_action(ecs, *enemy, point);
+pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
+    let position = ecs.get_position(enemy);
+    if let Some(direction) = get_random_direction(ecs, position, enemy) {
+        let point = point_in_direction(&position, direction).unwrap();
+        move_character_action(ecs, *enemy, point)
+    } else {
+        false
+    }
+}
+
+pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
+        let skill = get_skill(skill_name);
+        if distance <= skill.range.unwrap() {
+            if is_good_target(ecs, enemy, skill, target_point) {
+                invoke_skill(ecs, enemy, skill_name, Some(target_point));
+                return true;
             }
         }
-        BehaviorKind::Explode => {
-            begin_explode(ecs, &enemy);
+    }
+    false
+}
+
+pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    if let Some(path) = current_position.line_to(player_position.origin) {
+        move_character_action(ecs, *enemy, current_position.move_to(path[0]))
+    } else {
+        false
+    }
+}
+
+#[macro_export]
+macro_rules! try_behavior {
+    ($x:expr) => {
+        if $x {
+            return;
         }
     };
 }

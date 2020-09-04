@@ -21,6 +21,7 @@ pub enum SpriteKinds {
     Bullet,
     FireBullet,
     AirBullet,
+    Smoke,
 
     Bomb,
     Explosion,
