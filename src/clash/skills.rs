@@ -278,10 +278,10 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
 
     if skill.must_be_clear {
         if let Some(mut path) = initial.line_to(target) {
-            // If we are targeting an enemy we can safely
+            // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
             // have the target (from checks above)
-            if skill.target.is_enemy() {
+            if skill.target.is_enemy() || skill.target.is_player() {
                 path.pop();
             }
             if !is_area_clear(ecs, &path, invoker) {
