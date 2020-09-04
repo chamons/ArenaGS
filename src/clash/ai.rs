@@ -65,7 +65,7 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
@@ -80,7 +80,7 @@ fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> b
     false
 }
 
-fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
+pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     if let Some(path) = current_position.line_to(player_position.origin) {
