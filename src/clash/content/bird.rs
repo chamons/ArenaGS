@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use specs::prelude::*;
 
 use super::super::*;
+use crate::try_behavior;
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
@@ -11,24 +12,16 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             None,
             TargetType::Player,
             SkillEffect::RangedAttack(Damage::init(2), BoltKind::Bullet),
-            Some(7),
+            Some(3),
             true,
         ),
     );
 }
 
 pub fn take_action(ecs: &mut World, enemy: &Entity, phase: u32) {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(&find_player(ecs));
-    if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
-        let skill = get_skill("Feather Blast");
-        if distance <= skill.range.unwrap() {
-            if is_good_target(ecs, enemy, skill, target_point) {
-                invoke_skill(ecs, enemy, "Feather Blast", Some(target_point));
-                return;
-            }
-        }
-    }
+    try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Blast"));
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
 
     wait(ecs, *enemy);
 }
