@@ -121,7 +121,11 @@ pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_bolt(ecs: &mut World, source: Entity) {
-    let source_position = ecs.get_position(&source);
+    // We must re-create a position using the origin so multi-sized
+    // monsters don't create bolts with large widths
+    let caster_origin = ecs.get_position(&source).origin;
+    let source_position = SizedPoint::init(caster_origin.x, caster_origin.y);
+
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     let bolt = ecs
