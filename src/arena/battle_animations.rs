@@ -7,11 +7,16 @@ use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyECS, EasyMutWorld};
 use crate::clash::*;
 
-pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+pub fn battle_animation_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::Bolt(state) => match state {
             BoltState::BeginCastAnimation => begin_ranged_cast_animation(ecs, target.unwrap()),
             BoltState::BeginFlyingAnimation => begin_ranged_bolt_animation(ecs, target.unwrap()),
+            _ => {}
+        },
+        EventKind::Orb(state) => match state {
+            OrbState::BeginCastAnimation => begin_orb_cast_animation(ecs, target.unwrap()),
+            OrbState::Created => create_orb_sprite(ecs, target.unwrap()),
             _ => {}
         },
         _ => {}
@@ -53,6 +58,27 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
     };
 
     cast_animation(ecs, target, animation, EventKind::Bolt(BoltState::CompleteCastAnimation));
+}
+
+pub fn begin_orb_cast_animation(ecs: &mut World, target: Entity) {
+    let animation = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        match attacks.grab(target).attack.orb_kind() {
+            OrbKind::Feather => CharacterAnimationState::Magic,
+        }
+    };
+
+    cast_animation(ecs, target, animation, EventKind::Orb(OrbState::CompleteCastAnimation));
+}
+
+pub fn create_orb_sprite(ecs: &mut World, orb: Entity) {
+    let sprite = {
+        let attacks = ecs.write_storage::<AttackComponent>();
+        match attacks.grab(orb).attack.orb_kind() {
+            OrbKind::Feather => SpriteKinds::AirBullet,
+        }
+    };
+    ecs.shovel(orb, RenderComponent::init(RenderInfo::init(sprite)));
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {

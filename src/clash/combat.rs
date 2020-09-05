@@ -25,11 +25,17 @@ pub enum WeaponKind {
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum OrbKind {
+    Feather,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
     Field(FieldKind),
     Explode(u32),
+    Orb(OrbKind, u32, u32),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -59,6 +65,13 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Field(kind) => kind,
             _ => panic!("Wrong type in field_kind"),
+        }
+    }
+
+    pub fn orb_kind(&self) -> OrbKind {
+        match self.kind {
+            AttackKind::Orb(kind, _, _) => kind,
+            _ => panic!("Wrong type in orb_kind"),
         }
     }
 }
@@ -278,6 +291,53 @@ pub fn reap_killed(ecs: &mut World) {
     for d in dead {
         ecs.delete_entity(d).unwrap();
     }
+}
+
+pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, range: u32, speed: u32) {
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(
+        *source,
+        AttackComponent::init(target_position, strength, AttackKind::Orb(kind, range, speed), source_position),
+    );
+    ecs.raise_event(EventKind::Orb(OrbState::BeginCastAnimation), Some(*source));
+}
+
+pub fn orb_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Orb(state) => match state {
+            OrbState::CompleteCastAnimation => start_orb(ecs, target.unwrap()),
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
+pub fn start_orb(ecs: &mut World, source: Entity) {
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+
+    let caster_origin = ecs.get_position(&source).origin;
+    let source_position = SizedPoint::init(caster_origin.x, caster_origin.y);
+    let target_position = attack.target;
+    let path = source_position.line_to(target_position).unwrap();
+    let orb_position = path[1];
+
+    let orb = ecs
+        .create_entity()
+        .with(PositionComponent::init(SizedPoint::init(orb_position.x, orb_position.y)))
+        .with(AttackComponent { attack })
+        .build();
+
+    ecs.write_storage::<AttackComponent>().remove(source);
+    ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
+}
+
+pub fn apply_orb(ecs: &mut World, bolt: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(bolt).attack
+    };
+    apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
+    ecs.delete_entity(bolt).unwrap();
 }
 
 #[cfg(test)]

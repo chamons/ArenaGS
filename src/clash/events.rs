@@ -24,6 +24,13 @@ pub enum BoltState {
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
+pub enum OrbState {
+    BeginCastAnimation,
+    CompleteCastAnimation,
+    Created,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
 pub enum MeleeState {
     BeginAnimation,
     CompleteAnimation,
@@ -47,6 +54,7 @@ pub enum ExplodeState {
 pub enum EventKind {
     Move(MoveState, PostMoveAction),
     Bolt(BoltState),
+    Orb(OrbState),
     Melee(MeleeState),
     Field(FieldState),
     Explode(ExplodeState),

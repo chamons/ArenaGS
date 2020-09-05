@@ -219,6 +219,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::combat::melee_event);
     ecs.subscribe(super::combat::field_event);
     ecs.subscribe(super::combat::explode_event);
+    ecs.subscribe(super::combat::orb_event);
     ecs.subscribe(super::defenses::defense_event);
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
