@@ -31,7 +31,22 @@ pub fn move_orb(ecs: &mut World, entity: &Entity) {
     begin_move(ecs, entity, SizedPoint::from(path[next_index]), PostMoveAction::None);
 }
 
-pub fn add_orb_movement_fields(ecs: &mut World, path: &Vec<Point>, speed: u32, current: usize) {
+pub fn create_orb(ecs: &mut World, attack: AttackInfo, path: &Vec<Point>, position: &Point) -> Entity {
+    let speed = attack.orb_speed();
+    let orb = ecs
+        .create_entity()
+        .with(PositionComponent::init(SizedPoint::from(*position)))
+        .with(AttackComponent { attack })
+        .with(OrbComponent::init(path.clone(), speed))
+        .with(BehaviorComponent::init(BehaviorKind::Orb))
+        .with(TimeComponent::init(-100))
+        .build();
+
+    add_orb_movement_fields(ecs, &path, speed, 1);
+    orb
+}
+
+fn add_orb_movement_fields(ecs: &mut World, path: &Vec<Point>, speed: u32, current: usize) {
     for i in 0..speed as usize {
         if let Some(field) = path.get(current + i + 1) {
             ecs.create_entity()

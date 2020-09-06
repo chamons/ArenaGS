@@ -326,20 +326,8 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     let source_position = SizedPoint::from(caster_origin);
     let target_position = attack.target;
     let path = source_position.line_to(target_position).unwrap();
-    let orb_position = path[1];
 
-    // TODO - Does this belong in spawner or orb.rs?
-    let speed = attack.orb_speed();
-    let orb = ecs
-        .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(orb_position)))
-        .with(AttackComponent { attack })
-        .with(OrbComponent::init(path.clone(), speed))
-        .with(BehaviorComponent::init(BehaviorKind::Orb))
-        .with(TimeComponent::init(-100))
-        .build();
-
-    add_orb_movement_fields(ecs, &path, speed, 1);
+    let orb = create_orb(ecs, attack, &path, &path[1]);
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
