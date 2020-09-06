@@ -18,12 +18,10 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
-pub fn take_action(ecs: &mut World, enemy: &Entity, phase: u32) {
-    if phase == 1 {
-        try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Blast"));
-        try_behavior!(move_towards_player(ecs, enemy));
-        try_behavior!(move_randomly(ecs, enemy));
-    }
+pub fn take_action(ecs: &mut World, enemy: &Entity) {
+    try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Blast"));
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
 
     wait(ecs, *enemy);
 }

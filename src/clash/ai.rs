@@ -12,7 +12,7 @@ use crate::atlas::{EasyECS, SizedPoint};
 pub enum BehaviorKind {
     None,
     Random,
-    Bird(u32),
+    Bird,
     Explode,
     Orb,
 }
@@ -24,7 +24,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::Random => {
             move_randomly(ecs, enemy);
         }
-        BehaviorKind::Bird(phase) => super::content::bird::take_action(ecs, enemy, phase),
+        BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }
