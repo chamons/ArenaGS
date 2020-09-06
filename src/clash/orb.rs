@@ -61,7 +61,7 @@ fn add_orb_movement_fields(ecs: &mut World, path: &[Point], speed: u32, current:
             if i < speed as usize {
                 (255, 0, 0)
             } else {
-                (128, 128, 0)
+                (230, 150, 0)
             }
         };
 
