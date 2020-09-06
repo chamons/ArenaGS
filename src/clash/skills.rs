@@ -33,6 +33,7 @@ pub enum SkillEffect {
     RotateAmmo(),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
+    Orb(Damage, OrbKind, u32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -350,6 +351,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             process_skill(ecs, invoker, next_skill, target);
             ecs.add_status(invoker, *buff, *duration);
         }
+        SkillEffect::Orb(damage, kind, speed) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed),
         SkillEffect::None => {}
     }
 }
@@ -366,6 +368,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::None => 0,
         SkillEffect::BuffThen(_, _, _) => 1,
         SkillEffect::ThenBuff(_, _, _) => 1,
+        SkillEffect::Orb(_, _, _) => 3,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();

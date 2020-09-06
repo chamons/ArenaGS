@@ -91,7 +91,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     // If you add additional components remember to update saveload.rs
 
     ecs.subscribe(super::battle_animations::move_event);
-    ecs.subscribe(super::battle_animations::bolt_event);
+    ecs.subscribe(super::battle_animations::battle_animation_event);
     ecs.subscribe(super::battle_animations::melee_event);
     ecs.subscribe(super::battle_animations::field_event);
     ecs.subscribe(super::battle_animations::explode_event);

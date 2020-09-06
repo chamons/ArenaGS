@@ -97,6 +97,7 @@ pub fn save(ecs: &mut World) {
         BehaviorComponent,
         PlayerDeadComponent,
         StatusComponent,
+        OrbComponent,
         SerializationHelper
     );
 }
@@ -136,6 +137,7 @@ pub fn load() -> BoxResult<World> {
             BehaviorComponent,
             PlayerDeadComponent,
             StatusComponent,
+            OrbComponent,
             SerializationHelper
         );
     }

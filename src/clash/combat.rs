@@ -25,11 +25,17 @@ pub enum WeaponKind {
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum OrbKind {
+    Feather,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
     Field(FieldKind),
     Explode(u32),
+    Orb(OrbKind, u32),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -59,6 +65,20 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Field(kind) => kind,
             _ => panic!("Wrong type in field_kind"),
+        }
+    }
+
+    pub fn orb_kind(&self) -> OrbKind {
+        match self.kind {
+            AttackKind::Orb(kind, _) => kind,
+            _ => panic!("Wrong type in orb_kind"),
+        }
+    }
+
+    pub fn orb_speed(&self) -> u32 {
+        match self.kind {
+            AttackKind::Orb(_, speed) => speed,
+            _ => panic!("Wrong type in orb_speed"),
         }
     }
 }
@@ -124,7 +144,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     // We must re-create a position using the origin so multi-sized
     // monsters don't create bolts with large widths
     let caster_origin = ecs.get_position(&source).origin;
-    let source_position = SizedPoint::init(caster_origin.x, caster_origin.y);
+    let source_position = SizedPoint::from(caster_origin);
 
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
@@ -209,7 +229,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
     };
 
     ecs.create_entity()
-        .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
+        .with(PositionComponent::init(SizedPoint::from(attack.target)))
         .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0), None))
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(FieldComponent::init(r, g, b))
@@ -278,6 +298,48 @@ pub fn reap_killed(ecs: &mut World) {
     for d in dead {
         ecs.delete_entity(d).unwrap();
     }
+}
+
+pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32) {
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(
+        *source,
+        AttackComponent::init(target_position, strength, AttackKind::Orb(kind, speed), source_position),
+    );
+    ecs.raise_event(EventKind::Orb(OrbState::BeginCastAnimation), Some(*source));
+}
+
+pub fn orb_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::Orb(state) => match state {
+            OrbState::CompleteCastAnimation => start_orb(ecs, target.unwrap()),
+            _ => {}
+        },
+        _ => {}
+    }
+}
+
+pub fn start_orb(ecs: &mut World, source: Entity) {
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+
+    let caster_origin = ecs.get_position(&source).origin;
+    let source_position = SizedPoint::from(caster_origin);
+    let target_position = attack.target;
+    let path = source_position.line_to(target_position).unwrap();
+
+    let orb = create_orb(ecs, attack, &path, &path[1]);
+
+    ecs.write_storage::<AttackComponent>().remove(source);
+    ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
+}
+
+pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(orb).attack
+    };
+    apply_damage_to_location(ecs, point, attack.source, attack.damage);
+    ecs.delete_entity(orb).unwrap();
 }
 
 #[cfg(test)]
@@ -423,5 +485,143 @@ mod tests {
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
+    }
+
+    #[test]
+    fn orb_hits_target_on_time() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        let orb = find_entity_at(&ecs, 2, 3);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_position(&ecs, &orb, Point::init(2, 5));
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn fast_orb_does_not_overshoot() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10);
+        wait_for_animations(&mut ecs);
+        find_entity_at(&ecs, 2, 3); // Crashes if not in expected positions
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn orb_misses_moving_target() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        let orb = find_entity_at(&ecs, 2, 3);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_position(&ecs, &orb, Point::init(2, 5));
+
+        begin_move(&mut ecs, &target, SizedPoint::init(2, 7), PostMoveAction::None);
+        wait_for_animations(&mut ecs);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_eq!(ecs.get_defenses(&target).health, starting_health);
+    }
+
+    #[test]
+    fn orb_hits_target_en_route() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(3, 6, 0)
+            .with_character(2, 6, 0)
+            .with_map()
+            .build();
+        let player = find_at(&ecs, 2, 2);
+        let bystander = find_at(&ecs, 3, 6);
+        let target = find_at(&ecs, 2, 6);
+        let target_starting_health = ecs.get_defenses(&target).health;
+        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        let orb = find_entity_at(&ecs, 2, 3);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_position(&ecs, &orb, Point::init(2, 5));
+
+        begin_move(&mut ecs, &target, SizedPoint::init(1, 6), PostMoveAction::None);
+        begin_move(&mut ecs, &bystander, SizedPoint::init(2, 6), PostMoveAction::None);
+        wait_for_animations(&mut ecs);
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn orb_hit_first_target_only() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 0)
+            .with_character(2, 7, 0)
+            .with_map()
+            .build();
+        let player = find_at(&ecs, 2, 2);
+        let bystander = find_at(&ecs, 2, 6);
+        let target = find_at(&ecs, 2, 7);
+        let target_starting_health = ecs.get_defenses(&target).health;
+        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        let orb = find_entity_at(&ecs, 2, 3);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_position(&ecs, &orb, Point::init(2, 5));
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn orb_walk_into_orb() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 0)
+            .with_character(1, 5, 0)
+            .with_map()
+            .build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let bystander = find_at(&ecs, 1, 5);
+        let target_starting_health = ecs.get_defenses(&target).health;
+        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        let orb = find_entity_at(&ecs, 2, 3);
+
+        new_turn_wait_characters(&mut ecs);
+        assert_position(&ecs, &orb, Point::init(2, 5));
+        begin_move(&mut ecs, &bystander, SizedPoint::init(2, 5), PostMoveAction::None);
+        wait_for_animations(&mut ecs);
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
     }
 }
