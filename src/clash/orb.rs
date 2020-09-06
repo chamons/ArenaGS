@@ -77,3 +77,17 @@ fn remove_stale_fields(ecs: &mut World, entity: &Entity) {
         ecs.delete_entity(s).unwrap();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn orb_has_correct_fields() {}
+
+    #[test]
+    fn orb_removes_fields_on_hit() {}
+
+    #[test]
+    fn orb_removes_fields_on_move() {}
+}

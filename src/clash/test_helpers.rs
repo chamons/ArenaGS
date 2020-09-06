@@ -48,6 +48,10 @@ pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_character_at_location(ecs, Point::init(x, y)).unwrap()
 }
 
+pub fn find_entity_at(ecs: &World, x: u32, y: u32) -> Entity {
+    find_entity_at_location(ecs, Point::init(x, y)).unwrap()
+}
+
 pub fn find_first_entity(ecs: &World) -> Entity {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let entity = (&entities).join().next().unwrap();
@@ -71,6 +75,17 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
 
     let mut all = vec![];
     for entity in (&entities).join() {
+        all.push(entity);
+    }
+    all
+}
+
+pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+
+    let mut all = vec![];
+    for (entity, _) in (&entities, &char_infos).join() {
         all.push(entity);
     }
     all

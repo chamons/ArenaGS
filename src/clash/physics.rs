@@ -70,6 +70,19 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
     true
 }
 
+#[allow(dead_code)]
+pub fn find_entity_at_location(ecs: &World, area: Point) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let positions = ecs.read_storage::<PositionComponent>();
+
+    for (entity, position) in (&entities, &positions).join() {
+        if position.position.contains_point(&area) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
 pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
