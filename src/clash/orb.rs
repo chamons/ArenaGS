@@ -32,11 +32,14 @@ pub fn move_orb(ecs: &mut World, entity: &Entity) {
     begin_move(ecs, entity, SizedPoint::from(path[next_index]), PostMoveAction::None);
 }
 
-pub fn create_orb(ecs: &mut World, attack: AttackInfo, path: &[Point], position: &Point) -> Entity {
+pub fn create_orb(ecs: &mut World, invoker: &Entity, attack: AttackInfo, path: &[Point]) -> Entity {
+    let caster_position = ecs.get_position(invoker);
+    let starting_index = path.iter().position(|x| !caster_position.contains_point(x)).unwrap();
+
     let speed = attack.orb_speed();
     let orb = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(*position)))
+        .with(PositionComponent::init(SizedPoint::from(path[starting_index])))
         .with(AttackComponent { attack })
         .with(OrbComponent::init(path.to_vec(), speed))
         .with(BehaviorComponent::init(BehaviorKind::Orb))

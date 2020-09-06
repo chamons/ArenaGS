@@ -327,7 +327,7 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     let target_position = attack.target;
     let path = source_position.line_to(target_position).unwrap();
 
-    let orb = create_orb(ecs, attack, &path, &path[1]);
+    let orb = create_orb(ecs, &source, attack, &path);
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
@@ -623,5 +623,23 @@ mod tests {
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
         assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn orb_from_multi_square_sourced() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_sized_character(SizedPoint::init_multi(2, 6, 2, 2), 0)
+            .with_map()
+            .build();
+        let player = find_at(&ecs, 2, 2);
+        let enemy = find_at(&ecs, 2, 6);
+        let player_starting_health = ecs.get_defenses(&player).health;
+
+        begin_orb(&mut ecs, &enemy, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+
+        new_turn_wait_characters(&mut ecs);
+        assert!(ecs.get_defenses(&player).health < player_starting_health);
     }
 }
