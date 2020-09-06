@@ -31,6 +31,7 @@ pub enum SkillEffect {
     FieldEffect(Damage, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     RotateAmmo(),
+    Buff(StatusKind, i32),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
     Orb(Damage, OrbKind, u32),
@@ -343,6 +344,9 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
+        SkillEffect::Buff(buff, duration) => {
+            ecs.add_status(invoker, *buff, *duration);
+        }
         SkillEffect::BuffThen(buff, duration, next_skill) => {
             ecs.add_status(invoker, *buff, *duration);
             process_skill(ecs, invoker, next_skill, target);
@@ -366,6 +370,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::FieldEffect(_, _) => 2,
         SkillEffect::RotateAmmo() => 1,
         SkillEffect::None => 0,
+        SkillEffect::Buff(_, _) => 1,
         SkillEffect::BuffThen(_, _, _) => 1,
         SkillEffect::ThenBuff(_, _, _) => 1,
         SkillEffect::Orb(_, _, _) => 3,
@@ -884,6 +889,17 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert!(ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Adrenaline] > 0);
+    }
+
+    #[test]
+    fn buff() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "Buff", None);
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
     }
 
     #[test]

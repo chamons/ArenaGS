@@ -67,6 +67,15 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
+pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
+        invoke_skill(ecs, enemy, skill_name, None);
+        true
+    } else {
+        false
+    }
+}
+
 pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
