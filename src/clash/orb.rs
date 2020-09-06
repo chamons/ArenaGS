@@ -56,11 +56,19 @@ pub fn create_orb(ecs: &mut World, invoker: &Entity, attack: AttackInfo, path: &
 }
 
 fn add_orb_movement_fields(ecs: &mut World, path: &[Point], speed: u32, current: usize) {
-    for i in 0..speed as usize {
+    for i in 0..2 * speed as usize {
+        let (r, g, b) = {
+            if i < speed as usize {
+                (255, 0, 0)
+            } else {
+                (128, 128, 0)
+            }
+        };
+
         if let Some(field) = path.get(current + i + 1) {
             ecs.create_entity()
                 .with(PositionComponent::init(SizedPoint::from(*field)))
-                .with(FieldComponent::init(255, 0, 0))
+                .with(FieldComponent::init(r, g, b))
                 .with(OrbComponent::init(path.to_vec(), speed))
                 .build();
         }
@@ -112,7 +120,8 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
-        assert_field_count(&ecs, 2);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_count(&ecs, 3);
     }
 
     #[test]
@@ -163,10 +172,12 @@ mod tests {
         begin_orb(&mut ecs, &player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2);
         wait_for_animations(&mut ecs);
 
-        for _ in 0..3 {
-            assert_field_count(&ecs, 2);
+        for _ in 0..2 {
+            assert_field_count(&ecs, 4);
             new_turn_wait_characters(&mut ecs);
         }
+        assert_field_count(&ecs, 3);
+        new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 1);
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);
