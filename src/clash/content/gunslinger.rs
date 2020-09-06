@@ -99,27 +99,17 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("gun_06_b.PNG"),
             TargetType::Enemy,
-            SkillEffect::Orb(Damage::init(1), OrbKind::Feather, 2),
-            Some(10),
+            SkillEffect::RangedAttack(
+                Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
+                BoltKind::Bullet,
+            ),
+            Some(AIMED_SHOT_BASE_RANGE - 1),
             true,
-        ),
+        )
+        .with_ammo(AmmoKind::Bullets, 1)
+        .with_focus_use(0.5)
+        .with_alternate("Reload"),
     );
-    // m.insert(
-    //     "Aimed Shot",
-    //     SkillInfo::init_with_distance(
-    //         Some("gun_06_b.PNG"),
-    //         TargetType::Enemy,
-    //         SkillEffect::RangedAttack(
-    //             Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
-    //             BoltKind::Bullet,
-    //         ),
-    //         Some(AIMED_SHOT_BASE_RANGE - 1),
-    //         true,
-    //     )
-    //     .with_ammo(AmmoKind::Bullets, 1)
-    //     .with_focus_use(0.5)
-    //     .with_alternate("Reload"),
-    // );
 
     m.insert(
         "Explosive Blast",
