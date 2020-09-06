@@ -60,3 +60,6 @@ mod direction;
 pub use direction::*;
 
 pub mod content;
+
+mod orb;
+pub use orb::*;

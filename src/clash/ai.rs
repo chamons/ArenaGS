@@ -14,6 +14,7 @@ pub enum BehaviorKind {
     Random,
     Bird(u32),
     Explode,
+    Orb,
 }
 
 pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
@@ -27,6 +28,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }
+        BehaviorKind::Orb => move_orb(ecs, enemy),
     };
 }
 

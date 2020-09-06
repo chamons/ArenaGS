@@ -184,6 +184,18 @@ impl StatusComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct OrbComponent {
+    pub path: Vec<Point>,
+    pub speed: u32,
+}
+
+impl OrbComponent {
+    pub fn init(path: Vec<Point>, speed: u32) -> OrbComponent {
+        OrbComponent { path, speed }
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -203,6 +215,7 @@ pub fn create_world() -> World {
     ecs.register::<PlayerDeadComponent>();
     ecs.register::<SimpleMarker<ToSerialize>>();
     ecs.register::<StatusComponent>();
+    ecs.register::<OrbComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers

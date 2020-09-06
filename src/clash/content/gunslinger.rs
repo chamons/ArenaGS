@@ -99,7 +99,7 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             Some("gun_06_b.PNG"),
             TargetType::Enemy,
-            SkillEffect::Orb(Damage::init(1), OrbKind::Feather, 10, 2),
+            SkillEffect::Orb(Damage::init(1), OrbKind::Feather, 2),
             Some(10),
             true,
         ),

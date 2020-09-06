@@ -35,7 +35,7 @@ pub enum AttackKind {
     Melee(WeaponKind),
     Field(FieldKind),
     Explode(u32),
-    Orb(OrbKind, u32, u32),
+    Orb(OrbKind, u32),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -70,8 +70,15 @@ impl AttackInfo {
 
     pub fn orb_kind(&self) -> OrbKind {
         match self.kind {
-            AttackKind::Orb(kind, _, _) => kind,
+            AttackKind::Orb(kind, _) => kind,
             _ => panic!("Wrong type in orb_kind"),
+        }
+    }
+
+    pub fn orb_speed(&self) -> u32 {
+        match self.kind {
+            AttackKind::Orb(_, speed) => speed,
+            _ => panic!("Wrong type in orb_speed"),
         }
     }
 }
@@ -293,11 +300,11 @@ pub fn reap_killed(ecs: &mut World) {
     }
 }
 
-pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, range: u32, speed: u32) {
+pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32) {
     let source_position = Some(ecs.get_position(source).origin);
     ecs.shovel(
         *source,
-        AttackComponent::init(target_position, strength, AttackKind::Orb(kind, range, speed), source_position),
+        AttackComponent::init(target_position, strength, AttackKind::Orb(kind, speed), source_position),
     );
     ecs.raise_event(EventKind::Orb(OrbState::BeginCastAnimation), Some(*source));
 }
@@ -321,11 +328,26 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     let path = source_position.line_to(target_position).unwrap();
     let orb_position = path[1];
 
+    // TODO - Does this belong in spawner or orb.rs?
+    let speed = attack.orb_speed();
     let orb = ecs
         .create_entity()
         .with(PositionComponent::init(SizedPoint::init(orb_position.x, orb_position.y)))
         .with(AttackComponent { attack })
+        .with(OrbComponent::init(path.clone(), speed))
+        .with(BehaviorComponent::init(BehaviorKind::Orb))
+        .with(TimeComponent::init(-100))
         .build();
+
+    for i in 0..attack.orb_speed() as usize {
+        if let Some(field) = path.get(i + 2) {
+            ecs.create_entity()
+                .with(PositionComponent::init(SizedPoint::init(field.x, field.y)))
+                .with(FieldComponent::init(255, 0, 0))
+                .with(OrbComponent::init(path.clone(), speed))
+                .build();
+        }
+    }
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
