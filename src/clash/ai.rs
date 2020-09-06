@@ -82,6 +82,12 @@ pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) 
     false
 }
 
+pub fn distance_to_player(ecs: &mut World, enemy: &Entity) -> Option<u32> {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    current_position.distance_to_multi(player_position)
+}
+
 pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
