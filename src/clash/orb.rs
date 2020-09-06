@@ -48,7 +48,7 @@ pub fn create_orb(ecs: &mut World, invoker: &Entity, attack: AttackInfo, path: &
         .with(AttackComponent { attack })
         .with(OrbComponent::init(path.to_vec(), speed))
         .with(BehaviorComponent::init(BehaviorKind::Orb))
-        .with(TimeComponent::init(-100))
+        .with(TimeComponent::init(0))
         .build();
 
     add_orb_movement_fields(ecs, &path, speed, starting_index);
