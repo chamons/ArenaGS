@@ -82,8 +82,33 @@ fn remove_stale_fields(ecs: &mut World, entity: &Entity) {
 mod tests {
     use super::*;
 
+    fn assert_field_exists(ecs: &World, x: u32, y: u32) {
+        assert!(ecs.read_storage::<FieldComponent>().get(find_entity_at(&ecs, x, y)).is_some());
+    }
+
     #[test]
-    fn orb_has_correct_fields() {}
+    fn orb_has_correct_fields() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_exists(&ecs, 2, 5);
+    }
+
+    #[test]
+    fn super_fast_orb_has_correct_fields() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8);
+        wait_for_animations(&mut ecs);
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_exists(&ecs, 2, 5);
+        // Currently failing as enemy and orb at location. Need to exterd assert to look for field
+        assert_field_exists(&ecs, 2, 6);
+    }
 
     #[test]
     fn orb_removes_fields_on_hit() {}
