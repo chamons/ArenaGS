@@ -503,6 +503,7 @@ mod tests {
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
+        assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
     #[test]
@@ -518,6 +519,7 @@ mod tests {
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
+        assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
     #[test]
@@ -539,6 +541,7 @@ mod tests {
 
         new_turn_wait_characters(&mut ecs);
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
+        assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
     #[test]
