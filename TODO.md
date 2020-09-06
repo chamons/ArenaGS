@@ -1,9 +1,0 @@
-- Initial orb has "don't stand there" for next SPEED points somehow linked to it (?)
-- Initial orb has a timer and ai that moves
-- Need some sort of "OrbComponent" to store remaining range and full path (so we don't recal in flight and get diff answer)
-- On turn move forward that many squares, if we run into a character boom
-- Write tests:
-   - Impact nothing
-   - Impact something
-   - Cast on something at ground zero
-   - Bolt flies off screen
