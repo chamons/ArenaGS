@@ -487,16 +487,6 @@ mod tests {
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
     }
 
-    fn one_orb_tick(ecs: &mut World) {
-        add_ticks(ecs, 100);
-        for c in find_all_characters(ecs) {
-            wait(ecs, c);
-        }
-
-        tick_next_action(ecs);
-        wait_for_animations(ecs);
-    }
-
     #[test]
     fn orb_hits_target_on_time() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
@@ -508,10 +498,10 @@ mod tests {
         wait_for_animations(&mut ecs);
         let orb = find_entity_at(&ecs, 2, 3);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert_position(&ecs, &orb, Point::init(2, 5));
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
@@ -526,7 +516,7 @@ mod tests {
         wait_for_animations(&mut ecs);
         find_entity_at(&ecs, 2, 3); // Crashes if not in expected positions
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
     }
 
@@ -541,13 +531,13 @@ mod tests {
         wait_for_animations(&mut ecs);
         let orb = find_entity_at(&ecs, 2, 3);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert_position(&ecs, &orb, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(2, 7), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
     }
 
@@ -569,14 +559,14 @@ mod tests {
         wait_for_animations(&mut ecs);
         let orb = find_entity_at(&ecs, 2, 3);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert_position(&ecs, &orb, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(1, 6), PostMoveAction::None);
         begin_move(&mut ecs, &bystander, SizedPoint::init(2, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
         assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
     }
@@ -599,10 +589,10 @@ mod tests {
         wait_for_animations(&mut ecs);
         let orb = find_entity_at(&ecs, 2, 3);
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert_position(&ecs, &orb, Point::init(2, 5));
 
-        one_orb_tick(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
         assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
     }

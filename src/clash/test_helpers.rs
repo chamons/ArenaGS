@@ -122,3 +122,13 @@ pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
 }
+
+pub fn new_turn_wait_characters(ecs: &mut World) {
+    add_ticks(ecs, 100);
+    for c in find_all_characters(ecs) {
+        wait(ecs, c);
+    }
+
+    tick_next_action(ecs);
+    wait_for_animations(ecs);
+}

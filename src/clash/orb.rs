@@ -83,7 +83,15 @@ mod tests {
     use super::*;
 
     fn assert_field_exists(ecs: &World, x: u32, y: u32) {
-        assert!(ecs.read_storage::<FieldComponent>().get(find_entity_at(&ecs, x, y)).is_some());
+        let fields = ecs.read_storage::<FieldComponent>();
+        let positions = ecs.read_storage::<PositionComponent>();
+        assert!((&fields, &positions).join().any(|(_, p)| p.position.origin.x == x && p.position.origin.y == y));
+    }
+
+    fn assert_field_count(ecs: &World, expected: usize) {
+        let fields = ecs.read_storage::<FieldComponent>();
+        let count = (&fields).join().count();
+        assert_eq!(expected, count);
     }
 
     #[test]
@@ -95,6 +103,7 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
+        assert_field_count(&ecs, 2);
     }
 
     #[test]
@@ -106,13 +115,35 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
-        // Currently failing as enemy and orb at location. Need to exterd assert to look for field
         assert_field_exists(&ecs, 2, 6);
+        assert_field_count(&ecs, 3);
     }
 
     #[test]
-    fn orb_removes_fields_on_hit() {}
+    fn orb_removes_fields_on_hit() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8);
+        wait_for_animations(&mut ecs);
+        new_turn_wait_characters(&mut ecs);
+        assert_field_count(&ecs, 0);
+    }
 
     #[test]
-    fn orb_removes_fields_on_move() {}
+    fn orb_removes_fields_on_move() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 10, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+
+        for _ in 0..3 {
+            assert_field_count(&ecs, 2);
+            new_turn_wait_characters(&mut ecs);
+        }
+        assert_field_count(&ecs, 1);
+        new_turn_wait_characters(&mut ecs);
+        assert_field_count(&ecs, 0);
+    }
 }
