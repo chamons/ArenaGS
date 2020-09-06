@@ -67,6 +67,7 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
+#[allow(dead_code)]
 pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
         invoke_skill(ecs, enemy, skill_name, None);
