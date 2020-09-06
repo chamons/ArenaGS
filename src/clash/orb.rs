@@ -5,6 +5,7 @@ use specs::prelude::*;
 use super::*;
 use crate::atlas::{EasyECS, Point, SizedPoint};
 
+#[allow(clippy::needless_range_loop)]
 pub fn move_orb(ecs: &mut World, entity: &Entity) {
     remove_stale_fields(ecs, entity);
 
