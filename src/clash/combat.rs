@@ -144,7 +144,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     // We must re-create a position using the origin so multi-sized
     // monsters don't create bolts with large widths
     let caster_origin = ecs.get_position(&source).origin;
-    let source_position = SizedPoint::init(caster_origin.x, caster_origin.y);
+    let source_position = SizedPoint::from(caster_origin);
 
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
@@ -229,7 +229,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
     };
 
     ecs.create_entity()
-        .with(PositionComponent::init(SizedPoint::init(attack.target.x, attack.target.y)))
+        .with(PositionComponent::init(SizedPoint::from(attack.target)))
         .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0), None))
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(FieldComponent::init(r, g, b))
@@ -323,7 +323,7 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     let caster_origin = ecs.get_position(&source).origin;
-    let source_position = SizedPoint::init(caster_origin.x, caster_origin.y);
+    let source_position = SizedPoint::from(caster_origin);
     let target_position = attack.target;
     let path = source_position.line_to(target_position).unwrap();
     let orb_position = path[1];
@@ -332,34 +332,26 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     let speed = attack.orb_speed();
     let orb = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::init(orb_position.x, orb_position.y)))
+        .with(PositionComponent::init(SizedPoint::from(orb_position)))
         .with(AttackComponent { attack })
         .with(OrbComponent::init(path.clone(), speed))
         .with(BehaviorComponent::init(BehaviorKind::Orb))
         .with(TimeComponent::init(-100))
         .build();
 
-    for i in 0..attack.orb_speed() as usize {
-        if let Some(field) = path.get(i + 2) {
-            ecs.create_entity()
-                .with(PositionComponent::init(SizedPoint::init(field.x, field.y)))
-                .with(FieldComponent::init(255, 0, 0))
-                .with(OrbComponent::init(path.clone(), speed))
-                .build();
-        }
-    }
+    add_orb_movement_fields(ecs, &path, speed, 1);
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
 }
 
-pub fn apply_orb(ecs: &mut World, bolt: Entity) {
+pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(bolt).attack
+        attacks.grab(orb).attack
     };
-    apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
-    ecs.delete_entity(bolt).unwrap();
+    apply_damage_to_location(ecs, point, attack.source, attack.damage);
+    ecs.delete_entity(orb).unwrap();
 }
 
 #[cfg(test)]

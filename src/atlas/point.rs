@@ -55,6 +55,10 @@ impl SizedPoint {
         }
     }
 
+    pub const fn from(origin: Point) -> SizedPoint {
+        SizedPoint::init(origin.x, origin.y)
+    }
+
     pub const fn init_multi(x: u32, y: u32, width: u32, height: u32) -> SizedPoint {
         SizedPoint {
             origin: Point::init(x, y),
