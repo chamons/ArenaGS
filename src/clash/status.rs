@@ -416,7 +416,7 @@ mod tests {
         store.remove_status(StatusKind::TestStatus);
     }
 
-    fn test_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
         match kind {
             EventKind::StatusAdded(status_kind) => ecs.increment_test_data(format!("Added {:?}", status_kind)),
             EventKind::StatusExpired(status_kind) => ecs.increment_test_data(format!("Expired {:?}", status_kind)),
