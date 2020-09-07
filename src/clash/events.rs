@@ -61,10 +61,12 @@ pub enum EventKind {
     MoveComplete(u32),
     Tick(i32),
     Damage(RolledDamage),
+    StatusAdded(StatusKind),
+    StatusRemoved(StatusKind),
     StatusExpired(StatusKind),
 }
 
-type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();
+pub type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();
 
 #[derive(Component)] // NotConvertSaveload
 pub struct EventComponent {

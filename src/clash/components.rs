@@ -200,6 +200,39 @@ impl OrbComponent {
     }
 }
 
+#[cfg(test)]
+#[derive(PartialEq, Eq, Component, ConvertSaveload, Clone)]
+pub struct TestComponent {
+    pub data: HashMap<String, u32>,
+}
+
+#[cfg(test)]
+impl TestComponent {
+    pub fn init() -> TestComponent {
+        TestComponent { data: HashMap::new() }
+    }
+}
+
+#[cfg(test)]
+pub trait TestInfo {
+    fn get_test_data(&self, name: String) -> u32;
+    fn set_test_data(&self, name: String, value: u32);
+    fn increment_test_data(&self, name: String);
+}
+
+#[cfg(test)]
+impl TestInfo for World {
+    fn get_test_data(&self, name: String) -> u32 {
+        *self.read_resource::<TestComponent>().data.get(&name).unwrap()
+    }
+    fn set_test_data(&self, name: String, value: u32) {
+        self.write_resource::<TestComponent>().data.insert(name, value);
+    }
+    fn increment_test_data(&self, name: String) {
+        *self.write_resource::<TestComponent>().data.entry(name).or_insert(0) += 1;
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -244,6 +277,8 @@ pub fn create_world() -> World {
 
     #[cfg(test)]
     {
+        ecs.insert(TestComponent::init());
+        // Normally done by BattleScene in UI case
         crate::arena::add_ui_extension(&mut ecs);
     }
 

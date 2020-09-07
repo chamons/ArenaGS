@@ -56,26 +56,44 @@ impl StatusStore {
 
     pub fn add_status_to(ecs: &mut World, entity: &Entity, kind: StatusKind, length: i32) {
         ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
     }
 
     pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
         ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
     }
 
     pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
         ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
     }
 
     pub fn remove_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
         ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
     }
 
     pub fn remove_trait_if_found_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait_if_found(kind);
+        if ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait_if_found(kind) {
+            ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+        }
     }
 
+    // Returns true when swapping from false -> true
     pub fn toggle_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind, state: bool) -> bool {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.toggle_trait(kind, state)
+        let delta = ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.toggle_trait(kind, state);
+        if let Some(delta) = delta {
+            if delta {
+                ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+                true
+            } else {
+                ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+                false
+            }
+        } else {
+            false
+        }
     }
 
     fn add_status(&mut self, kind: StatusKind, length: i32) {
@@ -116,13 +134,16 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    fn remove_trait_if_found(&mut self, kind: StatusKind) {
+    fn remove_trait_if_found(&mut self, kind: StatusKind) -> bool {
         if self.has(kind) {
             self.remove_trait(kind);
+            true
+        } else {
+            false
         }
     }
 
-    fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
+    fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> Option<bool> {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
             _ => {}
@@ -130,13 +151,14 @@ impl StatusStore {
 
         if state {
             self.add_trait(kind);
-            return true;
+            return Some(true);
         } else {
             if self.has(kind) {
                 self.remove_trait(kind);
+                return Some(false);
             }
         }
-        false
+        None
     }
 
     // Need notification or return list to event
@@ -390,5 +412,15 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_trait(StatusKind::TestStatus);
         store.remove_status(StatusKind::TestStatus);
+    }
+
+    #[test]
+    fn events() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let callback: EventCallback = |world, kind, _| match kind {
+            EventKind::StatusAdded(status_kind) => world.increment_test_data(format!("{:?}", status_kind)),
+            _ => {}
+        };
+        ecs.subscribe(callback);
     }
 }
