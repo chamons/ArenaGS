@@ -215,15 +215,15 @@ impl TestComponent {
 
 #[cfg(test)]
 pub trait TestInfo {
-    fn get_test_data(&self, name: String) -> u32;
+    fn get_test_data(&self, name: &str) -> u32;
     fn set_test_data(&self, name: String, value: u32);
     fn increment_test_data(&self, name: String);
 }
 
 #[cfg(test)]
 impl TestInfo for World {
-    fn get_test_data(&self, name: String) -> u32 {
-        *self.read_resource::<TestComponent>().data.get(&name).unwrap()
+    fn get_test_data(&self, name: &str) -> u32 {
+        *self.read_resource::<TestComponent>().data.get(&name.to_string()).unwrap()
     }
     fn set_test_data(&self, name: String, value: u32) {
         self.write_resource::<TestComponent>().data.insert(name, value);

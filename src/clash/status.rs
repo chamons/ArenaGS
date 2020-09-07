@@ -150,8 +150,10 @@ impl StatusStore {
         };
 
         if state {
-            self.add_trait(kind);
-            return Some(true);
+            if !self.has(kind) {
+                self.add_trait(kind);
+                return Some(true);
+            }
         } else {
             if self.has(kind) {
                 self.remove_trait(kind);
@@ -429,5 +431,20 @@ mod tests {
         let player = find_at(&mut ecs, 2, 2);
         ecs.subscribe(test_event);
         ecs.add_status(&player, StatusKind::Aimed, 200);
+        assert_eq!(1, ecs.get_test_data("Added Aimed"));
+        ecs.add_trait(&player, StatusKind::Armored);
+        assert_eq!(1, ecs.get_test_data("Added Armored"));
+        ecs.remove_status(&player, StatusKind::Aimed);
+        assert_eq!(1, ecs.get_test_data("Removed Aimed"));
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
+        assert_eq!(1, ecs.get_test_data("Added Frozen"));
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, false);
+        assert_eq!(1, ecs.get_test_data("Removed Frozen"));
+        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Armored);
+        assert_eq!(1, ecs.get_test_data("Removed Armored"));
+        ecs.add_trait(&player, StatusKind::Magnum);
+        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Magnum);
+        assert_eq!(1, ecs.get_test_data("Removed Magnum"));
     }
 }
