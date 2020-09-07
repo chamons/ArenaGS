@@ -414,13 +414,20 @@ mod tests {
         store.remove_status(StatusKind::TestStatus);
     }
 
+    fn test_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+        match kind {
+            EventKind::StatusAdded(status_kind) => ecs.increment_test_data(format!("Added {:?}", status_kind)),
+            EventKind::StatusExpired(status_kind) => ecs.increment_test_data(format!("Expired {:?}", status_kind)),
+            EventKind::StatusRemoved(status_kind) => ecs.increment_test_data(format!("Removed {:?}", status_kind)),
+            _ => {}
+        };
+    }
+
     #[test]
     fn events() {
         let mut ecs = create_test_state().with_character(2, 2, 0).build();
-        let callback: EventCallback = |world, kind, _| match kind {
-            EventKind::StatusAdded(status_kind) => world.increment_test_data(format!("{:?}", status_kind)),
-            _ => {}
-        };
-        ecs.subscribe(callback);
+        let player = find_at(&mut ecs, 2, 2);
+        ecs.subscribe(test_event);
+        ecs.add_status(&player, StatusKind::Aimed, 200);
     }
 }
