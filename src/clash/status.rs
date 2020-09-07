@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
+use crate::atlas::EasyMutECS;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive)]
 #[repr(u32)]
@@ -53,7 +54,49 @@ impl StatusStore {
         StatusStore { store: HashMap::new() }
     }
 
-    pub fn add_status(&mut self, kind: StatusKind, length: i32) {
+    pub fn add_status_to(ecs: &mut World, entity: &Entity, kind: StatusKind, length: i32) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+    }
+
+    pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+    }
+
+    pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+    }
+
+    pub fn remove_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+    }
+
+    pub fn remove_trait_if_found_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        if ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait_if_found(kind) {
+            ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+        }
+    }
+
+    // Returns true when swapping from false -> true
+    pub fn toggle_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind, state: bool) -> bool {
+        let delta = ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.toggle_trait(kind, state);
+        if let Some(delta) = delta {
+            if delta {
+                ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+                true
+            } else {
+                ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    fn add_status(&mut self, kind: StatusKind, length: i32) {
         self.store
             .entry(kind)
             .and_modify(|e| match e {
@@ -63,7 +106,7 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Status(TickTimer::init_with_duration(length)));
     }
 
-    pub fn add_trait(&mut self, kind: StatusKind) {
+    fn add_trait(&mut self, kind: StatusKind) {
         self.store
             .entry(kind)
             .and_modify(|e| match e {
@@ -73,7 +116,7 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Trait);
     }
 
-    pub fn remove_status(&mut self, kind: StatusKind) {
+    fn remove_status(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => {}
             None => panic!("Status remove of status {:?} but not found?", kind),
@@ -82,7 +125,7 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    pub fn remove_trait(&mut self, kind: StatusKind) {
+    fn remove_trait(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status removal of trait {:?} but already as a status?", kind),
             None => panic!("Status remove of trait {:?} but not found?", kind),
@@ -91,43 +134,37 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    pub fn remove_trait_if_found(&mut self, kind: StatusKind) {
+    fn remove_trait_if_found(&mut self, kind: StatusKind) -> bool {
         if self.has(kind) {
             self.remove_trait(kind);
+            true
+        } else {
+            false
         }
     }
 
-    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
+    fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> Option<bool> {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
             _ => {}
         };
 
         if state {
-            self.add_trait(kind);
-            return true;
+            if !self.has(kind) {
+                self.add_trait(kind);
+                return Some(true);
+            }
         } else {
             if self.has(kind) {
                 self.remove_trait(kind);
+                return Some(false);
             }
         }
-        false
-    }
-
-    pub fn has(&self, kind: StatusKind) -> bool {
-        self.store.contains_key(&kind)
-    }
-
-    pub fn duration(&self, kind: StatusKind) -> Option<i32> {
-        match self.store.get(&kind) {
-            Some(StatusType::Status(timer)) => Some(timer.duration()),
-            Some(StatusType::Trait) => None,
-            None => None,
-        }
+        None
     }
 
     // Need notification or return list to event
-    pub fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
+    fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
         let mut remove = vec![];
 
         for (k, v) in self.store.iter_mut() {
@@ -144,6 +181,18 @@ impl StatusStore {
             self.store.remove(r);
         }
         remove
+    }
+
+    pub fn has(&self, kind: StatusKind) -> bool {
+        self.store.contains_key(&kind)
+    }
+
+    pub fn duration(&self, kind: StatusKind) -> Option<i32> {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(timer)) => Some(timer.duration()),
+            Some(StatusType::Trait) => None,
+            None => None,
+        }
     }
 
     pub fn get_all(&self) -> Vec<StatusKind> {
@@ -365,5 +414,37 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_trait(StatusKind::TestStatus);
         store.remove_status(StatusKind::TestStatus);
+    }
+
+    fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
+        match kind {
+            EventKind::StatusAdded(status_kind) => ecs.increment_test_data(format!("Added {:?}", status_kind)),
+            EventKind::StatusExpired(status_kind) => ecs.increment_test_data(format!("Expired {:?}", status_kind)),
+            EventKind::StatusRemoved(status_kind) => ecs.increment_test_data(format!("Removed {:?}", status_kind)),
+            _ => {}
+        };
+    }
+
+    #[test]
+    fn events() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).build();
+        let player = find_at(&mut ecs, 2, 2);
+        ecs.subscribe(test_event);
+        ecs.add_status(&player, StatusKind::Aimed, 200);
+        assert_eq!(1, ecs.get_test_data("Added Aimed"));
+        ecs.add_trait(&player, StatusKind::Armored);
+        assert_eq!(1, ecs.get_test_data("Added Armored"));
+        ecs.remove_status(&player, StatusKind::Aimed);
+        assert_eq!(1, ecs.get_test_data("Removed Aimed"));
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
+        assert_eq!(1, ecs.get_test_data("Added Frozen"));
+        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, false);
+        assert_eq!(1, ecs.get_test_data("Removed Frozen"));
+        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Armored);
+        assert_eq!(1, ecs.get_test_data("Removed Armored"));
+        ecs.add_trait(&player, StatusKind::Magnum);
+        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Magnum);
+        assert_eq!(1, ecs.get_test_data("Removed Magnum"));
     }
 }

@@ -10,7 +10,7 @@ use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint, ToSerialize};
+use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
@@ -200,6 +200,39 @@ impl OrbComponent {
     }
 }
 
+#[cfg(test)]
+#[derive(PartialEq, Eq, Component, ConvertSaveload, Clone)]
+pub struct TestComponent {
+    pub data: HashMap<String, u32>,
+}
+
+#[cfg(test)]
+impl TestComponent {
+    pub fn init() -> TestComponent {
+        TestComponent { data: HashMap::new() }
+    }
+}
+
+#[cfg(test)]
+pub trait TestInfo {
+    fn get_test_data(&self, name: &str) -> u32;
+    fn set_test_data(&self, name: String, value: u32);
+    fn increment_test_data(&self, name: String);
+}
+
+#[cfg(test)]
+impl TestInfo for World {
+    fn get_test_data(&self, name: &str) -> u32 {
+        *self.read_resource::<TestComponent>().data.get(&name.to_string()).unwrap()
+    }
+    fn set_test_data(&self, name: String, value: u32) {
+        self.write_resource::<TestComponent>().data.insert(name, value);
+    }
+    fn increment_test_data(&self, name: String) {
+        *self.write_resource::<TestComponent>().data.entry(name).or_insert(0) += 1;
+    }
+}
+
 pub fn create_world() -> World {
     let mut ecs = World::new();
     ecs.register::<PositionComponent>();
@@ -244,6 +277,8 @@ pub fn create_world() -> World {
 
     #[cfg(test)]
     {
+        ecs.insert(TestComponent::init());
+        // Normally done by BattleScene in UI case
         crate::arena::add_ui_extension(&mut ecs);
     }
 
@@ -297,19 +332,19 @@ impl Framer for World {
 }
 
 pub trait StatusApplier {
-    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32);
-    fn remove_status(&self, entity: &Entity, kind: StatusKind);
+    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32);
+    fn remove_status(&mut self, entity: &Entity, kind: StatusKind);
     fn add_trait(&mut self, entity: &Entity, kind: StatusKind);
 }
 impl StatusApplier for World {
-    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32) {
+        StatusStore::add_status_to(self, entity, kind, length);
     }
-    fn remove_status(&self, entity: &Entity, kind: StatusKind) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+    fn remove_status(&mut self, entity: &Entity, kind: StatusKind) {
+        StatusStore::remove_status_from(self, entity, kind);
     }
     fn add_trait(&mut self, entity: &Entity, kind: StatusKind) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+        StatusStore::add_trait_to(self, entity, kind);
     }
 }
 

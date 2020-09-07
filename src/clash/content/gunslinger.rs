@@ -49,15 +49,13 @@ fn remove_skills(ecs: &mut World, invoker: &Entity, skills_to_remove: &[&str]) {
 }
 
 fn set_weapon_trait(ecs: &mut World, invoker: &Entity, ammo: TargetAmmo) {
-    let mut statuses = ecs.write_storage::<StatusComponent>();
-    let status = &mut statuses.grab_mut(*invoker).status;
-    status.remove_trait_if_found(StatusKind::Magnum);
-    status.remove_trait_if_found(StatusKind::Ignite);
-    status.remove_trait_if_found(StatusKind::Cyclone);
+    StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Magnum);
+    StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Ignite);
+    StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Cyclone);
     match ammo {
-        TargetAmmo::Magnum => status.add_trait(StatusKind::Magnum),
-        TargetAmmo::Ignite => status.add_trait(StatusKind::Ignite),
-        TargetAmmo::Cyclone => status.add_trait(StatusKind::Cyclone),
+        TargetAmmo::Magnum => ecs.add_trait(invoker, StatusKind::Magnum),
+        TargetAmmo::Ignite => ecs.add_trait(invoker, StatusKind::Ignite),
+        TargetAmmo::Cyclone => ecs.add_trait(invoker, StatusKind::Cyclone),
     }
 }
 

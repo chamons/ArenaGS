@@ -79,11 +79,7 @@ impl Temperature {
 }
 
 fn check_temperature_state(ecs: &mut World, target: &Entity) {
-    let did_freeze = ecs
-        .write_storage::<StatusComponent>()
-        .grab_mut(*target)
-        .status
-        .toggle_trait(StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
+    let did_freeze = StatusStore::toggle_trait_from(ecs, target, StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
 
     if did_freeze {
         ecs.log(format!("{} freezes over", ecs.get_name(target).unwrap()));
