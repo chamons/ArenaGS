@@ -10,7 +10,7 @@ use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint, ToSerialize};
+use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
@@ -297,19 +297,19 @@ impl Framer for World {
 }
 
 pub trait StatusApplier {
-    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32);
-    fn remove_status(&self, entity: &Entity, kind: StatusKind);
+    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32);
+    fn remove_status(&mut self, entity: &Entity, kind: StatusKind);
     fn add_trait(&mut self, entity: &Entity, kind: StatusKind);
 }
 impl StatusApplier for World {
-    fn add_status(&self, entity: &Entity, kind: StatusKind, length: i32) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32) {
+        StatusStore::add_status_to(self, entity, kind, length);
     }
-    fn remove_status(&self, entity: &Entity, kind: StatusKind) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+    fn remove_status(&mut self, entity: &Entity, kind: StatusKind) {
+        StatusStore::remove_status_from(self, entity, kind);
     }
     fn add_trait(&mut self, entity: &Entity, kind: StatusKind) {
-        self.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+        StatusStore::add_trait_to(self, entity, kind);
     }
 }
 

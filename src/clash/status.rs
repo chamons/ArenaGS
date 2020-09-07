@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
+use crate::atlas::EasyMutECS;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive)]
 #[repr(u32)]
@@ -53,7 +54,11 @@ impl StatusStore {
         StatusStore { store: HashMap::new() }
     }
 
-    pub fn add_status(&mut self, kind: StatusKind, length: i32) {
+    pub fn add_status_to(ecs: &mut World, entity: &Entity, kind: StatusKind, length: i32) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
+    }
+
+    fn add_status(&mut self, kind: StatusKind, length: i32) {
         self.store
             .entry(kind)
             .and_modify(|e| match e {
@@ -63,7 +68,11 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Status(TickTimer::init_with_duration(length)));
     }
 
-    pub fn add_trait(&mut self, kind: StatusKind) {
+    pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+    }
+
+    fn add_trait(&mut self, kind: StatusKind) {
         self.store
             .entry(kind)
             .and_modify(|e| match e {
@@ -73,7 +82,11 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Trait);
     }
 
-    pub fn remove_status(&mut self, kind: StatusKind) {
+    pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+    }
+
+    fn remove_status(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => {}
             None => panic!("Status remove of status {:?} but not found?", kind),
@@ -114,18 +127,6 @@ impl StatusStore {
         false
     }
 
-    pub fn has(&self, kind: StatusKind) -> bool {
-        self.store.contains_key(&kind)
-    }
-
-    pub fn duration(&self, kind: StatusKind) -> Option<i32> {
-        match self.store.get(&kind) {
-            Some(StatusType::Status(timer)) => Some(timer.duration()),
-            Some(StatusType::Trait) => None,
-            None => None,
-        }
-    }
-
     // Need notification or return list to event
     pub fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
         let mut remove = vec![];
@@ -144,6 +145,18 @@ impl StatusStore {
             self.store.remove(r);
         }
         remove
+    }
+
+    pub fn has(&self, kind: StatusKind) -> bool {
+        self.store.contains_key(&kind)
+    }
+
+    pub fn duration(&self, kind: StatusKind) -> Option<i32> {
+        match self.store.get(&kind) {
+            Some(StatusType::Status(timer)) => Some(timer.duration()),
+            Some(StatusType::Trait) => None,
+            None => None,
+        }
     }
 
     pub fn get_all(&self) -> Vec<StatusKind> {
