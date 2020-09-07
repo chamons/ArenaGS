@@ -6,53 +6,69 @@ use super::*;
 use crate::atlas::{EasyECS, Point, SizedPoint};
 
 #[allow(clippy::needless_range_loop)]
-pub fn move_orb(ecs: &mut World, entity: &Entity) {
-    remove_stale_fields(ecs, entity);
+pub fn move_orb(ecs: &mut World, orb: &Entity) {
+    remove_stale_fields(ecs, orb);
 
-    let (path, speed, current_index, next_index) = {
-        let current_position = ecs.get_position(entity).origin;
+    let (path, speed, current_index, next_index, at_end) = {
+        let current_position = ecs.get_position(orb).origin;
         let orbs = ecs.read_storage::<OrbComponent>();
-        let orb = orbs.grab(*entity);
+        let orb = orbs.grab(*orb);
         let path = &orb.path;
         let current_index = path.iter().position(|&x| x == current_position).unwrap();
         let speed = orb.speed;
         let next_index = cmp::min(current_index + speed as usize, path.len() - 1);
-        (path.clone(), speed, current_index, next_index)
+        let at_end = next_index == path.len() - 1;
+        (path.clone(), speed, current_index, next_index, at_end)
     };
 
     for i in current_index..=next_index {
         if find_character_at_location(ecs, path[i]).is_some() {
-            apply_orb(ecs, *entity, path[i]);
+            apply_orb(ecs, *orb, path[i]);
             return;
         }
     }
 
-    wait(ecs, *entity);
-    add_orb_movement_fields(ecs, &path, speed, next_index);
-    begin_move(ecs, entity, SizedPoint::from(path[next_index]), PostMoveAction::None);
+    if !at_end {
+        wait(ecs, *orb);
+        add_orb_movement_fields(ecs, &path, speed, next_index);
+        begin_move(ecs, orb, SizedPoint::from(path[next_index]), PostMoveAction::None);
+    } else {
+        ecs.delete_entity(*orb).unwrap();
+    }
 }
 
-pub fn create_orb(ecs: &mut World, attack: AttackInfo, path: &[Point], position: &Point) -> Entity {
+pub fn create_orb(ecs: &mut World, invoker: &Entity, attack: AttackInfo, path: &[Point]) -> Entity {
+    let caster_position = ecs.get_position(invoker);
+    let starting_index = path.iter().position(|x| !caster_position.contains_point(x)).unwrap();
+
     let speed = attack.orb_speed();
     let orb = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(*position)))
+        .with(PositionComponent::init(SizedPoint::from(path[starting_index])))
         .with(AttackComponent { attack })
         .with(OrbComponent::init(path.to_vec(), speed))
         .with(BehaviorComponent::init(BehaviorKind::Orb))
-        .with(TimeComponent::init(-100))
+        .with(TimeComponent::init(0))
         .build();
 
-    add_orb_movement_fields(ecs, &path, speed, 1);
+    add_orb_movement_fields(ecs, &path, speed, starting_index);
     orb
 }
 
 fn add_orb_movement_fields(ecs: &mut World, path: &[Point], speed: u32, current: usize) {
-    for i in 0..speed as usize {
+    for i in 0..2 * speed as usize {
+        let (r, g, b) = {
+            if i < speed as usize {
+                (255, 0, 0)
+            } else {
+                (230, 150, 0)
+            }
+        };
+
         if let Some(field) = path.get(current + i + 1) {
             ecs.create_entity()
                 .with(PositionComponent::init(SizedPoint::from(*field)))
-                .with(FieldComponent::init(255, 0, 0))
+                .with(FieldComponent::init(r, g, b))
                 .with(OrbComponent::init(path.to_vec(), speed))
                 .build();
         }
@@ -104,7 +120,8 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
-        assert_field_count(&ecs, 2);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_count(&ecs, 3);
     }
 
     #[test]
@@ -118,6 +135,22 @@ mod tests {
         assert_field_exists(&ecs, 2, 5);
         assert_field_exists(&ecs, 2, 6);
         assert_field_count(&ecs, 3);
+    }
+
+    #[test]
+    fn orb_from_multi_sized_has_correct_fields() {
+        let mut ecs = create_test_state()
+            .with_sized_character(SizedPoint::init_multi(2, 6, 2, 2), 0)
+            .with_character(2, 2, 0)
+            .with_map()
+            .build();
+        let invoker = find_at(&ecs, 2, 6);
+
+        begin_orb(&mut ecs, &invoker, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2);
+        wait_for_animations(&mut ecs);
+        assert_field_exists(&ecs, 2, 3);
+        assert_field_exists(&ecs, 2, 2);
+        assert_field_count(&ecs, 2);
     }
 
     #[test]
@@ -139,10 +172,12 @@ mod tests {
         begin_orb(&mut ecs, &player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2);
         wait_for_animations(&mut ecs);
 
-        for _ in 0..3 {
-            assert_field_count(&ecs, 2);
+        for _ in 0..2 {
+            assert_field_count(&ecs, 4);
             new_turn_wait_characters(&mut ecs);
         }
+        assert_field_count(&ecs, 3);
+        new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 1);
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);

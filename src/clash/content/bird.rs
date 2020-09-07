@@ -7,7 +7,7 @@ use crate::try_behavior;
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
-        "Feather Blast",
+        "Wing Blast",
         SkillInfo::init_with_distance(
             None,
             TargetType::Player,
@@ -16,14 +16,20 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         ),
     );
+    m.insert(
+        "Feather Orb",
+        SkillInfo::init_with_distance(None, TargetType::Player, SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2), Some(12), true),
+    );
 }
 
-pub fn take_action(ecs: &mut World, enemy: &Entity, phase: u32) {
-    if phase == 1 {
-        try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Blast"));
-        try_behavior!(move_towards_player(ecs, enemy));
-        try_behavior!(move_randomly(ecs, enemy));
+pub fn take_action(ecs: &mut World, enemy: &Entity) {
+    if distance_to_player(ecs, enemy).unwrap_or(0) > 3 {
+        try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Orb"));
+    } else {
+        try_behavior!(use_skill_if_in_range(ecs, enemy, "Wing Blast"));
     }
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
 
     wait(ecs, *enemy);
 }

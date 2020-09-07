@@ -12,7 +12,7 @@ use crate::atlas::{EasyECS, SizedPoint};
 pub enum BehaviorKind {
     None,
     Random,
-    Bird(u32),
+    Bird,
     Explode,
     Orb,
 }
@@ -24,7 +24,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::Random => {
             move_randomly(ecs, enemy);
         }
-        BehaviorKind::Bird(phase) => super::content::bird::take_action(ecs, enemy, phase),
+        BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }
@@ -67,6 +67,16 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
+#[allow(dead_code)]
+pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
+        invoke_skill(ecs, enemy, skill_name, None);
+        true
+    } else {
+        false
+    }
+}
+
 pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
@@ -80,6 +90,12 @@ pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) 
         }
     }
     false
+}
+
+pub fn distance_to_player(ecs: &mut World, enemy: &Entity) -> Option<u32> {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    current_position.distance_to_multi(player_position)
 }
 
 pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {

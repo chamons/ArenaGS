@@ -42,7 +42,7 @@ pub fn bird_monster(ecs: &mut World) {
             Temperature::init(),
         )))
         .with(StatusComponent::init())
-        .with(BehaviorComponent::init(BehaviorKind::Bird(0)))
+        .with(BehaviorComponent::init(BehaviorKind::Bird))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();

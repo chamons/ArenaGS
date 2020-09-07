@@ -68,6 +68,9 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         ),
     );
+
+    m.insert("Buff", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Aimed, 300)));
+
     m.insert(
         "BuffAndMove",
         SkillInfo::init_with_distance(
