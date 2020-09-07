@@ -88,6 +88,11 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
 }
 
 fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_position: Option<Point>) {
+    // Flying should not be visibile, and are immune to all damage
+    if ecs.has_status(target, StatusKind::Flying) {
+        return;
+    }
+
     let rolled_damage = {
         let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
@@ -399,5 +404,20 @@ mod tests {
         // 0 - 2 damage
         let health = &ecs.get_defenses(&target);
         assert!(health.health > 7);
+    }
+
+    #[test]
+    fn flying_prevents_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 3);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        ecs.add_status(&target, StatusKind::Flying, 300);
+
+        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(ecs.get_defenses(&target).health, starting_health);
     }
 }

@@ -88,6 +88,7 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
         StatusKind::StaticCharge => "SpellBook06_89.png",
         StatusKind::Aimed => "SpellBook08_83.png",
         StatusKind::Armored => "SpellBook08_122.png",
+        StatusKind::Flying => "SpellBook08_68.png",
         #[cfg(test)]
         _ => "",
     }

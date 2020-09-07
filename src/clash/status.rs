@@ -21,6 +21,7 @@ pub enum StatusKind {
     StaticCharge,
     Aimed,
     Armored,
+    Flying,
 
     #[cfg(test)]
     TestStatus,

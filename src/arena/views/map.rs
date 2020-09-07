@@ -96,6 +96,12 @@ impl MapView {
                     // and the relative "render_frame" for the rest if we have it
                     let render_frame = get_render_frame(animation, frame);
                     if let Some(position) = position {
+                        // Flying shouldn't show up on screen
+                        // This really should be based upon a SkipDisplayComponent
+                        // but https://github.com/chamons/ArenaGS/issues/186
+                        if ecs.has_status(&entity, StatusKind::Flying) {
+                            continue;
+                        }
                         let offset = get_render_position(position, animation, frame);
                         let state = get_render_sprite_state(&render, animation);
                         sprite.draw(canvas, offset, state, render_frame)?;
