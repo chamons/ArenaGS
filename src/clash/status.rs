@@ -58,6 +58,26 @@ impl StatusStore {
         ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
     }
 
+    pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
+    }
+
+    pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
+    }
+
+    pub fn remove_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait(kind);
+    }
+
+    pub fn remove_trait_if_found_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait_if_found(kind);
+    }
+
+    pub fn toggle_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind, state: bool) -> bool {
+        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.toggle_trait(kind, state)
+    }
+
     fn add_status(&mut self, kind: StatusKind, length: i32) {
         self.store
             .entry(kind)
@@ -66,10 +86,6 @@ impl StatusStore {
                 StatusType::Trait => panic!("Status insert of {:?} but already in as a trait?", kind),
             })
             .or_insert_with(|| StatusType::Status(TickTimer::init_with_duration(length)));
-    }
-
-    pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
     }
 
     fn add_trait(&mut self, kind: StatusKind) {
@@ -82,10 +98,6 @@ impl StatusStore {
             .or_insert_with(|| StatusType::Trait);
     }
 
-    pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
-    }
-
     fn remove_status(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => {}
@@ -95,7 +107,7 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    pub fn remove_trait(&mut self, kind: StatusKind) {
+    fn remove_trait(&mut self, kind: StatusKind) {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status removal of trait {:?} but already as a status?", kind),
             None => panic!("Status remove of trait {:?} but not found?", kind),
@@ -104,13 +116,13 @@ impl StatusStore {
         self.store.remove(&kind);
     }
 
-    pub fn remove_trait_if_found(&mut self, kind: StatusKind) {
+    fn remove_trait_if_found(&mut self, kind: StatusKind) {
         if self.has(kind) {
             self.remove_trait(kind);
         }
     }
 
-    pub fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
+    fn toggle_trait(&mut self, kind: StatusKind, state: bool) -> bool {
         match self.store.get(&kind) {
             Some(StatusType::Status(_)) => panic!("Status toggle of trait {:?} but already as a status?", kind),
             _ => {}
@@ -128,7 +140,7 @@ impl StatusStore {
     }
 
     // Need notification or return list to event
-    pub fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
+    fn apply_ticks(&mut self, ticks: i32) -> Vec<StatusKind> {
         let mut remove = vec![];
 
         for (k, v) in self.store.iter_mut() {
