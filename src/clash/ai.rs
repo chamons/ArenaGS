@@ -16,6 +16,14 @@ macro_rules! try_behavior {
     };
 }
 
+#[macro_export]
+macro_rules! do_behavior {
+    ($x:expr) => {
+        $x;
+        return;
+    };
+}
+
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
