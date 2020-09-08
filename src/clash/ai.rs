@@ -62,6 +62,22 @@ fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -
     None
 }
 
+pub fn get_random_direction_list(ecs: &mut World) -> Vec<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    let mut directions = vec![
+        Direction::North,
+        Direction::NorthWest,
+        Direction::West,
+        Direction::SouthWest,
+        Direction::South,
+        Direction::SouthEast,
+        Direction::East,
+        Direction::NorthEast,
+    ];
+    directions.shuffle(random);
+    directions
+}
+
 pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     let position = ecs.get_position(enemy);
     if let Some(direction) = get_random_direction(ecs, position, enemy) {

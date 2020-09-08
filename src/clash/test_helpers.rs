@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{assert_points_equal, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{assert_points_equal, assert_points_not_equal, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 pub struct StateBuilder {
     ecs: World,
@@ -121,6 +121,11 @@ pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
 pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
+}
+
+pub fn assert_not_at_position(ecs: &World, entity: &Entity, expected: Point) {
+    let position = ecs.get_position(entity);
+    assert_points_not_equal(position.single_position(), expected);
 }
 
 pub fn new_turn_wait_characters(ecs: &mut World) {
