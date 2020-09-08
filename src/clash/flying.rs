@@ -33,7 +33,7 @@ fn start_flight(ecs: &mut World, target: &Entity) {
 
 fn find_clear_landing(ecs: &mut World, target: &Entity, initial: &SizedPoint) -> SizedPoint {
     for distance in 1..3 {
-        for direction in get_random_direction_list(ecs) {
+        for direction in get_random_full_direction_list(ecs) {
             let mut attempt = *initial;
             for _ in 0..distance {
                 if let Some(p) = direction.sized_point_in_direction(&attempt) {

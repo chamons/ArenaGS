@@ -206,8 +206,16 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_field(ecs: &mut World, source: Entity) {
-    let source_position = ecs.get_position(&source);
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+
+    // Fields can be fired by flying entities, skip animation if there is no Position
+    if ecs.read_storage::<PositionComponent>().get(source).is_none() {
+        let field_projectile = ecs.create_entity().with(AttackComponent { attack }).build();
+        apply_field(ecs, field_projectile);
+        return;
+    }
+
+    let source_position = ecs.get_position(&source);
 
     let field_projectile = ecs
         .create_entity()

@@ -17,6 +17,16 @@ macro_rules! try_behavior {
 }
 
 #[macro_export]
+macro_rules! try_behavior_and_if {
+    ($x:expr, $y: expr) => {
+        if $x {
+            $y;
+            return;
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! do_behavior {
     ($x:expr) => {
         $x;
@@ -72,6 +82,13 @@ fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -
 
 pub fn get_random_direction_list(ecs: &mut World) -> Vec<Direction> {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    let mut directions = vec![Direction::North, Direction::West, Direction::South, Direction::East];
+    directions.shuffle(random);
+    directions
+}
+
+pub fn get_random_full_direction_list(ecs: &mut World) -> Vec<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
     let mut directions = vec![
         Direction::North,
         Direction::NorthWest,
@@ -106,7 +123,7 @@ pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     }
 }
 
-pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
@@ -117,6 +134,28 @@ pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) 
                 return true;
             }
         }
+    }
+    false
+}
+
+pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    let mut target = ecs.get_position(&find_player(ecs));
+
+    let range = {
+        let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+        random.gen_range(0, 4)
+    };
+
+    for _ in 0..range {
+        let direction = get_random_direction_list(ecs)[0];
+        if let Some(t) = direction.sized_point_in_direction(&target) {
+            target = t;
+        }
+    }
+
+    if is_good_target(ecs, enemy, &get_skill(skill_name), target.origin) {
+        invoke_skill(ecs, enemy, skill_name, Some(target.origin));
+        return true;
     }
     false
 }
@@ -137,9 +176,28 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-pub fn use_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
     if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
         if use_skill(ecs, enemy, skill_name) {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill_with_random_target(ecs, enemy, skill_name) {
+            return true;
+        }
+    }
+    false
+}
+
+#[allow(dead_code)]
+pub fn use_player_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill_at_player_if_in_range(ecs, enemy, skill_name) {
             return true;
         }
     }

@@ -258,19 +258,21 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 }
 
 pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
-    let initial = ecs.get_position(invoker);
-
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
-        TargetType::Any => !initial.contains_point(&target),
+        TargetType::Any => {
+            let initial = ecs.get_position(invoker);
+            !initial.contains_point(&target)
+        }
         TargetType::None => false,
     } {
         return false;
     }
 
     if let Some(skill_range) = skill.range {
+        let initial = ecs.get_position(invoker);
         if let Some(range_to_target) = initial.distance_to(target) {
             if range_to_target > skill_range {
                 return false;
@@ -279,6 +281,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     }
 
     if skill.must_be_clear {
+        let initial = ecs.get_position(invoker);
         if let Some(mut path) = initial.line_to(target) {
             // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
