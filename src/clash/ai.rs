@@ -7,6 +7,15 @@ use rand::prelude::*;
 use super::*;
 use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
 
+#[macro_export]
+macro_rules! try_behavior {
+    ($x:expr) => {
+        if $x {
+            return;
+        }
+    };
+}
+
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
@@ -104,6 +113,15 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
+pub fn use_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill(ecs, enemy, skill_name) {
+            return true;
+        }
+    }
+    false
+}
+
 pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
     *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
 }
@@ -122,16 +140,6 @@ pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u
         false
     }
 }
-
-#[macro_export]
-macro_rules! try_behavior {
-    ($x:expr) => {
-        if $x {
-            return;
-        }
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -188,5 +196,6 @@ mod tests {
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
     }
 }

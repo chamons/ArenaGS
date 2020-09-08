@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use specs::prelude::*;
 
 use super::super::*;
+use crate::atlas::EasyECS;
 use crate::try_behavior;
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
@@ -24,6 +25,12 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 }
 
 pub fn take_action(ecs: &mut World, enemy: &Entity) {
+    if ecs.has_status(enemy, StatusKind::Flying) {
+    } else {
+        try_behavior!(use_skill_with_cooldown(ecs, enemy, "Take Off", 4));
+        try_behavior!(move_towards_player(ecs, enemy));
+        try_behavior!(move_randomly(ecs, enemy));
+    }
     // if distance_to_player(ecs, enemy).unwrap_or(0) > 3 {
     //     try_behavior!(use_skill_if_in_range(ecs, enemy, "Feather Orb"));
     // } else {
@@ -34,9 +41,6 @@ pub fn take_action(ecs: &mut World, enemy: &Entity) {
 
     // Disappear for x seconds, drop bombs that explode after y seconds
     // Then repeat ground combat for z seconds
-    if !ecs.has_status(enemy, StatusKind::Flying) {
-        try_behavior!(use_skill(ecs, enemy, "Take Off"));
-    }
 
     wait(ecs, *enemy);
 }

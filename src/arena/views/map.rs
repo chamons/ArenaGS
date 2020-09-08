@@ -81,14 +81,22 @@ impl MapView {
         let renderables = ecs.read_storage::<RenderComponent>();
         let animations = ecs.read_storage::<AnimationComponent>();
         let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let skip_renders = ecs.read_storage::<SkipRenderComponent>();
 
         // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
         for order in RenderOrder::into_enum_iter() {
-            for (entity, render, position, animation, character_info) in
-                (&entities, &renderables, (&positions).maybe(), (&animations).maybe(), (&character_infos).maybe()).join()
+            for (entity, render, position, animation, character_info, skip_render) in (
+                &entities,
+                &renderables,
+                (&positions).maybe(),
+                (&animations).maybe(),
+                (&character_infos).maybe(),
+                (&skip_renders).maybe(),
+            )
+                .join()
             {
                 let render = &render.render;
-                if render.order == order {
+                if render.order == order && skip_render.is_none() {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
                     // Animations have a relative frame that starts at 0 (start of animation) and
@@ -96,12 +104,6 @@ impl MapView {
                     // and the relative "render_frame" for the rest if we have it
                     let render_frame = get_render_frame(animation, frame);
                     if let Some(position) = position {
-                        // Flying shouldn't show up on screen
-                        // This really should be based upon a SkipDisplayComponent
-                        // but https://github.com/chamons/ArenaGS/issues/186
-                        if ecs.has_status(&entity, StatusKind::Flying) {
-                            continue;
-                        }
                         let offset = get_render_position(position, animation, frame);
                         let state = get_render_sprite_state(&render, animation);
                         sprite.draw(canvas, offset, state, render_frame)?;
