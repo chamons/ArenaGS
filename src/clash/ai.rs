@@ -5,13 +5,12 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
     None,
-    Random,
     Bird,
     Explode,
     Orb,
@@ -21,9 +20,6 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
-        BehaviorKind::Random => {
-            move_randomly(ecs, enemy);
-        }
         BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
@@ -108,6 +104,25 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
+pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
+    *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
+}
+
+pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
+    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
+}
+
+pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
+    let value = get_behavior_value(ecs, enemy, key, length);
+    if value <= 1 {
+        set_behavior_value(ecs, enemy, key, length);
+        true
+    } else {
+        set_behavior_value(ecs, enemy, key, value - 1);
+        false
+    }
+}
+
 #[macro_export]
 macro_rules! try_behavior {
     ($x:expr) => {
@@ -137,19 +152,6 @@ mod tests {
     }
 
     #[test]
-    fn random_behavior() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
-        let character = find_at(&ecs, 2, 2);
-        ecs.shovel(character, BehaviorComponent::init(BehaviorKind::Random));
-
-        take_enemy_action(&mut ecs, &character);
-        wait_for_animations(&mut ecs);
-
-        let final_position = ecs.get_position(&character);
-        assert_ne!(final_position.origin, Point::init(2, 2));
-    }
-
-    #[test]
     fn explode_behavior() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
         let target = find_at(&ecs, 2, 2);
@@ -172,5 +174,19 @@ mod tests {
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
         assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn behavior_value_checks() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert_eq!(4, get_behavior_value(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
     }
 }
