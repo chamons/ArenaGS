@@ -88,7 +88,7 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
 }
 
 fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_position: Option<Point>) {
-    // Flying should not be visibile, and are immune to all damage
+    // Flying should not be visible, and are immune to all damage
     if ecs.has_status(target, StatusKind::Flying) {
         return;
     }
