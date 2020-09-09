@@ -6,6 +6,11 @@ use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum FieldEffect {
+    Damage(Damage),
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
     Fire,
 }
@@ -189,9 +194,13 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: FieldKind) {
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind), Some(target)));
-    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
+    match effect {
+        FieldEffect::Damage(damage) => {
+            ecs.shovel(*source, AttackComponent::init(target, damage, AttackKind::Field(kind), Some(target)));
+            ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
+        }
+    }
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -414,7 +423,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -428,7 +437,7 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());

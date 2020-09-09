@@ -28,7 +28,7 @@ pub enum SkillEffect {
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    Field(Damage, FieldKind),
+    Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     RotateAmmo(),
     Buff(StatusKind, i32),
@@ -347,7 +347,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::Field(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
