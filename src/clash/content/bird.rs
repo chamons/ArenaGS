@@ -63,8 +63,5 @@ pub fn take_action(ecs: &mut World, enemy: &Entity) {
             do_behavior!(default_behavior(ecs, enemy));
         }
     }
-
-    // Disappear for x seconds, drop bombs that explode after y seconds
-    // Then repeat ground combat for z seconds
     wait(ecs, *enemy);
 }
