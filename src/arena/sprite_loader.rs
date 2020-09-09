@@ -49,6 +49,21 @@ impl SpriteLoader {
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
                     1.5,
                 )?),
+                SpriteKinds::SmallMonsterBirdBrown => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
+                    1.0,
+                )?),
+                SpriteKinds::SmallMonsterBirdBlue => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
+                    1.0,
+                )?),
+                SpriteKinds::SmallMonsterBirdRed => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
+                    1.0,
+                )?),
                 SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
                 SpriteKinds::Bullet => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "weapons_2"), 6, 1)?.with_render_offset(bullet_offset()),

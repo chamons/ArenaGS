@@ -90,6 +90,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<super::saveload::SerializationHelper>();
     // If you add additional components remember to update saveload.rs
 
+    ecs.subscribe(super::battle_scene::create_view_event);
     ecs.subscribe(super::battle_animations::move_event);
     ecs.subscribe(super::battle_animations::battle_animation_event);
     ecs.subscribe(super::battle_animations::melee_event);

@@ -39,6 +39,7 @@ macro_rules! do_behavior {
 pub enum BehaviorKind {
     None,
     Bird,
+    BirdAdd,
     Explode,
     Orb,
 }
@@ -48,6 +49,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
         BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
+        BehaviorKind::BirdAdd => super::content::bird::add_take_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }

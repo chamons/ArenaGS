@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::{BoltKind, Damage, RolledDamage, StatusKind};
+use super::{BoltKind, Damage, RolledDamage, SpawnKind, StatusKind};
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum MoveState {
@@ -52,6 +52,7 @@ pub enum ExplodeState {
 
 #[derive(Copy, Clone)]
 pub enum EventKind {
+    Creation(SpawnKind),
     Move(MoveState, PostMoveAction),
     Bolt(BoltState),
     Orb(OrbState),

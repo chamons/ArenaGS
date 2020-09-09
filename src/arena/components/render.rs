@@ -17,6 +17,10 @@ pub enum SpriteKinds {
     MonsterBirdBlue,
     MonsterBirdRed,
 
+    SmallMonsterBirdBrown,
+    SmallMonsterBirdBlue,
+    SmallMonsterBirdRed,
+
     FireBolt,
     Bullet,
     FireBullet,

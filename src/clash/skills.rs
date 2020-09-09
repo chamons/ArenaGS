@@ -35,6 +35,7 @@ pub enum SkillEffect {
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
     Orb(Damage, OrbKind, u32),
+    Spawn(SpawnKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -360,6 +361,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             ecs.add_status(invoker, *buff, *duration);
         }
         SkillEffect::Orb(damage, kind, speed) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed),
+        SkillEffect::Spawn(kind) => begin_spawn(ecs, &invoker, target.unwrap(), *kind),
         SkillEffect::None => {}
     }
 }
@@ -378,6 +380,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::BuffThen(_, _, _) => 1,
         SkillEffect::ThenBuff(_, _, _) => 1,
         SkillEffect::Orb(_, _, _) => 3,
+        SkillEffect::Spawn(_) => 2,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
@@ -952,5 +955,16 @@ mod tests {
         invoke_skill(&mut ecs, &player, "TestNoTime", None);
         wait_for_animations(&mut ecs);
         assert_eq!(100, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn spawn_add() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(1, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestSpawn", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, find_all_characters(&ecs).len());
     }
 }

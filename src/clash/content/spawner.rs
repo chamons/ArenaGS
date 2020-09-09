@@ -1,9 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
-use super::components::*;
-use crate::after_image::CharacterAnimationState;
-use crate::atlas::{SizedPoint, ToSerialize};
+use crate::atlas::{Point, SizedPoint, ToSerialize};
 use crate::clash::*;
 
 // All non-test create_entity() call should live here
@@ -12,10 +10,6 @@ use crate::clash::*;
 pub fn player(ecs: &mut World) {
     let player = ecs
         .create_entity()
-        .with(RenderComponent::init(RenderInfo::init_with_char_state(
-            SpriteKinds::MaleBrownHairBlueBody,
-            CharacterAnimationState::Idle,
-        )))
         .with(PositionComponent::init(SizedPoint::init(4, 4)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Player",
@@ -30,11 +24,13 @@ pub fn player(ecs: &mut World) {
         .build();
 
     content::gunslinger::setup_gunslinger(ecs, &player);
+
+    ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
 }
 
 pub fn bird_monster(ecs: &mut World) {
-    ecs.create_entity()
-        .with(RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown)))
+    let bird = ecs
+        .create_entity()
         .with(PositionComponent::init(SizedPoint::init_multi(5, 8, 2, 2)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Giant Bird",
@@ -46,14 +42,24 @@ pub fn bird_monster(ecs: &mut World) {
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
+
+    ecs.raise_event(EventKind::Creation(SpawnKind::Bird), Some(bird));
 }
 
-pub fn map_background(ecs: &mut World) {
-    ecs.create_entity()
-        .with(RenderComponent::init(RenderInfo::init_with_order(
-            SpriteKinds::BeachBackground,
-            RenderOrder::Background,
+pub fn bird_monster_add(ecs: &mut World, position: Point) {
+    let bird = ecs
+        .create_entity()
+        .with(PositionComponent::init(SizedPoint::from(position)))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(
+            "Bird",
+            Defenses::just_health(40),
+            Temperature::init(),
         )))
+        .with(StatusComponent::init())
+        .with(BehaviorComponent::init(BehaviorKind::BirdAdd))
+        .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
+
+    ecs.raise_event(EventKind::Creation(SpawnKind::BirdSpawn), Some(bird));
 }

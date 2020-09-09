@@ -65,3 +65,7 @@ pub fn take_action(ecs: &mut World, enemy: &Entity) {
     }
     wait(ecs, *enemy);
 }
+
+pub fn add_take_action(ecs: &mut World, enemy: &Entity) {
+    do_behavior!(default_behavior(ecs, enemy));
+}

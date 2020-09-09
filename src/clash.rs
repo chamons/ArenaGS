@@ -66,3 +66,6 @@ pub use orb::*;
 
 mod flying;
 pub use flying::*;
+
+mod spawn;
+pub use spawn::*;
