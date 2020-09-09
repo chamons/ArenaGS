@@ -94,4 +94,8 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert("TestNoTime", SkillInfo::init(None, TargetType::None, SkillEffect::None).with_no_time());
     m.insert("TestSpawn", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Bird)));
+    m.insert(
+        "TestSpawnField",
+        SkillInfo::init(None, TargetType::Any, SkillEffect::Field(FieldEffect::Spawn(SpawnKind::Bird), FieldKind::Fire)),
+    );
 }

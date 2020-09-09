@@ -8,6 +8,7 @@ use crate::clash::{EventCoordinator, FieldComponent};
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldEffect {
     Damage(Damage),
+    Spawn(SpawnKind),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -38,7 +39,6 @@ pub enum OrbKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
-    Field(FieldKind),
     Explode(u32),
     Orb(OrbKind, u32),
 }
@@ -63,13 +63,6 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Melee(kind) => kind,
             _ => panic!("Wrong type in melee_kind"),
-        }
-    }
-
-    pub fn field_kind(&self) -> FieldKind {
-        match self.kind {
-            AttackKind::Field(kind) => kind,
-            _ => panic!("Wrong type in field_kind"),
         }
     }
 
@@ -211,58 +204,40 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_field(ecs: &mut World, source: Entity) {
-    let (effect, kind, target) = {
-        let field_casts = ecs.read_storage::<FieldCastComponent>();
-        let info = field_casts.grab(source);
-        (info.effect, info.kind, info.target)
-    };
+    let cast = ecs.read_storage::<FieldCastComponent>().grab(source).clone();
     ecs.write_storage::<FieldCastComponent>().remove(source);
-    match effect {
-        FieldEffect::Damage(damage) => {
-            ecs.shovel(source, AttackComponent::init(target, damage, AttackKind::Field(kind), Some(target)));
-            start_damage_field(ecs, source);
-        }
-    }
-}
-
-pub fn start_damage_field(ecs: &mut World, source: Entity) {
-    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     // Fields can be fired by flying entities, skip animation if there is no Position
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
-        let field_projectile = ecs.create_entity().with(AttackComponent { attack }).build();
+        let field_projectile = ecs.create_entity().with(cast.clone()).build();
         apply_field(ecs, field_projectile);
     } else {
         let source_position = ecs.get_position(&source);
-
-        let field_projectile = ecs
-            .create_entity()
-            .with(PositionComponent::init(source_position))
-            .with(AttackComponent { attack })
-            .build();
-
-        ecs.write_storage::<AttackComponent>().remove(source);
+        let field_projectile = ecs.create_entity().with(PositionComponent::init(source_position)).with(cast.clone()).build();
         ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
     }
 }
 
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(projectile).attack
-    };
-    let (r, g, b) = match attack.field_kind() {
-        FieldKind::Fire => (255, 0, 0),
-    };
-
-    ecs.create_entity()
-        .with(PositionComponent::init(SizedPoint::from(attack.target)))
-        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0), None))
-        .with(BehaviorComponent::init(BehaviorKind::Explode))
-        .with(FieldComponent::init(r, g, b))
-        .with(TimeComponent::init(-BASE_ACTION_COST))
-        .build();
+    let cast = ecs.read_storage::<FieldCastComponent>().grab(projectile).clone();
     ecs.delete_entity(projectile).unwrap();
+
+    match cast.effect {
+        FieldEffect::Damage(damage) => {
+            let (r, g, b) = match cast.kind {
+                FieldKind::Fire => (255, 0, 0),
+            };
+
+            ecs.create_entity()
+                .with(PositionComponent::init(SizedPoint::from(cast.target)))
+                .with(AttackComponent::init(cast.target, damage, AttackKind::Explode(0), None))
+                .with(BehaviorComponent::init(BehaviorKind::Explode))
+                .with(FieldComponent::init(r, g, b))
+                .with(TimeComponent::init(-BASE_ACTION_COST))
+                .build();
+        }
+        FieldEffect::Spawn(kind) => begin_spawn(ecs, cast.target, kind),
+    }
 }
 
 pub fn begin_explode(ecs: &mut World, source: &Entity) {

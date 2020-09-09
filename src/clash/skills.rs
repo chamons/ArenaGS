@@ -361,7 +361,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             ecs.add_status(invoker, *buff, *duration);
         }
         SkillEffect::Orb(damage, kind, speed) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed),
-        SkillEffect::Spawn(kind) => begin_spawn(ecs, &invoker, target.unwrap(), *kind),
+        SkillEffect::Spawn(kind) => begin_spawn(ecs, target.unwrap(), *kind),
         SkillEffect::None => {}
     }
 }
@@ -964,6 +964,17 @@ mod tests {
 
         assert_eq!(1, find_all_characters(&ecs).len());
         invoke_skill(&mut ecs, &player, "TestSpawn", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, find_all_characters(&ecs).len());
+    }
+
+    #[test]
+    fn spawn_add_via_field() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(1, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestSpawnField", Some(Point::init(2, 3)));
         wait_for_animations(&mut ecs);
         assert_eq!(2, find_all_characters(&ecs).len());
     }

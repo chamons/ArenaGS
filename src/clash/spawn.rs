@@ -10,7 +10,7 @@ pub enum SpawnKind {
     BirdSpawn,
 }
 
-pub fn begin_spawn(ecs: &mut World, _source: &Entity, target_position: Point, kind: SpawnKind) {
+pub fn begin_spawn(ecs: &mut World, target_position: Point, kind: SpawnKind) {
     match kind {
         SpawnKind::Bird => super::content::spawner::bird_monster_add(ecs, target_position),
         _ => panic!("Can not spawn {:?} during combat", kind),
