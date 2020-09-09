@@ -263,8 +263,11 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
         TargetType::Any => {
-            let initial = ecs.get_position(invoker);
-            !initial.contains_point(&target)
+            if let Some(initial) = ecs.read_storage::<PositionComponent>().get(*invoker) {
+                !initial.position.contains_point(&target)
+            } else {
+                true
+            }
         }
         TargetType::None => false,
     } {
@@ -747,6 +750,18 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
         assert_eq!(true, get_skill("TestFocus").get_remaining_usages(&ecs, &player).unwrap() > 0);
+    }
+
+    #[test]
+    fn skill_with_field_without_position() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        // Some conditions, like flying can remove position temporarly. They should still be able to make fields
+        ecs.write_storage::<PositionComponent>().remove(player);
+
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
     }
 
     #[test]
