@@ -81,14 +81,22 @@ impl MapView {
         let renderables = ecs.read_storage::<RenderComponent>();
         let animations = ecs.read_storage::<AnimationComponent>();
         let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let skip_renders = ecs.read_storage::<SkipRenderComponent>();
 
         // FIXME - Enumerating all renderables 3 times is not ideal, can we do one pass if we get a bunch?
         for order in RenderOrder::into_enum_iter() {
-            for (entity, render, position, animation, character_info) in
-                (&entities, &renderables, (&positions).maybe(), (&animations).maybe(), (&character_infos).maybe()).join()
+            for (entity, render, position, animation, character_info, skip_render) in (
+                &entities,
+                &renderables,
+                (&positions).maybe(),
+                (&animations).maybe(),
+                (&character_infos).maybe(),
+                (&skip_renders).maybe(),
+            )
+                .join()
             {
                 let render = &render.render;
-                if render.order == order {
+                if render.order == order && skip_render.is_none() {
                     let id = render.sprite_id;
                     let sprite = &self.sprites.get(id);
                     // Animations have a relative frame that starts at 0 (start of animation) and

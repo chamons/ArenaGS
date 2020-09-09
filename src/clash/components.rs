@@ -200,6 +200,17 @@ impl OrbComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct FlightComponent {
+    pub takeoff_point: SizedPoint,
+}
+
+impl FlightComponent {
+    pub fn init(takeoff_point: SizedPoint) -> FlightComponent {
+        FlightComponent { takeoff_point }
+    }
+}
+
 #[cfg(test)]
 #[derive(PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TestComponent {
@@ -210,6 +221,15 @@ pub struct TestComponent {
 impl TestComponent {
     pub fn init() -> TestComponent {
         TestComponent { data: HashMap::new() }
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SkipRenderComponent {}
+
+impl SkipRenderComponent {
+    pub fn init() -> SkipRenderComponent {
+        SkipRenderComponent {}
     }
 }
 
@@ -253,6 +273,8 @@ pub fn create_world() -> World {
     ecs.register::<SimpleMarker<ToSerialize>>();
     ecs.register::<StatusComponent>();
     ecs.register::<OrbComponent>();
+    ecs.register::<FlightComponent>();
+    ecs.register::<SkipRenderComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
@@ -274,6 +296,7 @@ pub fn create_world() -> World {
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
     ecs.subscribe(super::status::status_event);
+    ecs.subscribe(super::flying::flying_event);
 
     #[cfg(test)]
     {

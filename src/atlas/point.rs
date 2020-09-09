@@ -173,6 +173,11 @@ pub fn assert_points_equal(a: Point, b: Point) {
 }
 
 #[cfg(test)]
+pub fn assert_points_not_equal(a: Point, b: Point) {
+    assert!(a.x != b.x || a.y != b.y);
+}
+
+#[cfg(test)]
 mod tests {
     use super::super::assert_points_equal;
     use super::*;

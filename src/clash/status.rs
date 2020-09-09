@@ -10,7 +10,7 @@ use specs::prelude::*;
 use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
 use crate::atlas::EasyMutECS;
 
-#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive)]
+#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive, is_enum_variant)]
 #[repr(u32)]
 pub enum StatusKind {
     Burning, // Retriggers as long as temperature is high enough
@@ -21,6 +21,7 @@ pub enum StatusKind {
     StaticCharge,
     Aimed,
     Armored,
+    Flying,
 
     #[cfg(test)]
     TestStatus,

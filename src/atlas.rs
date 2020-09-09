@@ -13,7 +13,7 @@ mod point;
 pub use point::{Point, SizedPoint};
 
 #[cfg(test)]
-pub use point::assert_points_equal;
+pub use point::{assert_points_equal, assert_points_not_equal};
 
 mod ecs;
 pub use ecs::*;

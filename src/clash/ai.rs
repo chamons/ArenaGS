@@ -5,13 +5,39 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
+
+#[macro_export]
+macro_rules! try_behavior {
+    ($x:expr) => {
+        if $x {
+            return;
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! try_behavior_and_if {
+    ($x:expr, $y: expr) => {
+        if $x {
+            $y;
+            return;
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! do_behavior {
+    ($x:expr) => {
+        $x;
+        return;
+    };
+}
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
     None,
-    Random,
     Bird,
     Explode,
     Orb,
@@ -21,9 +47,6 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
-        BehaviorKind::Random => {
-            move_randomly(ecs, enemy);
-        }
         BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
@@ -57,6 +80,29 @@ fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -
     None
 }
 
+pub fn get_random_direction_list(ecs: &mut World) -> Vec<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    let mut directions = vec![Direction::North, Direction::West, Direction::South, Direction::East];
+    directions.shuffle(random);
+    directions
+}
+
+pub fn get_random_full_direction_list(ecs: &mut World) -> Vec<Direction> {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    let mut directions = vec![
+        Direction::North,
+        Direction::NorthWest,
+        Direction::West,
+        Direction::SouthWest,
+        Direction::South,
+        Direction::SouthEast,
+        Direction::East,
+        Direction::NorthEast,
+    ];
+    directions.shuffle(random);
+    directions
+}
+
 pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     let position = ecs.get_position(enemy);
     if let Some(direction) = get_random_direction(ecs, position, enemy) {
@@ -77,7 +123,7 @@ pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     }
 }
 
-pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
@@ -88,6 +134,28 @@ pub fn use_skill_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) 
                 return true;
             }
         }
+    }
+    false
+}
+
+pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    let mut target = ecs.get_position(&find_player(ecs));
+
+    let range = {
+        let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+        random.gen_range(0, 4)
+    };
+
+    for _ in 0..range {
+        let direction = get_random_direction_list(ecs)[0];
+        if let Some(t) = direction.sized_point_in_direction(&target) {
+            target = t;
+        }
+    }
+
+    if is_good_target(ecs, enemy, &get_skill(skill_name), target.origin) {
+        invoke_skill(ecs, enemy, skill_name, Some(target.origin));
+        return true;
     }
     false
 }
@@ -108,15 +176,53 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-#[macro_export]
-macro_rules! try_behavior {
-    ($x:expr) => {
-        if $x {
-            return;
+pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill(ecs, enemy, skill_name) {
+            return true;
         }
-    };
+    }
+    false
 }
 
+#[allow(dead_code)]
+pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill_with_random_target(ecs, enemy, skill_name) {
+            return true;
+        }
+    }
+    false
+}
+
+#[allow(dead_code)]
+pub fn use_player_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
+        if use_skill_at_player_if_in_range(ecs, enemy, skill_name) {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
+    *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
+}
+
+pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
+    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
+}
+
+pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
+    let value = get_behavior_value(ecs, enemy, key, length);
+    if value <= 1 {
+        set_behavior_value(ecs, enemy, key, length);
+        true
+    } else {
+        set_behavior_value(ecs, enemy, key, value - 1);
+        false
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -134,19 +240,6 @@ mod tests {
 
         let final_position = ecs.get_position(&character);
         assert_eq!(final_position.origin, Point::init(2, 2));
-    }
-
-    #[test]
-    fn random_behavior() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
-        let character = find_at(&ecs, 2, 2);
-        ecs.shovel(character, BehaviorComponent::init(BehaviorKind::Random));
-
-        take_enemy_action(&mut ecs, &character);
-        wait_for_animations(&mut ecs);
-
-        let final_position = ecs.get_position(&character);
-        assert_ne!(final_position.origin, Point::init(2, 2));
     }
 
     #[test]
@@ -172,5 +265,20 @@ mod tests {
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
         assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn behavior_value_checks() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert_eq!(4, get_behavior_value(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
     }
 }

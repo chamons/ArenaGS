@@ -63,3 +63,6 @@ pub mod content;
 
 mod orb;
 pub use orb::*;
+
+mod flying;
+pub use flying::*;

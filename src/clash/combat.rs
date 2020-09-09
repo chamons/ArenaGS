@@ -206,8 +206,16 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_field(ecs: &mut World, source: Entity) {
-    let source_position = ecs.get_position(&source);
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+
+    // Fields can be fired by flying entities, skip animation if there is no Position
+    if ecs.read_storage::<PositionComponent>().get(source).is_none() {
+        let field_projectile = ecs.create_entity().with(AttackComponent { attack }).build();
+        apply_field(ecs, field_projectile);
+        return;
+    }
+
+    let source_position = ecs.get_position(&source);
 
     let field_projectile = ecs
         .create_entity()
@@ -405,6 +413,20 @@ mod tests {
     fn field_is_placed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
+
+        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+    }
+
+    #[test]
+    fn field_is_placed_without_position() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        // Some conditions, like flying can remove position temporarly. They should still be able to make fields
+        ecs.write_storage::<PositionComponent>().remove(player);
 
         begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
         wait_for_animations(&mut ecs);

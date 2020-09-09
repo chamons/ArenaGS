@@ -98,6 +98,8 @@ pub fn save(ecs: &mut World) {
         PlayerDeadComponent,
         StatusComponent,
         OrbComponent,
+        FlightComponent,
+        SkipRenderComponent,
         SerializationHelper
     );
 }
@@ -138,6 +140,8 @@ pub fn load() -> BoxResult<World> {
             PlayerDeadComponent,
             StatusComponent,
             OrbComponent,
+            FlightComponent,
+            SkipRenderComponent,
             SerializationHelper
         );
     }

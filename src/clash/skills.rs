@@ -258,20 +258,24 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 }
 
 pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
-    let initial = ecs.get_position(invoker);
-
     if !match skill.target {
         TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
-        TargetType::Any => !initial.contains_point(&target),
+        TargetType::Any => {
+            if let Some(initial) = ecs.read_storage::<PositionComponent>().get(*invoker) {
+                !initial.position.contains_point(&target)
+            } else {
+                true
+            }
+        }
         TargetType::None => false,
     } {
         return false;
     }
 
     if let Some(skill_range) = skill.range {
-        if let Some(range_to_target) = initial.distance_to(target) {
+        if let Some(range_to_target) = ecs.get_position(invoker).distance_to(target) {
             if range_to_target > skill_range {
                 return false;
             }
@@ -279,7 +283,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     }
 
     if skill.must_be_clear {
-        if let Some(mut path) = initial.line_to(target) {
+        if let Some(mut path) = ecs.get_position(invoker).line_to(target) {
             // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
             // have the target (from checks above)
@@ -744,6 +748,18 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
         assert_eq!(true, get_skill("TestFocus").get_remaining_usages(&ecs, &player).unwrap() > 0);
+    }
+
+    #[test]
+    fn skill_with_field_without_position() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        // Some conditions, like flying can remove position temporarly. They should still be able to make fields
+        ecs.write_storage::<PositionComponent>().remove(player);
+
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
     }
 
     #[test]
