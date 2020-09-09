@@ -275,8 +275,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     }
 
     if let Some(skill_range) = skill.range {
-        let initial = ecs.get_position(invoker);
-        if let Some(range_to_target) = initial.distance_to(target) {
+        if let Some(range_to_target) = ecs.get_position(invoker).distance_to(target) {
             if range_to_target > skill_range {
                 return false;
             }
@@ -284,8 +283,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
     }
 
     if skill.must_be_clear {
-        let initial = ecs.get_position(invoker);
-        if let Some(mut path) = initial.line_to(target) {
+        if let Some(mut path) = ecs.get_position(invoker).line_to(target) {
             // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
             // have the target (from checks above)
