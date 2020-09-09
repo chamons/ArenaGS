@@ -22,7 +22,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert(
         "Explosive Eggs",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::FieldEffect(Damage::init(4), FieldKind::Fire)),
+        SkillInfo::init(None, TargetType::Tile, SkillEffect::Field(Damage::init(4), FieldKind::Fire)),
     );
     m.insert("Take Off", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
 }
