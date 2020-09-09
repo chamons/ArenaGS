@@ -421,6 +421,20 @@ mod tests {
     }
 
     #[test]
+    fn field_is_placed_without_position() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        // Some conditions, like flying can remove position temporarly. They should still be able to make fields
+        ecs.write_storage::<PositionComponent>().remove(player);
+
+        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+    }
+
+    #[test]
     fn killed_enemies_removed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);

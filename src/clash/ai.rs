@@ -185,6 +185,7 @@ pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_
     false
 }
 
+#[allow(dead_code)]
 pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
     if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
         if use_skill_with_random_target(ecs, enemy, skill_name) {
