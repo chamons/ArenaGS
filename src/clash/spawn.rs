@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use crate::atlas::Point;
+use super::find_clear_landing;
+use super::ShortInfo;
+use crate::atlas::SizedPoint;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum SpawnKind {
@@ -10,9 +12,16 @@ pub enum SpawnKind {
     BirdSpawn,
 }
 
-pub fn begin_spawn(ecs: &mut World, target_position: Point, kind: SpawnKind) {
+pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
+    let target = find_clear_landing(ecs, &target, None);
     match kind {
-        SpawnKind::Bird => super::content::spawner::bird_monster_add(ecs, target_position),
+        SpawnKind::Bird => super::content::spawner::bird_monster_add(ecs, target),
         _ => panic!("Can not spawn {:?} during combat", kind),
     }
+}
+
+pub fn spawn_replace(ecs: &mut World, invoker: &Entity, kind: SpawnKind) {
+    let position = ecs.get_position(invoker);
+    ecs.delete_entity(*invoker).unwrap();
+    spawn(ecs, position, kind);
 }

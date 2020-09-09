@@ -188,7 +188,7 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
 }
 
 pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
-    ecs.shovel(*source, FieldCastComponent::init(effect, kind, target));
+    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
@@ -229,14 +229,14 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
             };
 
             ecs.create_entity()
-                .with(PositionComponent::init(SizedPoint::from(cast.target)))
-                .with(AttackComponent::init(cast.target, damage, AttackKind::Explode(0), None))
+                .with(PositionComponent::init(cast.target))
+                .with(AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None))
                 .with(BehaviorComponent::init(BehaviorKind::Explode))
                 .with(FieldComponent::init(r, g, b))
                 .with(TimeComponent::init(-BASE_ACTION_COST))
                 .build();
         }
-        FieldEffect::Spawn(kind) => begin_spawn(ecs, cast.target, kind),
+        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
     }
 }
 

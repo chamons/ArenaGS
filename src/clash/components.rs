@@ -237,11 +237,11 @@ impl SkipRenderComponent {
 pub struct FieldCastComponent {
     pub effect: FieldEffect,
     pub kind: FieldKind,
-    pub target: Point,
+    pub target: SizedPoint,
 }
 
 impl FieldCastComponent {
-    pub fn init(effect: FieldEffect, kind: FieldKind, target: Point) -> FieldCastComponent {
+    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
         FieldCastComponent { effect, kind, target }
     }
 }

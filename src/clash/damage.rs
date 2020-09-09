@@ -128,7 +128,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
             let direction_of_impact = Direction::from_two_points(&source_position, &current_position.origin);
             if let Some(new_origin) = direction_of_impact.point_in_direction(&current_position.origin) {
                 let new_position = current_position.move_to(new_origin);
-                if is_area_clear(ecs, &new_position.all_positions(), target) {
+                if is_area_clear_of_others(ecs, &new_position.all_positions(), target) {
                     ecs.log(format!("{} is knocked back", ecs.get_name(target).unwrap()));
                     begin_move(ecs, target, new_position, PostMoveAction::None);
                 }

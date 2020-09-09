@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
-use crate::atlas::{Point, SizedPoint, ToSerialize};
+use crate::atlas::{SizedPoint, ToSerialize};
 use crate::clash::*;
 
 // All non-test create_entity() call should live here
@@ -46,10 +46,10 @@ pub fn bird_monster(ecs: &mut World) {
     ecs.raise_event(EventKind::Creation(SpawnKind::Bird), Some(bird));
 }
 
-pub fn bird_monster_add(ecs: &mut World, position: Point) {
+pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
     let bird = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(position)))
+        .with(PositionComponent::init(position))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Bird",
             Defenses::just_health(40),

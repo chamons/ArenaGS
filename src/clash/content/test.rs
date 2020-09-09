@@ -98,4 +98,8 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "TestSpawnField",
         SkillInfo::init(None, TargetType::Any, SkillEffect::Field(FieldEffect::Spawn(SpawnKind::Bird), FieldKind::Fire)),
     );
+    m.insert(
+        "TestReplaceSpawn",
+        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::Bird)),
+    );
 }

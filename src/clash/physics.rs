@@ -50,8 +50,12 @@ pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<
     }
 }
 
-// Is an area clear of all elements with PositionComponent and CharacterInfoComponent _except_ the invoker
-pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
+// Is an area clear of all elements with PositionComponent and CharacterInfoComponent _except_ the invoker (if)
+pub fn is_area_clear_of_others(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
+    is_area_clear(ecs, area, Some(*invoker))
+}
+
+pub fn is_area_clear(ecs: &World, area: &[Point], invoker: Option<Entity>) -> bool {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
     let char_info = ecs.read_storage::<CharacterInfoComponent>();
@@ -62,7 +66,7 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
             if !map.is_in_bounds(&p) || !map.is_walkable(&p) {
                 return false;
             }
-            if *invoker != entity && position.position.contains_point(&p) {
+            if invoker != Some(entity) && position.position.contains_point(&p) {
                 return false;
             }
         }
@@ -105,7 +109,7 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
         }
     };
 
-    is_area_clear(ecs, &new.all_positions(), mover) && has_exhaustion
+    is_area_clear_of_others(ecs, &new.all_positions(), mover) && has_exhaustion
 }
 
 // Move a character, spending standard time and exhaustion
@@ -147,6 +151,28 @@ pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
     crate::arena::complete_animations(ecs);
+}
+
+pub fn find_clear_landing(ecs: &mut World, initial: &SizedPoint, entity: Option<Entity>) -> SizedPoint {
+    if is_area_clear(ecs, &initial.all_positions(), entity) {
+        return *initial;
+    }
+
+    for distance in 1..3 {
+        for direction in get_random_full_direction_list(ecs) {
+            let mut attempt = *initial;
+            for _ in 0..distance {
+                if let Some(p) = direction.sized_point_in_direction(&attempt) {
+                    attempt = p;
+                }
+            }
+            if is_area_clear(ecs, &attempt.all_positions(), entity) {
+                return attempt;
+            }
+        }
+    }
+    // This seems very unlikely, we check every single possibility within 3 of the source point
+    panic!("Unable to find clear landing at {}", initial.origin);
 }
 
 #[cfg(test)]

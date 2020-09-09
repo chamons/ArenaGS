@@ -124,7 +124,7 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
         let sprite = match cast.kind {
             FieldKind::Fire => SpriteKinds::Bomb,
         };
-        (cast.target, sprite)
+        (cast.target.origin, sprite)
     };
     projectile_animation(ecs, bolt, target, sprite, EventKind::Field(FieldState::CompleteFlyingAnimation));
 }
