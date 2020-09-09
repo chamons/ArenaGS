@@ -108,8 +108,8 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
 pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
     let animation = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.grab(target).attack.field_kind() {
+        let field_casts = ecs.read_storage::<FieldCastComponent>();
+        match field_casts.grab(target).kind {
             FieldKind::Fire => CharacterAnimationState::Crouch,
         }
     };

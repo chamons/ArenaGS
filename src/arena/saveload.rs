@@ -109,6 +109,7 @@ pub fn save(ecs: &mut World) {
         OrbComponent,
         FlightComponent,
         SkipRenderComponent,
+        FieldCastComponent,
         SerializationHelper
     );
 }
@@ -151,6 +152,7 @@ pub fn load() -> BoxResult<World> {
             OrbComponent,
             FlightComponent,
             SkipRenderComponent,
+            FieldCastComponent,
             SerializationHelper
         );
     }

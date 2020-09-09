@@ -195,12 +195,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
 }
 
 pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
-    match effect {
-        FieldEffect::Damage(damage) => {
-            ecs.shovel(*source, AttackComponent::init(target, damage, AttackKind::Field(kind), Some(target)));
-            ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
-        }
-    }
+    ecs.shovel(*source, FieldCastComponent::init(effect, kind, target));
+    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -215,25 +211,39 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_field(ecs: &mut World, source: Entity) {
+    let (effect, kind, target) = {
+        let field_casts = ecs.read_storage::<FieldCastComponent>();
+        let info = field_casts.grab(source);
+        (info.effect, info.kind, info.target)
+    };
+    ecs.write_storage::<FieldCastComponent>().remove(source);
+    match effect {
+        FieldEffect::Damage(damage) => {
+            ecs.shovel(source, AttackComponent::init(target, damage, AttackKind::Field(kind), Some(target)));
+            start_damage_field(ecs, source);
+        }
+    }
+}
+
+pub fn start_damage_field(ecs: &mut World, source: Entity) {
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
     // Fields can be fired by flying entities, skip animation if there is no Position
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
         let field_projectile = ecs.create_entity().with(AttackComponent { attack }).build();
         apply_field(ecs, field_projectile);
-        return;
+    } else {
+        let source_position = ecs.get_position(&source);
+
+        let field_projectile = ecs
+            .create_entity()
+            .with(PositionComponent::init(source_position))
+            .with(AttackComponent { attack })
+            .build();
+
+        ecs.write_storage::<AttackComponent>().remove(source);
+        ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
     }
-
-    let source_position = ecs.get_position(&source);
-
-    let field_projectile = ecs
-        .create_entity()
-        .with(PositionComponent::init(source_position))
-        .with(AttackComponent { attack })
-        .build();
-
-    ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
 }
 
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
