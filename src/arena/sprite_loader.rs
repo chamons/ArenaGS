@@ -83,6 +83,11 @@ impl SpriteLoader {
                 SpriteKinds::Smoke => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?.with_render_offset(bullet_offset()),
                 ),
+                SpriteKinds::Egg => Box::new(
+                    StandardCharacter::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "birds1"), 9)?
+                        .with_scale(2.5)
+                        .with_render_offset(SDLPoint::new(0, -8)),
+                ),
             };
             sprites.insert(s.into(), sprite);
         }

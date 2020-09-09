@@ -21,6 +21,8 @@ pub enum SpriteKinds {
     SmallMonsterBirdBlue,
     SmallMonsterBirdRed,
 
+    Egg,
+
     FireBolt,
     Bullet,
     FireBullet,
