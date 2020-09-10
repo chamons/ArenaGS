@@ -1,3 +1,6 @@
+// The ai macros can add "unnecessary" returns occationally
+#![allow(clippy::needless_return)]
+
 use std::collections::HashMap;
 
 use specs::prelude::*;

@@ -209,11 +209,11 @@ pub fn start_field(ecs: &mut World, source: Entity) {
 
     // Fields can be fired by flying entities, skip animation if there is no Position
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
-        let field_projectile = ecs.create_entity().with(cast.clone()).build();
+        let field_projectile = ecs.create_entity().with(cast).build();
         apply_field(ecs, field_projectile);
     } else {
         let source_position = ecs.get_position(&source);
-        let field_projectile = ecs.create_entity().with(PositionComponent::init(source_position)).with(cast.clone()).build();
+        let field_projectile = ecs.create_entity().with(PositionComponent::init(source_position)).with(cast).build();
         ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
     }
 }

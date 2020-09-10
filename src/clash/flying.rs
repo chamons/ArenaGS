@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutWorld};
 
 pub fn flying_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
@@ -43,7 +43,7 @@ fn end_flight(ecs: &mut World, target: &Entity) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::Point;
+    use crate::atlas::{Point, SizedPoint};
 
     #[test]
     fn flight_round_trip() {
