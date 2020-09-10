@@ -242,6 +242,7 @@ pub fn create_view_event(ecs: &mut World, kind: EventKind, target: Option<Entity
     match kind {
         EventKind::Creation(kind) => match kind {
             SpawnKind::Bird => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown))),
+            SpawnKind::Egg => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Egg))),
             SpawnKind::BirdSpawn => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::SmallMonsterBirdBrown))),
             SpawnKind::Player => ecs.shovel(
                 target.unwrap(),

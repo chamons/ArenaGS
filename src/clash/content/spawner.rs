@@ -28,38 +28,35 @@ pub fn player(ecs: &mut World) {
     ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
 }
 
-pub fn bird_monster(ecs: &mut World) {
-    let bird = ecs
+fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: BehaviorKind, defenses: Defenses, position: SizedPoint) {
+    let monster = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::init_multi(5, 8, 2, 2)))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(
-            "Giant Bird",
-            Defenses::just_health(150),
-            Temperature::init(),
-        )))
+        .with(PositionComponent::init(position))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(name, defenses, Temperature::init())))
         .with(StatusComponent::init())
-        .with(BehaviorComponent::init(BehaviorKind::Bird))
+        .with(BehaviorComponent::init(behavior_kind))
         .with(TimeComponent::init(0))
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
 
-    ecs.raise_event(EventKind::Creation(SpawnKind::Bird), Some(bird));
+    ecs.raise_event(EventKind::Creation(kind), Some(monster));
+}
+
+pub fn bird_monster(ecs: &mut World) {
+    create_monster(
+        ecs,
+        "Giant Bird",
+        SpawnKind::Bird,
+        BehaviorKind::Bird,
+        Defenses::just_health(150),
+        SizedPoint::init_multi(5, 8, 2, 2),
+    );
+}
+
+pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
+    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 20), position);
 }
 
 pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
-    let bird = ecs
-        .create_entity()
-        .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(
-            "Bird",
-            Defenses::just_health(40),
-            Temperature::init(),
-        )))
-        .with(StatusComponent::init())
-        .with(BehaviorComponent::init(BehaviorKind::BirdAdd))
-        .with(TimeComponent::init(0))
-        .marked::<SimpleMarker<ToSerialize>>()
-        .build();
-
-    ecs.raise_event(EventKind::Creation(SpawnKind::BirdSpawn), Some(bird));
+    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position);
 }
