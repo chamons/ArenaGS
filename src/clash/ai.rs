@@ -5,7 +5,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
+use crate::atlas::{Direction, EasyECS, EasyMutECS, SizedPoint};
 
 #[macro_export]
 macro_rules! try_behavior {

@@ -12,6 +12,9 @@ pub use paths::{get_exe_folder, EasyPath};
 mod point;
 pub use point::{Point, SizedPoint};
 
+mod direction;
+pub use direction::*;
+
 #[cfg(test)]
 pub use point::{assert_points_equal, assert_points_not_equal};
 

@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::Point;
+use crate::atlas::{Direction, Point};
 
 pub fn find_player(ecs: &World) -> Entity {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();

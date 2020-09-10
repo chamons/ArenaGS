@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{Direction, EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 // Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint, action: PostMoveAction) {
