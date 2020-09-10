@@ -93,13 +93,17 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         ),
     );
     m.insert("TestNoTime", SkillInfo::init(None, TargetType::None, SkillEffect::None).with_no_time());
-    m.insert("TestSpawn", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Bird)));
+    m.insert("TestSpawn", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::BirdSpawn)));
     m.insert(
         "TestSpawnField",
-        SkillInfo::init(None, TargetType::Any, SkillEffect::Field(FieldEffect::Spawn(SpawnKind::Bird), FieldKind::Fire)),
+        SkillInfo::init(
+            None,
+            TargetType::Any,
+            SkillEffect::Field(FieldEffect::Spawn(SpawnKind::BirdSpawn), FieldKind::Fire),
+        ),
     );
     m.insert(
         "TestReplaceSpawn",
-        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::Bird)),
+        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn)),
     );
 }
