@@ -1,5 +1,6 @@
 use std::fmt;
 
+use super::Direction;
 use line_drawing::WalkGrid;
 use serde::{Deserialize, Serialize};
 
@@ -110,6 +111,18 @@ impl SizedPoint {
                     .map(|(x, y)| Point::init(x as u32, y as u32))
                     .collect(),
             )
+        } else {
+            None
+        }
+    }
+
+    pub fn direction_line_to(&self, point: Point) -> Option<Vec<Direction>> {
+        if let Some(point_line) = self.line_to(point) {
+            let mut direction_line = vec![Direction::None; point_line.len()];
+            for i in 1..point_line.len() {
+                direction_line[i] = Direction::from_two_points(&point_line[i - 1], &point_line[i]);
+            }
+            Some(direction_line)
         } else {
             None
         }
@@ -251,6 +264,19 @@ mod tests {
         assert_eq!(line[3], Point::init(3, 4));
         assert_eq!(line[4], Point::init(4, 4));
         assert_eq!(line[5], Point::init(4, 5));
+    }
+
+    #[test]
+    fn direction_line_to_single() {
+        let point = SizedPoint::init(2, 2);
+        let line = point.direction_line_to(Point::init(4, 5)).unwrap();
+        assert_eq!(6, line.len());
+        assert_eq!(line[0], Direction::None);
+        assert_eq!(line[1], Direction::South);
+        assert_eq!(line[2], Direction::East);
+        assert_eq!(line[3], Direction::South);
+        assert_eq!(line[4], Direction::East);
+        assert_eq!(line[5], Direction::South);
     }
 
     #[test]
