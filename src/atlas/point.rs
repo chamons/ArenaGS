@@ -167,7 +167,7 @@ impl fmt::Display for SizedPoint {
     }
 }
 
-pub fn point_list_to_direction(point_line: &[Point]) -> Vec<Direction> {
+pub fn point_list_to_direction_list(point_line: &[Point]) -> Vec<Direction> {
     let mut direction_line = vec![Direction::None; point_line.len()];
     for i in 1..point_line.len() {
         direction_line[i] = Direction::from_two_points(&point_line[i - 1], &point_line[i]);
@@ -263,9 +263,9 @@ mod tests {
     }
 
     #[test]
-    fn point_list_to_direction_list() {
+    fn point_list_to_direction() {
         let point = SizedPoint::init(2, 2);
-        let line = point_list_to_direction(&point.line_to(Point::init(4, 5)).unwrap());
+        let line = point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap());
         assert_eq!(6, line.len());
         assert_eq!(line[0], Direction::None);
         assert_eq!(line[1], Direction::South);

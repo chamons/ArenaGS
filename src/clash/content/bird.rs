@@ -21,7 +21,13 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert(
         "Feather Orb",
-        SkillInfo::init_with_distance(None, TargetType::Player, SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2), Some(12), true),
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2, 12),
+            Some(12),
+            true,
+        ),
     );
     m.insert(
         "Tailwind",

@@ -10,7 +10,7 @@ use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
+use crate::atlas::{point_list_to_direction_list, Direction, EasyECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
@@ -190,13 +190,20 @@ impl StatusComponent {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct OrbComponent {
+    pub directions: Vec<Direction>,
     pub path: Vec<Point>,
     pub speed: u32,
+    pub duration: u32,
 }
 
 impl OrbComponent {
-    pub fn init(path: Vec<Point>, speed: u32) -> OrbComponent {
-        OrbComponent { path, speed }
+    pub fn init(path: Vec<Point>, speed: u32, duration: u32) -> OrbComponent {
+        OrbComponent {
+            directions: point_list_to_direction_list(&path),
+            path,
+            speed,
+            duration,
+        }
     }
 }
 

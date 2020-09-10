@@ -34,7 +34,7 @@ pub enum SkillEffect {
     Buff(StatusKind, i32),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
-    Orb(Damage, OrbKind, u32),
+    Orb(Damage, OrbKind, u32, u32),
     Spawn(SpawnKind),
     SpawnReplace(SpawnKind),
 }
@@ -361,7 +361,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             process_skill(ecs, invoker, next_skill, target);
             ecs.add_status(invoker, *buff, *duration);
         }
-        SkillEffect::Orb(damage, kind, speed) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed),
+        SkillEffect::Orb(damage, kind, speed, duration) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed, *duration),
         SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
         SkillEffect::None => {}
@@ -381,7 +381,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::Buff(_, _) => 1,
         SkillEffect::BuffThen(_, _, _) => 1,
         SkillEffect::ThenBuff(_, _, _) => 1,
-        SkillEffect::Orb(_, _, _) => 3,
+        SkillEffect::Orb(_, _, _, _) => 3,
         SkillEffect::Spawn(_) => 2,
         SkillEffect::SpawnReplace(_) => 0,
     };

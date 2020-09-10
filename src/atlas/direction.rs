@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::atlas::{Point, SizedPoint};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     None,
     North,
