@@ -116,18 +116,6 @@ impl SizedPoint {
         }
     }
 
-    pub fn direction_line_to(&self, point: Point) -> Option<Vec<Direction>> {
-        if let Some(point_line) = self.line_to(point) {
-            let mut direction_line = vec![Direction::None; point_line.len()];
-            for i in 1..point_line.len() {
-                direction_line[i] = Direction::from_two_points(&point_line[i - 1], &point_line[i]);
-            }
-            Some(direction_line)
-        } else {
-            None
-        }
-    }
-
     pub fn distance_with_initial(&self, point: Point) -> Option<(Point, u32)> {
         if let Some(path) = self.line_to(point) {
             Some((*path.first().unwrap(), path.len() as u32 - 1)) // Path includes both end points
@@ -177,6 +165,14 @@ impl fmt::Display for SizedPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({},{}) {}x{}", self.origin.x, self.origin.y, self.width, self.height)
     }
+}
+
+pub fn point_list_to_direction(point_line: &[Point]) -> Vec<Direction> {
+    let mut direction_line = vec![Direction::None; point_line.len()];
+    for i in 1..point_line.len() {
+        direction_line[i] = Direction::from_two_points(&point_line[i - 1], &point_line[i]);
+    }
+    direction_line
 }
 
 #[cfg(test)]
@@ -267,9 +263,9 @@ mod tests {
     }
 
     #[test]
-    fn direction_line_to_single() {
+    fn point_list_to_direction_list() {
         let point = SizedPoint::init(2, 2);
-        let line = point.direction_line_to(Point::init(4, 5)).unwrap();
+        let line = point_list_to_direction(&point.line_to(Point::init(4, 5)).unwrap());
         assert_eq!(6, line.len());
         assert_eq!(line[0], Direction::None);
         assert_eq!(line[1], Direction::South);
