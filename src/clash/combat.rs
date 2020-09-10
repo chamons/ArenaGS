@@ -297,6 +297,7 @@ pub fn reap_killed(ecs: &mut World) {
 
 pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32) {
     let source_position = ecs.get_position(source);
+    // Need to use extend line to extend to duration if too little
     let path = source_position.line_to(target_position).unwrap();
     ecs.shovel(*source, OrbComponent::init(path, speed, duration));
     ecs.shovel(

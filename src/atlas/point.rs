@@ -188,6 +188,10 @@ pub fn apply_direction_list(point: &Point, directions: &[Direction]) -> Vec<Poin
     line
 }
 
+pub fn extend_line_along_path(points: &[Point], length: u32) -> Vec<Point> {
+    vec![]
+}
+
 #[cfg(test)]
 pub fn assert_points_equal(a: Point, b: Point) {
     assert_eq!(a.x, b.x);
@@ -299,6 +303,25 @@ mod tests {
         assert_eq!(line[3], Point::init(3, 4));
         assert_eq!(line[4], Point::init(4, 4));
         assert_eq!(line[5], Point::init(4, 5));
+    }
+
+    #[test]
+    fn extend_line() {
+        let point = SizedPoint::init(2, 2);
+        let line = extend_line_along_path(&point.line_to(Point::init(4, 5)).unwrap(), 12);
+        assert_eq!(12, line.len());
+        assert_eq!(line[0], Point::init(2, 2));
+        assert_eq!(line[1], Point::init(2, 3));
+        assert_eq!(line[2], Point::init(3, 3));
+        assert_eq!(line[3], Point::init(3, 4));
+        assert_eq!(line[4], Point::init(4, 4));
+        assert_eq!(line[5], Point::init(4, 5));
+        assert_eq!(line[6], Point::init(5, 5));
+        assert_eq!(line[7], Point::init(5, 6));
+        assert_eq!(line[8], Point::init(6, 6));
+        assert_eq!(line[9], Point::init(6, 7));
+        assert_eq!(line[10], Point::init(7, 7));
+        assert_eq!(line[11], Point::init(7, 8));
     }
 
     #[test]

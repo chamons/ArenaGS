@@ -3,7 +3,7 @@ use std::cmp;
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, Point, SizedPoint};
+use crate::atlas::{EasyECS, SizedPoint};
 
 pub fn create_orb(ecs: &mut World, invoker: &Entity) -> Entity {
     let orb_component = ecs.read_storage::<OrbComponent>().grab(*invoker).clone();
