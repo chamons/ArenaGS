@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point};
+use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -28,13 +28,15 @@ pub enum SkillEffect {
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    FieldEffect(Damage, FieldKind),
+    Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     RotateAmmo(),
     Buff(StatusKind, i32),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
     Orb(Damage, OrbKind, u32),
+    Spawn(SpawnKind),
+    SpawnReplace(SpawnKind),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
@@ -259,8 +261,8 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
 pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
     if !match skill.target {
-        TargetType::Tile => is_area_clear(ecs, from_ref(&target), invoker),
-        TargetType::Enemy => !is_area_clear(ecs, from_ref(&target), invoker),
+        TargetType::Tile => is_area_clear_of_others(ecs, from_ref(&target), invoker),
+        TargetType::Enemy => !is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
         TargetType::Any => {
             if let Some(initial) = ecs.read_storage::<PositionComponent>().get(*invoker) {
@@ -290,7 +292,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
             if skill.target.is_enemy() || skill.target.is_player() {
                 path.pop();
             }
-            if !is_area_clear(ecs, &path, invoker) {
+            if !is_area_clear_of_others(ecs, &path, invoker) {
                 return false;
             }
         }
@@ -314,8 +316,6 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
         ecs.log(format!("{} used {}.", player_name.as_str(), name));
     }
 
-    process_skill(ecs, invoker, &skill.effect, target);
-
     if !skill.no_time {
         spend_time(ecs, invoker, BASE_ACTION_COST);
     }
@@ -329,6 +329,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
 
     gain_adrenaline(ecs, invoker, skill);
+
+    process_skill(ecs, invoker, &skill.effect, target);
 }
 
 fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target: Option<Point>) {
@@ -346,7 +348,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::FieldEffect(damage, kind) => begin_field(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
@@ -360,6 +362,8 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             ecs.add_status(invoker, *buff, *duration);
         }
         SkillEffect::Orb(damage, kind, speed) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed),
+        SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
+        SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
         SkillEffect::None => {}
     }
 }
@@ -371,13 +375,15 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
-        SkillEffect::FieldEffect(_, _) => 2,
+        SkillEffect::Field(_, _) => 2,
         SkillEffect::RotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
         SkillEffect::BuffThen(_, _, _) => 1,
         SkillEffect::ThenBuff(_, _, _) => 1,
         SkillEffect::Orb(_, _, _) => 3,
+        SkillEffect::Spawn(_) => 2,
+        SkillEffect::SpawnReplace(_) => 0,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
@@ -952,5 +958,62 @@ mod tests {
         invoke_skill(&mut ecs, &player, "TestNoTime", None);
         wait_for_animations(&mut ecs);
         assert_eq!(100, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn spawn_add() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(1, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestSpawn", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, find_all_characters(&ecs).len());
+    }
+
+    #[test]
+    fn spawn_add_via_field() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(1, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestSpawnField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, find_all_characters(&ecs).len());
+    }
+
+    #[test]
+    fn spawn_add_via_field_collision() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 4, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let bystander = find_at(&ecs, 2, 4);
+
+        assert_eq!(2, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestSpawnField", Some(Point::init(2, 3)));
+        begin_move(&mut ecs, &bystander, SizedPoint::init(2, 3), PostMoveAction::None);
+        wait_for_animations(&mut ecs);
+        assert_eq!(3, find_all_characters(&ecs).len());
+        assert_eq!(
+            1,
+            find_all_characters(&ecs)
+                .iter()
+                .filter(|x| ecs.get_position(x).origin == Point::init(2, 3))
+                .count()
+        );
+    }
+
+    #[test]
+    fn spawn_replace() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let health = ecs.get_defenses(&player).health;
+
+        assert_eq!(1, find_all_characters(&ecs).len());
+        invoke_skill(&mut ecs, &player, "TestReplaceSpawn", None);
+        wait_for_animations(&mut ecs);
+        assert_eq!(1, find_all_characters(&ecs).len());
+
+        let bird = find_at(&ecs, 2, 2);
+        assert_ne!(health, ecs.get_defenses(&bird).health);
     }
 }

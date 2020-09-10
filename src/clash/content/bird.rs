@@ -1,3 +1,6 @@
+// The ai macros can add "unnecessary" returns occationally
+#![allow(clippy::needless_return)]
+
 use std::collections::HashMap;
 
 use specs::prelude::*;
@@ -22,24 +25,35 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert(
         "Explosive Eggs",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::FieldEffect(Damage::init(4), FieldKind::Fire)),
+        SkillInfo::init(
+            None,
+            TargetType::Tile,
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(4)), FieldKind::Fire),
+        ),
     );
     m.insert("Take Off", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
+    m.insert(
+        "Hatch",
+        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn)),
+    );
+    m.insert("Throw Eggs", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg)));
 }
 
 pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
-    if distance_to_player(ecs, enemy).unwrap_or(0) > 3 {
+    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    if distance > 7 {
+        try_behavior!(move_towards_player(ecs, enemy));
+    } else if distance > 3 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
     } else {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
 
-pub fn take_action(ecs: &mut World, enemy: &Entity) {
+pub fn bird_action(ecs: &mut World, enemy: &Entity) {
     let defenses = ecs.get_defenses(enemy);
     let phase = match defenses.health as f64 / defenses.max_health as f64 {
         x if x < 0.25 => 4,
@@ -53,7 +67,7 @@ pub fn take_action(ecs: &mut World, enemy: &Entity) {
     } else if phase == 2 {
         if ecs.has_status(enemy, StatusKind::Flying) {
             if check_behavior_cooldown(ecs, enemy, "Bombing Run", 0) {
-                try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs"));
+                try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
             }
         } else {
             try_behavior_and_if!(
@@ -62,6 +76,20 @@ pub fn take_action(ecs: &mut World, enemy: &Entity) {
             );
             do_behavior!(default_behavior(ecs, enemy));
         }
+    } else if phase == 3 {
+        if check_behavior_cooldown(ecs, enemy, "Throw Eggs", 3) {
+            try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
+        }
+        do_behavior!(default_behavior(ecs, enemy));
     }
+    wait(ecs, *enemy);
+}
+
+pub fn bird_add_action(ecs: &mut World, enemy: &Entity) {
+    do_behavior!(default_behavior(ecs, enemy));
+}
+
+pub fn egg_action(ecs: &mut World, enemy: &Entity) {
+    try_behavior!(use_no_target_skill_with_cooldown(ecs, enemy, "Hatch", 4));
     wait(ecs, *enemy);
 }

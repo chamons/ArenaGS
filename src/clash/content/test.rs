@@ -56,7 +56,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
     m.insert(
         "TestField",
-        SkillInfo::init(None, TargetType::Any, SkillEffect::FieldEffect(Damage::init(1), FieldKind::Fire)),
+        SkillInfo::init(None, TargetType::Any, SkillEffect::Field(FieldEffect::Damage(Damage::init(1)), FieldKind::Fire)),
     );
     m.insert(
         "TestMoveAndShoot",
@@ -93,4 +93,17 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         ),
     );
     m.insert("TestNoTime", SkillInfo::init(None, TargetType::None, SkillEffect::None).with_no_time());
+    m.insert("TestSpawn", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::BirdSpawn)));
+    m.insert(
+        "TestSpawnField",
+        SkillInfo::init(
+            None,
+            TargetType::Any,
+            SkillEffect::Field(FieldEffect::Spawn(SpawnKind::BirdSpawn), FieldKind::Fire),
+        ),
+    );
+    m.insert(
+        "TestReplaceSpawn",
+        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn)),
+    );
 }

@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, SizedPoint};
+use crate::atlas::{EasyECS, EasyMutWorld};
 
 pub fn flying_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
@@ -31,36 +31,10 @@ fn start_flight(ecs: &mut World, target: &Entity) {
     ecs.write_storage::<PositionComponent>().remove(*target);
 }
 
-fn find_clear_landing(ecs: &mut World, target: &Entity, initial: &SizedPoint) -> SizedPoint {
-    for distance in 1..3 {
-        for direction in get_random_full_direction_list(ecs) {
-            let mut attempt = *initial;
-            for _ in 0..distance {
-                if let Some(p) = direction.sized_point_in_direction(&attempt) {
-                    attempt = p;
-                }
-            }
-            if is_area_clear(ecs, &attempt.all_positions(), target) {
-                return attempt;
-            }
-        }
-    }
-    // This seems very unlikely, we check every single possibility within 3 of the takeoff point.
-    panic!(
-        "Unable to find clear landing for flying {} at {}",
-        ecs.get_name(target).unwrap(),
-        initial.origin
-    );
-}
-
 fn end_flight(ecs: &mut World, target: &Entity) {
     let position = ecs.read_storage::<FlightComponent>().grab(*target).takeoff_point;
-    if is_area_clear(ecs, &position.all_positions(), target) {
-        ecs.shovel(*target, PositionComponent::init(position));
-    } else {
-        let new_position = find_clear_landing(ecs, target, &position);
-        ecs.shovel(*target, PositionComponent::init(new_position));
-    }
+    let position = find_clear_landing(ecs, &position, Some(*target));
+    ecs.shovel(*target, PositionComponent::init(position));
     ecs.write_storage::<SkipRenderComponent>().remove(*target);
     ecs.write_storage::<FlightComponent>().remove(*target);
 }
@@ -69,7 +43,7 @@ fn end_flight(ecs: &mut World, target: &Entity) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::Point;
+    use crate::atlas::{Point, SizedPoint};
 
     #[test]
     fn flight_round_trip() {

@@ -4,7 +4,7 @@ use super::components::*;
 use super::{Animation, AnimationComponent};
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyECS, EasyMutWorld};
+use crate::atlas::{EasyECS, EasyMutWorld, Point};
 use crate::clash::*;
 
 pub fn battle_animation_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -31,12 +31,11 @@ pub fn cast_animation(ecs: &mut World, target: Entity, animation: CharacterAnima
     ecs.shovel(target, AnimationComponent::init(cast_animation));
 }
 
-pub fn projectile_animation(ecs: &mut World, projectile: Entity, sprite: SpriteKinds, post_event: EventKind) {
+pub fn projectile_animation(ecs: &mut World, projectile: Entity, target_position: Point, sprite: SpriteKinds, post_event: EventKind) {
     let frame = ecs.get_current_frame();
     ecs.shovel(projectile, RenderComponent::init(RenderInfo::init(sprite)));
 
     let source_position = ecs.get_position(&projectile);
-    let target_position = ecs.read_storage::<AttackComponent>().grab(projectile).attack.target;
 
     let path_length = source_position.distance_to(target_position).unwrap() as u64;
     let animation_length = if frame < 4 { 6 * path_length } else { 3 * path_length };
@@ -82,17 +81,19 @@ pub fn create_orb_sprite(ecs: &mut World, orb: Entity) {
 }
 
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
-    let sprite = {
+    let (target, sprite) = {
         let attacks = ecs.write_storage::<AttackComponent>();
-        match attacks.grab(bolt).attack.ranged_kind() {
+        let attack = attacks.grab(bolt).attack;
+        let sprite = match attack.ranged_kind() {
             BoltKind::Fire => SpriteKinds::FireBolt,
             BoltKind::Bullet => SpriteKinds::Bullet,
             BoltKind::FireBullet => SpriteKinds::FireBullet,
             BoltKind::AirBullet => SpriteKinds::AirBullet,
             BoltKind::Smoke => SpriteKinds::Smoke,
-        }
+        };
+        (attack.target, sprite)
     };
-    projectile_animation(ecs, bolt, sprite, EventKind::Bolt(BoltState::CompleteFlyingAnimation));
+    projectile_animation(ecs, bolt, target, sprite, EventKind::Bolt(BoltState::CompleteFlyingAnimation));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -108,8 +109,8 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
 pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
     let animation = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.grab(target).attack.field_kind() {
+        let field_casts = ecs.read_storage::<FieldCastComponent>();
+        match field_casts.grab(target).kind {
             FieldKind::Fire => CharacterAnimationState::Crouch,
         }
     };
@@ -117,13 +118,15 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
 }
 
 pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
-    let sprite = {
-        let attacks = ecs.write_storage::<AttackComponent>();
-        match attacks.grab(bolt).attack.field_kind() {
+    let (target, sprite) = {
+        let field_casts = ecs.read_storage::<FieldCastComponent>();
+        let cast = field_casts.grab(bolt);
+        let sprite = match cast.kind {
             FieldKind::Fire => SpriteKinds::Bomb,
-        }
+        };
+        (cast.target.origin, sprite)
     };
-    projectile_animation(ecs, bolt, sprite, EventKind::Field(FieldState::CompleteFlyingAnimation));
+    projectile_animation(ecs, bolt, target, sprite, EventKind::Field(FieldState::CompleteFlyingAnimation));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {

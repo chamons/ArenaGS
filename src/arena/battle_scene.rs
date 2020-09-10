@@ -13,7 +13,7 @@ use crate::clash::*;
 
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::{BoxResult, EasyMutWorld, Point};
 use crate::conductor::Scene;
 
 pub struct BattleScene {
@@ -233,5 +233,25 @@ fn is_keystroke_skill(keycode: Keycode) -> Option<usize> {
         }
     } else {
         None
+    }
+}
+
+pub fn create_view_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    use crate::after_image::CharacterAnimationState;
+
+    match kind {
+        EventKind::Creation(kind) => match kind {
+            SpawnKind::Bird => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown))),
+            SpawnKind::Egg => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Egg))),
+            SpawnKind::BirdSpawn => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::SmallMonsterBirdBrown))),
+            SpawnKind::Player => ecs.shovel(
+                target.unwrap(),
+                RenderComponent::init(RenderInfo::init_with_char_state(
+                    SpriteKinds::MaleBrownHairBlueBody,
+                    CharacterAnimationState::Idle,
+                )),
+            ),
+        },
+        _ => {}
     }
 }

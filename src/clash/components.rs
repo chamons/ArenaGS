@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, Map, StatusKind, StatusStore, Temperature};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -233,6 +233,19 @@ impl SkipRenderComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct FieldCastComponent {
+    pub effect: FieldEffect,
+    pub kind: FieldKind,
+    pub target: SizedPoint,
+}
+
+impl FieldCastComponent {
+    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
+        FieldCastComponent { effect, kind, target }
+    }
+}
+
 #[cfg(test)]
 pub trait TestInfo {
     fn get_test_data(&self, name: &str) -> u32;
@@ -275,6 +288,7 @@ pub fn create_world() -> World {
     ecs.register::<OrbComponent>();
     ecs.register::<FlightComponent>();
     ecs.register::<SkipRenderComponent>();
+    ecs.register::<FieldCastComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers

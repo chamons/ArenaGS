@@ -8,7 +8,6 @@ use specs::saveload::{DeserializeComponents, MarkedBuilder, SerializeComponents,
 use specs_derive::Component;
 
 use super::components::*;
-use super::spawner;
 use crate::atlas::{get_exe_folder, BoxResult, EasyPath, ToSerialize};
 use crate::clash::*;
 
@@ -42,17 +41,27 @@ macro_rules! deserialize_individually {
     };
 }
 
+pub fn map_background(ecs: &mut World) {
+    ecs.create_entity()
+        .with(RenderComponent::init(RenderInfo::init_with_order(
+            SpriteKinds::BeachBackground,
+            RenderOrder::Background,
+        )))
+        .marked::<SimpleMarker<ToSerialize>>()
+        .build();
+}
+
 pub fn new_world() -> BoxResult<World> {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
-    spawner::player(&mut ecs);
-    spawner::bird_monster(&mut ecs);
+    crate::clash::content::spawner::player(&mut ecs);
+    crate::clash::content::spawner::bird_monster(&mut ecs);
 
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)?));
 
-    super::spawner::map_background(&mut ecs);
+    map_background(&mut ecs);
 
     Ok(ecs)
 }
@@ -100,6 +109,7 @@ pub fn save(ecs: &mut World) {
         OrbComponent,
         FlightComponent,
         SkipRenderComponent,
+        FieldCastComponent,
         SerializationHelper
     );
 }
@@ -142,6 +152,7 @@ pub fn load() -> BoxResult<World> {
             OrbComponent,
             FlightComponent,
             SkipRenderComponent,
+            FieldCastComponent,
             SerializationHelper
         );
     }

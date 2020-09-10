@@ -6,6 +6,12 @@ use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum FieldEffect {
+    Damage(Damage),
+    Spawn(SpawnKind),
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
     Fire,
 }
@@ -33,7 +39,6 @@ pub enum OrbKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
-    Field(FieldKind),
     Explode(u32),
     Orb(OrbKind, u32),
 }
@@ -58,13 +63,6 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Melee(kind) => kind,
             _ => panic!("Wrong type in melee_kind"),
-        }
-    }
-
-    pub fn field_kind(&self) -> FieldKind {
-        match self.kind {
-            AttackKind::Field(kind) => kind,
-            _ => panic!("Wrong type in field_kind"),
         }
     }
 
@@ -189,8 +187,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: FieldKind) {
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Field(kind), Some(target)));
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
+    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
@@ -206,44 +204,40 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_field(ecs: &mut World, source: Entity) {
-    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+    let cast = ecs.read_storage::<FieldCastComponent>().grab(source).clone();
+    ecs.write_storage::<FieldCastComponent>().remove(source);
 
     // Fields can be fired by flying entities, skip animation if there is no Position
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
-        let field_projectile = ecs.create_entity().with(AttackComponent { attack }).build();
+        let field_projectile = ecs.create_entity().with(cast).build();
         apply_field(ecs, field_projectile);
-        return;
+    } else {
+        let source_position = ecs.get_position(&source);
+        let field_projectile = ecs.create_entity().with(PositionComponent::init(source_position)).with(cast).build();
+        ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
     }
-
-    let source_position = ecs.get_position(&source);
-
-    let field_projectile = ecs
-        .create_entity()
-        .with(PositionComponent::init(source_position))
-        .with(AttackComponent { attack })
-        .build();
-
-    ecs.write_storage::<AttackComponent>().remove(source);
-    ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
 }
 
 pub fn apply_field(ecs: &mut World, projectile: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(projectile).attack
-    };
-    let (r, g, b) = match attack.field_kind() {
-        FieldKind::Fire => (255, 0, 0),
-    };
-
-    ecs.create_entity()
-        .with(PositionComponent::init(SizedPoint::from(attack.target)))
-        .with(AttackComponent::init(attack.target, attack.damage, AttackKind::Explode(0), None))
-        .with(BehaviorComponent::init(BehaviorKind::Explode))
-        .with(FieldComponent::init(r, g, b))
-        .with(TimeComponent::init(-BASE_ACTION_COST))
-        .build();
+    let cast = ecs.read_storage::<FieldCastComponent>().grab(projectile).clone();
     ecs.delete_entity(projectile).unwrap();
+
+    match cast.effect {
+        FieldEffect::Damage(damage) => {
+            let (r, g, b) = match cast.kind {
+                FieldKind::Fire => (255, 0, 0),
+            };
+
+            ecs.create_entity()
+                .with(PositionComponent::init(cast.target))
+                .with(AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None))
+                .with(BehaviorComponent::init(BehaviorKind::Explode))
+                .with(FieldComponent::init(r, g, b))
+                .with(TimeComponent::init(-BASE_ACTION_COST))
+                .build();
+        }
+        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
+    }
 }
 
 pub fn begin_explode(ecs: &mut World, source: &Entity) {
@@ -414,7 +408,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -428,7 +422,7 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), Damage::init(1), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());

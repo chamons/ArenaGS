@@ -39,6 +39,8 @@ macro_rules! do_behavior {
 pub enum BehaviorKind {
     None,
     Bird,
+    Egg,
+    BirdAdd,
     Explode,
     Orb,
 }
@@ -47,7 +49,9 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
     let behavior = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).behavior };
     match behavior {
         BehaviorKind::None => wait(ecs, *enemy),
-        BehaviorKind::Bird => super::content::bird::take_action(ecs, enemy),
+        BehaviorKind::Bird => super::content::bird::bird_action(ecs, enemy),
+        BehaviorKind::BirdAdd => super::content::bird::bird_add_action(ecs, enemy),
+        BehaviorKind::Egg => super::content::bird::egg_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }
@@ -138,12 +142,12 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_na
     false
 }
 
-pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str, range: u32) -> bool {
     let mut target = ecs.get_position(&find_player(ecs));
 
     let range = {
         let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
-        random.gen_range(0, 4)
+        random.gen_range(0, range)
     };
 
     for _ in 0..range {
@@ -186,9 +190,9 @@ pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_
 }
 
 #[allow(dead_code)]
-pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
+pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32, range: u32) -> bool {
     if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill_with_random_target(ecs, enemy, skill_name) {
+        if use_skill_with_random_target(ecs, enemy, skill_name, range) {
             return true;
         }
     }
