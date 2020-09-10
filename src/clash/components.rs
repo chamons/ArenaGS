@@ -190,7 +190,6 @@ impl StatusComponent {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct OrbComponent {
-    pub directions: Vec<Direction>,
     pub path: Vec<Point>,
     pub speed: u32,
     pub duration: u32,
@@ -198,12 +197,7 @@ pub struct OrbComponent {
 
 impl OrbComponent {
     pub fn init(path: Vec<Point>, speed: u32, duration: u32) -> OrbComponent {
-        OrbComponent {
-            directions: point_list_to_direction_list(&path),
-            path,
-            speed,
-            duration,
-        }
+        OrbComponent { path, speed, duration }
     }
 }
 

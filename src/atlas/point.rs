@@ -175,6 +175,19 @@ pub fn point_list_to_direction_list(point_line: &[Point]) -> Vec<Direction> {
     direction_line
 }
 
+pub fn apply_direction_list(point: &Point, directions: &[Direction]) -> Vec<Point> {
+    let mut line: Vec<Point> = Vec::with_capacity(directions.len());
+    line.push(*point);
+    for (i, d) in directions.iter().skip(1).enumerate() {
+        // +1 sine we're starting at index 1 due to skip. -1 since we're looking
+        // for last element
+        if let Some(p) = d.point_in_direction(&line[i + 1 - 1]) {
+            line.push(p);
+        }
+    }
+    line
+}
+
 #[cfg(test)]
 pub fn assert_points_equal(a: Point, b: Point) {
     assert_eq!(a.x, b.x);
@@ -265,14 +278,27 @@ mod tests {
     #[test]
     fn point_list_to_direction() {
         let point = SizedPoint::init(2, 2);
-        let line = point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap());
+        let directions = point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap());
+        assert_eq!(6, directions.len());
+        assert_eq!(directions[0], Direction::None);
+        assert_eq!(directions[1], Direction::South);
+        assert_eq!(directions[2], Direction::East);
+        assert_eq!(directions[3], Direction::South);
+        assert_eq!(directions[4], Direction::East);
+        assert_eq!(directions[5], Direction::South);
+    }
+
+    #[test]
+    fn apply_direction_list_roundtrip() {
+        let point = SizedPoint::init(2, 2);
+        let line = apply_direction_list(&point.origin, &point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap()));
         assert_eq!(6, line.len());
-        assert_eq!(line[0], Direction::None);
-        assert_eq!(line[1], Direction::South);
-        assert_eq!(line[2], Direction::East);
-        assert_eq!(line[3], Direction::South);
-        assert_eq!(line[4], Direction::East);
-        assert_eq!(line[5], Direction::South);
+        assert_eq!(line[0], Point::init(2, 2));
+        assert_eq!(line[1], Point::init(2, 3));
+        assert_eq!(line[2], Point::init(3, 3));
+        assert_eq!(line[3], Point::init(3, 4));
+        assert_eq!(line[4], Point::init(4, 4));
+        assert_eq!(line[5], Point::init(4, 5));
     }
 
     #[test]

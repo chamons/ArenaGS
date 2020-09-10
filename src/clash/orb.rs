@@ -31,13 +31,10 @@ pub fn move_orb(ecs: &mut World, entity: &Entity) {
     remove_stale_fields(ecs, entity);
 
     let orb = ecs.read_storage::<OrbComponent>().grab(*entity).clone();
-    let (current_index, next_index, at_end) = {
-        let current_position = ecs.get_position(entity).origin;
-        let current_index = orb.path.iter().position(|&x| x == current_position).unwrap();
-        let next_index = cmp::min(current_index + orb.speed as usize, orb.path.len() - 1);
-        let at_end = next_index == orb.path.len() - 1;
-        (current_index, next_index, at_end)
-    };
+    let current_position = ecs.get_position(entity).origin;
+    let current_index = orb.path.iter().position(|&x| x == current_position).unwrap();
+    let next_index = cmp::min(current_index + orb.speed as usize, orb.path.len() - 1);
+    let at_end = next_index == orb.path.len() - 1;
 
     for i in current_index..=next_index {
         if find_character_at_location(ecs, orb.path[i]).is_some() {
