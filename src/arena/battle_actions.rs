@@ -5,6 +5,7 @@ use super::AnimationComponent;
 use crate::atlas::{Direction, EasyECS, Point};
 use crate::clash::*;
 
+// Prevents actions when animations in progress. actions::can_act handles world state
 pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
     (&animations).join().count() > 0

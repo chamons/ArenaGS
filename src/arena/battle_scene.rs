@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, complete_animations, tick_animations};
+use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::saveload;
@@ -204,7 +204,7 @@ impl Scene for BattleScene {
 
     fn on_quit(&mut self) -> BoxResult<()> {
         // Complete any outstanding animations to prevent any weirdness on load
-        complete_animations(&mut self.ecs);
+        force_complete_animations(&mut self.ecs);
 
         Ok(())
     }

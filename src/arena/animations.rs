@@ -132,7 +132,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
     }
 
     // Remove must occur before notification, in case a notification
-    // adds a new animatino
+    // adds a new animation
     for entity in &completed {
         ecs.write_storage::<AnimationComponent>().remove(*entity);
     }
@@ -142,7 +142,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
     }
 }
 
-pub fn complete_animations(ecs: &mut World) {
+pub fn force_complete_animations(ecs: &mut World) {
     loop {
         let current_frame = {
             ecs.write_resource::<crate::clash::FrameComponent>().current_frame += 1;
