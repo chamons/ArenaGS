@@ -91,6 +91,11 @@ pub fn get_random_direction_list(ecs: &mut World) -> Vec<Direction> {
     directions
 }
 
+pub fn coin_flip(ecs: &mut World) -> bool {
+    let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
+    random.gen_bool(0.5)
+}
+
 pub fn get_random_full_direction_list(ecs: &mut World) -> Vec<Direction> {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
     let mut directions = vec![

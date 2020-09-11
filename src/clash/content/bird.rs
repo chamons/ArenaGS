@@ -100,7 +100,21 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
         }
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 4 {
-        do_behavior!(default_behavior(ecs, enemy));
+        if ecs.has_status(enemy, StatusKind::Flying) {
+            if check_behavior_cooldown(ecs, enemy, "Bombing Run", 0) {
+                if coin_flip(ecs) {
+                    try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
+                } else {
+                    try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
+                }
+            }
+        } else {
+            try_behavior_and_if!(
+                use_no_target_skill_with_cooldown(ecs, enemy, "Take Off", 4),
+                set_behavior_value(ecs, enemy, "Bombing Run", 1)
+            );
+            do_behavior!(default_behavior(ecs, enemy));
+        }
     }
     wait(ecs, *enemy);
 }
