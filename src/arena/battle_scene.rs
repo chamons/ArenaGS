@@ -49,7 +49,7 @@ impl BattleScene {
     fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
             if keycode == Keycode::F1 {
-                battle_actions::set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
+                battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
             }
         }
 
@@ -75,7 +75,7 @@ impl BattleScene {
 
     fn handle_target_key(&mut self, keycode: Keycode) {
         if keycode == Keycode::Escape {
-            battle_actions::reset_state(&mut self.ecs)
+            battle_actions::reset_action_state(&mut self.ecs)
         }
 
         // If they select a skill, start a new target session just like
@@ -88,7 +88,7 @@ impl BattleScene {
 
     fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) {
         if keycode == Keycode::Escape {
-            battle_actions::reset_state(&mut self.ecs);
+            battle_actions::reset_action_state(&mut self.ecs);
             return;
         }
         if kind.is_map_overlay() {
@@ -110,11 +110,11 @@ impl BattleScene {
 
     fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Right {
-            battle_actions::reset_state(&mut self.ecs);
+            battle_actions::reset_action_state(&mut self.ecs);
             return;
         }
 
-        let target_info = match battle_actions::read_state(&self.ecs) {
+        let target_info = match battle_actions::read_action_state(&self.ecs) {
             BattleSceneState::Targeting(target_source) => Some(target_source),
             _ => None,
         };
@@ -171,7 +171,7 @@ impl Scene for BattleScene {
                 }
             }
 
-            let state = battle_actions::read_state(&self.ecs);
+            let state = battle_actions::read_action_state(&self.ecs);
             match state {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
                 BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),

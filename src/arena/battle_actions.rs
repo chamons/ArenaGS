@@ -34,7 +34,9 @@ pub fn select_skill(ecs: &mut World, name: &str) {
         player_use_skill(ecs, name, None);
     } else {
         match target_required {
-            TargetType::Any | TargetType::Enemy | TargetType::Tile => set_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string()))),
+            TargetType::Any | TargetType::Enemy | TargetType::Tile => {
+                set_action_state(ecs, BattleSceneState::Targeting(BattleTargetSource::Skill(name.to_string())))
+            }
             TargetType::Player => panic!("TargetType::Player should not have reached here in select_skill"),
             TargetType::None => panic!("TargetType::None should not have reached here in select_skill"),
         }
@@ -43,7 +45,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
 
 pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
-    reset_state(ecs);
+    reset_action_state(ecs);
 
     let skill = get_skill(name);
 
@@ -59,15 +61,15 @@ pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     }
 }
 
-pub fn read_state(ecs: &World) -> BattleSceneState {
+pub fn read_action_state(ecs: &World) -> BattleSceneState {
     ecs.read_resource::<BattleSceneStateComponent>().state.clone()
 }
 
-pub fn set_state(ecs: &mut World, state: BattleSceneState) {
+pub fn set_action_state(ecs: &mut World, state: BattleSceneState) {
     ecs.write_resource::<BattleSceneStateComponent>().state = state;
 }
 
-pub fn reset_state(ecs: &mut World) {
+pub fn reset_action_state(ecs: &mut World) {
     let mut state = ecs.write_resource::<BattleSceneStateComponent>();
     state.state = BattleSceneState::Default();
 }
