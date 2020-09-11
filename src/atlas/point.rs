@@ -192,7 +192,7 @@ impl fmt::Display for SizedPoint {
     }
 }
 
-pub fn extend_line_along_path(points: &[Point], length: usize) -> Vec<Point> {
+pub fn extend_line_along_path(points: &[Point], length: u32) -> Vec<Point> {
     let starting = points.first().unwrap();
     let ending = points.last().unwrap();
 
@@ -210,8 +210,8 @@ pub fn extend_line_along_path(points: &[Point], length: usize) -> Vec<Point> {
         }
 
         // If we've reached our length or the extension adds no additional length due to map edge
-        if line.len() >= length || extension.len() == 1 {
-            line.truncate(length);
+        if line.len() >= length as usize || extension.len() == 1 {
+            line.truncate(length as usize);
             return line;
         }
     }

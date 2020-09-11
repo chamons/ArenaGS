@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::{EventCoordinator, FieldComponent};
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -299,6 +299,7 @@ pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, stren
     let source_position = ecs.get_position(source);
     // Need to use extend line to extend to duration if too little
     let path = source_position.line_to(target_position).unwrap();
+    let path = extend_line_along_path(&path, duration);
     ecs.shovel(*source, OrbComponent::init(path, speed, duration));
     ecs.shovel(
         *source,
@@ -541,12 +542,11 @@ mod tests {
         new_turn_wait_characters(&mut ecs);
         assert_position(&ecs, &orb, Point::init(2, 5));
 
-        begin_move(&mut ecs, &target, SizedPoint::init(2, 7), PostMoveAction::None);
+        begin_move(&mut ecs, &target, SizedPoint::init(3, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
-        assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
     #[test]

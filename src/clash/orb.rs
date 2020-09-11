@@ -119,7 +119,7 @@ mod tests {
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
         assert_field_exists(&ecs, 2, 6);
-        assert_field_count(&ecs, 3);
+        assert_field_count(&ecs, 4);
     }
 
     #[test]
@@ -132,7 +132,7 @@ mod tests {
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
         assert_field_exists(&ecs, 2, 6);
-        assert_field_count(&ecs, 3);
+        assert_field_count(&ecs, 9);
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 3);
         assert_field_exists(&ecs, 2, 2);
-        assert_field_count(&ecs, 2);
+        assert_field_count(&ecs, 4);
     }
 
     #[test]
@@ -174,9 +174,9 @@ mod tests {
             assert_field_count(&ecs, 4);
             new_turn_wait_characters(&mut ecs);
         }
-        assert_field_count(&ecs, 3);
+        assert_field_count(&ecs, 4);
         new_turn_wait_characters(&mut ecs);
-        assert_field_count(&ecs, 1);
+        assert_field_count(&ecs, 3);
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);
     }
