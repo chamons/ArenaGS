@@ -6,7 +6,7 @@ use crate::atlas::{Direction, EasyECS, Point};
 use crate::clash::*;
 
 pub enum BattleActionRequest {
-    None
+    None,
     SelectSkill(String),
     Move(Direction),
 }
@@ -15,22 +15,6 @@ pub enum BattleActionRequest {
 pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
     (&animations).join().count() > 0
-}
-
-pub fn get_skill_name(ecs: &World, index: usize) -> Option<String> {
-    let skills_component = ecs.read_storage::<SkillsComponent>();
-    let skills = &skills_component.grab(find_player(&ecs)).skills;
-    skills.get(index).map(|s| get_current_skill(ecs, s))
-}
-
-// Some skills have an alternate when not usable (such as reload)
-pub fn get_current_skill(ecs: &World, skill_name: &str) -> String {
-    let skill = get_skill(skill_name);
-
-    match skill.is_usable(ecs, &find_player(&ecs)) {
-        UsableResults::LacksAmmo if skill.alternate.is_some() => skill.alternate.as_ref().unwrap().to_string(),
-        _ => skill_name.to_string(),
-    }
 }
 
 pub fn select_skill(ecs: &mut World, name: &str) {

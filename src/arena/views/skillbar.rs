@@ -115,7 +115,7 @@ impl SkillBarItemView {
     }
 
     fn get_render_params(&self, ecs: &World) -> Option<(&HotKeyRenderInfo, &Texture, bool)> {
-        if let Some(skill_name) = battle_actions::get_skill_name(ecs, self.index) {
+        if let Some(skill_name) = get_skill_name_on_skillbar(ecs, self.index) {
             let skill = get_skill(&skill_name);
 
             match skill.is_usable(ecs, &find_player(&ecs)) {
@@ -152,8 +152,8 @@ impl View for SkillBarItemView {
     }
 
     fn hit_test(&self, ecs: &World, _: i32, _: i32) -> Option<HitTestResult> {
-        if let Some(skill_name) = battle_actions::get_skill_name(ecs, self.index) {
-            Some(HitTestResult::Skill(battle_actions::get_current_skill(ecs, &skill_name)))
+        if let Some(skill_name) = get_skill_name_on_skillbar(ecs, self.index) {
+            Some(HitTestResult::Skill(get_current_skill_on_skillbar(ecs, &skill_name)))
         } else {
             None
         }
@@ -175,6 +175,22 @@ pub fn hotkey_to_skill_index(hotkey: usize) -> usize {
         9
     } else {
         hotkey - 1
+    }
+}
+
+pub fn get_skill_name_on_skillbar(ecs: &World, index: usize) -> Option<String> {
+    let skills_component = ecs.read_storage::<SkillsComponent>();
+    let skills = &skills_component.grab(find_player(&ecs)).skills;
+    skills.get(index).map(|s| get_current_skill_on_skillbar(ecs, s))
+}
+
+// Some skills have an alternate when not usable (such as reload)
+pub fn get_current_skill_on_skillbar(ecs: &World, skill_name: &str) -> String {
+    let skill = get_skill(skill_name);
+
+    match skill.is_usable(ecs, &find_player(&ecs)) {
+        UsableResults::LacksAmmo if skill.alternate.is_some() => skill.alternate.as_ref().unwrap().to_string(),
+        _ => skill_name.to_string(),
     }
 }
 

@@ -54,7 +54,7 @@ impl BattleScene {
         }
 
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::select_skill(&mut self.ecs, &name);
             }
         }
@@ -80,7 +80,7 @@ impl BattleScene {
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
+            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::select_skill(&mut self.ecs, &name);
             }
         }

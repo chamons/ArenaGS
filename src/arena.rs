@@ -17,7 +17,7 @@ use sprite_loader::SpriteLoader;
 pub use battle_scene::BattleScene;
 
 #[cfg(test)]
-pub use animations::complete_animations;
+pub use animations::force_complete_animations;
 #[cfg(test)]
 pub use components::add_ui_extension;
 
