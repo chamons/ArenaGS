@@ -5,6 +5,12 @@ use super::AnimationComponent;
 use crate::atlas::{Direction, EasyECS, Point};
 use crate::clash::*;
 
+pub enum BattleActionRequest {
+    None
+    SelectSkill(String),
+    Move(Direction),
+}
+
 // Prevents actions when animations in progress. actions::can_act handles world state
 pub fn has_animations_blocking(ecs: &World) -> bool {
     let animations = ecs.read_storage::<AnimationComponent>();
@@ -52,10 +58,6 @@ pub fn select_skill(ecs: &mut World, name: &str) {
 }
 
 pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
-    if has_animations_blocking(ecs) {
-        return;
-    }
-
     // Selection has been made, drop out of targeting state
     reset_state(ecs);
 
