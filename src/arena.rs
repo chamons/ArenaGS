@@ -2,6 +2,7 @@
 // The scene and UX
 mod animations;
 mod battle_actions;
+pub use battle_actions::BattleActionRequest;
 mod battle_animations;
 mod battle_scene;
 

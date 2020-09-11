@@ -2,13 +2,24 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::AnimationComponent;
-use crate::atlas::{Direction, EasyECS, Point};
+use crate::atlas::{Direction, Point};
 use crate::clash::*;
 
 pub enum BattleActionRequest {
-    None,
-    SelectSkill(String),
     Move(Direction),
+    SelectSkill(String),
+    TargetSkill(String, Point),
+}
+
+pub fn request_action(ecs: &mut World, request: BattleActionRequest) {
+    if has_animations_blocking(ecs) {
+        return;
+    }
+    match request {
+        BattleActionRequest::Move(direction) => move_action(ecs, direction),
+        BattleActionRequest::SelectSkill(name) => select_skill(ecs, &name),
+        BattleActionRequest::TargetSkill(name, target) => select_skill_with_target(ecs, &name, &target),
+    }
 }
 
 // Prevents actions when animations in progress. actions::can_act handles world state
@@ -17,11 +28,7 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
     (&animations).join().count() > 0
 }
 
-pub fn select_skill(ecs: &mut World, name: &str) {
-    if has_animations_blocking(ecs) {
-        return;
-    }
-
+fn select_skill(ecs: &mut World, name: &str) {
     let skill = get_skill(name);
 
     match skill.is_usable(ecs, &find_player(&ecs)) {
@@ -43,7 +50,7 @@ pub fn select_skill(ecs: &mut World, name: &str) {
     }
 }
 
-pub fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
+fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
     reset_action_state(ecs);
 
@@ -74,10 +81,6 @@ pub fn reset_action_state(ecs: &mut World) {
     state.state = BattleSceneState::Default();
 }
 
-pub fn move_action(ecs: &mut World, direction: Direction) {
-    if has_animations_blocking(ecs) {
-        return;
-    }
-
+fn move_action(ecs: &mut World, direction: Direction) {
     player_move(ecs, direction);
 }

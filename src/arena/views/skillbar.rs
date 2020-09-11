@@ -7,7 +7,6 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::super::battle_actions;
 use super::{ContextData, HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};

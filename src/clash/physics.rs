@@ -150,7 +150,7 @@ pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
 
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
-    crate::arena::complete_animations(ecs);
+    crate::arena::force_complete_animations(ecs);
 }
 
 pub fn find_clear_landing(ecs: &mut World, initial: &SizedPoint, entity: Option<Entity>) -> SizedPoint {

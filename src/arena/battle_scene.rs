@@ -55,14 +55,14 @@ impl BattleScene {
 
         if let Some(i) = is_keystroke_skill(keycode) {
             if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
-                battle_actions::select_skill(&mut self.ecs, &name);
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
             }
         }
         match keycode {
-            Keycode::Up => battle_actions::move_action(&mut self.ecs, Direction::North),
-            Keycode::Down => battle_actions::move_action(&mut self.ecs, Direction::South),
-            Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
-            Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
+            Keycode::Up => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::North)),
+            Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
+            Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
+            Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
             Keycode::S => saveload::save(&mut self.ecs),
             Keycode::L => {
                 if let Ok(new_world) = saveload::load() {
@@ -81,7 +81,7 @@ impl BattleScene {
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
             if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
-                battle_actions::select_skill(&mut self.ecs, &name);
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()));
             }
         }
     }
@@ -103,7 +103,7 @@ impl BattleScene {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
-                battle_actions::select_skill(&mut self.ecs, &name)
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
             }
         }
     }
@@ -123,7 +123,9 @@ impl BattleScene {
             if button == MouseButton::Left {
                 if let Some(map_position) = screen_to_map_position(x, y) {
                     match target_source {
-                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, &map_position),
+                        BattleTargetSource::Skill(skill_name) => {
+                            battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::TargetSkill(skill_name.to_string(), map_position))
+                        }
                     }
                 }
             }
