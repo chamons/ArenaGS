@@ -10,7 +10,7 @@ use specs_derive::*;
 
 use super::EventCoordinator;
 use super::Log;
-use crate::atlas::{point_list_to_direction_list, Direction, EasyECS, Point, SizedPoint, ToSerialize};
+use crate::atlas::{EasyECS, Point, SizedPoint, ToSerialize};
 use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]

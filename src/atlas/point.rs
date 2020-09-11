@@ -1,8 +1,12 @@
 use std::fmt;
 
-use super::Direction;
 use line_drawing::WalkGrid;
 use serde::{Deserialize, Serialize};
+
+// Points are always in the context of a map, which is a fixed sized
+// Negative points and points > 12 are invalid in most contexts
+// See ExtendedPoint for an example otherwise
+pub const MAX_POINT_SIZE: u32 = 13;
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Point {
@@ -32,11 +36,27 @@ impl Point {
 
         points
     }
+
+    pub fn is_in_bounds(&self) -> bool {
+        self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
+    }
 }
 
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({},{})", self.x, self.y)
+    }
+}
+
+// Internal point that can point off map safely
+struct ExtendedPoint {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl ExtendedPoint {
+    const fn init(x: i32, y: i32) -> ExtendedPoint {
+        ExtendedPoint { x, y }
     }
 }
 
@@ -98,16 +118,21 @@ impl SizedPoint {
     }
 
     pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        self.line_to_extended(ExtendedPoint::init(point.x as i32, point.y as i32))
+    }
+
+    fn line_to_extended(&self, point: ExtendedPoint) -> Option<Vec<Point>> {
         // TODO - Can we be smarter than checking every point?
         let positions = self.all_positions();
         let shortest = positions.iter().min_by(|first, second| {
-            let first = WalkGrid::new((first.x as i32, first.y as i32), (point.x as i32, point.y as i32)).count();
-            let second = WalkGrid::new((second.x as i32, second.y as i32), (point.x as i32, point.y as i32)).count();
+            let first = WalkGrid::new((first.x as i32, first.y as i32), (point.x, point.y)).count();
+            let second = WalkGrid::new((second.x as i32, second.y as i32), (point.x, point.y)).count();
             first.cmp(&second)
         });
         if let Some(shortest) = shortest {
             Some(
-                WalkGrid::new((shortest.x as i32, shortest.y as i32), (point.x as i32, point.y as i32))
+                WalkGrid::<i32>::new((shortest.x as i32, shortest.y as i32), (point.x as i32, point.y as i32))
+                    .filter(|(x, y)| *x >= 0 && *y >= 0 && *y < 13 && *x < 13)
                     .map(|(x, y)| Point::init(x as u32, y as u32))
                     .collect(),
             )
@@ -167,29 +192,29 @@ impl fmt::Display for SizedPoint {
     }
 }
 
-pub fn point_list_to_direction_list(point_line: &[Point]) -> Vec<Direction> {
-    let mut direction_line = vec![Direction::None; point_line.len()];
-    for i in 1..point_line.len() {
-        direction_line[i] = Direction::from_two_points(&point_line[i - 1], &point_line[i]);
-    }
-    direction_line
-}
+pub fn extend_line_along_path(points: &[Point], length: usize) -> Vec<Point> {
+    let starting = points.first().unwrap();
+    let ending = points.last().unwrap();
 
-pub fn apply_direction_list(point: &Point, directions: &[Direction]) -> Vec<Point> {
-    let mut line: Vec<Point> = Vec::with_capacity(directions.len());
-    line.push(*point);
-    for (i, d) in directions.iter().skip(1).enumerate() {
-        // +1 sine we're starting at index 1 due to skip. -1 since we're looking
-        // for last element
-        if let Some(p) = d.point_in_direction(&line[i + 1 - 1]) {
-            line.push(p);
+    let delta_x: i32 = ending.x as i32 - starting.x as i32;
+    let delta_y: i32 = ending.y as i32 - starting.y as i32;
+
+    let mut line = points.to_vec();
+    loop {
+        let ending = SizedPoint::from(*line.last().unwrap());
+        let extension = ending
+            .line_to_extended(ExtendedPoint::init(ending.origin.x as i32 + delta_x, ending.origin.y as i32 + delta_y))
+            .unwrap();
+        for e in extension.iter().skip(1) {
+            line.push(*e);
+        }
+
+        // If we've reached our length or the extension adds no additional length due to map edge
+        if line.len() >= length || extension.len() == 1 {
+            line.truncate(length);
+            return line;
         }
     }
-    line
-}
-
-pub fn extend_line_along_path(points: &[Point], length: u32) -> Vec<Point> {
-    vec![]
 }
 
 #[cfg(test)]
@@ -280,32 +305,6 @@ mod tests {
     }
 
     #[test]
-    fn point_list_to_direction() {
-        let point = SizedPoint::init(2, 2);
-        let directions = point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap());
-        assert_eq!(6, directions.len());
-        assert_eq!(directions[0], Direction::None);
-        assert_eq!(directions[1], Direction::South);
-        assert_eq!(directions[2], Direction::East);
-        assert_eq!(directions[3], Direction::South);
-        assert_eq!(directions[4], Direction::East);
-        assert_eq!(directions[5], Direction::South);
-    }
-
-    #[test]
-    fn apply_direction_list_roundtrip() {
-        let point = SizedPoint::init(2, 2);
-        let line = apply_direction_list(&point.origin, &point_list_to_direction_list(&point.line_to(Point::init(4, 5)).unwrap()));
-        assert_eq!(6, line.len());
-        assert_eq!(line[0], Point::init(2, 2));
-        assert_eq!(line[1], Point::init(2, 3));
-        assert_eq!(line[2], Point::init(3, 3));
-        assert_eq!(line[3], Point::init(3, 4));
-        assert_eq!(line[4], Point::init(4, 4));
-        assert_eq!(line[5], Point::init(4, 5));
-    }
-
-    #[test]
     fn extend_line() {
         let point = SizedPoint::init(2, 2);
         let line = extend_line_along_path(&point.line_to(Point::init(4, 5)).unwrap(), 12);
@@ -316,12 +315,41 @@ mod tests {
         assert_eq!(line[3], Point::init(3, 4));
         assert_eq!(line[4], Point::init(4, 4));
         assert_eq!(line[5], Point::init(4, 5));
-        assert_eq!(line[6], Point::init(5, 5));
+        assert_eq!(line[6], Point::init(4, 6));
         assert_eq!(line[7], Point::init(5, 6));
-        assert_eq!(line[8], Point::init(6, 6));
+        assert_eq!(line[8], Point::init(5, 7));
         assert_eq!(line[9], Point::init(6, 7));
-        assert_eq!(line[10], Point::init(7, 7));
-        assert_eq!(line[11], Point::init(7, 8));
+        assert_eq!(line[10], Point::init(6, 8));
+        assert_eq!(line[11], Point::init(6, 9));
+    }
+
+    #[test]
+    fn extend_line_past_map_edge_south() {
+        let point = SizedPoint::init(8, 8);
+        let line = extend_line_along_path(&point.line_to(Point::init(11, 12)).unwrap(), 12);
+        assert_eq!(8, line.len());
+        assert_eq!(line[0], Point::init(8, 8));
+        assert_eq!(line[1], Point::init(8, 9));
+        assert_eq!(line[2], Point::init(9, 9));
+        assert_eq!(line[3], Point::init(9, 10));
+        assert_eq!(line[4], Point::init(10, 10));
+        assert_eq!(line[5], Point::init(10, 11));
+        assert_eq!(line[6], Point::init(11, 11));
+        assert_eq!(line[7], Point::init(11, 12));
+    }
+
+    #[test]
+    fn extend_line_past_map_edge_north() {
+        let point = SizedPoint::init(3, 3);
+        let line = extend_line_along_path(&point.line_to(Point::init(1, 1)).unwrap(), 12);
+        assert_eq!(7, line.len());
+        assert_eq!(line[0], Point::init(3, 3));
+        assert_eq!(line[1], Point::init(3, 2));
+        assert_eq!(line[2], Point::init(2, 2));
+        assert_eq!(line[3], Point::init(2, 1));
+        assert_eq!(line[4], Point::init(1, 1));
+        assert_eq!(line[5], Point::init(1, 0));
+        assert_eq!(line[6], Point::init(0, 0));
     }
 
     #[test]

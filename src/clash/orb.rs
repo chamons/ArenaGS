@@ -95,6 +95,7 @@ fn remove_stale_fields(ecs: &mut World, entity: &Entity) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::atlas::Point;
 
     fn assert_field_exists(ecs: &World, x: u32, y: u32) {
         let fields = ecs.read_storage::<FieldComponent>();

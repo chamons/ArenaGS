@@ -10,7 +10,7 @@ mod paths;
 pub use paths::{get_exe_folder, EasyPath};
 
 mod point;
-pub use point::{point_list_to_direction_list, Point, SizedPoint};
+pub use point::{Point, SizedPoint, MAX_POINT_SIZE};
 
 mod direction;
 pub use direction::*;

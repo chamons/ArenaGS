@@ -8,7 +8,7 @@ use specs::prelude::*;
 use super::{CharacterInfoComponent, FieldComponent, PlayerComponent, PositionComponent};
 use crate::atlas::{BoxResult, Point};
 
-pub const MAX_MAP_TILES: u32 = 13;
+pub const MAX_MAP_TILES: u32 = crate::atlas::MAX_POINT_SIZE;
 pub const MAX_MAP_TILES_SIZED: usize = MAX_MAP_TILES as usize;
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug)]
@@ -35,10 +35,6 @@ impl Map {
         Map {
             tiles: [[MapTile { walkable: true }; MAX_MAP_TILES_SIZED]; MAX_MAP_TILES_SIZED],
         }
-    }
-
-    pub fn is_in_bounds(&self, position: &Point) -> bool {
-        position.x < MAX_MAP_TILES && position.y < MAX_MAP_TILES
     }
 
     pub fn is_walkable(&self, position: &Point) -> bool {
