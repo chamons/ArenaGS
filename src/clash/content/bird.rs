@@ -14,14 +14,30 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             None,
             TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(2), BoltKind::Bullet),
+            SkillEffect::RangedAttack(Damage::init(2), BoltKind::AirBullet),
             Some(3),
             true,
         ),
     );
     m.insert(
         "Feather Orb",
-        SkillInfo::init_with_distance(None, TargetType::Player, SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2), Some(12), true),
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2, 12),
+            Some(12),
+            true,
+        ),
+    );
+    m.insert(
+        "Tailwind",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::RangedAttack(Damage::init(1).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
+            Some(6),
+            true,
+        ),
     );
     m.insert(
         "Explosive Eggs",
@@ -63,6 +79,7 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
     };
 
     if phase == 1 {
+        try_behavior!(use_player_target_skill_with_cooldown(ecs, enemy, "Tailwind", 4));
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 2 {
         if ecs.has_status(enemy, StatusKind::Flying) {
@@ -74,12 +91,15 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
                 use_no_target_skill_with_cooldown(ecs, enemy, "Take Off", 4),
                 set_behavior_value(ecs, enemy, "Bombing Run", 1)
             );
+            try_behavior!(use_player_target_skill_with_cooldown(ecs, enemy, "Tailwind", 4));
             do_behavior!(default_behavior(ecs, enemy));
         }
     } else if phase == 3 {
         if check_behavior_cooldown(ecs, enemy, "Throw Eggs", 3) {
             try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
         }
+        do_behavior!(default_behavior(ecs, enemy));
+    } else if phase == 4 {
         do_behavior!(default_behavior(ecs, enemy));
     }
     wait(ecs, *enemy);

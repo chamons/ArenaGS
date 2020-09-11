@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyMutECS, Point};
-use crate::clash::{Direction, EventCoordinator};
+use crate::atlas::{Direction, EasyMutECS, Point};
+use crate::clash::EventCoordinator;
 
 bitflags! {
     #[derive(Serialize, Deserialize)]

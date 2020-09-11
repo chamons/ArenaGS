@@ -192,11 +192,12 @@ impl StatusComponent {
 pub struct OrbComponent {
     pub path: Vec<Point>,
     pub speed: u32,
+    pub duration: u32,
 }
 
 impl OrbComponent {
-    pub fn init(path: Vec<Point>, speed: u32) -> OrbComponent {
-        OrbComponent { path, speed }
+    pub fn init(path: Vec<Point>, speed: u32, duration: u32) -> OrbComponent {
+        OrbComponent { path, speed, duration }
     }
 }
 

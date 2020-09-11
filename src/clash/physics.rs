@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{Direction, EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 // Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint, action: PostMoveAction) {
@@ -63,7 +63,7 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: Option<Entity>) -> bo
 
     for (entity, position, _) in (&entities, &positions, &char_info).join() {
         for p in area.iter() {
-            if !map.is_in_bounds(&p) || !map.is_walkable(&p) {
+            if !p.is_in_bounds() || !map.is_walkable(&p) {
                 return false;
             }
             if invoker != Some(entity) && position.position.contains_point(&p) {
