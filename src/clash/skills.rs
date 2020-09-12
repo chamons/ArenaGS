@@ -305,7 +305,7 @@ pub fn in_possible_skill_range(ecs: &World, invoker: &Entity, skill: &SkillInfo,
             }
         }
     }
-    return true;
+    true
 }
 
 pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
