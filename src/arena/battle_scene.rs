@@ -63,9 +63,9 @@ impl BattleScene {
             Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
             Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
             Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
-            Keycode::S => saveload::save(&mut self.ecs),
+            Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {
-                if let Ok(new_world) = saveload::load() {
+                if let Ok(new_world) = saveload::load_from_disk() {
                     self.ecs = new_world;
                 }
             }

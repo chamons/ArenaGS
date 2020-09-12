@@ -1,7 +1,8 @@
 use specs::prelude::*;
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::*;
-use crate::atlas::{assert_points_equal, assert_points_not_equal, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::*;
 
 pub struct StateBuilder {
     ecs: World,
@@ -104,6 +105,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
+        .marked::<SimpleMarker<ToSerialize>>()
         .build();
 }
 
@@ -178,4 +180,25 @@ pub fn dump_all_position(ecs: &World) {
         println!("{}", description);
     }
     println!("");
+}
+
+pub fn assert_field_exists(ecs: &World, x: u32, y: u32) {
+    let fields = ecs.read_storage::<FieldComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    let found_field = (&fields, (&positions).maybe()).join().any(|(f, p)| {
+        f.fields.iter().any(|(field_position, _)| {
+            if let Some(field_position) = field_position {
+                field_position.x == x && field_position.y == y
+            } else {
+                p.unwrap().position.contains_point(&Point::init(x, y))
+            }
+        })
+    });
+    assert_eq!(true, found_field);
+}
+
+pub fn assert_field_count(ecs: &World, expected: usize) {
+    let fields = ecs.read_storage::<FieldComponent>();
+    let count: usize = (&fields).join().map(|f| f.fields.len()).sum();
+    assert_eq!(expected, count);
 }

@@ -1,4 +1,5 @@
 use std::fs::{read_to_string, File};
+use std::io::{Read, Write};
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -71,9 +72,23 @@ pub struct SerializationHelper {
     pub map: Map,
 }
 
-pub fn save(ecs: &mut World) {
-    let writer = File::create("./savegame.sav").unwrap();
-    let mut serializer = serde_json::Serializer::new(writer);
+pub fn save_to_string(ecs: &mut World) -> String {
+    let mut writer = vec![];
+    save(ecs, &mut writer);
+
+    let mut out = Vec::new();
+    let mut c = writer.as_slice();
+    c.read_to_end(&mut out).unwrap();
+    String::from_utf8(out).unwrap()
+}
+
+pub fn save_to_disk(ecs: &mut World) {
+    let mut writer = File::create("./savegame.sav").unwrap();
+    save(ecs, &mut writer);
+}
+
+fn save<T: Write>(ecs: &mut World, writer: &mut T) {
+    let mut serializer = serde_json::Serializer::new(&mut *writer);
 
     {
         let map = ecs.read_resource::<MapComponent>().map.clone();
@@ -89,9 +104,6 @@ pub fn save(ecs: &mut World) {
         serializer,
         data,
         PositionComponent,
-        RenderComponent,
-        BattleSceneStateComponent,
-        MousePositionComponent,
         FieldComponent,
         PlayerComponent,
         CharacterInfoComponent,
@@ -110,16 +122,27 @@ pub fn save(ecs: &mut World) {
         FlightComponent,
         SkipRenderComponent,
         FieldCastComponent,
+        RenderComponent,
+        BattleSceneStateComponent,
+        MousePositionComponent,
         SerializationHelper
     );
 }
 
-pub fn load() -> BoxResult<World> {
+pub fn load_from_disk() -> BoxResult<World> {
+    let data = read_to_string("./savegame.sav")?;
+    load(data)
+}
+
+pub fn load_from_string(data: String) -> BoxResult<World> {
+    load(data)
+}
+
+fn load(data: String) -> BoxResult<World> {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
     {
-        let data = read_to_string("./savegame.sav")?;
         let mut de = serde_json::Deserializer::from_str(&data);
         let mut d = (
             &mut ecs.entities(),
@@ -132,9 +155,6 @@ pub fn load() -> BoxResult<World> {
             de,
             d,
             PositionComponent,
-            RenderComponent,
-            BattleSceneStateComponent,
-            MousePositionComponent,
             FieldComponent,
             PlayerComponent,
             CharacterInfoComponent,
@@ -153,6 +173,9 @@ pub fn load() -> BoxResult<World> {
             FlightComponent,
             SkipRenderComponent,
             FieldCastComponent,
+            RenderComponent,
+            BattleSceneStateComponent,
+            MousePositionComponent,
             SerializationHelper
         );
     }
@@ -168,4 +191,52 @@ pub fn load() -> BoxResult<World> {
     }
 
     Ok(ecs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::atlas::Point;
+
+    #[test]
+    fn save_load_smoke() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let save = save_to_string(&mut ecs);
+        ecs = load_from_string(save).unwrap();
+        assert_eq!(2, find_all_characters(&ecs).len());
+    }
+
+    #[test]
+    fn save_load_with_field() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_field(&mut ecs, &player, Point::init(2, 6), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
+        wait_for_animations(&mut ecs);
+
+        assert_field_exists(&ecs, 2, 6);
+
+        let save = save_to_string(&mut ecs);
+        ecs = load_from_string(save).unwrap();
+
+        assert_field_exists(&ecs, 2, 6);
+    }
+
+    #[test]
+    fn save_load_with_orbs() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_count(&ecs, 5);
+
+        let save = save_to_string(&mut ecs);
+        ecs = load_from_string(save).unwrap();
+
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_count(&ecs, 5);
+    }
 }

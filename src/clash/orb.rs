@@ -13,15 +13,7 @@ pub fn create_orb(ecs: &mut World, invoker: &Entity) -> Entity {
     let caster_position = ecs.get_position(invoker);
     let starting_index = path.iter().position(|x| !caster_position.contains_point(x)).unwrap();
 
-    let orb = ecs
-        .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(path[starting_index])))
-        .with(attack_component)
-        .with(orb_component)
-        .with(BehaviorComponent::init(BehaviorKind::Orb))
-        .with(TimeComponent::init(0))
-        .with(FieldComponent::init())
-        .build();
+    let orb = super::content::spawner::create_orb(ecs, path[starting_index], attack_component, orb_component);
     add_orb_movement_fields(ecs, &orb, starting_index);
 
     orb
@@ -85,23 +77,6 @@ fn add_orb_movement_fields(ecs: &mut World, entity: &Entity, current: usize) {
 mod tests {
     use super::*;
     use crate::atlas::Point;
-
-    fn assert_field_exists(ecs: &World, x: u32, y: u32) {
-        let fields = ecs.read_storage::<FieldComponent>();
-        assert!((&fields).join().any(|f| f.fields.iter().any(|(p, _)| {
-            if let Some(p) = p {
-                p.x == x && p.y == y
-            } else {
-                false
-            }
-        })));
-    }
-
-    fn assert_field_count(ecs: &World, expected: usize) {
-        let fields = ecs.read_storage::<FieldComponent>();
-        let count: usize = (&fields).join().map(|f| f.fields.len()).sum();
-        assert_eq!(expected, count);
-    }
 
     #[test]
     fn orb_has_correct_fields() {

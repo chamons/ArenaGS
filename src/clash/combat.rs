@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent};
+use crate::clash::EventCoordinator;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldEffect {
@@ -139,6 +139,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
 
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
+    // NotConvertSaveload - Bolts only last during an animation
     let bolt = ecs
         .create_entity()
         .with(PositionComponent::init(source_position))
@@ -201,6 +202,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
     ecs.write_storage::<FieldCastComponent>().remove(source);
 
     // Fields can be fired by flying entities, skip animation if there is no Position
+    // NotConvertSaveload - These entities only last the duration of the animation
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
         let field_projectile = ecs.create_entity().with(cast).build();
         apply_field(ecs, field_projectile);
@@ -221,13 +223,8 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 FieldKind::Fire => (255, 0, 0),
             };
 
-            ecs.create_entity()
-                .with(PositionComponent::init(cast.target))
-                .with(AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None))
-                .with(BehaviorComponent::init(BehaviorKind::Explode))
-                .with(FieldComponent::init_single(r, g, b))
-                .with(TimeComponent::init(-BASE_ACTION_COST))
-                .build();
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None);
+            super::content::spawner::create_damage_field(ecs, cast.target, attack, (r, g, b));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
     }
