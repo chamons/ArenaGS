@@ -137,3 +137,11 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
     tick_next_action(ecs);
     wait_for_animations(ecs);
 }
+
+pub fn dump_all_position(ecs: &World) {
+    let positions = ecs.read_storage::<PositionComponent>();
+    for position in (&positions).join() {
+        println!("{}", position.position);
+    }
+    println!("");
+}
