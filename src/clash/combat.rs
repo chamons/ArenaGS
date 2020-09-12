@@ -321,6 +321,8 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
 }
 
+// Apply orb can damage enties not on it's exact location
+// if it will run into them this turn
 pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
@@ -328,6 +330,12 @@ pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     };
     apply_damage_to_location(ecs, point, attack.source, attack.damage);
     ecs.delete_entity(orb).unwrap();
+}
+
+pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
+    if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(&entity)) {
+        apply_orb(ecs, orb, ecs.get_position(&orb).single_position());
+    }
 }
 
 #[cfg(test)]
@@ -653,5 +661,45 @@ mod tests {
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&player).health < player_starting_health);
+    }
+
+    // Being knocked back into an active orb should explode it, even if you go first
+    #[test]
+    fn knockback_into_orb() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 100)
+            .with_character(3, 7, 0)
+            .with_map()
+            .build();
+
+        // . . . .
+        // . . . .
+        // . . P .
+        // . . . .
+        // . . . .
+        // . . . .
+        // . . T .
+        // . . . O
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let orb_caster = find_at(&ecs, 3, 7);
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_orb(&mut ecs, &orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 6),
+            Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_character_at(&ecs, 2, 7);
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
     }
 }

@@ -49,6 +49,10 @@ pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_character_at_location(ecs, Point::init(x, y)).unwrap()
 }
 
+pub fn assert_character_at(ecs: &World, x: u32, y: u32) {
+    assert!(find_character_at_location(ecs, Point::init(x, y)).is_some());
+}
+
 #[allow(dead_code)]
 pub fn find_entity_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_entity_at_location(ecs, Point::init(x, y)).unwrap()
