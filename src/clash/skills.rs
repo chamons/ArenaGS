@@ -28,7 +28,7 @@ pub enum SkillEffect {
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    Field(FieldEffect, FieldKind),
+    Field(FieldEffect, FieldKind, u32),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
@@ -348,7 +348,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
+        SkillEffect::Field(effect, kind, explosion_size) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind, *explosion_size),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
@@ -375,7 +375,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
-        SkillEffect::Field(_, _) => 2,
+        SkillEffect::Field(_, _, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
@@ -787,6 +787,27 @@ mod tests {
         wait(&mut ecs, player);
         tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
+        assert!(ecs.get_defenses(&other).health < starting_health);
+    }
+
+    #[test]
+    fn skill_with_large_field_explodes() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 5, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let other = find_at(&ecs, 2, 5);
+        ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
+        let starting_health = ecs.get_defenses(&other).health;
+        invoke_skill(&mut ecs, &player, "TestLargeField", Some(Point::init(2, 4)));
+        wait_for_animations(&mut ecs);
+        assert_field_exists(&ecs, 2, 5);
+
+        for _ in 0..2 {
+            add_ticks(&mut ecs, 100);
+            wait(&mut ecs, player);
+            tick_next_action(&mut ecs);
+            wait_for_animations(&mut ecs);
+        }
+
         assert!(ecs.get_defenses(&other).health < starting_health);
     }
 

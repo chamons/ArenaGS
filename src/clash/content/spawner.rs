@@ -73,12 +73,12 @@ pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb
         .build()
 }
 
-pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, color: (u8, u8, u8)) -> Entity {
+pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, fields: FieldComponent) -> Entity {
     ecs.create_entity()
         .with(PositionComponent::init(position))
         .with(attack)
         .with(BehaviorComponent::init(BehaviorKind::Explode))
-        .with(FieldComponent::init_single(color.0, color.1, color.2))
+        .with(fields)
         .with(TimeComponent::init(-BASE_ACTION_COST))
         .marked::<SimpleMarker<ToSerialize>>()
         .build()
