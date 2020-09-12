@@ -13,7 +13,7 @@ pub fn player(ecs: &mut World) {
         .with(PositionComponent::init(SizedPoint::init(4, 4)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Player",
-            Defenses::just_health(10),
+            Defenses::init(2, 0, 0, 10),
             Temperature::init(),
         )))
         .with(StatusComponent::init())
