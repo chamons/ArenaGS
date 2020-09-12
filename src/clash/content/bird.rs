@@ -62,7 +62,10 @@ pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
         try_behavior!(move_towards_player(ecs, enemy));
     } else {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
+        // Flip between 2 and 3 shots before pausing a round
+        if check_behavior_ammo_calculate(ecs, enemy, "Feather-Ammo", |ecs| flip_value(ecs, enemy, "Feather-Ammo-Amount", 3, 2)) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
+        }
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));

@@ -179,7 +179,7 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     if let Some(path) = current_position.line_to(player_position.origin) {
-        move_character_action(ecs, *enemy, current_position.move_to(path[0]))
+        move_character_action(ecs, *enemy, current_position.move_to(path[1]))
     } else {
         false
     }
@@ -236,20 +236,47 @@ pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) 
     *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
 }
 
+pub fn get_behavior_value_calculate(ecs: &World, enemy: &Entity, key: &str, default: &impl Fn(&World) -> u32) -> u32 {
+    // Must copy value so we don't hold lock on read_storage when calling closure
+    // which will likely rewire write_storage to flip a bit
+    let value = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).copied() };
+    value.unwrap_or_else(|| default(ecs))
+}
+
 pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
     ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
 }
 
 pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
-    let value = get_behavior_value(ecs, enemy, key, length);
+    check_behavior_cooldown_calculate(ecs, enemy, key, |_| length)
+}
+
+pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str, length: impl Fn(&World) -> u32) -> bool {
+    let value = get_behavior_value_calculate(ecs, enemy, key, &length);
     if value <= 1 {
-        set_behavior_value(ecs, enemy, key, length);
+        set_behavior_value(ecs, enemy, key, length(ecs));
         true
     } else {
         set_behavior_value(ecs, enemy, key, value - 1);
         false
     }
 }
+
+pub fn check_behavior_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
+    check_behavior_ammo_calculate(ecs, enemy, key, |_| ammo)
+}
+
+pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, ammo: impl Fn(&World) -> u32) -> bool {
+    let value = get_behavior_value_calculate(ecs, enemy, key, &ammo);
+    if value >= 1 {
+        set_behavior_value(ecs, enemy, key, value - 1);
+        true
+    } else {
+        set_behavior_value(ecs, enemy, key, ammo(ecs));
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -332,5 +359,31 @@ mod tests {
         assert!(has_behavior_value(&ecs, &target, "TestKey"));
         clear_behavior_value(&ecs, &target, "TestKey");
         assert!(!has_behavior_value(&ecs, &target, "TestKey"));
+    }
+
+    #[test]
+    fn behavior_ammo_value() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
+        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
+        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
+        assert!(!check_behavior_ammo(&ecs, &target, "TestKey", 3));
+
+        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
+        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
+        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
+        assert!(!check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
+    }
+
+    #[test]
+    fn move_towards_player_changes_location() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 0).with_map().build();
+        let target = find_at(&ecs, 2, 4);
+        move_towards_player(&mut ecs, &target);
+        wait_for_animations(&mut ecs);
+        assert_character_at(&ecs, 2, 3);
     }
 }
