@@ -214,6 +214,24 @@ pub fn use_player_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, sk
     false
 }
 
+pub fn flip_value(ecs: &World, enemy: &Entity, key: &str, left: u32, right: u32) -> u32 {
+    if has_behavior_value(ecs, enemy, key) {
+        clear_behavior_value(ecs, enemy, key);
+        right
+    } else {
+        set_behavior_value(ecs, enemy, key, 1);
+        left
+    }
+}
+
+pub fn has_behavior_value(ecs: &World, enemy: &Entity, key: &str) -> bool {
+    ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.contains_key(key)
+}
+
+pub fn clear_behavior_value(ecs: &World, enemy: &Entity, key: &str) {
+    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.remove(key);
+}
+
 pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
     *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
 }
@@ -289,5 +307,30 @@ mod tests {
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
+    }
+
+    #[test]
+    fn behavior_value_flip() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
+        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
+        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
+        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
+    }
+
+    #[test]
+    fn behavior_value_set_clear() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
+        set_behavior_value(&ecs, &target, "TestKey", 1);
+        assert!(has_behavior_value(&ecs, &target, "TestKey"));
+        clear_behavior_value(&ecs, &target, "TestKey");
+        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
     }
 }
