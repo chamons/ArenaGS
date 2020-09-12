@@ -1,5 +1,5 @@
 use std::fs::{read_to_string, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -72,6 +72,7 @@ pub struct SerializationHelper {
     pub map: Map,
 }
 
+#[cfg(test)]
 pub fn save_to_string(ecs: &mut World) -> String {
     let mut writer = vec![];
     save(ecs, &mut writer);
@@ -134,6 +135,7 @@ pub fn load_from_disk() -> BoxResult<World> {
     load(data)
 }
 
+#[cfg(test)]
 pub fn load_from_string(data: String) -> BoxResult<World> {
     load(data)
 }
