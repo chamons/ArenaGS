@@ -59,11 +59,17 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
     true
 }
 
-pub fn tick_next_action(ecs: &mut World) {
+// Returns if player can act
+pub fn tick_next_action(ecs: &mut World) -> bool {
     if let Some(next) = wait_for_next(ecs) {
         if find_player(ecs) != next {
             take_enemy_action(ecs, &next);
+            false
+        } else {
+            true
         }
+    } else {
+        false
     }
 }
 

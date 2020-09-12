@@ -5,6 +5,7 @@ use super::AnimationComponent;
 use crate::atlas::{Direction, Point};
 use crate::clash::*;
 
+#[derive(Clone)]
 pub enum BattleActionRequest {
     Move(Direction),
     SelectSkill(String),
@@ -13,8 +14,22 @@ pub enum BattleActionRequest {
 
 pub fn request_action(ecs: &mut World, request: BattleActionRequest) {
     if has_animations_blocking(ecs) {
-        return;
+        ecs.write_resource::<BufferedInputComponent>().input = Some(request);
+    } else {
+        process_action(ecs, request);
     }
+}
+
+pub fn process_any_queued_action(ecs: &mut World) {
+    assert!(!has_animations_blocking(ecs));
+    let buffered_input = ecs.read_resource::<BufferedInputComponent>().input.clone();
+    if let Some(buffered_input) = buffered_input {
+        process_action(ecs, buffered_input);
+        ecs.write_resource::<BufferedInputComponent>().input = None;
+    }
+}
+
+fn process_action(ecs: &mut World, request: BattleActionRequest) {
     match request {
         BattleActionRequest::Move(direction) => move_action(ecs, direction),
         BattleActionRequest::SelectSkill(name) => select_skill(ecs, &name),

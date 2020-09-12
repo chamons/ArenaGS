@@ -200,7 +200,10 @@ impl Scene for BattleScene {
         process_tick_events(&mut self.ecs, frame);
 
         if !battle_actions::has_animations_blocking(&self.ecs) {
-            tick_next_action(&mut self.ecs);
+            let player_can_act = tick_next_action(&mut self.ecs);
+            if player_can_act {
+                battle_actions::process_any_queued_action(&mut self.ecs);
+            }
         }
     }
 
