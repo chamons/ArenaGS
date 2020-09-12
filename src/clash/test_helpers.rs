@@ -118,9 +118,24 @@ pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
     ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::just_health(health);
 }
 
+// This can be dangerous, if something invalidates the entity reference
+// then you can crash here
 pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
+}
+
+pub fn assert_orb_at_position(ecs: &World, expected: Point) {
+    let orb_components = ecs.read_storage::<OrbComponent>();
+    let attack_components = ecs.read_storage::<AttackComponent>();
+    let position_components = ecs.read_storage::<PositionComponent>();
+
+    for (_, _, position) in (&orb_components, &attack_components, &position_components).join() {
+        if position.position.contains_point(&expected) {
+            return;
+        }
+    }
+    panic!("Unable to find orb at point {:?}");
 }
 
 pub fn assert_not_at_position(ecs: &World, entity: &Entity, expected: Point) {
@@ -138,6 +153,7 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
     wait_for_animations(ecs);
 }
 
+#[allow(dead_code)]
 pub fn dump_all_position(ecs: &World) {
     let positions = ecs.read_storage::<PositionComponent>();
     for position in (&positions).join() {

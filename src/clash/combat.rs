@@ -501,10 +501,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -520,7 +519,7 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12);
         wait_for_animations(&mut ecs);
-        find_entity_at(&ecs, 2, 3); // Crashes if not in expected positions
+        assert_orb_at_position(&ecs, Point::init(2, 3));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -536,10 +535,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(3, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
@@ -564,10 +562,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(1, 6), PostMoveAction::None);
         begin_move(&mut ecs, &bystander, SizedPoint::init(2, 6), PostMoveAction::None);
@@ -594,10 +591,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
@@ -620,10 +616,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
         begin_move(&mut ecs, &bystander, SizedPoint::init(2, 5), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 

@@ -53,7 +53,7 @@ pub fn move_orb(ecs: &mut World, entity: &Entity) {
 }
 
 fn add_orb_movement_fields(ecs: &mut World, orb: &OrbComponent, current: usize) {
-    for i in 0..2 * orb.speed as usize {
+    for i in 0..1 + (2 * orb.speed as usize) {
         let (r, g, b) = {
             if i < orb.speed as usize {
                 (255, 0, 0)
@@ -62,7 +62,7 @@ fn add_orb_movement_fields(ecs: &mut World, orb: &OrbComponent, current: usize) 
             }
         };
 
-        if let Some(field) = orb.path.get(current + i + 1) {
+        if let Some(field) = orb.path.get(current + i) {
             ecs.create_entity()
                 .with(PositionComponent::init(SizedPoint::from(*field)))
                 .with(FieldComponent::init(r, g, b))
@@ -119,7 +119,7 @@ mod tests {
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
         assert_field_exists(&ecs, 2, 6);
-        assert_field_count(&ecs, 4);
+        assert_field_count(&ecs, 5);
     }
 
     #[test]
@@ -132,7 +132,7 @@ mod tests {
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
         assert_field_exists(&ecs, 2, 6);
-        assert_field_count(&ecs, 9);
+        assert_field_count(&ecs, 10);
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 3);
         assert_field_exists(&ecs, 2, 2);
-        assert_field_count(&ecs, 4);
+        assert_field_count(&ecs, 5);
     }
 
     #[test]
@@ -171,12 +171,12 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         for _ in 0..2 {
-            assert_field_count(&ecs, 4);
+            assert_field_count(&ecs, 5);
             new_turn_wait_characters(&mut ecs);
         }
-        assert_field_count(&ecs, 4);
+        assert_field_count(&ecs, 5);
         new_turn_wait_characters(&mut ecs);
-        assert_field_count(&ecs, 3);
+        assert_field_count(&ecs, 4);
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);
     }
