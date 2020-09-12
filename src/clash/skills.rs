@@ -28,9 +28,9 @@ pub enum SkillEffect {
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    Field(FieldEffect, FieldKind),
+    Field(FieldEffect, FieldKind, u32),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
-    RotateAmmo(),
+    ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
@@ -276,6 +276,14 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         return false;
     }
 
+    if !in_possible_skill_range(ecs, invoker, skill, target) {
+        return false;
+    }
+
+    true
+}
+
+pub fn in_possible_skill_range(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
     if let Some(skill_range) = skill.range {
         if let Some(range_to_target) = ecs.get_position(invoker).distance_to(target) {
             if range_to_target > skill_range {
@@ -298,6 +306,13 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         }
     }
     true
+}
+
+pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
+    match skill.effect {
+        SkillEffect::MoveAndShoot(_, range, _) => range,
+        _ => None,
+    }
 }
 
 pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
@@ -348,8 +363,8 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
-        SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
+        SkillEffect::Field(effect, kind, explosion_size) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind, *explosion_size),
+        SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
         }
@@ -375,8 +390,8 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
-        SkillEffect::Field(_, _) => 2,
-        SkillEffect::RotateAmmo() => 1,
+        SkillEffect::Field(_, _, _) => 2,
+        SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
         SkillEffect::BuffThen(_, _, _) => 1,
@@ -411,7 +426,7 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
-fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
+pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
     let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
     set_ammo(ecs, invoker, kind, max_ammo);
 }
@@ -791,6 +806,27 @@ mod tests {
     }
 
     #[test]
+    fn skill_with_large_field_explodes() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 5, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let other = find_at(&ecs, 2, 5);
+        ecs.shovel(other, BehaviorComponent::init(BehaviorKind::None));
+        let starting_health = ecs.get_defenses(&other).health;
+        invoke_skill(&mut ecs, &player, "TestLargeField", Some(Point::init(2, 4)));
+        wait_for_animations(&mut ecs);
+        assert_field_exists(&ecs, 2, 5);
+
+        for _ in 0..2 {
+            add_ticks(&mut ecs, 100);
+            wait(&mut ecs, player);
+            tick_next_action(&mut ecs);
+            wait_for_animations(&mut ecs);
+        }
+
+        assert!(ecs.get_defenses(&other).health < starting_health);
+    }
+
+    #[test]
     fn dodge_restored_by_skill_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
@@ -880,14 +916,14 @@ mod tests {
     #[test]
     fn move_and_shoot_out_of_range() {
         let mut ecs = create_test_state()
-            .with_player(2, 2, 100)
-            .with_character(2, 6, 0)
+            .with_player(2, 0, 100)
             .with_character(2, 7, 0)
+            .with_character(2, 8, 0)
             .with_map()
             .build();
-        let player = find_at(&ecs, 2, 2);
-        let target = find_at(&ecs, 2, 6);
-        let other = find_at(&ecs, 2, 7);
+        let player = find_at(&ecs, 2, 0);
+        let target = find_at(&ecs, 2, 7);
+        let other = find_at(&ecs, 2, 8);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));

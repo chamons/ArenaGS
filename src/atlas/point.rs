@@ -40,6 +40,24 @@ impl Point {
     pub fn is_in_bounds(&self) -> bool {
         self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
     }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        if let Some(path) = self.line_to(point) {
+            Some(path.len() as u32 - 1) // Path includes both end points
+        } else {
+            None
+        }
+    }
+
+    pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        let path = WalkGrid::new((self.x as i32, self.y as i32), (point.x as i32, point.y as i32));
+        let path: Vec<Point> = path.map(|(x, y)| Point::init(x as u32, y as u32)).collect();
+        if path.len() > 0 {
+            Some(path)
+        } else {
+            None
+        }
+    }
 }
 
 impl fmt::Display for Point {
@@ -161,8 +179,8 @@ impl SizedPoint {
         // TODO - Can we be smarter than checking every point?
         let target_positions = point.all_positions();
         let shortest_target = target_positions.iter().min_by(|first, second| {
-            let first = point.distance_to(**first);
-            let second = point.distance_to(**second);
+            let first = self.distance_to(**first);
+            let second = self.distance_to(**second);
             first.cmp(&second)
         });
 
@@ -374,12 +392,19 @@ mod tests {
 
     #[test]
     fn multi_distance_to_multi() {
-        let point = SizedPoint::init_multi(1, 2, 2, 1);
-        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
+        let point = SizedPoint::init_multi(1, 2, 2, 2);
+        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::init_multi(4, 6, 2, 2)).unwrap();
+        // . . . . . .
+        // . P P . . .
+        // . P P . . .
+        // . . * * . .
+        // . . . * * .
+        // . . . . T T
+        // . . . . T T
         assert_eq!(5, distance);
         assert_points_equal(Point::init(2, 2), initial);
         assert_points_equal(Point::init(4, 5), end);
-        let distance = point.distance_to_multi(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
+        let distance = point.distance_to_multi(SizedPoint::init_multi(4, 6, 2, 2)).unwrap();
         assert_eq!(5, distance);
     }
 
@@ -395,5 +420,18 @@ mod tests {
     fn burst_corner() {
         let point = Point::init(0, 0);
         assert_eq!(3, point.get_burst(1).len());
+    }
+
+    #[test]
+    fn distance_to_point() {
+        assert_eq!(9, Point::init(5, 4).distance_to(Point::init(0, 0)).unwrap());
+    }
+
+    #[test]
+    fn line_to_point() {
+        let path = Point::init(5, 4).line_to(Point::init(0, 0)).unwrap();
+        assert_points_equal(path[0], Point::init(5, 4));
+        assert_points_equal(path[4], Point::init(3, 2));
+        assert_points_equal(path[9], Point::init(0, 0));
     }
 }

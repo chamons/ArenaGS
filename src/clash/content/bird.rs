@@ -15,7 +15,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             None,
             TargetType::Player,
             SkillEffect::RangedAttack(Damage::init(2), BoltKind::AirBullet),
-            Some(3),
+            Some(2),
             true,
         ),
     );
@@ -44,7 +44,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init(
             None,
             TargetType::Tile,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(4)), FieldKind::Fire),
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(4)), FieldKind::Fire, 1),
         ),
     );
     m.insert("Take Off", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
@@ -59,10 +59,9 @@ pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     if distance > 7 {
         try_behavior!(move_towards_player(ecs, enemy));
-    } else if distance > 3 {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
     } else {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));

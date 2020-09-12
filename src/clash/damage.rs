@@ -130,7 +130,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
                 let new_position = current_position.move_to(new_origin);
                 if is_area_clear_of_others(ecs, &new_position.all_positions(), target) {
                     ecs.log(format!("{} is knocked back", ecs.get_name(target).unwrap()));
-                    begin_move(ecs, target, new_position, PostMoveAction::None);
+                    begin_move(ecs, target, new_position, PostMoveAction::CheckNewLocationDamage);
                 }
             }
         }

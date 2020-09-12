@@ -87,7 +87,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
         if find_player(ecs) == *source {
             find_enemies(&ecs)
         } else {
-            // ALLIES_TODO
+            // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
             vec![find_player(&ecs)]
         }
     };
@@ -99,7 +99,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
     });
     if let Some(target) = target {
         if let Some((_, target_position, distance)) = source_position.distance_to_multi_with_endpoints(ecs.get_position(target)) {
-            if range.is_none() || range.unwrap() > distance {
+            if range.is_none() || range.unwrap() >= distance {
                 begin_bolt(ecs, source, target_position, strength, kind);
             }
         }
@@ -181,8 +181,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
-    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind, explosion_size: u32) {
+    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target), explosion_size));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
@@ -223,8 +223,15 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 FieldKind::Fire => (255, 0, 0),
             };
 
-            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None);
-            super::content::spawner::create_damage_field(ecs, cast.target, attack, (r, g, b));
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(cast.explosion_size), None);
+            let fields = cast
+                .target
+                .origin
+                .get_burst(cast.explosion_size)
+                .iter()
+                .map(|p| (Some(*p), (r, g, b, 140)))
+                .collect();
+            super::content::spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
     }
@@ -321,6 +328,8 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
 }
 
+// Apply orb can damage enties not on it's exact location
+// if it will run into them this turn
 pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     let attack = {
         let attacks = ecs.read_storage::<AttackComponent>();
@@ -328,6 +337,12 @@ pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     };
     apply_damage_to_location(ecs, point, attack.source, attack.damage);
     ecs.delete_entity(orb).unwrap();
+}
+
+pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
+    if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(&entity)) {
+        apply_orb(ecs, orb, ecs.get_position(&orb).single_position());
+    }
 }
 
 #[cfg(test)]
@@ -394,7 +409,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 0);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -408,7 +423,7 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 0);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -450,6 +465,18 @@ mod tests {
     }
 
     #[test]
+    fn move_and_shoot_max_range() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 8, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 8);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
     fn move_and_shoot_multiple_targets() {
         let mut ecs = create_test_state()
             .with_player(2, 2, 100)
@@ -482,7 +509,7 @@ mod tests {
         let other = find_at(&ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(4), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
@@ -653,5 +680,45 @@ mod tests {
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&player).health < player_starting_health);
+    }
+
+    // Being knocked back into an active orb should explode it, even if you go first
+    #[test]
+    fn knockback_into_orb() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 100)
+            .with_character(3, 7, 0)
+            .with_map()
+            .build();
+
+        // . . . .
+        // . . . .
+        // . . P .
+        // . . . .
+        // . . . .
+        // . . . .
+        // . . T .
+        // . . . O
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        let orb_caster = find_at(&ecs, 3, 7);
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_orb(&mut ecs, &orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 6),
+            Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_character_at(&ecs, 2, 7);
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
     }
 }

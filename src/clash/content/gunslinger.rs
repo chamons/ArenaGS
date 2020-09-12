@@ -73,6 +73,8 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
     remove_skills(ecs, invoker, &get_weapon_skills(current_ammo));
     add_skills_to_front(ecs, invoker, &get_weapon_skills(next_ammo));
     set_weapon_trait(ecs, invoker, next_ammo);
+
+    reload(ecs, &invoker, AmmoKind::Bullets);
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
@@ -85,7 +87,10 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "Reload",
         SkillInfo::init(Some("b_45.png"), TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
     );
-    m.insert("Swap Ammo", SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::RotateAmmo()));
+    m.insert(
+        "Swap Ammo",
+        SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::ReloadAndRotateAmmo()),
+    );
 }
 
 fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
@@ -319,6 +324,23 @@ mod tests {
 
         assert!(ecs.has_status(&player, StatusKind::Magnum));
         assert_eq!(5, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
+    }
+
+    #[test]
+    fn rotate_ammo_reloads_as_well() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let player = find_at(&ecs, 2, 2);
+        setup_gunslinger(&mut ecs, &player);
+
+        *ecs.write_storage::<SkillResourceComponent>()
+            .grab_mut(player)
+            .ammo
+            .get_mut(&AmmoKind::Bullets)
+            .unwrap() = 5;
+
+        assert_eq!(5, ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Bullets]);
+        rotate_ammo(&mut ecs, &player);
+        assert_eq!(6, ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Bullets]);
     }
 
     #[test]

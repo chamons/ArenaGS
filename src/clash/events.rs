@@ -13,6 +13,7 @@ pub enum MoveState {
 pub enum PostMoveAction {
     None,
     Shoot(Damage, Option<u32>, BoltKind),
+    CheckNewLocationDamage,
 }
 
 #[derive(Copy, Clone, is_enum_variant)]

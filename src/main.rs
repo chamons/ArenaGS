@@ -1,5 +1,6 @@
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
+#![allow(clippy::len_zero)]
 
 use std::{cell::RefCell, rc::Rc};
 

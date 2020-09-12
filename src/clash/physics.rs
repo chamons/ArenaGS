@@ -17,6 +17,7 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 match action {
                     PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, &target.unwrap(), range, damage, kind),
                     PostMoveAction::None => {}
+                    PostMoveAction::CheckNewLocationDamage => check_new_location_for_damage(ecs, target.unwrap()),
                 }
             }
         }
@@ -94,6 +95,18 @@ pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
 
     for (entity, position, _) in (&entities, &positions, &char_info).join() {
         if position.position.contains_point(&area) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
+pub fn find_orb_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let orbs = ecs.read_storage::<OrbComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    for (entity, _, position) in (&entities, &orbs, &positions).join() {
+        if target.contains_point(&position.position.single_position()) {
             return Some(entity);
         }
     }
