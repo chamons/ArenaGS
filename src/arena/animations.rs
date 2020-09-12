@@ -3,7 +3,7 @@ use specs::prelude::*;
 use super::{AccelerateAnimations, AnimationComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyMutECS, EasyMutWorld, Point};
-use crate::clash::{EventCoordinator, EventKind, Framer};
+use crate::clash::{EventCoordinator, EventKind};
 
 #[derive(PartialEq)]
 pub struct FPoint {
