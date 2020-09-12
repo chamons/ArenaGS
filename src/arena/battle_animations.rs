@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
-use super::{Animation, AnimationComponent};
+use super::{add_animation, Animation, AnimationComponent};
 
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyECS, EasyMutWorld, Point};
@@ -28,7 +28,7 @@ pub fn cast_animation(ecs: &mut World, target: Entity, animation: CharacterAnima
 
     const CAST_LENGTH: u64 = 18;
     let cast_animation = Animation::sprite_state(animation, CharacterAnimationState::Idle, frame, CAST_LENGTH).with_post_event(post_event, Some(target));
-    ecs.shovel(target, AnimationComponent::init(cast_animation));
+    add_animation(ecs, target, cast_animation);
 }
 
 pub fn projectile_animation(ecs: &mut World, projectile: Entity, target_position: Point, sprite: SpriteKinds, post_event: EventKind) {
@@ -41,7 +41,7 @@ pub fn projectile_animation(ecs: &mut World, projectile: Entity, target_position
     let animation_length = if frame < 4 { 6 * path_length } else { 3 * path_length };
 
     let animation = Animation::movement(source_position.origin, target_position, frame, animation_length).with_post_event(post_event, Some(projectile));
-    ecs.shovel(projectile, AnimationComponent::init(animation));
+    add_animation(ecs, projectile, animation);
 }
 
 pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
@@ -147,7 +147,7 @@ pub fn begin_melee_animation(ecs: &mut World, target: Entity) {
     const MELEE_ATTACK_LENGTH: u64 = 18;
     let attack_animation = Animation::sprite_state(animation, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH)
         .with_post_event(EventKind::Melee(MeleeState::CompleteAnimation), Some(target));
-    ecs.shovel(target, AnimationComponent::init(attack_animation));
+    add_animation(ecs, target, attack_animation);
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -173,7 +173,7 @@ fn animate_move(ecs: &mut World, target: Entity, action: PostMoveAction) {
 
     let animation = Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH)
         .with_post_event(EventKind::Move(MoveState::CompleteAnimation, action), Some(target));
-    ecs.shovel(target, AnimationComponent::init(animation));
+    add_animation(ecs, target, animation);
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -189,5 +189,5 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
 
     const EXPLOSION_LENGTH: u64 = 18;
     let attack_animation = Animation::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::CompleteAnimation), Some(target));
-    ecs.shovel(target, AnimationComponent::init(attack_animation));
+    add_animation(ecs, target, attack_animation);
 }

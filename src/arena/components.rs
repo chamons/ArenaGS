@@ -94,6 +94,17 @@ impl BufferedInputComponent {
     }
 }
 
+#[derive(Component)] // NotConvertSaveload
+pub struct AccelerateAnimations {
+    pub state: bool,
+}
+
+impl AccelerateAnimations {
+    pub fn init() -> AccelerateAnimations {
+        AccelerateAnimations { state: false }
+    }
+}
+
 pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<RenderComponent>();
     ecs.register::<BattleSceneStateComponent>();
@@ -112,6 +123,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
     ecs.insert(BufferedInputComponent::init());
+    ecs.insert(AccelerateAnimations::init());
 }
 
 pub trait UIState {

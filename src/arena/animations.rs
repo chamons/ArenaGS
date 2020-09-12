@@ -1,9 +1,9 @@
 use specs::prelude::*;
 
-use super::AnimationComponent;
+use super::{AccelerateAnimations, AnimationComponent};
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::Point;
-use crate::clash::{EventCoordinator, EventKind};
+use crate::atlas::{EasyMutECS, EasyMutWorld, Point};
+use crate::clash::{EventCoordinator, EventKind, Framer};
 
 #[derive(PartialEq)]
 pub struct FPoint {
@@ -140,6 +140,36 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
     for need_events in needs_events {
         ecs.raise_event(need_events.kind, need_events.target);
     }
+}
+
+pub fn add_animation(ecs: &mut World, entity: Entity, mut animation: Animation) {
+    if ecs.read_resource::<AccelerateAnimations>().state {
+        animation.duration = animation.duration / 4;
+    }
+    ecs.shovel(entity, AnimationComponent::init(animation));
+}
+
+pub fn accelerate_animations(ecs: &mut World) {
+    let mut to_speedup = vec![];
+    {
+        let frame = ecs.get_current_frame();
+        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+        let animations = ecs.read_storage::<AnimationComponent>();
+
+        for (entity, animation_component) in (&entities, &animations).join() {
+            let animation = &animation_component.animation;
+            if !animation.is_complete(frame) {
+                to_speedup.push(entity);
+            }
+        }
+    }
+
+    for a in to_speedup {
+        let mut animations = ecs.write_storage::<AnimationComponent>();
+        let animation = &mut animations.grab_mut(a).animation;
+        animation.duration = animation.duration / 4;
+    }
+    ecs.write_resource::<AccelerateAnimations>().state = true;
 }
 
 pub fn force_complete_animations(ecs: &mut World) {
