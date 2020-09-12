@@ -55,7 +55,7 @@ impl BattleScene {
 
         if let Some(i) = is_keystroke_skill(keycode) {
             if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
-                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name))
             }
         }
         match keycode {
@@ -81,7 +81,7 @@ impl BattleScene {
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
             if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
-                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()));
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name));
             }
         }
     }
@@ -124,7 +124,7 @@ impl BattleScene {
                 if let Some(map_position) = screen_to_map_position(x, y) {
                     match target_source {
                         BattleTargetSource::Skill(skill_name) => {
-                            battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::TargetSkill(skill_name.to_string(), map_position))
+                            battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::TargetSkill(skill_name, map_position))
                         }
                     }
                 }

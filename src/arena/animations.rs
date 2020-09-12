@@ -144,7 +144,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
 
 pub fn add_animation(ecs: &mut World, entity: Entity, mut animation: Animation) {
     if ecs.read_resource::<AccelerateAnimations>().state {
-        animation.duration = animation.duration / 4;
+        animation.duration /= 4;
     }
     ecs.shovel(entity, AnimationComponent::init(animation));
 }
@@ -167,7 +167,7 @@ pub fn accelerate_animations(ecs: &mut World) {
     for a in to_speedup {
         let mut animations = ecs.write_storage::<AnimationComponent>();
         let animation = &mut animations.grab_mut(a).animation;
-        animation.duration = animation.duration / 4;
+        animation.duration /= 4;
     }
     ecs.write_resource::<AccelerateAnimations>().state = true;
 }
