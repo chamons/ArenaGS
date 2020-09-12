@@ -52,7 +52,7 @@ fn add_orb_movement_fields(ecs: &mut World, entity: &Entity, current: usize) {
         for i in 0..1 + (2 * orb.speed as usize) {
             let (r, g, b) = {
                 // Red if impacts next turn, else orangish
-                if i < orb.speed as usize {
+                if i <= orb.speed as usize {
                     (255, 0, 0)
                 } else {
                     (230, 150, 0)
