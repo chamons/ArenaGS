@@ -24,7 +24,7 @@ pub fn find_enemies(ecs: &World) -> Vec<Entity> {
     enemies
 }
 
-fn can_act(ecs: &World) -> bool {
+pub fn can_act(ecs: &World) -> bool {
     let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
     let is_ready = get_ticks(ecs, &player) == BASE_ACTION_COST;

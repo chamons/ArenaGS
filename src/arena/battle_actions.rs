@@ -13,7 +13,9 @@ pub enum BattleActionRequest {
 }
 
 pub fn request_action(ecs: &mut World, request: BattleActionRequest) {
-    if has_animations_blocking(ecs) {
+    let animation_blocked = has_animations_blocking(ecs);
+    let action_blocked = !can_act(ecs);
+    if animation_blocked || action_blocked {
         ecs.write_resource::<BufferedInputComponent>().input = Some(request);
     } else {
         process_action(ecs, request);
