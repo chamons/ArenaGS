@@ -48,6 +48,7 @@ pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_character_at_location(ecs, Point::init(x, y)).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn find_entity_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_entity_at_location(ecs, Point::init(x, y)).unwrap()
 }
@@ -123,19 +124,6 @@ pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
 pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
-}
-
-pub fn assert_orb_at_position(ecs: &World, expected: Point) {
-    let orb_components = ecs.read_storage::<OrbComponent>();
-    let attack_components = ecs.read_storage::<AttackComponent>();
-    let position_components = ecs.read_storage::<PositionComponent>();
-
-    for (_, _, position) in (&orb_components, &attack_components, &position_components).join() {
-        if position.position.contains_point(&expected) {
-            return;
-        }
-    }
-    panic!("Unable to find orb at point {:?}");
 }
 
 pub fn assert_not_at_position(ecs: &World, entity: &Entity, expected: Point) {

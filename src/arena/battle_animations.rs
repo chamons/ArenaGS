@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::components::*;
-use super::{add_animation, Animation, AnimationComponent};
+use super::{add_animation, Animation};
 
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyECS, EasyMutWorld, Point};

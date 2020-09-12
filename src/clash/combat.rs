@@ -492,6 +492,19 @@ mod tests {
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
     }
 
+    pub fn assert_orb_at_position(ecs: &World, expected: Point) {
+        let orb_components = ecs.read_storage::<OrbComponent>();
+        let attack_components = ecs.read_storage::<AttackComponent>();
+        let position_components = ecs.read_storage::<PositionComponent>();
+
+        for (_, _, position) in (&orb_components, &attack_components, &position_components).join() {
+            if position.position.contains_point(&expected) {
+                return;
+            }
+        }
+        panic!("Unable to find orb at point {:?}");
+    }
+
     #[test]
     fn orb_hits_target_on_time() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
