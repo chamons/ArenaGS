@@ -7,10 +7,10 @@ use crate::clash::*;
 // All non-test create_entity() call should live here
 // so we make sure they are marked with ToSerialize
 
-pub fn player(ecs: &mut World) {
+pub fn player(ecs: &mut World, position: Point) {
     let player = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::init(4, 4)))
+        .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Player",
             Defenses::init(2, 0, 0, 10),
@@ -48,14 +48,14 @@ fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: B
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
-pub fn bird_monster(ecs: &mut World) {
+pub fn bird_monster(ecs: &mut World, position: Point) {
     create_monster(
         ecs,
         "Giant Bird",
         SpawnKind::Bird,
         BehaviorKind::Bird,
         Defenses::just_health(150),
-        SizedPoint::init_multi(5, 8, 2, 2),
+        SizedPoint::init_multi(position.x, position.y, 2, 2),
         1,
     );
 }
