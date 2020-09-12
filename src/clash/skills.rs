@@ -276,6 +276,14 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         return false;
     }
 
+    if !in_possible_skill_range(ecs, invoker, skill, target) {
+        return false;
+    }
+
+    true
+}
+
+pub fn in_possible_skill_range(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: Point) -> bool {
     if let Some(skill_range) = skill.range {
         if let Some(range_to_target) = ecs.get_position(invoker).distance_to(target) {
             if range_to_target > skill_range {
@@ -297,7 +305,7 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
             }
         }
     }
-    true
+    return true;
 }
 
 pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {

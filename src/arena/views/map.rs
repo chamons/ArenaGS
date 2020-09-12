@@ -168,6 +168,21 @@ impl MapView {
         Ok(())
     }
 
+    fn render_targetting_range(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
+        if let Some(skill) = get_target_skill(ecs) {
+            let player = find_player(&ecs);
+            for x in 0..MAX_MAP_TILES {
+                for y in 0..MAX_MAP_TILES {
+                    let map_position = Point::init(x, y);
+                    if in_possible_skill_range(ecs, &player, skill, map_position) {
+                        self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 60)))?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn draw_line(&self, canvas: &mut RenderCanvas, points: &[Point], color: Color) -> BoxResult<()> {
         for p in points.iter() {
             self.draw_overlay_tile(canvas, &p, color)?;
@@ -192,6 +207,7 @@ impl View for MapView {
         }
         if should_draw_cursor(ecs) {
             self.render_cursor(canvas, ecs)?;
+            self.render_targetting_range(canvas, ecs)?;
         }
         self.render_fields(ecs, canvas)?;
         Ok(())
@@ -240,9 +256,6 @@ pub fn screen_to_map_position(x: i32, y: i32) -> Option<Point> {
 
 fn should_draw_grid(ecs: &World) -> bool {
     let state = battle_actions::read_action_state(ecs);
-    if state.is_targeting() {
-        return true;
-    }
     if let BattleSceneState::Debug(kind) = state {
         if kind.is_map_overlay() {
             return true;
