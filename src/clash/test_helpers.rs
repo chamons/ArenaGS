@@ -144,8 +144,38 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
 #[allow(dead_code)]
 pub fn dump_all_position(ecs: &World) {
     let positions = ecs.read_storage::<PositionComponent>();
-    for position in (&positions).join() {
-        println!("{}", position.position);
+    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let orb_components = ecs.read_storage::<OrbComponent>();
+    let attack_components = ecs.read_storage::<AttackComponent>();
+    let fields = ecs.read_storage::<FieldComponent>();
+    let times = ecs.read_storage::<TimeComponent>();
+    for (position, char_info, orb, attack, field, time) in (
+        &positions,
+        (&char_infos).maybe(),
+        (&orb_components).maybe(),
+        (&attack_components).maybe(),
+        (&fields).maybe(),
+        (&times).maybe(),
+    )
+        .join()
+    {
+        let mut description = format!("{}", position.position);
+        if char_info.is_some() {
+            description.push_str(" (Char)");
+        }
+        if orb.is_some() {
+            description.push_str(" (Orb)");
+        }
+        if attack.is_some() {
+            description.push_str(" (Attack)");
+        }
+        if field.is_some() {
+            description.push_str(" (Field)");
+        }
+        if time.is_some() {
+            description.push_str(format!(" ({})", time.unwrap().ticks).as_str());
+        }
+        println!("{}", description);
     }
     println!("");
 }

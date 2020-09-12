@@ -180,4 +180,84 @@ mod tests {
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);
     }
+
+    pub fn assert_orb_field_path_at_position(ecs: &World, expected: Point) {
+        let orb_components = ecs.read_storage::<OrbComponent>();
+        let fields = ecs.read_storage::<FieldComponent>();
+        let position_components = ecs.read_storage::<PositionComponent>();
+
+        for (_, _, position) in (&orb_components, &fields, &position_components).join() {
+            if position.position.contains_point(&expected) {
+                return;
+            }
+        }
+        panic!("Unable to find orb field (path) at point {:?}", expected);
+    }
+
+    // This test sets two bolts on the same path, with overlapping
+    // fields showing the path. If they only check endpoint, one will blap another
+    #[test]
+    fn orb_path_remove_correct_path_only() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_map().build();
+
+        let player = find_at(&ecs, 2, 2);
+        begin_orb(&mut ecs, &player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+        dump_all_position(&ecs);
+
+        // Bolt #1 at (2,3)
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 3));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 4));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+
+        // Bolt #1 to (2,5)
+        new_turn_wait_characters(&mut ecs);
+        wait_for_animations(&mut ecs);
+        dump_all_position(&ecs);
+
+        // Bolt #2 at (2,3)
+        let player = find_at(&ecs, 2, 2);
+        begin_orb(&mut ecs, &player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+        dump_all_position(&ecs);
+
+        // Bolt #1
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
+
+        // Bolt #2
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 3));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 4));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+
+        dump_all_position(&ecs);
+        new_turn_wait_characters(&mut ecs);
+        dump_all_position(&ecs);
+        tick_next_action(&mut ecs);
+        wait_for_animations(&mut ecs);
+        dump_all_position(&ecs);
+        // Bolt #1 to (2,7)
+        // Bolt #2 at (2,5)
+
+        // Bolt #1
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 10));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 11));
+
+        // Bolt #2
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
+        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
+    }
 }
