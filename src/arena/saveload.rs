@@ -110,7 +110,6 @@ pub fn save(ecs: &mut World) {
         FlightComponent,
         SkipRenderComponent,
         FieldCastComponent,
-        OrbWakeComponent,
         SerializationHelper
     );
 }

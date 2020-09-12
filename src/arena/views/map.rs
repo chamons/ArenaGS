@@ -126,8 +126,14 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            for position in position.position.all_positions().iter() {
-                self.draw_overlay_tile(canvas, position, Color::from(field.color))?;
+            for (p, (r, g, b, a)) in &field.fields {
+                if let Some(p) = p {
+                    self.draw_overlay_tile(canvas, p, Color::from((*r, *g, *b, *a)))?;
+                } else {
+                    for p in position.position.all_positions() {
+                        self.draw_overlay_tile(canvas, &p, Color::from((*r, *g, *b, *a)))?;
+                    }
+                }
             }
         }
 

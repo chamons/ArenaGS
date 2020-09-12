@@ -225,7 +225,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 .with(PositionComponent::init(cast.target))
                 .with(AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None))
                 .with(BehaviorComponent::init(BehaviorKind::Explode))
-                .with(FieldComponent::init(r, g, b))
+                .with(FieldComponent::init_single(r, g, b))
                 .with(TimeComponent::init(-BASE_ACTION_COST))
                 .build();
         }

@@ -69,16 +69,24 @@ impl FrameComponent {
     }
 }
 
+#[allow(clippy::type_complexity)]
+type SimpleColor = (u8, u8, u8, u8);
+
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct FieldComponent {
-    #[allow(clippy::type_complexity)]
-    pub color: (u8, u8, u8, u8),
+    pub fields: Vec<(Option<Point>, SimpleColor)>,
 }
 
 #[allow(dead_code)]
 impl FieldComponent {
-    pub fn init(r: u8, g: u8, b: u8) -> FieldComponent {
-        FieldComponent { color: (r, g, b, 140) }
+    pub fn init() -> FieldComponent {
+        FieldComponent { fields: vec![] }
+    }
+
+    pub fn init_single(r: u8, g: u8, b: u8) -> FieldComponent {
+        FieldComponent {
+            fields: vec![(None, (r, g, b, 140))],
+        }
     }
 }
 

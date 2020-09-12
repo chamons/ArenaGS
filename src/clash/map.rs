@@ -94,7 +94,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(3, 2, 0).build();
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(4, 2)))
-            .with(FieldComponent::init(255, 0, 0))
+            .with(FieldComponent::init_single(255, 0, 0))
             .build();
 
         assert_eq!(MapHitTestResult::None(), element_at_location(&ecs, &Point::init(1, 2)));

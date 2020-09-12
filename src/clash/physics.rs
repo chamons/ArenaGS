@@ -210,7 +210,7 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(FieldComponent::init(255, 0, 0))
+            .with(FieldComponent::init_single(255, 0, 0))
             .build();
 
         assert_position(&ecs, &entity, Point::init(2, 2));
