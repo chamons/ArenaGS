@@ -175,6 +175,15 @@ mod tests {
         assert_field_count(&ecs, 0);
     }
 
+    #[test]
+    fn orb_next_door() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        begin_orb(&mut ecs, &player, Point::init(2, 3), Damage::init(2), OrbKind::Feather, 2, 12);
+        wait_for_animations(&mut ecs);
+    }
+
     // This test sets two bolts on the same path, with overlapping
     // fields showing the path. If they only check endpoint, one will blap another
     #[test]
