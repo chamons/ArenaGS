@@ -308,6 +308,13 @@ pub fn in_possible_skill_range(ecs: &World, invoker: &Entity, skill: &SkillInfo,
     return true;
 }
 
+pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
+    match skill.effect {
+        SkillEffect::MoveAndShoot(_, range, _) => range,
+        _ => None,
+    }
+}
+
 pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
     let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
     let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
@@ -909,14 +916,14 @@ mod tests {
     #[test]
     fn move_and_shoot_out_of_range() {
         let mut ecs = create_test_state()
-            .with_player(2, 2, 100)
-            .with_character(2, 6, 0)
+            .with_player(2, 0, 100)
             .with_character(2, 7, 0)
+            .with_character(2, 8, 0)
             .with_map()
             .build();
-        let player = find_at(&ecs, 2, 2);
-        let target = find_at(&ecs, 2, 6);
-        let other = find_at(&ecs, 2, 7);
+        let player = find_at(&ecs, 2, 0);
+        let target = find_at(&ecs, 2, 7);
+        let other = find_at(&ecs, 2, 8);
         let starting_health = ecs.get_defenses(&target).health;
 
         invoke_skill(&mut ecs, &player, "TestMoveAndShoot", Some(Point::init(2, 1)));

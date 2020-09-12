@@ -40,6 +40,24 @@ impl Point {
     pub fn is_in_bounds(&self) -> bool {
         self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
     }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        if let Some(path) = self.line_to(point) {
+            Some(path.len() as u32 - 1) // Path includes both end points
+        } else {
+            None
+        }
+    }
+
+    pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        let path = WalkGrid::new((self.x as i32, self.y as i32), (point.x as i32, point.y as i32));
+        let path: Vec<Point> = path.map(|(x, y)| Point::init(x as u32, y as u32)).collect();
+        if path.len() > 0 {
+            Some(path)
+        } else {
+            None
+        }
+    }
 }
 
 impl fmt::Display for Point {
@@ -402,5 +420,18 @@ mod tests {
     fn burst_corner() {
         let point = Point::init(0, 0);
         assert_eq!(3, point.get_burst(1).len());
+    }
+
+    #[test]
+    fn distance_to_point() {
+        assert_eq!(9, Point::init(5, 4).distance_to(Point::init(0, 0)).unwrap());
+    }
+
+    #[test]
+    fn line_to_point() {
+        let path = Point::init(5, 4).line_to(Point::init(0, 0)).unwrap();
+        assert_points_equal(path[0], Point::init(5, 4));
+        assert_points_equal(path[4], Point::init(3, 2));
+        assert_points_equal(path[9], Point::init(0, 0));
     }
 }

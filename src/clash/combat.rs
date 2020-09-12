@@ -87,7 +87,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
         if find_player(ecs) == *source {
             find_enemies(&ecs)
         } else {
-            // ALLIES_TODO
+            // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
             vec![find_player(&ecs)]
         }
     };
@@ -99,7 +99,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
     });
     if let Some(target) = target {
         if let Some((_, target_position, distance)) = source_position.distance_to_multi_with_endpoints(ecs.get_position(target)) {
-            if range.is_none() || range.unwrap() > distance {
+            if range.is_none() || range.unwrap() >= distance {
                 begin_bolt(ecs, source, target_position, strength, kind);
             }
         }
@@ -465,6 +465,18 @@ mod tests {
     }
 
     #[test]
+    fn move_and_shoot_max_range() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 8, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 8);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
     fn move_and_shoot_multiple_targets() {
         let mut ecs = create_test_state()
             .with_player(2, 2, 100)
@@ -497,7 +509,7 @@ mod tests {
         let other = find_at(&ecs, 2, 7);
         let starting_health = ecs.get_defenses(&target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(4), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 1));
         assert_eq!(ecs.get_defenses(&target).health, starting_health);

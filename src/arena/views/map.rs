@@ -170,12 +170,31 @@ impl MapView {
 
     fn render_targetting_range(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
         if let Some(skill) = get_target_skill(ecs) {
-            let player = find_player(&ecs);
-            for x in 0..MAX_MAP_TILES {
-                for y in 0..MAX_MAP_TILES {
-                    let map_position = Point::init(x, y);
-                    if in_possible_skill_range(ecs, &player, skill, map_position) {
-                        self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 60)))?;
+            if let Some(secondary_skill_range) = skill_secondary_range(skill) {
+                let mouse = ecs.get_mouse_position();
+                if let Some(mouse_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
+                    let player = find_player(&ecs);
+                    if is_good_target(ecs, &player, skill, mouse_position) {
+                        for x in 0..MAX_MAP_TILES {
+                            for y in 0..MAX_MAP_TILES {
+                                let map_position = Point::init(x, y);
+                                if let Some(map_distance) = mouse_position.distance_to(map_position) {
+                                    if map_distance <= secondary_skill_range {
+                                        self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 60)))?;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                let player = find_player(&ecs);
+                for x in 0..MAX_MAP_TILES {
+                    for y in 0..MAX_MAP_TILES {
+                        let map_position = Point::init(x, y);
+                        if in_possible_skill_range(ecs, &player, skill, map_position) {
+                            self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 60)))?;
+                        }
                     }
                 }
             }
