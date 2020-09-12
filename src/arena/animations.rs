@@ -152,22 +152,16 @@ pub fn add_animation(ecs: &mut World, entity: Entity, mut animation: Animation) 
 pub fn accelerate_animations(ecs: &mut World) {
     let mut to_speedup = vec![];
     {
-        let frame = ecs.get_current_frame();
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let animations = ecs.read_storage::<AnimationComponent>();
 
-        for (entity, animation_component) in (&entities, &animations).join() {
-            let animation = &animation_component.animation;
-            if !animation.is_complete(frame) {
-                to_speedup.push(entity);
-            }
+        for (entity, _) in (&entities, &animations).join() {
+            to_speedup.push(entity);
         }
     }
 
     for a in to_speedup {
-        let mut animations = ecs.write_storage::<AnimationComponent>();
-        let animation = &mut animations.grab_mut(a).animation;
-        animation.duration /= 4;
+        ecs.write_storage::<AnimationComponent>().grab_mut(a).animation.duration /= 4;
     }
     ecs.write_resource::<AccelerateAnimations>().state = true;
 }
