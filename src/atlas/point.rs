@@ -161,8 +161,8 @@ impl SizedPoint {
         // TODO - Can we be smarter than checking every point?
         let target_positions = point.all_positions();
         let shortest_target = target_positions.iter().min_by(|first, second| {
-            let first = point.distance_to(**first);
-            let second = point.distance_to(**second);
+            let first = self.distance_to(**first);
+            let second = self.distance_to(**second);
             first.cmp(&second)
         });
 
@@ -374,12 +374,19 @@ mod tests {
 
     #[test]
     fn multi_distance_to_multi() {
-        let point = SizedPoint::init_multi(1, 2, 2, 1);
-        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
+        let point = SizedPoint::init_multi(1, 2, 2, 2);
+        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::init_multi(4, 6, 2, 2)).unwrap();
+        // . . . . . .
+        // . P P . . .
+        // . P P . . .
+        // . . * * . .
+        // . . . * * .
+        // . . . . T T
+        // . . . . T T
         assert_eq!(5, distance);
         assert_points_equal(Point::init(2, 2), initial);
         assert_points_equal(Point::init(4, 5), end);
-        let distance = point.distance_to_multi(SizedPoint::init_multi(4, 5, 2, 1)).unwrap();
+        let distance = point.distance_to_multi(SizedPoint::init_multi(4, 6, 2, 2)).unwrap();
         assert_eq!(5, distance);
     }
 
