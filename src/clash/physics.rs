@@ -110,7 +110,7 @@ pub fn find_orb_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> 
             return Some(entity);
         }
     }
-    return None;
+    None
 }
 
 pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
