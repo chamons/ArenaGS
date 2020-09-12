@@ -84,13 +84,18 @@ mod tests {
 
     fn assert_field_exists(ecs: &World, x: u32, y: u32) {
         let fields = ecs.read_storage::<FieldComponent>();
-        let positions = ecs.read_storage::<PositionComponent>();
-        assert!((&fields, &positions).join().any(|(_, p)| p.position.origin.x == x && p.position.origin.y == y));
+        assert!((&fields).join().any(|f| f.fields.iter().any(|(p, _)| {
+            if let Some(p) = p {
+                p.x == x && p.y == y
+            } else {
+                false
+            }
+        })));
     }
 
     fn assert_field_count(ecs: &World, expected: usize) {
         let fields = ecs.read_storage::<FieldComponent>();
-        let count = (&fields).join().count();
+        let count: usize = (&fields).join().map(|f| f.fields.len()).sum();
         assert_eq!(expected, count);
     }
 
@@ -166,19 +171,6 @@ mod tests {
         assert_field_count(&ecs, 0);
     }
 
-    pub fn assert_orb_field_path_at_position(ecs: &World, expected: Point) {
-        let orb_components = ecs.read_storage::<OrbComponent>();
-        let fields = ecs.read_storage::<FieldComponent>();
-        let position_components = ecs.read_storage::<PositionComponent>();
-
-        for (_, _, position) in (&orb_components, &fields, &position_components).join() {
-            if position.position.contains_point(&expected) {
-                return;
-            }
-        }
-        panic!("Unable to find orb field (path) at point {:?}", expected);
-    }
-
     // This test sets two bolts on the same path, with overlapping
     // fields showing the path. If they only check endpoint, one will blap another
     #[test]
@@ -191,11 +183,11 @@ mod tests {
         dump_all_position(&ecs);
 
         // Bolt #1 at (2,3)
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 3));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 4));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+        assert_field_exists(&ecs, 2, 3);
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_exists(&ecs, 2, 5);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_exists(&ecs, 2, 7);
 
         // Bolt #1 to (2,5)
         new_turn_wait_characters(&mut ecs);
@@ -209,18 +201,18 @@ mod tests {
         dump_all_position(&ecs);
 
         // Bolt #1
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
+        assert_field_exists(&ecs, 2, 5);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_exists(&ecs, 2, 7);
+        assert_field_exists(&ecs, 2, 8);
+        assert_field_exists(&ecs, 2, 9);
 
         // Bolt #2
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 3));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 4));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
+        assert_field_exists(&ecs, 2, 3);
+        assert_field_exists(&ecs, 2, 4);
+        assert_field_exists(&ecs, 2, 5);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_exists(&ecs, 2, 7);
 
         dump_all_position(&ecs);
         new_turn_wait_characters(&mut ecs);
@@ -232,17 +224,17 @@ mod tests {
         // Bolt #2 at (2,5)
 
         // Bolt #1
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 10));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 11));
+        assert_field_exists(&ecs, 2, 7);
+        assert_field_exists(&ecs, 2, 8);
+        assert_field_exists(&ecs, 2, 9);
+        assert_field_exists(&ecs, 2, 10);
+        assert_field_exists(&ecs, 2, 11);
 
         // Bolt #2
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 5));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 6));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 7));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 8));
-        assert_orb_field_path_at_position(&ecs, Point::init(2, 9));
+        assert_field_exists(&ecs, 2, 5);
+        assert_field_exists(&ecs, 2, 6);
+        assert_field_exists(&ecs, 2, 7);
+        assert_field_exists(&ecs, 2, 8);
+        assert_field_exists(&ecs, 2, 9);
     }
 }
