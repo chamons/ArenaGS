@@ -15,6 +15,7 @@ pub fn player(ecs: &mut World) {
             "Player",
             Defenses::init(2, 0, 0, 10),
             Temperature::init(),
+            0,
         )))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
@@ -28,11 +29,16 @@ pub fn player(ecs: &mut World) {
     ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
 }
 
-fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: BehaviorKind, defenses: Defenses, position: SizedPoint) {
+fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: BehaviorKind, defenses: Defenses, position: SizedPoint, skill_power: u32) {
     let monster = ecs
         .create_entity()
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(name, defenses, Temperature::init())))
+        .with(CharacterInfoComponent::init(CharacterInfo::init(
+            name,
+            defenses,
+            Temperature::init(),
+            skill_power,
+        )))
         .with(StatusComponent::init())
         .with(BehaviorComponent::init(behavior_kind))
         .with(TimeComponent::init(0))
@@ -50,15 +56,16 @@ pub fn bird_monster(ecs: &mut World) {
         BehaviorKind::Bird,
         Defenses::just_health(150),
         SizedPoint::init_multi(5, 8, 2, 2),
+        1,
     );
 }
 
 pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 20), position);
+    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 20), position, 0);
 }
 
 pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position);
+    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position, 0);
 }
 
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {

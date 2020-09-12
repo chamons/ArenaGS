@@ -118,4 +118,14 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "TestReplaceSpawn",
         SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn)),
     );
+    m.insert(
+        "TestTap",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Enemy,
+            SkillEffect::RangedAttack(Damage::init(0), BoltKind::Fire),
+            Some(2),
+            false,
+        ),
+    );
 }

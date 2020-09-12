@@ -40,7 +40,7 @@ impl Damage {
         self
     }
 
-    pub fn copy_more_strength(&self, increase: u32) -> Damage {
+    pub fn more_strength(&self, increase: u32) -> Damage {
         Damage {
             amount: Strength::init(self.amount.dice + increase),
             options: self.options,

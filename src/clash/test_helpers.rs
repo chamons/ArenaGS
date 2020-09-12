@@ -105,6 +105,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
             "TestCharacter",
             Defenses::just_health(10),
             Temperature::init(),
+            0
         )))
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))

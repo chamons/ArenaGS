@@ -349,6 +349,12 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
 }
 
 fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target: Option<Point>) {
+    let skill_power = ecs
+        .read_storage::<CharacterInfoComponent>()
+        .get(*invoker)
+        .and_then(|c| Some(c.character.skill_power))
+        .unwrap_or(0);
+
     match effect {
         SkillEffect::Move => {
             // Targeting only gives us a point, so clone their position to get size as well
@@ -358,10 +364,10 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::MoveAndShoot(damage, range, kind) => {
             // Targeting only gives us a point, so clone their position to get size as well
             let position = ecs.get_position(invoker).move_to(target.unwrap());
-            begin_shoot_and_move(ecs, invoker, position, *range, *damage, *kind)
+            begin_shoot_and_move(ecs, invoker, position, *range, damage.more_strength(skill_power), *kind)
         }
-        SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), *damage, *kind),
-        SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
+        SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
+        SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::Field(effect, kind, explosion_size) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind, *explosion_size),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
@@ -376,7 +382,9 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
             process_skill(ecs, invoker, next_skill, target);
             ecs.add_status(invoker, *buff, *duration);
         }
-        SkillEffect::Orb(damage, kind, speed, duration) => begin_orb(ecs, &invoker, target.unwrap(), *damage, *kind, *speed, *duration),
+        SkillEffect::Orb(damage, kind, speed, duration) => {
+            begin_orb(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind, *speed, *duration)
+        }
         SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
         SkillEffect::None => {}
@@ -665,6 +673,7 @@ mod tests {
 
         assert_eq!(true, get_skill("TestMelee").get_remaining_usages(&ecs, &player).is_none());
     }
+
     #[test]
     fn skills_with_ammo() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
@@ -1051,5 +1060,21 @@ mod tests {
 
         let bird = find_at(&ecs, 2, 2);
         assert_ne!(health, ecs.get_defenses(&bird).health);
+    }
+
+    #[test]
+    fn skill_power() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.skill_power = 1;
+
+        let target = find_at(&ecs, 4, 2);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        // This does no damage unless you add skill_power
+        invoke_skill(&mut ecs, &player, "TestTap", Some(Point::init(4, 2)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.get_defenses(&target).health < starting_health);
     }
 }
