@@ -30,7 +30,7 @@ pub enum SkillEffect {
     Reload(AmmoKind),
     Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
-    RotateAmmo(),
+    ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
     BuffThen(StatusKind, i32, Box<SkillEffect>),
     ThenBuff(Box<SkillEffect>, StatusKind, i32),
@@ -349,7 +349,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
-        SkillEffect::RotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
+        SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
         }
@@ -376,7 +376,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::MeleeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
         SkillEffect::Field(_, _) => 2,
-        SkillEffect::RotateAmmo() => 1,
+        SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
         SkillEffect::BuffThen(_, _, _) => 1,
@@ -411,7 +411,7 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
-fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
+pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
     let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
     set_ammo(ecs, invoker, kind, max_ammo);
 }
