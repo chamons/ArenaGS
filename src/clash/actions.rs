@@ -24,7 +24,7 @@ pub fn find_enemies(ecs: &World) -> Vec<Entity> {
     enemies
 }
 
-fn can_act(ecs: &World) -> bool {
+pub fn can_act(ecs: &World) -> bool {
     let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
     let is_ready = get_ticks(ecs, &player) == BASE_ACTION_COST;
@@ -59,11 +59,17 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
     true
 }
 
-pub fn tick_next_action(ecs: &mut World) {
+// Returns if player can act
+pub fn tick_next_action(ecs: &mut World) -> bool {
     if let Some(next) = wait_for_next(ecs) {
         if find_player(ecs) != next {
             take_enemy_action(ecs, &next);
+            false
+        } else {
+            true
         }
+    } else {
+        false
     }
 }
 

@@ -150,7 +150,7 @@ pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
 
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
-    crate::arena::complete_animations(ecs);
+    crate::arena::force_complete_animations(ecs);
 }
 
 pub fn find_clear_landing(ecs: &mut World, initial: &SizedPoint, entity: Option<Entity>) -> SizedPoint {
@@ -210,7 +210,7 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
         ecs.create_entity()
             .with(PositionComponent::init(SizedPoint::init(2, 3)))
-            .with(FieldComponent::init(255, 0, 0))
+            .with(FieldComponent::init_single(255, 0, 0))
             .build();
 
         assert_position(&ecs, &entity, Point::init(2, 2));

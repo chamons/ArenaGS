@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
-use crate::atlas::{SizedPoint, ToSerialize};
+use crate::atlas::{Point, SizedPoint, ToSerialize};
 use crate::clash::*;
 
 // All non-test create_entity() call should live here
@@ -59,4 +59,27 @@ pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
 
 pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
     create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position);
+}
+
+pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {
+    ecs.create_entity()
+        .with(PositionComponent::init(SizedPoint::from(position)))
+        .with(attack)
+        .with(orb)
+        .with(BehaviorComponent::init(BehaviorKind::Orb))
+        .with(TimeComponent::init(0))
+        .with(FieldComponent::init())
+        .marked::<SimpleMarker<ToSerialize>>()
+        .build()
+}
+
+pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, color: (u8, u8, u8)) -> Entity {
+    ecs.create_entity()
+        .with(PositionComponent::init(position))
+        .with(attack)
+        .with(BehaviorComponent::init(BehaviorKind::Explode))
+        .with(FieldComponent::init_single(color.0, color.1, color.2))
+        .with(TimeComponent::init(-BASE_ACTION_COST))
+        .marked::<SimpleMarker<ToSerialize>>()
+        .build()
 }

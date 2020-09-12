@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
-use crate::clash::{EventCoordinator, FieldComponent};
+use crate::clash::EventCoordinator;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldEffect {
@@ -139,6 +139,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
 
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
 
+    // NotConvertSaveload - Bolts only last during an animation
     let bolt = ecs
         .create_entity()
         .with(PositionComponent::init(source_position))
@@ -201,6 +202,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
     ecs.write_storage::<FieldCastComponent>().remove(source);
 
     // Fields can be fired by flying entities, skip animation if there is no Position
+    // NotConvertSaveload - These entities only last the duration of the animation
     if ecs.read_storage::<PositionComponent>().get(source).is_none() {
         let field_projectile = ecs.create_entity().with(cast).build();
         apply_field(ecs, field_projectile);
@@ -221,13 +223,8 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 FieldKind::Fire => (255, 0, 0),
             };
 
-            ecs.create_entity()
-                .with(PositionComponent::init(cast.target))
-                .with(AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None))
-                .with(BehaviorComponent::init(BehaviorKind::Explode))
-                .with(FieldComponent::init(r, g, b))
-                .with(TimeComponent::init(-BASE_ACTION_COST))
-                .build();
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(0), None);
+            super::content::spawner::create_damage_field(ecs, cast.target, attack, (r, g, b));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
     }
@@ -492,6 +489,19 @@ mod tests {
         assert_eq!(ecs.get_defenses(&other).health, starting_health);
     }
 
+    pub fn assert_orb_at_position(ecs: &World, expected: Point) {
+        let orb_components = ecs.read_storage::<OrbComponent>();
+        let attack_components = ecs.read_storage::<AttackComponent>();
+        let position_components = ecs.read_storage::<PositionComponent>();
+
+        for (_, _, position) in (&orb_components, &attack_components, &position_components).join() {
+            if position.position.contains_point(&expected) {
+                return;
+            }
+        }
+        panic!("Unable to find orb at point {:?}");
+    }
+
     #[test]
     fn orb_hits_target_on_time() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
@@ -501,10 +511,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -520,7 +529,7 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12);
         wait_for_animations(&mut ecs);
-        find_entity_at(&ecs, 2, 3); // Crashes if not in expected positions
+        assert_orb_at_position(&ecs, Point::init(2, 3));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&target).health < starting_health);
@@ -536,10 +545,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(3, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
@@ -564,10 +572,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         begin_move(&mut ecs, &target, SizedPoint::init(1, 6), PostMoveAction::None);
         begin_move(&mut ecs, &bystander, SizedPoint::init(2, 6), PostMoveAction::None);
@@ -594,10 +601,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
         assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
@@ -620,10 +626,9 @@ mod tests {
 
         begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
-        let orb = find_entity_at(&ecs, 2, 3);
 
         new_turn_wait_characters(&mut ecs);
-        assert_position(&ecs, &orb, Point::init(2, 5));
+        assert_orb_at_position(&ecs, Point::init(2, 5));
         begin_move(&mut ecs, &bystander, SizedPoint::init(2, 5), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 

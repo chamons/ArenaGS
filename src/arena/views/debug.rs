@@ -28,7 +28,7 @@ impl DebugView {
 
 impl View for DebugView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
-        if let BattleSceneState::Debug(kind) = battle_actions::read_state(&ecs) {
+        if let BattleSceneState::Debug(kind) = battle_actions::read_action_state(&ecs) {
             let state = format!("Debug: {}", kind.to_string());
             self.text
                 .render_text(&state, self.position.x, self.position.y, canvas, FontSize::Small, FontColor::Red)?;

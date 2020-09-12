@@ -10,6 +10,7 @@ mod render;
 pub use render::{RenderInfo, RenderOrder, SpriteKinds};
 
 use super::Animation;
+use super::BattleActionRequest;
 use crate::atlas::Point;
 use crate::clash::EventCoordinator;
 
@@ -82,6 +83,28 @@ impl RenderComponent {
     }
 }
 
+#[derive(Component)] // NotConvertSaveload
+pub struct BufferedInputComponent {
+    pub input: Option<BattleActionRequest>,
+}
+
+impl BufferedInputComponent {
+    pub fn init() -> BufferedInputComponent {
+        BufferedInputComponent { input: None }
+    }
+}
+
+#[derive(Component)] // NotConvertSaveload
+pub struct AccelerateAnimations {
+    pub state: bool,
+}
+
+impl AccelerateAnimations {
+    pub fn init() -> AccelerateAnimations {
+        AccelerateAnimations { state: false }
+    }
+}
+
 pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<RenderComponent>();
     ecs.register::<BattleSceneStateComponent>();
@@ -99,6 +122,8 @@ pub fn add_ui_extension(ecs: &mut World) {
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
+    ecs.insert(BufferedInputComponent::init());
+    ecs.insert(AccelerateAnimations::init());
 }
 
 pub trait UIState {

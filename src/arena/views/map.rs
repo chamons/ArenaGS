@@ -126,8 +126,14 @@ impl MapView {
 
         canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
-            for position in position.position.all_positions().iter() {
-                self.draw_overlay_tile(canvas, position, Color::from(field.color))?;
+            for (p, (r, g, b, a)) in &field.fields {
+                if let Some(p) = p {
+                    self.draw_overlay_tile(canvas, p, Color::from((*r, *g, *b, *a)))?;
+                } else {
+                    for p in position.position.all_positions() {
+                        self.draw_overlay_tile(canvas, &p, Color::from((*r, *g, *b, *a)))?;
+                    }
+                }
             }
         }
 
@@ -233,7 +239,7 @@ pub fn screen_to_map_position(x: i32, y: i32) -> Option<Point> {
 }
 
 fn should_draw_grid(ecs: &World) -> bool {
-    let state = battle_actions::read_state(ecs);
+    let state = battle_actions::read_action_state(ecs);
     if state.is_targeting() {
         return true;
     }
@@ -247,7 +253,7 @@ fn should_draw_grid(ecs: &World) -> bool {
 }
 
 fn should_draw_cursor(ecs: &World) -> bool {
-    let state = battle_actions::read_state(ecs);
+    let state = battle_actions::read_action_state(ecs);
     match state {
         BattleSceneState::Targeting(_) => true,
         _ => false,
@@ -255,7 +261,7 @@ fn should_draw_cursor(ecs: &World) -> bool {
 }
 
 fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
-    let state = battle_actions::read_state(ecs);
+    let state = battle_actions::read_action_state(ecs);
     match state {
         BattleSceneState::Targeting(source) => match source {
             BattleTargetSource::Skill(name) => Some(get_skill(&name)),

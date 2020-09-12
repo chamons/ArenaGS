@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::views::*;
-use super::{battle_actions, complete_animations, tick_animations};
+use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::saveload;
@@ -49,23 +49,23 @@ impl BattleScene {
     fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
             if keycode == Keycode::F1 {
-                battle_actions::set_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
+                battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
             }
         }
 
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
-                battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name))
             }
         }
         match keycode {
-            Keycode::Up => battle_actions::move_action(&mut self.ecs, Direction::North),
-            Keycode::Down => battle_actions::move_action(&mut self.ecs, Direction::South),
-            Keycode::Left => battle_actions::move_action(&mut self.ecs, Direction::West),
-            Keycode::Right => battle_actions::move_action(&mut self.ecs, Direction::East),
-            Keycode::S => saveload::save(&mut self.ecs),
+            Keycode::Up => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::North)),
+            Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
+            Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
+            Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
+            Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {
-                if let Ok(new_world) = saveload::load() {
+                if let Ok(new_world) = saveload::load_from_disk() {
                     self.ecs = new_world;
                 }
             }
@@ -75,20 +75,20 @@ impl BattleScene {
 
     fn handle_target_key(&mut self, keycode: Keycode) {
         if keycode == Keycode::Escape {
-            battle_actions::reset_state(&mut self.ecs)
+            battle_actions::reset_action_state(&mut self.ecs)
         }
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = battle_actions::get_skill_name(&self.ecs, i as usize) {
-                battle_actions::select_skill(&mut self.ecs, &name);
+            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name));
             }
         }
     }
 
     fn handle_debug_key(&mut self, kind: DebugKind, keycode: Keycode) {
         if keycode == Keycode::Escape {
-            battle_actions::reset_state(&mut self.ecs);
+            battle_actions::reset_action_state(&mut self.ecs);
             return;
         }
         if kind.is_map_overlay() {
@@ -103,18 +103,18 @@ impl BattleScene {
         let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
-                battle_actions::select_skill(&mut self.ecs, &name)
+                battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
             }
         }
     }
 
     fn handle_target_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
         if button == MouseButton::Right {
-            battle_actions::reset_state(&mut self.ecs);
+            battle_actions::reset_action_state(&mut self.ecs);
             return;
         }
 
-        let target_info = match battle_actions::read_state(&self.ecs) {
+        let target_info = match battle_actions::read_action_state(&self.ecs) {
             BattleSceneState::Targeting(target_source) => Some(target_source),
             _ => None,
         };
@@ -123,7 +123,9 @@ impl BattleScene {
             if button == MouseButton::Left {
                 if let Some(map_position) = screen_to_map_position(x, y) {
                     match target_source {
-                        BattleTargetSource::Skill(skill_name) => battle_actions::select_skill_with_target(&mut self.ecs, &skill_name, &map_position),
+                        BattleTargetSource::Skill(skill_name) => {
+                            battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::TargetSkill(skill_name, map_position))
+                        }
                     }
                 }
             }
@@ -171,7 +173,7 @@ impl Scene for BattleScene {
                 }
             }
 
-            let state = battle_actions::read_state(&self.ecs);
+            let state = battle_actions::read_action_state(&self.ecs);
             match state {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
                 BattleSceneState::Targeting(_) => self.handle_target_mouse(x, y, button),
@@ -198,13 +200,16 @@ impl Scene for BattleScene {
         process_tick_events(&mut self.ecs, frame);
 
         if !battle_actions::has_animations_blocking(&self.ecs) {
-            tick_next_action(&mut self.ecs);
+            let player_can_act = tick_next_action(&mut self.ecs);
+            if player_can_act {
+                battle_actions::process_any_queued_action(&mut self.ecs);
+            }
         }
     }
 
     fn on_quit(&mut self) -> BoxResult<()> {
         // Complete any outstanding animations to prevent any weirdness on load
-        complete_animations(&mut self.ecs);
+        force_complete_animations(&mut self.ecs);
 
         Ok(())
     }

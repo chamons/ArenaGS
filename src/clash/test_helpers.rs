@@ -1,7 +1,8 @@
 use specs::prelude::*;
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::*;
-use crate::atlas::{assert_points_equal, assert_points_not_equal, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::*;
 
 pub struct StateBuilder {
     ecs: World,
@@ -48,6 +49,7 @@ pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_character_at_location(ecs, Point::init(x, y)).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn find_entity_at(ecs: &World, x: u32, y: u32) -> Entity {
     find_entity_at_location(ecs, Point::init(x, y)).unwrap()
 }
@@ -103,6 +105,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
+        .marked::<SimpleMarker<ToSerialize>>()
         .build();
 }
 
@@ -118,6 +121,8 @@ pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
     ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::just_health(health);
 }
 
+// This can be dangerous, if something invalidates the entity reference
+// then you can crash here
 pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
@@ -136,4 +141,64 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
 
     tick_next_action(ecs);
     wait_for_animations(ecs);
+}
+
+#[allow(dead_code)]
+pub fn dump_all_position(ecs: &World) {
+    let positions = ecs.read_storage::<PositionComponent>();
+    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let orb_components = ecs.read_storage::<OrbComponent>();
+    let attack_components = ecs.read_storage::<AttackComponent>();
+    let fields = ecs.read_storage::<FieldComponent>();
+    let times = ecs.read_storage::<TimeComponent>();
+    for (position, char_info, orb, attack, field, time) in (
+        &positions,
+        (&char_infos).maybe(),
+        (&orb_components).maybe(),
+        (&attack_components).maybe(),
+        (&fields).maybe(),
+        (&times).maybe(),
+    )
+        .join()
+    {
+        let mut description = format!("{}", position.position);
+        if char_info.is_some() {
+            description.push_str(" (Char)");
+        }
+        if orb.is_some() {
+            description.push_str(" (Orb)");
+        }
+        if attack.is_some() {
+            description.push_str(" (Attack)");
+        }
+        if field.is_some() {
+            description.push_str(" (Field)");
+        }
+        if time.is_some() {
+            description.push_str(format!(" ({})", time.unwrap().ticks).as_str());
+        }
+        println!("{}", description);
+    }
+    println!("");
+}
+
+pub fn assert_field_exists(ecs: &World, x: u32, y: u32) {
+    let fields = ecs.read_storage::<FieldComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    let found_field = (&fields, (&positions).maybe()).join().any(|(f, p)| {
+        f.fields.iter().any(|(field_position, _)| {
+            if let Some(field_position) = field_position {
+                field_position.x == x && field_position.y == y
+            } else {
+                p.unwrap().position.contains_point(&Point::init(x, y))
+            }
+        })
+    });
+    assert_eq!(true, found_field);
+}
+
+pub fn assert_field_count(ecs: &World, expected: usize) {
+    let fields = ecs.read_storage::<FieldComponent>();
+    let count: usize = (&fields).join().map(|f| f.fields.len()).sum();
+    assert_eq!(expected, count);
 }
