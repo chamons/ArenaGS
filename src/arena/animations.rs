@@ -154,7 +154,6 @@ pub fn accelerate_animations(ecs: &mut World) {
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
         let animations = ecs.read_storage::<AnimationComponent>();
-
         for (entity, _) in (&entities, &animations).join() {
             to_speedup.push(entity);
         }

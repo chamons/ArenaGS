@@ -12,11 +12,10 @@ pub fn create_orb(ecs: &mut World, invoker: &Entity) -> Entity {
     let path = &orb_component.path;
     let caster_position = ecs.get_position(invoker);
     let starting_index = path.iter().position(|x| !caster_position.contains_point(x)).unwrap();
-    let orb_position = path[starting_index];
 
     let orb = ecs
         .create_entity()
-        .with(PositionComponent::init(SizedPoint::from(orb_position)))
+        .with(PositionComponent::init(SizedPoint::from(path[starting_index])))
         .with(attack_component)
         .with(orb_component)
         .with(BehaviorComponent::init(BehaviorKind::Orb))
@@ -54,21 +53,26 @@ pub fn move_orb(ecs: &mut World, entity: &Entity) {
 
 fn add_orb_movement_fields(ecs: &mut World, entity: &Entity, current: usize) {
     let mut fields_to_add = vec![];
-    let orbs = ecs.write_storage::<OrbComponent>();
-    let orb = orbs.grab(*entity);
-    for i in 0..1 + (2 * orb.speed as usize) {
-        let (r, g, b) = {
-            if i < orb.speed as usize {
-                (255, 0, 0)
-            } else {
-                (230, 150, 0)
-            }
-        };
+    {
+        let orbs = ecs.write_storage::<OrbComponent>();
+        let orb = orbs.grab(*entity);
+        // Path is 2 turns worth of movement, plus the current square
+        for i in 0..1 + (2 * orb.speed as usize) {
+            let (r, g, b) = {
+                // Red if impacts next turn, else orangish
+                if i < orb.speed as usize {
+                    (255, 0, 0)
+                } else {
+                    (230, 150, 0)
+                }
+            };
 
-        if let Some(field) = orb.path.get(current + i) {
-            fields_to_add.push((Some(*field), (r, g, b)));
+            if let Some(field) = orb.path.get(current + i) {
+                fields_to_add.push((Some(*field), (r, g, b)));
+            }
         }
     }
+
     let mut fields = ecs.write_storage::<FieldComponent>();
     let field_component = fields.grab_mut(*entity);
     field_component.fields.clear();
