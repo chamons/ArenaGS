@@ -28,7 +28,7 @@ pub enum SkillEffect {
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    Field(FieldEffect, FieldKind, u32),
+    Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
@@ -370,7 +370,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::Field(effect, kind, explosion_size) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind, *explosion_size),
+        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
@@ -399,7 +399,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
-        SkillEffect::Field(_, _, _) => 2,
+        SkillEffect::Field(_, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,

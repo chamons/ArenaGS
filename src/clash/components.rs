@@ -251,17 +251,11 @@ pub struct FieldCastComponent {
     pub effect: FieldEffect,
     pub kind: FieldKind,
     pub target: SizedPoint,
-    pub explosion_size: u32,
 }
 
 impl FieldCastComponent {
-    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint, explosion_size: u32) -> FieldCastComponent {
-        FieldCastComponent {
-            effect,
-            kind,
-            target,
-            explosion_size,
-        }
+    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
+        FieldCastComponent { effect, kind, target }
     }
 }
 
