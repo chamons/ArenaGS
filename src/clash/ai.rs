@@ -378,6 +378,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
         let target = find_at(&ecs, 2, 2);
         ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
         assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
         assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
         assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
