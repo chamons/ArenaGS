@@ -63,6 +63,8 @@ pub fn random_new_world(difficulty: u32) -> BoxResult<World> {
     // Since we are creating an entire new world, it is acceptable to use thread RNG
     let mut random = rand::thread_rng();
     let kind: BattleKind = random.gen();
+    // Temp Hack
+    let kind = BattleKind::Elementalist;
     new_world(kind, difficulty)
 }
 
@@ -84,20 +86,20 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
             crate::clash::content::spawner::bird_monster(&mut ecs, enemy_position, difficulty);
         }
         BattleKind::Elementalist => {
-            let enemy_position = find_placement(&ecs, 1, 1);
-            crate::clash::content::spawner::elementalist(&mut ecs, enemy_position, difficulty);
+            // let enemy_position = find_placement(&ecs, 1, 1);
+            // crate::clash::content::spawner::elementalist(&mut ecs, enemy_position, difficulty);
 
             let enemy_position = find_placement(&ecs, 1, 1);
             crate::clash::content::spawner::water_elemental(&mut ecs, enemy_position, difficulty);
 
-            let enemy_position = find_placement(&ecs, 1, 1);
-            crate::clash::content::spawner::fire_elemental(&mut ecs, enemy_position, difficulty);
+            // let enemy_position = find_placement(&ecs, 1, 1);
+            // crate::clash::content::spawner::fire_elemental(&mut ecs, enemy_position, difficulty);
 
-            let enemy_position = find_placement(&ecs, 1, 1);
-            crate::clash::content::spawner::wind_elemental(&mut ecs, enemy_position, difficulty);
+            // let enemy_position = find_placement(&ecs, 1, 1);
+            // crate::clash::content::spawner::wind_elemental(&mut ecs, enemy_position, difficulty);
 
-            let enemy_position = find_placement(&ecs, 1, 1);
-            crate::clash::content::spawner::earth_elemental(&mut ecs, enemy_position, difficulty);
+            // let enemy_position = find_placement(&ecs, 1, 1);
+            // crate::clash::content::spawner::earth_elemental(&mut ecs, enemy_position, difficulty);
         }
     }
 
