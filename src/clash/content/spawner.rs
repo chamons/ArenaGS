@@ -48,15 +48,15 @@ fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: B
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
-pub fn bird_monster(ecs: &mut World, position: Point) {
+pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,
         "Giant Bird",
         SpawnKind::Bird,
         BehaviorKind::Bird,
-        Defenses::just_health(150),
+        Defenses::just_health(150 + 20 * difficulty),
         SizedPoint::init_multi(position.x, position.y, 2, 2),
-        1,
+        1 + difficulty,
     );
 }
 

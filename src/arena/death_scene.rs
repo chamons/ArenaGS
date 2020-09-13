@@ -109,7 +109,7 @@ impl Scene for DeathScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewGame
+            StageDirection::NewGame(0)
         } else {
             StageDirection::Continue
         }

@@ -22,8 +22,8 @@ pub struct BattleScene {
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<BattleScene> {
-        let ecs = saveload::new_world().unwrap();
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
+        let ecs = saveload::new_world(difficulty).unwrap();
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -77,7 +77,7 @@ impl BattleScene {
                 }
             }
             Keycode::N => {
-                self.ecs = saveload::new_world().unwrap();
+                self.ecs = saveload::new_world(0).unwrap();
             }
             Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {
@@ -240,7 +240,7 @@ impl Scene for BattleScene {
 
         let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
         if non_player_character_count == 0 {
-            return StageDirection::BattleEnemyDefeated;
+            return StageDirection::BattleEnemyDefeated(self.ecs.read_resource::<GameDifficultyComponent>().difficulty + 1);
         }
         StageDirection::Continue
     }

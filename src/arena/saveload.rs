@@ -82,18 +82,19 @@ fn find_placement(ecs: &World, width: u32, height: u32) -> Point {
     }
 }
 
-pub fn new_world() -> BoxResult<World> {
+pub fn new_world(difficulty: u32) -> BoxResult<World> {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)?));
+    ecs.insert(GameDifficultyComponent::init(difficulty));
 
     let player_position = find_placement(&ecs, 1, 1);
     crate::clash::content::spawner::player(&mut ecs, player_position);
     let bird_position = find_placement(&ecs, 2, 2);
-    crate::clash::content::spawner::bird_monster(&mut ecs, bird_position);
+    crate::clash::content::spawner::bird_monster(&mut ecs, bird_position, difficulty);
 
     map_background(&mut ecs);
 
@@ -103,6 +104,7 @@ pub fn new_world() -> BoxResult<World> {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SerializationHelper {
     pub map: Map,
+    pub difficulty: u32,
 }
 
 #[cfg(test)]
@@ -125,8 +127,9 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
     let mut serializer = serde_json::Serializer::new(&mut *writer);
     {
         let map = ecs.read_resource::<MapComponent>().map.clone();
+        let difficulty = ecs.read_resource::<GameDifficultyComponent>().difficulty;
         ecs.create_entity()
-            .with(SerializationHelper { map })
+            .with(SerializationHelper { map, difficulty })
             .marked::<SimpleMarker<ToSerialize>>()
             .build();
     }
@@ -158,6 +161,7 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
         RenderComponent,
         BattleSceneStateComponent,
         MousePositionComponent,
+        GameDifficultyComponent,
         SerializationHelper
     );
 }
@@ -210,17 +214,19 @@ fn load(data: String) -> BoxResult<World> {
             RenderComponent,
             BattleSceneStateComponent,
             MousePositionComponent,
+            GameDifficultyComponent,
             SerializationHelper
         );
     }
     {
-        let (map, entity) = {
+        let (map, difficulty, entity) = {
             let entities = ecs.entities();
             let helper = ecs.read_storage::<SerializationHelper>();
             let (entity, helper) = (&entities, &helper).join().next().unwrap();
-            (helper.map.clone(), entity)
+            (helper.map.clone(), helper.difficulty, entity)
         };
         ecs.insert(MapComponent::init(map));
+        ecs.insert(GameDifficultyComponent::init(difficulty));
         ecs.delete_entity(entity)?;
     }
 
