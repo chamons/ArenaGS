@@ -1,10 +1,8 @@
 use std::rc::Rc;
 
-use specs::prelude::*;
-
 use super::death_scene::DeathScene;
 use crate::after_image::{RenderContextHolder, TextRenderer};
-use crate::clash::{CharacterInfoComponent, PlayerComponent, PlayerDeadComponent};
+use crate::clash::{PlayerComponent, PlayerDeadComponent};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
 use super::battle_scene::BattleScene;

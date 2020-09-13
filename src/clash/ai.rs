@@ -232,6 +232,7 @@ pub fn clear_behavior_value(ecs: &World, enemy: &Entity, key: &str) {
     ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.remove(key);
 }
 
+#[allow(dead_code)]
 pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
     *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
 }
@@ -262,6 +263,7 @@ pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str,
     }
 }
 
+#[allow(dead_code)]
 pub fn check_behavior_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
     check_behavior_ammo_calculate(ecs, enemy, key, |_| ammo)
 }

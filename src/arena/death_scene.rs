@@ -64,11 +64,11 @@ impl DeathScene {
 }
 
 impl Scene for DeathScene {
-    fn handle_key(&mut self, keycode: Keycode) {
+    fn handle_key(&mut self, _keycode: Keycode) {
         self.interacted = true;
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
         if button.is_some() {
             self.interacted = true;
         }
@@ -100,7 +100,7 @@ impl Scene for DeathScene {
         Ok(())
     }
 
-    fn tick(&mut self, frame: u64) {}
+    fn tick(&mut self, _frame: u64) {}
 
     fn on_quit(&mut self) -> BoxResult<()> {
         Ok(())
