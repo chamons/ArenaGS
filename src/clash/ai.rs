@@ -46,6 +46,7 @@ pub enum BehaviorKind {
     FireElemental,
     WindElemental,
     EarthElemental,
+    TickDamage,
     Explode,
     Orb,
 }
@@ -62,9 +63,8 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::FireElemental => super::content::elementalist::fire_elemental_action(ecs, enemy),
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
-        BehaviorKind::Explode => {
-            begin_explode(ecs, &enemy);
-        }
+        BehaviorKind::Explode => begin_explode(ecs, &enemy),
+        BehaviorKind::TickDamage => tick_damage(ecs, &enemy),
         BehaviorKind::Orb => move_orb(ecs, enemy),
     };
 }
@@ -421,5 +421,22 @@ mod tests {
         move_towards_player(&mut ecs, &target);
         wait_for_animations(&mut ecs);
         assert_character_at(&ecs, 2, 3);
+    }
+
+    #[test]
+    fn ticks_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let damage_source = make_test_character(&mut ecs, SizedPoint::init(2, 2), 0);
+        ecs.shovel(damage_source, BehaviorComponent::init(BehaviorKind::TickDamage));
+        ecs.shovel(
+            damage_source,
+            AttackComponent::init(Point::init(2, 2), Damage::init(1), AttackKind::DamageTick, Some(Point::init(2, 2))),
+        );
+        ecs.write_storage::<CharacterInfoComponent>().remove(damage_source);
+
+        let target_starting_health = ecs.get_defenses(&player).health;
+        take_enemy_action(&mut ecs, &damage_source);
+        assert_ne!(ecs.get_defenses(&player).health, target_starting_health);
     }
 }
