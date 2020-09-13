@@ -279,6 +279,16 @@ pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, amm
     }
 }
 
+pub fn check_behavior_single_use_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
+    let value = get_behavior_value(ecs, enemy, key, ammo);
+    if value >= 1 {
+        set_behavior_value(ecs, enemy, key, value - 1);
+        true
+    } else {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -378,6 +388,20 @@ mod tests {
         assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
         assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
         assert!(!check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
+    }
+
+    #[test]
+    fn single_use_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
     }
 
     #[test]

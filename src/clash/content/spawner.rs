@@ -48,24 +48,24 @@ fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: B
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
-pub fn bird_monster(ecs: &mut World, position: Point) {
+pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,
         "Giant Bird",
         SpawnKind::Bird,
         BehaviorKind::Bird,
-        Defenses::just_health(150),
+        Defenses::just_health(150 + 20 * difficulty),
         SizedPoint::init_multi(position.x, position.y, 2, 2),
-        1,
+        1 + difficulty,
     );
 }
 
 pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 20), position, 0);
+    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 10), position, 0);
 }
 
 pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position, 0);
+    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(20), position, 0);
 }
 
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {

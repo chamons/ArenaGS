@@ -92,7 +92,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
         }
     };
     let source_position = ecs.get_position(source);
-    let target = targets.iter().min_by(|first, second| {
+    let target = targets.iter().filter(|t| !ecs.has_status(t, StatusKind::Flying)).min_by(|first, second| {
         let first = source_position.distance_to_multi(ecs.get_position(first));
         let second = source_position.distance_to_multi(ecs.get_position(second));
         first.cmp(&second)
@@ -720,5 +720,23 @@ mod tests {
 
         assert_character_at(&ecs, 2, 7);
         assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn move_and_shoot_one_flying() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 100)
+            .with_character(2, 8, 100)
+            .with_map()
+            .build();
+        let player = find_at(&ecs, 2, 2);
+        let flyer = find_at(&ecs, 2, 8);
+
+        ecs.add_status(&flyer, StatusKind::Flying, 300);
+
+        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 3));
     }
 }

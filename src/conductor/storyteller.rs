@@ -2,9 +2,9 @@ use super::{EventStatus, Scene};
 use crate::after_image::RenderContextHolder;
 pub enum StageDirection {
     Continue,
-    NewGame,
+    NewGame(u32),
     BattlePlayerDeath(String),
-    BattleEnemyDefeated,
+    BattleEnemyDefeated(u32),
 }
 pub trait Storyteller {
     fn initial_scene(&self) -> Box<dyn Scene>;

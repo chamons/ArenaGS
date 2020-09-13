@@ -25,9 +25,9 @@ impl ArenaStoryteller {
         Box::from(DeathScene::init(snapshot, &mut render_context.borrow_mut().canvas, &self.text_renderer, message).unwrap())
     }
 
-    fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder) -> Box<dyn Scene> {
+    fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder, difficulty: u32) -> Box<dyn Scene> {
         let snapshot = Director::screen_shot(render_context).unwrap();
-        Box::from(RoundFadeScene::init(snapshot))
+        Box::from(RoundFadeScene::init(snapshot, difficulty))
     }
 }
 
@@ -35,13 +35,15 @@ impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {
             StageDirection::Continue => EventStatus::Continue,
-            StageDirection::NewGame => EventStatus::NewScene(self.initial_scene()),
+            StageDirection::NewGame(difficulty) => {
+                EventStatus::NewScene(Box::new(BattleScene::init(&self.render_context, &self.text_renderer, difficulty).unwrap()))
+            }
             StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),
-            StageDirection::BattleEnemyDefeated => EventStatus::NewScene(self.prepare_round_fade_scene(render_context)),
+            StageDirection::BattleEnemyDefeated(difficulty) => EventStatus::NewScene(self.prepare_round_fade_scene(render_context, difficulty)),
         }
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
-        Box::new(BattleScene::init(&self.render_context, &self.text_renderer).unwrap())
+        Box::new(BattleScene::init(&self.render_context, &self.text_renderer, 0).unwrap())
     }
 }

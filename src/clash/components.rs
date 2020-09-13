@@ -265,6 +265,17 @@ impl FieldCastComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct GameDifficultyComponent {
+    pub difficulty: u32,
+}
+
+impl GameDifficultyComponent {
+    pub fn init(difficulty: u32) -> GameDifficultyComponent {
+        GameDifficultyComponent { difficulty }
+    }
+}
+
 #[cfg(test)]
 pub trait TestInfo {
     fn get_test_data(&self, name: &str) -> u32;
@@ -308,6 +319,7 @@ pub fn create_world() -> World {
     ecs.register::<FlightComponent>();
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
+    ecs.register::<GameDifficultyComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
@@ -317,6 +329,7 @@ pub fn create_world() -> World {
     ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+    ecs.insert(GameDifficultyComponent::init(0));
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
 
     ecs.subscribe(super::physics::move_event);

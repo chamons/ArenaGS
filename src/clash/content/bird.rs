@@ -99,7 +99,9 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
         }
     } else if phase == 3 {
         if check_behavior_cooldown(ecs, enemy, "Throw Eggs", 3) {
-            try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
+            if check_behavior_single_use_ammo(ecs, enemy, "TotalEggs", 3) {
+                try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
+            }
         }
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 4 {
@@ -108,7 +110,11 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
                 if coin_flip(ecs) {
                     try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
                 } else {
-                    try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
+                    if check_behavior_single_use_ammo(ecs, enemy, "TotalEggs", 3) {
+                        try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
+                    } else {
+                        try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
+                    }
                 }
             }
         } else {
