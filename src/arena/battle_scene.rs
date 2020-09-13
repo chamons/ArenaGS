@@ -71,6 +71,11 @@ impl BattleScene {
                     .defenses
                     .health = 0
             }
+            Keycode::K => {
+                for e in find_enemies(&self.ecs) {
+                    self.ecs.write_storage::<CharacterInfoComponent>().grab_mut(e).character.defenses.health = 0
+                }
+            }
             Keycode::N => {
                 self.ecs = saveload::new_world().unwrap();
             }

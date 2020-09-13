@@ -24,3 +24,4 @@ mod saveload;
 pub mod arena_storyteller;
 pub mod battle_scene;
 pub mod death_scene;
+pub mod round_fade_scene;

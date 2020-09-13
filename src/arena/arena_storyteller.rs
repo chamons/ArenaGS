@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use super::death_scene::DeathScene;
+use super::round_fade_scene::RoundFadeScene;
 use crate::after_image::{RenderContextHolder, TextRenderer};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
@@ -23,6 +24,11 @@ impl ArenaStoryteller {
         let snapshot = Director::screen_shot(render_context).unwrap();
         Box::from(DeathScene::init(snapshot, &mut render_context.borrow_mut().canvas, &self.text_renderer, message).unwrap())
     }
+
+    fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder) -> Box<dyn Scene> {
+        let snapshot = Director::screen_shot(render_context).unwrap();
+        Box::from(RoundFadeScene::init(snapshot))
+    }
 }
 
 impl Storyteller for ArenaStoryteller {
@@ -31,7 +37,7 @@ impl Storyteller for ArenaStoryteller {
             StageDirection::Continue => EventStatus::Continue,
             StageDirection::NewGame => EventStatus::NewScene(self.initial_scene()),
             StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),
-            StageDirection::BattleEnemyDefeated => EventStatus::NewScene(self.initial_scene()),
+            StageDirection::BattleEnemyDefeated => EventStatus::NewScene(self.prepare_round_fade_scene(render_context)),
         }
     }
 
