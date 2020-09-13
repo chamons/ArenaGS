@@ -270,6 +270,17 @@ impl GameDifficultyComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DurationComponent {
+    pub duration: u32,
+}
+
+impl DurationComponent {
+    pub fn init(duration: u32) -> DurationComponent {
+        DurationComponent { duration }
+    }
+}
+
 #[cfg(test)]
 pub trait TestInfo {
     fn get_test_data(&self, name: &str) -> u32;
@@ -314,6 +325,7 @@ pub fn create_world() -> World {
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
     ecs.register::<GameDifficultyComponent>();
+    ecs.register::<DurationComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers

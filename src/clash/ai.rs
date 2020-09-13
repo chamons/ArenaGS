@@ -64,7 +64,24 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::Explode => begin_explode(ecs, &enemy),
-        BehaviorKind::TickDamage => tick_damage(ecs, &enemy),
+        BehaviorKind::TickDamage => {
+            tick_damage(ecs, &enemy);
+            let should_die = {
+                if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(*enemy) {
+                    d.duration -= 1;
+                    if d.duration == 0 {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            };
+            if should_die {
+                ecs.delete_entity(*enemy).unwrap();
+            }
+        }
         BehaviorKind::Orb => move_orb(ecs, enemy),
     };
 }
@@ -428,6 +445,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let damage_source = make_test_character(&mut ecs, SizedPoint::init(2, 2), 0);
+        ecs.shovel(damage_source, DurationComponent::init(2));
         ecs.shovel(damage_source, BehaviorComponent::init(BehaviorKind::TickDamage));
         ecs.shovel(
             damage_source,
@@ -435,8 +453,13 @@ mod tests {
         );
         ecs.write_storage::<CharacterInfoComponent>().remove(damage_source);
 
-        let target_starting_health = ecs.get_defenses(&player).health;
-        take_enemy_action(&mut ecs, &damage_source);
-        assert_ne!(ecs.get_defenses(&player).health, target_starting_health);
+        for _ in 0..2 {
+            let target_health = ecs.get_defenses(&player).health;
+            take_enemy_action(&mut ecs, &damage_source);
+            add_ticks(&mut ecs, 100);
+            assert_ne!(ecs.get_defenses(&player).health, target_health);
+        }
+
+        assert_eq!(1, find_all_entities(&ecs).len());
     }
 }
