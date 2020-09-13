@@ -60,6 +60,54 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
     );
 }
 
+pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Water Elemental",
+        SpawnKind::WaterElemental,
+        BehaviorKind::WaterElemental,
+        Defenses::just_health(40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Fire Elemental",
+        SpawnKind::FireElemental,
+        BehaviorKind::FireElemental,
+        Defenses::just_health(40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Wind Elemental",
+        SpawnKind::WindElemental,
+        BehaviorKind::WindElemental,
+        Defenses::just_health(40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Earth Elemental",
+        SpawnKind::EarthElemental,
+        BehaviorKind::EarthElemental,
+        Defenses::just_health(40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
 pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,

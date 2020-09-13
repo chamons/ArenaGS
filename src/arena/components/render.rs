@@ -23,6 +23,10 @@ pub enum SpriteKinds {
 
     Egg,
     Elementalist,
+    WaterElemental,
+    FireElemental,
+    WindElemental,
+    EarthElemental,
 
     FireBolt,
     Bullet,

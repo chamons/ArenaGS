@@ -11,6 +11,10 @@ pub enum SpawnKind {
     Bird,
     BirdSpawn,
     Egg,
+    WaterElemental,
+    FireElemental,
+    WindElemental,
+    EarthElemental,
     Elementalist,
 }
 

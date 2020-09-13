@@ -95,6 +95,30 @@ impl SpriteLoader {
                     9,
                     StandardCharacterSize::Normal,
                 )?),
+                SpriteKinds::WaterElemental => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "elemental"),
+                    0,
+                    StandardCharacterSize::Large,
+                )?),
+                SpriteKinds::FireElemental => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "elemental"),
+                    3,
+                    StandardCharacterSize::Large,
+                )?),
+                SpriteKinds::WindElemental => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "elemental"),
+                    6,
+                    StandardCharacterSize::Large,
+                )?),
+                SpriteKinds::EarthElemental => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "elemental"),
+                    9,
+                    StandardCharacterSize::Large,
+                )?),
             };
             sprites.insert(s.into(), sprite);
         }
