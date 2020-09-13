@@ -13,8 +13,8 @@ use crate::clash::*;
 
 use super::saveload;
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Direction, EasyMutWorld, Point};
-use crate::conductor::Scene;
+use crate::atlas::{BoxResult, Direction, EasyMutECS, EasyMutWorld, Point};
+use crate::conductor::{Scene, StageDirection};
 
 pub struct BattleScene {
     ecs: World,
@@ -63,6 +63,22 @@ impl BattleScene {
             Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
             Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
             Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
+            Keycode::D => {
+                self.ecs
+                    .write_storage::<CharacterInfoComponent>()
+                    .grab_mut(find_player(&self.ecs))
+                    .character
+                    .defenses
+                    .health = 0
+            }
+            Keycode::K => {
+                for e in find_enemies(&self.ecs) {
+                    self.ecs.write_storage::<CharacterInfoComponent>().grab_mut(e).character.defenses.health = 0
+                }
+            }
+            Keycode::N => {
+                self.ecs = saveload::new_world().unwrap();
+            }
             Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {
                 if let Ok(new_world) = saveload::load_from_disk() {
@@ -182,7 +198,7 @@ impl Scene for BattleScene {
         }
     }
 
-    fn render(&self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+    fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.ecs.write_resource::<FrameComponent>().current_frame = frame;
 
         canvas.set_draw_color(Color::from((0, 128, 255)));
@@ -214,8 +230,19 @@ impl Scene for BattleScene {
         Ok(())
     }
 
-    fn get_state(&self) -> &World {
-        &self.ecs
+    fn ask_stage_direction(&self) -> StageDirection {
+        if self.ecs.try_fetch::<PlayerDeadComponent>().is_some() {
+            return StageDirection::BattlePlayerDeath("This is where detailed death info goes".to_string());
+        }
+        let entities = self.ecs.read_resource::<specs::world::EntitiesRes>();
+        let character_infos = self.ecs.read_storage::<CharacterInfoComponent>();
+        let player = self.ecs.read_storage::<PlayerComponent>();
+
+        let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
+        if non_player_character_count == 0 {
+            return StageDirection::BattleEnemyDefeated;
+        }
+        StageDirection::Continue
     }
 }
 

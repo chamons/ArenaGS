@@ -109,7 +109,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
 pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, mut strength: Damage, kind: BoltKind) {
     if ecs.has_status(source, StatusKind::Aimed) {
         ecs.remove_status(source, StatusKind::Aimed);
-        strength = strength.copy_more_strength(2);
+        strength = strength.more_strength(2);
     }
 
     let source_position = Some(ecs.get_position(source).origin);

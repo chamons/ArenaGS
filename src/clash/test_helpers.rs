@@ -86,17 +86,6 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
     all
 }
 
-pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
-    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
-
-    let mut all = vec![];
-    for (entity, _) in (&entities, &char_infos).join() {
-        all.push(entity);
-    }
-    all
-}
-
 pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
     ecs.create_entity()
         .with(TimeComponent::init(time))
@@ -105,6 +94,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
             "TestCharacter",
             Defenses::just_health(10),
             Temperature::init(),
+            0,
         )))
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))

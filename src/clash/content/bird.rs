@@ -9,12 +9,13 @@ use super::super::*;
 use crate::{do_behavior, try_behavior, try_behavior_and_if};
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+    // All skills will be boosted by default +1 skill_power on main bird
     m.insert(
         "Wing Blast",
         SkillInfo::init_with_distance(
             None,
             TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(2), BoltKind::AirBullet),
+            SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
             Some(2),
             true,
         ),
@@ -24,7 +25,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             None,
             TargetType::Player,
-            SkillEffect::Orb(Damage::init(4), OrbKind::Feather, 2, 12),
+            SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
             Some(12),
             true,
         ),
@@ -34,7 +35,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             None,
             TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(1).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
+            SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
             Some(6),
             true,
         ),
@@ -44,7 +45,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init(
             None,
             TargetType::Tile,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(4)), FieldKind::Fire, 1),
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(3)), FieldKind::Fire, 1),
         ),
     );
     m.insert("Take Off", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
@@ -61,7 +62,10 @@ pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
         try_behavior!(move_towards_player(ecs, enemy));
     } else {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
+        // Flip between 2 and 3 shots before pausing a round
+        if check_behavior_ammo_calculate(ecs, enemy, "Feather-Ammo", |ecs| flip_value(ecs, enemy, "Feather-Ammo-Amount", 3, 2)) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
+        }
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));

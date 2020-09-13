@@ -113,6 +113,17 @@ pub fn find_orb_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> 
     None
 }
 
+pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+
+    let mut all = vec![];
+    for (entity, _) in (&entities, &char_infos).join() {
+        all.push(entity);
+    }
+    all
+}
+
 pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
     let has_exhaustion = {
         if let Some(skill_resource) = ecs.read_storage::<SkillResourceComponent>().get(*mover) {
