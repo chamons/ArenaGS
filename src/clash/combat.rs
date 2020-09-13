@@ -21,11 +21,13 @@ pub enum FieldKind {
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum ConeKind {
     Fire,
+    Water,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum BoltKind {
     Fire,
+    Water,
     Bullet,
     FireBullet,
     AirBullet,

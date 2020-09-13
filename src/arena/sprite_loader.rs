@@ -65,6 +65,7 @@ impl SpriteLoader {
                     1.0,
                 )?),
                 SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
+                SpriteKinds::WaterBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "water"), 44, 3)?),
                 SpriteKinds::Bullet => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "weapons_2"), 6, 1)?.with_render_offset(bullet_offset()),
                 ),

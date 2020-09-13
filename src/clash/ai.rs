@@ -5,7 +5,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, EasyMutECS, SizedPoint};
+use crate::atlas::{Direction, EasyECS, EasyMutECS, Point, SizedPoint};
 
 #[macro_export]
 macro_rules! try_behavior {
@@ -154,6 +154,14 @@ pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     } else {
         false
     }
+}
+
+pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: &Point) -> bool {
+    if is_good_target(ecs, enemy, get_skill(skill_name), *target_point) {
+        invoke_skill(ecs, enemy, skill_name, Some(*target_point));
+        return true;
+    }
+    false
 }
 
 pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
@@ -311,6 +319,30 @@ pub fn check_behavior_single_use_ammo(ecs: &World, enemy: &Entity, key: &str, am
     } else {
         false
     }
+}
+
+pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) -> Option<Point> {
+    let position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(&ecs));
+    for origin in position.all_positions() {
+        for d in vec![Direction::North, Direction::East, Direction::South, Direction::East] {
+            if origin.get_cone(d, size).iter().any(|p| player_position.contains_point(p)) {
+                return Some(d.point_in_direction(&origin).unwrap());
+            }
+        }
+    }
+    None
+}
+
+pub fn any_ally_without_buff_in_range(ecs: &World, enemy: &Entity, buff: StatusKind, range: u32) -> Option<Entity> {
+    let position = ecs.get_position(enemy);
+    let player = find_player(ecs);
+    find_all_characters(ecs)
+        .iter()
+        .filter(|&&c| c != player)
+        .filter(|&c| !ecs.has_status(c, buff))
+        .find(|&c| position.distance_to_multi(ecs.get_position(c)).unwrap_or(std::u32::MAX) <= range)
+        .copied()
 }
 
 #[cfg(test)]

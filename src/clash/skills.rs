@@ -19,6 +19,7 @@ pub enum TargetType {
     Player,
     Enemy,
     Any,
+    AnyoneButSelf,
 }
 
 #[allow(dead_code)]
@@ -250,7 +251,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
+        TargetType::AnyoneButSelf | TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -267,13 +268,14 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         TargetType::Tile => is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
-        TargetType::Any => {
+        TargetType::AnyoneButSelf => {
             if let Some(initial) = ecs.read_storage::<PositionComponent>().get(*invoker) {
                 !initial.position.contains_point(&target)
             } else {
                 true
             }
         }
+        TargetType::Any => true,
         TargetType::None => false,
     } {
         return false;
@@ -553,6 +555,17 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+    }
+
+    #[test]
+    fn skill_info_any_but_self_target() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+
+        let info = SkillInfo::init_with_distance(None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));

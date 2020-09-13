@@ -29,6 +29,7 @@ pub enum SpriteKinds {
     EarthElemental,
 
     FireBolt,
+    WaterBolt,
     Bullet,
     FireBullet,
     AirBullet,
