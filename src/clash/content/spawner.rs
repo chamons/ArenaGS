@@ -61,11 +61,11 @@ pub fn bird_monster(ecs: &mut World, position: Point) {
 }
 
 pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 20), position, 0);
+    create_monster(ecs, "Egg", SpawnKind::Egg, BehaviorKind::Egg, Defenses::init(0, 2, 0, 10), position, 0);
 }
 
 pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
-    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(40), position, 0);
+    create_monster(ecs, "Bird", SpawnKind::BirdSpawn, BehaviorKind::BirdAdd, Defenses::just_health(20), position, 0);
 }
 
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {
