@@ -132,8 +132,10 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
 pub fn melee_cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     if matches!(kind, EventKind::Melee(state) if state.is_begin_animation()) {
         begin_weapon_animation(ecs, target.unwrap(), EventKind::Melee(MeleeState::CompleteAnimation));
-    } else if matches!(kind, EventKind::Cone(state) if state.is_begin_animation()) {
-        begin_weapon_animation(ecs, target.unwrap(), EventKind::Cone(ConeState::CompleteAnimation));
+    } else if matches!(kind, EventKind::Cone(state) if state.is_begin_swing_animation()) {
+        begin_weapon_animation(ecs, target.unwrap(), EventKind::Cone(ConeState::CompleteSwingAnimation));
+    } else if matches!(kind, EventKind::Cone(state) if state.is_begin_hit_animation()) {
+        begin_cone_hit_animation(ecs, target.unwrap());
     }
 }
 
@@ -144,6 +146,20 @@ fn begin_weapon_animation(ecs: &mut World, target: Entity, post_event: EventKind
     let attack_animation = Animation::sprite_state(CharacterAnimationState::AttackTwo, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH)
         .with_post_event(post_event, Some(target));
     add_animation(ecs, target, attack_animation);
+}
+
+fn begin_cone_hit_animation(ecs: &mut World, entity: Entity) {
+    let frame = ecs.get_current_frame();
+    let sprite = {
+        match ecs.read_storage::<AttackComponent>().grab(entity).attack.cone_kind() {
+            ConeKind::Fire => SpriteKinds::FireBolt,
+        }
+    };
+    let target = ecs.get_position(&entity).single_position();
+    ecs.shovel(entity, RenderComponent::init(RenderInfo::init(sprite)));
+
+    let animation = Animation::movement(target, target, frame, 18).with_post_event(EventKind::Cone(ConeState::CompleteHitAnimation), Some(entity));
+    add_animation(ecs, entity, animation);
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {

@@ -68,6 +68,13 @@ impl AttackInfo {
         }
     }
 
+    pub fn cone_kind(&self) -> ConeKind {
+        match self.kind {
+            AttackKind::Cone(kind, _) => kind,
+            _ => panic!("Wrong type in cone_kind"),
+        }
+    }
+
     pub fn orb_kind(&self) -> OrbKind {
         match self.kind {
             AttackKind::Orb(kind) => kind,
@@ -381,12 +388,14 @@ pub fn tick_damage(ecs: &mut World, entity: &Entity) {
 pub fn begin_cone(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: ConeKind, size: u32) {
     let source_position = Some(ecs.get_position(source).origin);
     ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Cone(kind, size), source_position));
-    ecs.raise_event(EventKind::Cone(ConeState::BeginAnimation), Some(*source));
+    ecs.raise_event(EventKind::Cone(ConeState::BeginSwingAnimation), Some(*source));
 }
 
 pub fn cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Cone(state) if state.is_complete_animation()) {
+    if matches!(kind, EventKind::Cone(state) if state.is_complete_swing_animation()) {
         apply_cone(ecs, target.unwrap());
+    } else if matches!(kind, EventKind::Cone(state) if state.is_complete_hit_animation()) {
+        cone_hits(ecs, target.unwrap());
     }
 }
 
@@ -395,16 +404,32 @@ pub fn apply_cone(ecs: &mut World, character: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(character).attack
     };
-    let (kind, size) = match attack.kind {
-        AttackKind::Cone(kind, size) => (kind, size),
+    let size = match attack.kind {
+        AttackKind::Cone(_, size) => size,
         _ => panic!("Unexpected kind in apply_cone"),
     };
     let cone_direction = Direction::from_two_points(&attack.source.unwrap(), &attack.target);
     for p in attack.source.unwrap().get_cone(cone_direction, size) {
-        apply_damage_to_location(ecs, p, attack.source, attack.damage);
+        // NotConvertSaveload - Hits only last during an animation
+        let hit = ecs
+            .create_entity()
+            .with(PositionComponent::init(SizedPoint::from(p)))
+            .with(AttackComponent { attack })
+            .build();
+        ecs.raise_event(EventKind::Cone(ConeState::BeginHitAnimation), Some(hit));
     }
 
     ecs.write_storage::<AttackComponent>().remove(character);
+}
+
+pub fn cone_hits(ecs: &mut World, entity: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(entity).attack
+    };
+    let position = ecs.get_position(&entity);
+    apply_damage_to_location(ecs, position.single_position(), attack.source, attack.damage);
+    ecs.delete_entity(entity).unwrap();
 }
 
 #[cfg(test)]

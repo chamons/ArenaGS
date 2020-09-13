@@ -39,8 +39,10 @@ pub enum MeleeState {
 
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum ConeState {
-    BeginAnimation,
-    CompleteAnimation,
+    BeginSwingAnimation,
+    CompleteSwingAnimation,
+    BeginHitAnimation,
+    CompleteHitAnimation,
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
