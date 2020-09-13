@@ -16,5 +16,5 @@ pub use icon_cache::IconCache;
 pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
-pub use sprites::{Background, Bolt, CharacterAnimationState, DetailedCharacter, LargeEnemy, Sprite, SpriteFolderDescription, StandardCharacter};
+pub use sprites::*;
 pub use text_renderer::{FontColor, FontSize, TextRenderer};

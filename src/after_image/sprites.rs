@@ -29,4 +29,4 @@ pub use large_enemy::LargeEnemy;
 // Image Size (42x36)
 // Blit Size (105x90) [2.5 zoom]
 mod standard_character;
-pub use standard_character::StandardCharacter;
+pub use standard_character::{StandardCharacter, StandardCharacterSize};
