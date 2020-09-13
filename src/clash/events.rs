@@ -72,6 +72,7 @@ pub enum EventKind {
     MoveComplete(u32),
     Tick(i32),
     Damage(RolledDamage),
+    Healing(u32),
     StatusAdded(StatusKind),
     StatusRemoved(StatusKind),
     StatusExpired(StatusKind),

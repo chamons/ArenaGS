@@ -22,6 +22,8 @@ pub enum StatusKind {
     Aimed,
     Armored,
     Flying,
+    Regen,
+    RegenTick,
 
     #[cfg(test)]
     TestStatus,

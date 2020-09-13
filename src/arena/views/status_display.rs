@@ -32,9 +32,14 @@ impl View for StatusBarView {
         let statuses = ecs.read_storage::<StatusComponent>();
         let status = &statuses.grab(player).status;
         let status_names = status.get_all();
+
+        let mut draw_count = 0;
         for i in 0..10 {
             if let Some(kind) = status_names.get(i) {
-                self.views[i].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
+                if show_status(*kind) {
+                    self.views[draw_count].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
+                    draw_count += 1;
+                }
             }
         }
 
@@ -78,6 +83,13 @@ impl View for StatusBarItemView {
     }
 }
 
+pub fn show_status(kind: StatusKind) -> bool {
+    match kind {
+        StatusKind::RegenTick | StatusKind::Flying => false,
+        _ => true,
+    }
+}
+
 pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
     match kind {
         StatusKind::Burning => "SpellBook08_130.png",
@@ -88,7 +100,8 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
         StatusKind::StaticCharge => "SpellBook06_89.png",
         StatusKind::Aimed => "SpellBook08_83.png",
         StatusKind::Armored => "SpellBook08_122.png",
-        StatusKind::Flying => "SpellBook08_68.png",
+        StatusKind::Regen => "SpellBook08_73.png",
+        StatusKind::Flying | StatusKind::RegenTick => "",
         #[cfg(test)]
         _ => "",
     }
@@ -104,5 +117,6 @@ pub fn all_icon_filenames() -> &'static [&'static str] {
         "SpellBook06_89.png",
         "SpellBook08_83.png",
         "SpellBook08_122.png",
+        "SpellBook08_73.png",
     ]
 }
