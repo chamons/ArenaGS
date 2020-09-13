@@ -1,18 +1,11 @@
 use std::cmp;
-use std::fs::{read_to_string, File};
-#[cfg(test)]
-use std::io::Read;
-use std::io::Write;
 use std::path::Path;
 
 use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 use rand::Rng;
-use serde::{Deserialize, Serialize};
-use specs::error::NoError;
 use specs::prelude::*;
-use specs::saveload::{DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator};
-use specs_derive::Component;
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::components::*;
 use crate::atlas::{get_exe_folder, BoxResult, Direction, EasyPath, Point, SizedPoint, ToSerialize};
@@ -66,8 +59,6 @@ pub fn random_new_world(difficulty: u32) -> BoxResult<World> {
     // Since we are creating an entire new world, it is acceptable to use thread RNG
     let mut random = rand::thread_rng();
     let kind: BattleKind = random.gen();
-    // Temp Hack
-    let kind = BattleKind::Elementalist;
     new_world(kind, difficulty)
 }
 

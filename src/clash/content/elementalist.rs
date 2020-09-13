@@ -6,9 +6,8 @@ use std::collections::HashMap;
 use specs::prelude::*;
 
 use super::super::*;
-use crate::{do_behavior, try_behavior, try_behavior_and_if};
 
-pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {}
+pub fn elementalist_skills(_m: &mut HashMap<&'static str, SkillInfo>) {}
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
     wait(ecs, *enemy);
 }

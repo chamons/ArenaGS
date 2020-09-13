@@ -2,9 +2,7 @@ use std::fs::{read_to_string, File};
 #[cfg(test)]
 use std::io::Read;
 use std::io::Write;
-use std::path::Path;
 
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use specs::error::NoError;
 use specs::prelude::*;
@@ -12,7 +10,7 @@ use specs::saveload::{DeserializeComponents, MarkedBuilder, SerializeComponents,
 use specs_derive::Component;
 
 use super::components::*;
-use crate::atlas::{get_exe_folder, BoxResult, Direction, EasyPath, Point, SizedPoint, ToSerialize};
+use crate::atlas::{BoxResult, ToSerialize};
 use crate::clash::*;
 
 // Lovingly borrowed from https://bfnightly.bracketproductions.com/rustbook/chapter_11.html
