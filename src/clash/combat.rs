@@ -889,4 +889,25 @@ mod tests {
         assert!(ecs.get_defenses(&target_two).health < target_two_health);
         assert_eq!(ecs.get_defenses(&bystander).health, bystander_health);
     }
+
+    fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
+        match kind {
+            EventKind::Damage(_) => ecs.increment_test_data("Damage".to_string()),
+            _ => {}
+        };
+    }
+
+    #[test]
+    fn cone_hits_wide_multiple_time() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_sized_character(SizedPoint::init_multi(2, 3, 2, 2), 0)
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        ecs.subscribe(test_event);
+
+        begin_cone(&mut ecs, &player, Point::init(2, 3), Damage::init(1), ConeKind::Fire, 2);
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, ecs.get_test_data("Damage"));
+    }
 }
