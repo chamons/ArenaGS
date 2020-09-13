@@ -1,3 +1,4 @@
+use std::cmp;
 use std::fs::{read_to_string, File};
 #[cfg(test)]
 use std::io::Read;
@@ -16,6 +17,8 @@ use specs_derive::Component;
 use super::components::*;
 use crate::atlas::{get_exe_folder, BoxResult, Direction, EasyPath, Point, SizedPoint, ToSerialize};
 use crate::clash::*;
+
+use crate::clash::content::spawner;
 
 fn find_placement(ecs: &World, width: u32, height: u32) -> Point {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
@@ -86,20 +89,28 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
             crate::clash::content::spawner::bird_monster(&mut ecs, enemy_position, difficulty);
         }
         BattleKind::Elementalist => {
+            enum ElementalKind {
+                Water,
+                Fire,
+                Wind,
+                Earth,
+            }
+            // Since we are creating an entire new world, it is acceptable to use thread RNG
+            let mut random = rand::thread_rng();
+            let mut elements = vec![ElementalKind::Water, ElementalKind::Fire, ElementalKind::Wind, ElementalKind::Earth];
+            for _ in 0..cmp::min(difficulty + 1, 4) {
+                elements.shuffle(&mut random);
+
+                let enemy_position = find_placement(&ecs, 1, 1);
+                match elements.pop().unwrap() {
+                    ElementalKind::Water => spawner::water_elemental(&mut ecs, enemy_position, difficulty),
+                    ElementalKind::Fire => spawner::fire_elemental(&mut ecs, enemy_position, difficulty),
+                    ElementalKind::Wind => spawner::wind_elemental(&mut ecs, enemy_position, difficulty),
+                    ElementalKind::Earth => spawner::earth_elemental(&mut ecs, enemy_position, difficulty),
+                }
+            }
             // let enemy_position = find_placement(&ecs, 1, 1);
             // crate::clash::content::spawner::elementalist(&mut ecs, enemy_position, difficulty);
-
-            let enemy_position = find_placement(&ecs, 1, 1);
-            crate::clash::content::spawner::water_elemental(&mut ecs, enemy_position, difficulty);
-
-            // let enemy_position = find_placement(&ecs, 1, 1);
-            // crate::clash::content::spawner::fire_elemental(&mut ecs, enemy_position, difficulty);
-
-            // let enemy_position = find_placement(&ecs, 1, 1);
-            // crate::clash::content::spawner::wind_elemental(&mut ecs, enemy_position, difficulty);
-
-            // let enemy_position = find_placement(&ecs, 1, 1);
-            // crate::clash::content::spawner::earth_elemental(&mut ecs, enemy_position, difficulty);
         }
     }
 
