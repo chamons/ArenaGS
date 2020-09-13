@@ -2,6 +2,9 @@ use std::time::Duration;
 use std::time::Instant;
 
 use sdl2::event::Event;
+use sdl2::pixels::PixelFormatEnum;
+use sdl2::rect::Rect as SDLRect;
+use sdl2::render::Texture;
 
 use super::{Scene, Storyteller};
 
@@ -53,7 +56,9 @@ impl<'a> Director<'a> {
 
             self.scene.tick(frame);
 
-            match self.storyteller.check_place(self.scene.get_state()) {
+            let direction = self.scene.ask_stage_direction();
+
+            match self.storyteller.follow_stage_direction(direction, &render_context) {
                 EventStatus::NewScene(scene) => self.change_scene(scene),
                 EventStatus::Quit => return Ok(()),
                 EventStatus::Continue => {}
@@ -71,5 +76,19 @@ impl<'a> Director<'a> {
 
             frame += 1;
         }
+    }
+
+    pub fn screen_shot(render_context: &RenderContextHolder) -> BoxResult<Texture> {
+        let render = render_context.borrow_mut();
+        let output_size = render.canvas.output_size()?;
+        let mut pixels = render
+            .canvas
+            .read_pixels(SDLRect::new(0, 0, output_size.0, output_size.1), PixelFormatEnum::ARGB8888)?;
+        let pitch = output_size.0 * 4;
+        let screen = sdl2::surface::Surface::from_data(&mut pixels, output_size.0, output_size.1, pitch, PixelFormatEnum::ARGB8888)?;
+        let texture_creator = render.canvas.texture_creator();
+        let texture = texture_creator.create_texture_from_surface(&screen).map_err(|e| e.to_string())?;
+
+        Ok(texture)
     }
 }

@@ -8,4 +8,4 @@ mod scene;
 pub use scene::Scene;
 
 mod storyteller;
-pub use storyteller::Storyteller;
+pub use storyteller::{StageDirection, Storyteller};

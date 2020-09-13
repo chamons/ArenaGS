@@ -2,11 +2,12 @@ use std::rc::Rc;
 
 use specs::prelude::*;
 
+use super::death_scene::DeathScene;
 use crate::after_image::{RenderContextHolder, TextRenderer};
 use crate::clash::{CharacterInfoComponent, PlayerComponent, PlayerDeadComponent};
-use crate::conductor::{EventStatus, Scene, Storyteller};
+use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
-use super::BattleScene;
+use super::battle_scene::BattleScene;
 
 pub struct ArenaStoryteller {
     render_context: RenderContextHolder,
@@ -20,22 +21,21 @@ impl ArenaStoryteller {
             text_renderer: Rc::clone(&text_renderer),
         }
     }
+
+    fn prepare_battle_end_scene(&self, render_context: &RenderContextHolder, message: String) -> Box<dyn Scene> {
+        let snapshot = Director::screen_shot(render_context).unwrap();
+        Box::from(DeathScene::init(snapshot, message))
+    }
 }
 
 impl Storyteller for ArenaStoryteller {
-    fn check_place(&self, ecs: &World) -> EventStatus {
-        if ecs.try_fetch::<PlayerDeadComponent>().is_some() {
-            return EventStatus::NewScene(self.initial_scene());
+    fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
+        match direction {
+            StageDirection::Continue => EventStatus::Continue,
+            StageDirection::NewGame => EventStatus::NewScene(self.initial_scene()),
+            StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),
+            StageDirection::BattleEnemyDefeated => EventStatus::NewScene(self.initial_scene()),
         }
-        let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-        let character_infos = ecs.read_storage::<CharacterInfoComponent>();
-        let player = ecs.read_storage::<PlayerComponent>();
-
-        let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
-        if non_player_character_count == 0 {
-            return EventStatus::NewScene(self.initial_scene());
-        }
-        EventStatus::Continue
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
