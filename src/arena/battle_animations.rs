@@ -124,7 +124,7 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
         let field_casts = ecs.read_storage::<FieldCastComponent>();
         let cast = field_casts.grab(bolt);
         let sprite = match cast.kind {
-            FieldKind::Fire => SpriteKinds::Bomb,
+            FieldKind::Fire => SpriteKinds::FireBolt,
         };
         (cast.target.origin, sprite)
     };

@@ -10,6 +10,7 @@ use crate::try_behavior;
 
 const TIDAL_SURGE_SIZE: u32 = 2;
 const HEALING_MIST_RANGE: u32 = 5;
+const MAGMA_ERUPTION_RANGE: u32 = 7;
 
 pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.insert(
@@ -44,6 +45,31 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             false,
         ),
     );
+
+    m.insert(
+        "Magma Eruption",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Any,
+            SkillEffect::Field(
+                FieldEffect::SustainedDamage(Damage::init(1).with_option(DamageOptions::PIERCE_DEFENSES), 6),
+                FieldKind::Fire,
+            ),
+            Some(MAGMA_ERUPTION_RANGE),
+            false,
+        ),
+    );
+
+    m.insert(
+        "Lava Bolt",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
+            Some(4),
+            false,
+        ),
+    );
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
@@ -60,6 +86,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
         }
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ice Shard"));
     }
+
     if let Some(target) = any_ally_without_buff_in_range(ecs, enemy, StatusKind::Regen, HEALING_MIST_RANGE) {
         try_behavior!(use_skill_at_position(
             ecs,
@@ -73,7 +100,19 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
+
 pub fn fire_elemental_action(ecs: &mut World, enemy: &Entity) {
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lava Bolt"));
+
+    let player_position = ecs.get_position(&find_player(ecs));
+    if find_field_at_location(ecs, &player_position).is_none() {
+        if check_behavior_cooldown(ecs, enemy, "Magma Eruption", 2) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Magma Eruption"));
+        }
+    }
+
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
 
