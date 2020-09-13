@@ -371,7 +371,7 @@ pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
 }
 
 pub fn tick_damage(ecs: &mut World, entity: &Entity) {
-    let attack = ecs.read_storage::<AttackComponent>().grab(*entity).attack.clone();
+    let attack = ecs.read_storage::<AttackComponent>().grab(*entity).attack;
     for p in ecs.get_position(entity).all_positions() {
         if let Some(target) = find_character_at_location(ecs, p) {
             apply_damage_to_character(ecs, attack.damage, &target, Some(p));

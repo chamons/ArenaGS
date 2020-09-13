@@ -70,11 +70,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
             let should_die = {
                 if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(*enemy) {
                     d.duration -= 1;
-                    if d.duration == 0 {
-                        true
-                    } else {
-                        false
-                    }
+                    d.duration == 0
                 } else {
                     false
                 }
