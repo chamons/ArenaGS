@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
+use super::content::spawner;
 use super::*;
 use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::EventCoordinator;
@@ -9,6 +10,7 @@ use crate::clash::EventCoordinator;
 pub enum FieldEffect {
     Damage(Damage, u32),
     Spawn(SpawnKind),
+    SustainedDamage(Damage, u32),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -40,6 +42,7 @@ pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
     Explode(u32),
+    DamageTick,
     Orb(OrbKind),
 }
 
@@ -231,9 +234,19 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 .iter()
                 .map(|p| (Some(*p), (r, g, b, 140)))
                 .collect();
-            super::content::spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
+            spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
+        FieldEffect::SustainedDamage(damage, duration) => {
+            let (r, g, b) = match cast.kind {
+                FieldKind::Fire => (255, 140, 0),
+            };
+
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));
+            let fields = FieldComponent::init_single(r, g, b);
+            let field = spawner::create_sustained_damage_field(ecs, cast.target, attack, fields, duration);
+            tick_damage(ecs, &field);
+        }
     }
 }
 
@@ -342,6 +355,18 @@ pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
 pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
     if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(&entity)) {
         apply_orb(ecs, orb, ecs.get_position(&orb).single_position());
+    }
+    if let Some(field) = find_field_at_location(ecs, &ecs.get_position(&entity)) {
+        let should_tick = {
+            if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(field) {
+                b.behavior.is_tick_damage()
+            } else {
+                false
+            }
+        };
+        if should_tick {
+            tick_damage(ecs, &field);
+        }
     }
 }
 
@@ -747,5 +772,64 @@ mod tests {
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 3));
+    }
+
+    #[test]
+    fn sustained_damage_field_damages_over_time() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 6, 100).with_map().build();
+
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        ecs.shovel(player, BehaviorComponent::init(BehaviorKind::None));
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_field(
+            &mut ecs,
+            &player,
+            Point::init(2, 6),
+            FieldEffect::SustainedDamage(Damage::init(1), 3),
+            FieldKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        // Triggering does a tick of damage
+        let first_tick_health = ecs.get_defenses(&target).health;
+        assert_ne!(first_tick_health, target_starting_health);
+
+        new_turn_wait_characters(&mut ecs);
+        // Second tick as well
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn knockback_into_sustained_damage_does_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 100).with_map().build();
+
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 4);
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_field(
+            &mut ecs,
+            &player,
+            Point::init(2, 5),
+            FieldEffect::SustainedDamage(Damage::init(1), 3),
+            FieldKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 4),
+            Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_character_at(&ecs, 2, 5);
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
     }
 }

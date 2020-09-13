@@ -34,7 +34,7 @@ macro_rules! do_behavior {
     };
 }
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize, is_enum_variant)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
     None,
@@ -65,7 +65,8 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::Explode => begin_explode(ecs, &enemy),
         BehaviorKind::TickDamage => {
-            tick_damage(ecs, &enemy);
+            wait(ecs, *enemy);
+            tick_damage(ecs, enemy);
             let should_die = {
                 if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(*enemy) {
                     d.duration -= 1;

@@ -113,6 +113,18 @@ pub fn find_orb_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> 
     None
 }
 
+pub fn find_field_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let fields = ecs.read_storage::<FieldComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    for (entity, _, position) in (&entities, &fields, &positions).join() {
+        if target.contains_point(&position.position.single_position()) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
 pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let char_infos = ecs.read_storage::<CharacterInfoComponent>();
