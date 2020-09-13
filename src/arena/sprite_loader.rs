@@ -89,6 +89,12 @@ impl SpriteLoader {
                     9,
                     StandardCharacterSize::Micro,
                 )?),
+                SpriteKinds::Elementalist => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "npc6"),
+                    9,
+                    StandardCharacterSize::Normal,
+                )?),
             };
             sprites.insert(s.into(), sprite);
         }

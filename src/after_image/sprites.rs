@@ -26,7 +26,11 @@ mod large_enemy;
 pub use large_enemy::LargeEnemy;
 
 // Spritesheet (12 by 8) (8 characters, 4 directions)
-// Image Size (42x36)
-// Blit Size (105x90) [2.5 zoom]
+// Micro Size:
+//    Image Size (42x36)
+//    Blit Size (105x90) [2.5 zoom]
+// Standard Size:
+//    Image Size (52x72)
+//    Blit Size (52x72)
 mod standard_character;
 pub use standard_character::{StandardCharacter, StandardCharacterSize};

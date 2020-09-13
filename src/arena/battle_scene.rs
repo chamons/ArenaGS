@@ -276,6 +276,7 @@ pub fn create_view_event(ecs: &mut World, kind: EventKind, target: Option<Entity
             SpawnKind::Bird => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown))),
             SpawnKind::Egg => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Egg))),
             SpawnKind::BirdSpawn => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::SmallMonsterBirdBrown))),
+            SpawnKind::Elementalist => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Elementalist))),
             SpawnKind::Player => ecs.shovel(
                 target.unwrap(),
                 RenderComponent::init(RenderInfo::init_with_char_state(
