@@ -11,7 +11,7 @@ use super::views::*;
 use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
 
-use super::saveload;
+use super::{new_game, saveload};
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, Direction, EasyMutECS, EasyMutWorld, Point};
 use crate::conductor::{Scene, StageDirection};
@@ -23,7 +23,7 @@ pub struct BattleScene {
 
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let ecs = saveload::new_world(difficulty).unwrap();
+        let ecs = new_game::random_new_world(difficulty).unwrap();
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -77,7 +77,7 @@ impl BattleScene {
                 }
             }
             Keycode::N => {
-                self.ecs = saveload::new_world(0).unwrap();
+                self.ecs = new_game::random_new_world(0).unwrap();
             }
             Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {

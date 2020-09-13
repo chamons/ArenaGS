@@ -48,6 +48,18 @@ fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: B
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
+pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Elementalist",
+        SpawnKind::Elementalist,
+        BehaviorKind::Elementalist,
+        Defenses::init(0, 0, 20, 80 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
 pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,

@@ -11,6 +11,7 @@ pub enum SpawnKind {
     Bird,
     BirdSpawn,
     Egg,
+    Elementalist,
 }
 
 pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
