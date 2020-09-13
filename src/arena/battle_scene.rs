@@ -11,7 +11,7 @@ use super::views::*;
 use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
 
-use super::saveload;
+use super::{new_game, saveload};
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, Direction, EasyMutECS, EasyMutWorld, Point};
 use crate::conductor::{Scene, StageDirection};
@@ -23,7 +23,7 @@ pub struct BattleScene {
 
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let ecs = saveload::new_world(difficulty).unwrap();
+        let ecs = new_game::random_new_world(difficulty).unwrap();
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -77,7 +77,7 @@ impl BattleScene {
                 }
             }
             Keycode::N => {
-                self.ecs = saveload::new_world(0).unwrap();
+                self.ecs = new_game::random_new_world(0).unwrap();
             }
             Keycode::S => saveload::save_to_disk(&mut self.ecs),
             Keycode::L => {
@@ -276,6 +276,11 @@ pub fn create_view_event(ecs: &mut World, kind: EventKind, target: Option<Entity
             SpawnKind::Bird => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::MonsterBirdBrown))),
             SpawnKind::Egg => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Egg))),
             SpawnKind::BirdSpawn => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::SmallMonsterBirdBrown))),
+            SpawnKind::Elementalist => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::Elementalist))),
+            SpawnKind::WaterElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::WaterElemental))),
+            SpawnKind::FireElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::FireElemental))),
+            SpawnKind::WindElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::WindElemental))),
+            SpawnKind::EarthElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::EarthElemental))),
             SpawnKind::Player => ecs.shovel(
                 target.unwrap(),
                 RenderComponent::init(RenderInfo::init_with_char_state(

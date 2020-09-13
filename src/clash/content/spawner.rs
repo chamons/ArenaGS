@@ -48,6 +48,67 @@ fn create_monster(ecs: &mut World, name: &str, kind: SpawnKind, behavior_kind: B
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
+#[allow(dead_code)]
+pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Elementalist",
+        SpawnKind::Elementalist,
+        BehaviorKind::Elementalist,
+        Defenses::init(0, 0, 40 + 10 * difficulty, 40),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Water Elemental",
+        SpawnKind::WaterElemental,
+        BehaviorKind::WaterElemental,
+        Defenses::just_health(60 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Fire Elemental",
+        SpawnKind::FireElemental,
+        BehaviorKind::FireElemental,
+        Defenses::init(0, 0, 50 + 10 * difficulty, 5),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Wind Elemental",
+        SpawnKind::WindElemental,
+        BehaviorKind::WindElemental,
+        Defenses::init(1, 0, 0, 40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
+pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+    create_monster(
+        ecs,
+        "Earth Elemental",
+        SpawnKind::EarthElemental,
+        BehaviorKind::EarthElemental,
+        Defenses::init(0, 1, 0, 40 + 10 * difficulty),
+        SizedPoint::init(position.x, position.y),
+        difficulty,
+    );
+}
+
 pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,

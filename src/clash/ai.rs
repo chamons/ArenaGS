@@ -41,6 +41,11 @@ pub enum BehaviorKind {
     Bird,
     Egg,
     BirdAdd,
+    Elementalist,
+    WaterElemental,
+    FireElemental,
+    WindElemental,
+    EarthElemental,
     Explode,
     Orb,
 }
@@ -52,6 +57,11 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::Bird => super::content::bird::bird_action(ecs, enemy),
         BehaviorKind::BirdAdd => super::content::bird::bird_add_action(ecs, enemy),
         BehaviorKind::Egg => super::content::bird::egg_action(ecs, enemy),
+        BehaviorKind::Elementalist => super::content::elementalist::elementalist_action(ecs, enemy),
+        BehaviorKind::WaterElemental => super::content::elementalist::water_elemental_action(ecs, enemy),
+        BehaviorKind::FireElemental => super::content::elementalist::fire_elemental_action(ecs, enemy),
+        BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
+        BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::Explode => {
             begin_explode(ecs, &enemy);
         }
