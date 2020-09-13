@@ -93,6 +93,7 @@ impl Scene for DeathScene {
 
         let mut offset = 10;
         self.small_text(canvas, "You Died!", &mut offset)?;
+        offset += 30;
         self.small_text(canvas, &self.message, &mut offset)?;
 
         canvas.present();
