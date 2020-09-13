@@ -16,8 +16,13 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 complete_move(ecs, target.unwrap());
                 match action {
                     PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, &target.unwrap(), range, damage, kind),
-                    PostMoveAction::None => {}
                     PostMoveAction::CheckNewLocationDamage => check_new_location_for_damage(ecs, target.unwrap()),
+                    PostMoveAction::Attack => {
+                        let a = ecs.read_storage::<AttackComponent>().grab(target.unwrap()).clone();
+                        ecs.write_storage::<AttackComponent>().remove(target.unwrap());
+                        begin_melee(ecs, &target.unwrap(), a.attack.target, a.attack.damage, a.attack.melee_kind());
+                    }
+                    PostMoveAction::None => {}
                 }
             }
         }

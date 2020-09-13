@@ -128,4 +128,14 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             false,
         ),
     );
+    m.insert(
+        "TestCharge",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Any,
+            SkillEffect::ChargeAttack(Damage::init(1), WeaponKind::Sword),
+            Some(3),
+            false,
+        ),
+    );
 }

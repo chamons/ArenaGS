@@ -12,7 +12,8 @@ pub enum MoveState {
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum PostMoveAction {
     None,
-    Shoot(Damage, Option<u32>, BoltKind),
+    Shoot(Damage, Option<u32>, BoltKind), // Shoot nearest target (if any)
+    Attack,                               // Attack the exact target in the embedded AttackComponent
     CheckNewLocationDamage,
 }
 

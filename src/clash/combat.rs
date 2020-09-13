@@ -61,6 +61,13 @@ pub struct AttackInfo {
 }
 
 impl AttackInfo {
+    pub fn melee_kind(&self) -> WeaponKind {
+        match self.kind {
+            AttackKind::Melee(kind) => kind,
+            _ => panic!("Wrong type in melee_kind"),
+        }
+    }
+
     pub fn ranged_kind(&self) -> BoltKind {
         match self.kind {
             AttackKind::Ranged(kind) => kind,
@@ -430,6 +437,26 @@ pub fn cone_hits(ecs: &mut World, entity: Entity) {
     let position = ecs.get_position(&entity);
     apply_damage_to_location(ecs, position.single_position(), attack.source, attack.damage);
     ecs.delete_entity(entity).unwrap();
+}
+
+pub fn begin_charge(ecs: &mut World, entity: &Entity, target: Point, damage: Damage, kind: WeaponKind) {
+    let initial_position = ecs.get_position(entity);
+    // This code does not correctly handle wide charges, that will take some thinking
+    assert!(initial_position.width == 1 && initial_position.height == 1);
+
+    if let Some(path) = initial_position.line_to(target) {
+        // First element on path is entity's position
+        if let Some((index, _)) = path.iter().skip(1).enumerate().find(|(_, &p)| find_character_at_location(ecs, p).is_some()) {
+            // Index is target's position -1 (from the skip), but this matches the last free square
+            ecs.shovel(
+                *entity,
+                AttackComponent::init(path[index + 1], damage, AttackKind::Melee(kind), Some(path[index])),
+            );
+            begin_move(ecs, &entity, initial_position.move_to(path[index]), PostMoveAction::Attack);
+        } else {
+            begin_move(ecs, &entity, initial_position.move_to(*path.last().unwrap()), PostMoveAction::None);
+        }
+    }
 }
 
 #[cfg(test)]
