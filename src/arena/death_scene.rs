@@ -9,7 +9,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::BoxResult;
 use crate::conductor::{Scene, StageDirection};
 
 pub struct DeathScene {

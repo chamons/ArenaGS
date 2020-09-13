@@ -352,7 +352,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
     let skill_power = ecs
         .read_storage::<CharacterInfoComponent>()
         .get(*invoker)
-        .and_then(|c| Some(c.character.skill_power))
+        .map(|c| c.character.skill_power)
         .unwrap_or(0);
 
     match effect {
