@@ -3,6 +3,8 @@ use std::fmt;
 use line_drawing::WalkGrid;
 use serde::{Deserialize, Serialize};
 
+use super::Direction;
+
 // Points are always in the context of a map, which is a fixed sized
 // Negative points and points > 12 are invalid in most contexts
 // See ExtendedPoint for an example otherwise
@@ -29,6 +31,45 @@ impl Point {
                     let y = j + self.y as i32;
                     if x >= 0 && y >= 0 {
                         points.push(Point::init(x as u32, y as u32));
+                    }
+                }
+            }
+        }
+
+        points
+    }
+
+    fn get_cone_spread_point(mut p: Point, distance: u32, direction: Direction) -> Option<Point> {
+        for _ in 0..distance {
+            if let Some(new_point) = direction.point_in_direction(&p) {
+                p = new_point;
+            } else {
+                return None;
+            }
+        }
+        Some(p)
+    }
+
+    pub fn get_cone(&self, direction: Direction, distance: u32) -> Vec<Point> {
+        let mut points = vec![];
+        let mut center = *self;
+        let (dir_one, dir_two) = match direction {
+            Direction::North | Direction::South => (Direction::West, Direction::East),
+            Direction::West | Direction::East => (Direction::North, Direction::South),
+            _ => panic!("gen_cone with {:?} direction", direction),
+        };
+
+        for i in 0..distance {
+            if let Some(next_center) = direction.point_in_direction(&center) {
+                center = next_center;
+                points.push(center);
+
+                for l in 1..i + 2 {
+                    if let Some(first) = Point::get_cone_spread_point(center, l, dir_one) {
+                        points.push(first);
+                    }
+                    if let Some(first) = Point::get_cone_spread_point(center, l, dir_two) {
+                        points.push(first);
                     }
                 }
             }
@@ -433,5 +474,30 @@ mod tests {
         assert_points_equal(path[0], Point::init(5, 4));
         assert_points_equal(path[4], Point::init(3, 2));
         assert_points_equal(path[9], Point::init(0, 0));
+    }
+
+    #[test]
+    fn cone() {
+        let point = Point::init(3, 3);
+        let points = point.get_cone(Direction::North, 2);
+        assert_eq!(8, points.len());
+        assert!(points.contains(&Point::init(3, 2)));
+        assert!(points.contains(&Point::init(2, 2)));
+        assert!(points.contains(&Point::init(4, 2)));
+        assert!(points.contains(&Point::init(3, 1)));
+        assert!(points.contains(&Point::init(2, 1)));
+        assert!(points.contains(&Point::init(4, 1)));
+        assert!(points.contains(&Point::init(1, 1)));
+        assert!(points.contains(&Point::init(5, 1)));
+    }
+
+    #[test]
+    fn cone_corner() {
+        let point = Point::init(1, 4);
+        let points = point.get_cone(Direction::West, 3);
+        assert_eq!(3, points.len());
+        assert!(points.contains(&Point::init(0, 4)));
+        assert!(points.contains(&Point::init(0, 3)));
+        assert!(points.contains(&Point::init(0, 5)));
     }
 }

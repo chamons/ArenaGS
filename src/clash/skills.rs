@@ -27,8 +27,10 @@ pub enum SkillEffect {
     Move,
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
+    ConeAttack(Damage, ConeKind, u32),
+    ChargeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
-    Field(FieldEffect, FieldKind, u32),
+    Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
@@ -369,8 +371,10 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         }
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
+        SkillEffect::ConeAttack(damage, kind, size) => begin_cone(ecs, &invoker, target.unwrap(), *damage, *kind, *size),
+        SkillEffect::ChargeAttack(damage, kind) => begin_charge(ecs, &invoker, target.unwrap(), *damage, *kind),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
-        SkillEffect::Field(effect, kind, explosion_size) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind, *explosion_size),
+        SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(invoker, *buff, *duration);
@@ -398,8 +402,10 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::MoveAndShoot(_, _, _) => 3,
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
+        SkillEffect::ConeAttack(_, _, _) => 3,
+        SkillEffect::ChargeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
-        SkillEffect::Field(_, _, _) => 2,
+        SkillEffect::Field(_, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
@@ -1077,5 +1083,29 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn charge_moves_and_swings() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 5, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 5);
+        let starting_health = ecs.get_defenses(&target).health;
+
+        invoke_skill(&mut ecs, &player, "TestCharge", Some(Point::init(2, 5)));
+        wait_for_animations(&mut ecs);
+
+        assert_position(&ecs, &player, Point::init(2, 4));
+        assert!(ecs.get_defenses(&target).health < starting_health);
+    }
+
+    #[test]
+    fn charge_only_moves_no_target() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "TestCharge", Some(Point::init(2, 5)));
+        wait_for_animations(&mut ecs);
+        assert_position(&ecs, &player, Point::init(2, 5));
     }
 }

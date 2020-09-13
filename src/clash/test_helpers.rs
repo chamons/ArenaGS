@@ -86,7 +86,7 @@ pub fn find_all_entities(ecs: &World) -> Vec<Entity> {
     all
 }
 
-pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
+pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> Entity {
     ecs.create_entity()
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
@@ -100,7 +100,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) {
         .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
         .marked::<SimpleMarker<ToSerialize>>()
-        .build();
+        .build()
 }
 
 pub fn set_temperature(ecs: &mut World, player: Entity, temperature: i32) {

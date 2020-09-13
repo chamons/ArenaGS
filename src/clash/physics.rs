@@ -16,8 +16,13 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 complete_move(ecs, target.unwrap());
                 match action {
                     PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, &target.unwrap(), range, damage, kind),
-                    PostMoveAction::None => {}
                     PostMoveAction::CheckNewLocationDamage => check_new_location_for_damage(ecs, target.unwrap()),
+                    PostMoveAction::Attack => {
+                        let a = ecs.read_storage::<AttackComponent>().grab(target.unwrap()).clone();
+                        ecs.write_storage::<AttackComponent>().remove(target.unwrap());
+                        begin_melee(ecs, &target.unwrap(), a.attack.target, a.attack.damage, a.attack.melee_kind());
+                    }
+                    PostMoveAction::None => {}
                 }
             }
         }
@@ -106,6 +111,18 @@ pub fn find_orb_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> 
     let orbs = ecs.read_storage::<OrbComponent>();
     let positions = ecs.read_storage::<PositionComponent>();
     for (entity, _, position) in (&entities, &orbs, &positions).join() {
+        if target.contains_point(&position.position.single_position()) {
+            return Some(entity);
+        }
+    }
+    None
+}
+
+pub fn find_field_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity> {
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let fields = ecs.read_storage::<FieldComponent>();
+    let positions = ecs.read_storage::<PositionComponent>();
+    for (entity, _, position) in (&entities, &fields, &positions).join() {
         if target.contains_point(&position.position.single_position()) {
             return Some(entity);
         }

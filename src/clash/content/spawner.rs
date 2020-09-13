@@ -151,3 +151,15 @@ pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: Attack
         .marked::<SimpleMarker<ToSerialize>>()
         .build()
 }
+
+pub fn create_sustained_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, fields: FieldComponent, duration: u32) -> Entity {
+    ecs.create_entity()
+        .with(PositionComponent::init(position))
+        .with(attack)
+        .with(BehaviorComponent::init(BehaviorKind::TickDamage))
+        .with(fields)
+        .with(DurationComponent::init(duration))
+        .with(TimeComponent::init(-BASE_ACTION_COST))
+        .marked::<SimpleMarker<ToSerialize>>()
+        .build()
+}

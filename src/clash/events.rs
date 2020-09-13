@@ -12,7 +12,8 @@ pub enum MoveState {
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum PostMoveAction {
     None,
-    Shoot(Damage, Option<u32>, BoltKind),
+    Shoot(Damage, Option<u32>, BoltKind), // Shoot nearest target (if any)
+    Attack,                               // Attack the exact target in the embedded AttackComponent
     CheckNewLocationDamage,
 }
 
@@ -38,6 +39,14 @@ pub enum MeleeState {
 }
 
 #[derive(Copy, Clone, is_enum_variant)]
+pub enum ConeState {
+    BeginSwingAnimation,
+    CompleteSwingAnimation,
+    BeginHitAnimation,
+    CompleteHitAnimation,
+}
+
+#[derive(Copy, Clone, is_enum_variant)]
 pub enum FieldState {
     BeginCastAnimation,
     CompleteCastAnimation,
@@ -58,11 +67,13 @@ pub enum EventKind {
     Bolt(BoltState),
     Orb(OrbState),
     Melee(MeleeState),
+    Cone(ConeState),
     Field(FieldState),
     Explode(ExplodeState),
     MoveComplete(u32),
     Tick(i32),
     Damage(RolledDamage),
+    Healing(u32),
     StatusAdded(StatusKind),
     StatusRemoved(StatusKind),
     StatusExpired(StatusKind),

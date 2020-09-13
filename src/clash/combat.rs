@@ -1,18 +1,25 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
+use super::content::spawner;
 use super::*;
-use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{extend_line_along_path, Direction, EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::EventCoordinator;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldEffect {
-    Damage(Damage),
+    Damage(Damage, u32),
     Spawn(SpawnKind),
+    SustainedDamage(Damage, u32),
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
+    Fire,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum ConeKind {
     Fire,
 }
 
@@ -39,7 +46,9 @@ pub enum OrbKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
+    Cone(ConeKind, u32),
     Explode(u32),
+    DamageTick,
     Orb(OrbKind),
 }
 
@@ -52,6 +61,13 @@ pub struct AttackInfo {
 }
 
 impl AttackInfo {
+    pub fn melee_kind(&self) -> WeaponKind {
+        match self.kind {
+            AttackKind::Melee(kind) => kind,
+            _ => panic!("Wrong type in melee_kind"),
+        }
+    }
+
     pub fn ranged_kind(&self) -> BoltKind {
         match self.kind {
             AttackKind::Ranged(kind) => kind,
@@ -59,10 +75,10 @@ impl AttackInfo {
         }
     }
 
-    pub fn melee_kind(&self) -> WeaponKind {
+    pub fn cone_kind(&self) -> ConeKind {
         match self.kind {
-            AttackKind::Melee(kind) => kind,
-            _ => panic!("Wrong type in melee_kind"),
+            AttackKind::Cone(kind, _) => kind,
+            _ => panic!("Wrong type in cone_kind"),
         }
     }
 
@@ -181,8 +197,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind, explosion_size: u32) {
-    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target), explosion_size));
+pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
+    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
 }
 
@@ -218,22 +234,32 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
     ecs.delete_entity(projectile).unwrap();
 
     match cast.effect {
-        FieldEffect::Damage(damage) => {
+        FieldEffect::Damage(damage, explosion_size) => {
             let (r, g, b) = match cast.kind {
                 FieldKind::Fire => (255, 0, 0),
             };
 
-            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(cast.explosion_size), None);
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(explosion_size), None);
             let fields = cast
                 .target
                 .origin
-                .get_burst(cast.explosion_size)
+                .get_burst(explosion_size)
                 .iter()
                 .map(|p| (Some(*p), (r, g, b, 140)))
                 .collect();
-            super::content::spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
+            spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
+        FieldEffect::SustainedDamage(damage, duration) => {
+            let (r, g, b) = match cast.kind {
+                FieldKind::Fire => (255, 140, 0),
+            };
+
+            let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));
+            let fields = FieldComponent::init_single(r, g, b);
+            let field = spawner::create_sustained_damage_field(ecs, cast.target, attack, fields, duration);
+            tick_damage(ecs, &field);
+        }
     }
 }
 
@@ -343,6 +369,94 @@ pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
     if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(&entity)) {
         apply_orb(ecs, orb, ecs.get_position(&orb).single_position());
     }
+    if let Some(field) = find_field_at_location(ecs, &ecs.get_position(&entity)) {
+        let should_tick = {
+            if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(field) {
+                b.behavior.is_tick_damage()
+            } else {
+                false
+            }
+        };
+        if should_tick {
+            tick_damage(ecs, &field);
+        }
+    }
+}
+
+pub fn tick_damage(ecs: &mut World, entity: &Entity) {
+    let attack = ecs.read_storage::<AttackComponent>().grab(*entity).attack;
+    for p in ecs.get_position(entity).all_positions() {
+        if let Some(target) = find_character_at_location(ecs, p) {
+            apply_damage_to_character(ecs, attack.damage, &target, Some(p));
+        }
+    }
+}
+
+pub fn begin_cone(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: ConeKind, size: u32) {
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Cone(kind, size), source_position));
+    ecs.raise_event(EventKind::Cone(ConeState::BeginSwingAnimation), Some(*source));
+}
+
+pub fn cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Cone(state) if state.is_complete_swing_animation()) {
+        apply_cone(ecs, target.unwrap());
+    } else if matches!(kind, EventKind::Cone(state) if state.is_complete_hit_animation()) {
+        cone_hits(ecs, target.unwrap());
+    }
+}
+
+pub fn apply_cone(ecs: &mut World, character: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(character).attack
+    };
+    let size = match attack.kind {
+        AttackKind::Cone(_, size) => size,
+        _ => panic!("Unexpected kind in apply_cone"),
+    };
+    let cone_direction = Direction::from_two_points(&attack.source.unwrap(), &attack.target);
+    for p in attack.source.unwrap().get_cone(cone_direction, size) {
+        // NotConvertSaveload - Hits only last during an animation
+        let hit = ecs
+            .create_entity()
+            .with(PositionComponent::init(SizedPoint::from(p)))
+            .with(AttackComponent { attack })
+            .build();
+        ecs.raise_event(EventKind::Cone(ConeState::BeginHitAnimation), Some(hit));
+    }
+
+    ecs.write_storage::<AttackComponent>().remove(character);
+}
+
+pub fn cone_hits(ecs: &mut World, entity: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(entity).attack
+    };
+    let position = ecs.get_position(&entity);
+    apply_damage_to_location(ecs, position.single_position(), attack.source, attack.damage);
+    ecs.delete_entity(entity).unwrap();
+}
+
+pub fn begin_charge(ecs: &mut World, entity: &Entity, target: Point, damage: Damage, kind: WeaponKind) {
+    let initial_position = ecs.get_position(entity);
+    // This code does not correctly handle wide charges, that will take some thinking
+    assert!(initial_position.width == 1 && initial_position.height == 1);
+
+    if let Some(path) = initial_position.line_to(target) {
+        // First element on path is entity's position
+        if let Some((index, _)) = path.iter().skip(1).enumerate().find(|(_, &p)| find_character_at_location(ecs, p).is_some()) {
+            // Index is target's position -1 (from the skip), but this matches the last free square
+            ecs.shovel(
+                *entity,
+                AttackComponent::init(path[index + 1], damage, AttackKind::Melee(kind), Some(path[index])),
+            );
+            begin_move(ecs, &entity, initial_position.move_to(path[index]), PostMoveAction::Attack);
+        } else {
+            begin_move(ecs, &entity, initial_position.move_to(*path.last().unwrap()), PostMoveAction::None);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -409,7 +523,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 0);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -423,7 +537,7 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 0);
+        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -738,5 +852,114 @@ mod tests {
         begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 3));
+    }
+
+    #[test]
+    fn sustained_damage_field_damages_over_time() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 6, 100).with_map().build();
+
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 6);
+        ecs.shovel(player, BehaviorComponent::init(BehaviorKind::None));
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_field(
+            &mut ecs,
+            &player,
+            Point::init(2, 6),
+            FieldEffect::SustainedDamage(Damage::init(1), 3),
+            FieldKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        // Triggering does a tick of damage
+        let first_tick_health = ecs.get_defenses(&target).health;
+        assert_ne!(first_tick_health, target_starting_health);
+
+        new_turn_wait_characters(&mut ecs);
+        // Second tick as well
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn knockback_into_sustained_damage_does_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 100).with_map().build();
+
+        let player = find_at(&ecs, 2, 2);
+        let target = find_at(&ecs, 2, 4);
+
+        let target_starting_health = ecs.get_defenses(&target).health;
+
+        begin_field(
+            &mut ecs,
+            &player,
+            Point::init(2, 5),
+            FieldEffect::SustainedDamage(Damage::init(1), 3),
+            FieldKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+        begin_bolt(
+            &mut ecs,
+            &player,
+            Point::init(2, 4),
+            Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+            BoltKind::Fire,
+        );
+        wait_for_animations(&mut ecs);
+
+        assert_character_at(&ecs, 2, 5);
+        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn cone_hits() {
+        // Cone of size 2 from (1,2) to (1,3) hits:
+        //      (0,3) (1,3) (2,3)
+        //(-1,4) (0,4) (1,4) (2,4) (3,4)
+        let mut ecs = create_test_state()
+            .with_player(1, 2, 100)
+            .with_character(2, 3, 10)
+            .with_character(0, 4, 10)
+            .with_character(1, 5, 10)
+            .build();
+        let player = find_player(&ecs);
+        let player_health = ecs.get_defenses(&player).health;
+        let target_one = find_at(&ecs, 2, 3);
+        let target_one_health = ecs.get_defenses(&target_one).health;
+        let target_two = find_at(&ecs, 0, 4);
+        let target_two_health = ecs.get_defenses(&target_two).health;
+        let bystander = find_at(&ecs, 1, 5);
+        let bystander_health = ecs.get_defenses(&bystander).health;
+
+        begin_cone(&mut ecs, &player, Point::init(1, 3), Damage::init(1), ConeKind::Fire, 2);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(ecs.get_defenses(&player).health, player_health);
+        assert!(ecs.get_defenses(&target_one).health < target_one_health);
+        assert!(ecs.get_defenses(&target_two).health < target_two_health);
+        assert_eq!(ecs.get_defenses(&bystander).health, bystander_health);
+    }
+
+    fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
+        match kind {
+            EventKind::Damage(_) => ecs.increment_test_data("Damage".to_string()),
+            _ => {}
+        };
+    }
+
+    #[test]
+    fn cone_hits_wide_multiple_time() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_sized_character(SizedPoint::init_multi(2, 3, 2, 2), 0)
+            .build();
+        let player = find_at(&mut ecs, 2, 2);
+        ecs.subscribe(test_event);
+
+        begin_cone(&mut ecs, &player, Point::init(2, 3), Damage::init(1), ConeKind::Fire, 2);
+        wait_for_animations(&mut ecs);
+        assert_eq!(2, ecs.get_test_data("Damage"));
     }
 }

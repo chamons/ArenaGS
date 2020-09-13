@@ -251,17 +251,11 @@ pub struct FieldCastComponent {
     pub effect: FieldEffect,
     pub kind: FieldKind,
     pub target: SizedPoint,
-    pub explosion_size: u32,
 }
 
 impl FieldCastComponent {
-    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint, explosion_size: u32) -> FieldCastComponent {
-        FieldCastComponent {
-            effect,
-            kind,
-            target,
-            explosion_size,
-        }
+    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
+        FieldCastComponent { effect, kind, target }
     }
 }
 
@@ -273,6 +267,17 @@ pub struct GameDifficultyComponent {
 impl GameDifficultyComponent {
     pub fn init(difficulty: u32) -> GameDifficultyComponent {
         GameDifficultyComponent { difficulty }
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DurationComponent {
+    pub duration: u32,
+}
+
+impl DurationComponent {
+    pub fn init(duration: u32) -> DurationComponent {
+        DurationComponent { duration }
     }
 }
 
@@ -320,6 +325,7 @@ pub fn create_world() -> World {
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
     ecs.register::<GameDifficultyComponent>();
+    ecs.register::<DurationComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
@@ -338,11 +344,13 @@ pub fn create_world() -> World {
     ecs.subscribe(super::combat::field_event);
     ecs.subscribe(super::combat::explode_event);
     ecs.subscribe(super::combat::orb_event);
+    ecs.subscribe(super::combat::cone_event);
     ecs.subscribe(super::defenses::defense_event);
     ecs.subscribe(super::skills::tick_event);
     ecs.subscribe(super::temperature::temp_event);
     ecs.subscribe(super::status::status_event);
     ecs.subscribe(super::flying::flying_event);
+    ecs.subscribe(super::damage::regen_event);
 
     #[cfg(test)]
     {

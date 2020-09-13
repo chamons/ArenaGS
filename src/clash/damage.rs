@@ -1,3 +1,5 @@
+use std::cmp;
+
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -66,6 +68,19 @@ impl RolledDamage {
             options: initial_damage.options,
         }
     }
+}
+
+pub fn apply_healing_to_character(ecs: &mut World, amount: Strength, target: &Entity) {
+    let healing_total = {
+        let amount_to_heal = amount.roll(&mut ecs.fetch_mut::<RandomComponent>().rand);
+        let mut defenses = ecs.write_storage::<CharacterInfoComponent>();
+        let mut defense = &mut defenses.grab_mut(*target).character.defenses;
+
+        let inital_health = defense.health;
+        defense.health = cmp::min(defense.health + amount_to_heal, defense.max_health);
+        defense.health - inital_health
+    };
+    ecs.raise_event(EventKind::Healing(healing_total), Some(*target));
 }
 
 pub fn apply_damage_to_location(ecs: &mut World, target_position: Point, source_position: Option<Point>, damage: Damage) {
@@ -162,6 +177,29 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
     }
 
     ecs.raise_event(EventKind::Damage(rolled_damage), Some(*target));
+}
+
+pub const REGEN_DURATION: i32 = 100;
+pub fn regen_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    match kind {
+        EventKind::StatusAdded(kind) => {
+            if matches!(kind, StatusKind::Regen) {
+                ecs.add_status(&target.unwrap(), StatusKind::RegenTick, REGEN_DURATION);
+            }
+        }
+        EventKind::StatusExpired(kind) => {
+            if matches!(kind, StatusKind::RegenTick) {
+                if ecs.has_status(&target.unwrap(), StatusKind::Regen) {
+                    ecs.add_status(&target.unwrap(), StatusKind::RegenTick, REGEN_DURATION);
+                } else {
+                    ecs.log(format!("{} stops regenerating", ecs.get_name(&target.unwrap()).unwrap()));
+                }
+                const HEALTH_REGEN_PER_TICK: u32 = 1;
+                apply_healing_to_character(ecs, Strength::init(HEALTH_REGEN_PER_TICK), &target.unwrap());
+            }
+        }
+        _ => {}
+    }
 }
 
 #[cfg(test)]
@@ -419,5 +457,66 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(ecs.get_defenses(&target).health, starting_health);
+    }
+
+    #[test]
+    fn regen_adds_health_over_turns() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        ecs.add_status(&player, StatusKind::Regen, 300);
+
+        add_ticks(&mut ecs, 100);
+        let first_tick = ecs.get_defenses(&player).health;
+        assert!(first_tick > 5);
+
+        add_ticks(&mut ecs, 100);
+        let second_tick = ecs.get_defenses(&player).health;
+        assert!(second_tick > first_tick);
+
+        add_ticks(&mut ecs, 100);
+        let third_tick = ecs.get_defenses(&player).health;
+        assert!(third_tick > second_tick);
+    }
+
+    fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
+        match kind {
+            EventKind::Healing(_) => ecs.increment_test_data("Healing".to_string()),
+            _ => {}
+        };
+    }
+
+    #[test]
+    fn regen_total_ticks() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        ecs.subscribe(test_event);
+        let player = find_at(&ecs, 2, 2);
+
+        ecs.add_status(&player, StatusKind::Regen, 300);
+        for _ in 0..5 {
+            add_ticks(&mut ecs, 100);
+        }
+        assert_eq!(3, ecs.get_test_data("Healing"));
+    }
+
+    #[test]
+    fn apply_healing_raises_health() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        apply_healing_to_character(&mut ecs, Strength::init(2), &player);
+        assert!(ecs.get_defenses(&player).health > 5);
+    }
+
+    #[test]
+    fn apply_healing_does_not_exceed_max() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        apply_healing_to_character(&mut ecs, Strength::init(20), &player);
+        assert_eq!(ecs.get_defenses(&player).max_health, ecs.get_defenses(&player).health);
     }
 }

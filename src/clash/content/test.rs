@@ -59,7 +59,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init(
             None,
             TargetType::Any,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 0),
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire),
         ),
     );
     m.insert(
@@ -67,7 +67,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init(
             None,
             TargetType::Any,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(1)), FieldKind::Fire, 1),
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(1), 1), FieldKind::Fire),
         ),
     );
     m.insert(
@@ -111,7 +111,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init(
             None,
             TargetType::Any,
-            SkillEffect::Field(FieldEffect::Spawn(SpawnKind::BirdSpawn), FieldKind::Fire, 0),
+            SkillEffect::Field(FieldEffect::Spawn(SpawnKind::BirdSpawn), FieldKind::Fire),
         ),
     );
     m.insert(
@@ -125,6 +125,16 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             TargetType::Enemy,
             SkillEffect::RangedAttack(Damage::init(0), BoltKind::Fire),
             Some(2),
+            false,
+        ),
+    );
+    m.insert(
+        "TestCharge",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Any,
+            SkillEffect::ChargeAttack(Damage::init(1), WeaponKind::Sword),
+            Some(3),
             false,
         ),
     );

@@ -34,7 +34,7 @@ macro_rules! do_behavior {
     };
 }
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize, is_enum_variant)]
 #[allow(dead_code)]
 pub enum BehaviorKind {
     None,
@@ -46,6 +46,7 @@ pub enum BehaviorKind {
     FireElemental,
     WindElemental,
     EarthElemental,
+    TickDamage,
     Explode,
     Orb,
 }
@@ -62,8 +63,21 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::FireElemental => super::content::elementalist::fire_elemental_action(ecs, enemy),
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
-        BehaviorKind::Explode => {
-            begin_explode(ecs, &enemy);
+        BehaviorKind::Explode => begin_explode(ecs, &enemy),
+        BehaviorKind::TickDamage => {
+            wait(ecs, *enemy);
+            tick_damage(ecs, enemy);
+            let should_die = {
+                if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(*enemy) {
+                    d.duration -= 1;
+                    d.duration == 0
+                } else {
+                    false
+                }
+            };
+            if should_die {
+                ecs.delete_entity(*enemy).unwrap();
+            }
         }
         BehaviorKind::Orb => move_orb(ecs, enemy),
     };
@@ -421,5 +435,28 @@ mod tests {
         move_towards_player(&mut ecs, &target);
         wait_for_animations(&mut ecs);
         assert_character_at(&ecs, 2, 3);
+    }
+
+    #[test]
+    fn ticks_damage() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        let damage_source = make_test_character(&mut ecs, SizedPoint::init(2, 2), 0);
+        ecs.shovel(damage_source, DurationComponent::init(2));
+        ecs.shovel(damage_source, BehaviorComponent::init(BehaviorKind::TickDamage));
+        ecs.shovel(
+            damage_source,
+            AttackComponent::init(Point::init(2, 2), Damage::init(1), AttackKind::DamageTick, Some(Point::init(2, 2))),
+        );
+        ecs.write_storage::<CharacterInfoComponent>().remove(damage_source);
+
+        for _ in 0..2 {
+            let target_health = ecs.get_defenses(&player).health;
+            take_enemy_action(&mut ecs, &damage_source);
+            add_ticks(&mut ecs, 100);
+            assert_ne!(ecs.get_defenses(&player).health, target_health);
+        }
+
+        assert_eq!(1, find_all_entities(&ecs).len());
     }
 }

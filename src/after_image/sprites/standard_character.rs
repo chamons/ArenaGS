@@ -59,7 +59,7 @@ impl StandardCharacter {
         match self.size {
             StandardCharacterSize::Micro => Some(SDLPoint::new(0, -8)),
             StandardCharacterSize::Normal => Some(SDLPoint::new(1, 6)),
-            StandardCharacterSize::Large => None,
+            StandardCharacterSize::Large => Some(SDLPoint::new(-1, -20)),
         }
     }
 
