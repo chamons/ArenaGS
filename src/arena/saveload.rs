@@ -89,7 +89,7 @@ pub fn new_world(difficulty: u32) -> BoxResult<World> {
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)?));
-    ecs.insert(GameDifficultyComponent::init(difficulty));
+    ecs.write_resource::<GameDifficultyComponent>().difficulty = difficulty;
 
     let player_position = find_placement(&ecs, 1, 1);
     crate::clash::content::spawner::player(&mut ecs, player_position);

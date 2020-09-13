@@ -329,6 +329,7 @@ pub fn create_world() -> World {
     ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
+    ecs.insert(GameDifficultyComponent::init(0));
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
 
     ecs.subscribe(super::physics::move_event);
