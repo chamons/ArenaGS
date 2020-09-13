@@ -54,7 +54,7 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
         "Elementalist",
         SpawnKind::Elementalist,
         BehaviorKind::Elementalist,
-        Defenses::init(0, 0, 20, 80 + 10 * difficulty),
+        Defenses::init(0, 0, 40 + 10 * difficulty, 40),
         SizedPoint::init(position.x, position.y),
         difficulty,
     );
@@ -66,7 +66,7 @@ pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Water Elemental",
         SpawnKind::WaterElemental,
         BehaviorKind::WaterElemental,
-        Defenses::just_health(40 + 10 * difficulty),
+        Defenses::just_health(60 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         difficulty,
     );
@@ -78,7 +78,7 @@ pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Fire Elemental",
         SpawnKind::FireElemental,
         BehaviorKind::FireElemental,
-        Defenses::just_health(40 + 10 * difficulty),
+        Defenses::init(0, 0, 50 + 10 * difficulty, 5),
         SizedPoint::init(position.x, position.y),
         difficulty,
     );
@@ -90,7 +90,7 @@ pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Wind Elemental",
         SpawnKind::WindElemental,
         BehaviorKind::WindElemental,
-        Defenses::just_health(40 + 10 * difficulty),
+        Defenses::init(1, 0, 0, 40 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         difficulty,
     );
@@ -102,7 +102,7 @@ pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Earth Elemental",
         SpawnKind::EarthElemental,
         BehaviorKind::EarthElemental,
-        Defenses::just_health(40 + 10 * difficulty),
+        Defenses::init(0, 1, 0, 40 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         difficulty,
     );
