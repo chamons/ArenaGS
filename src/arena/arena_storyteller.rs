@@ -24,7 +24,7 @@ impl ArenaStoryteller {
 
     fn prepare_battle_end_scene(&self, render_context: &RenderContextHolder, message: String) -> Box<dyn Scene> {
         let snapshot = Director::screen_shot(render_context).unwrap();
-        Box::from(DeathScene::init(snapshot, message))
+        Box::from(DeathScene::init(snapshot, &mut render_context.borrow_mut().canvas, &self.text_renderer, message).unwrap())
     }
 }
 

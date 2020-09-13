@@ -227,7 +227,7 @@ impl Scene for BattleScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.ecs.try_fetch::<PlayerDeadComponent>().is_some() {
-            return StageDirection::BattlePlayerDeath("".to_string());
+            return StageDirection::BattlePlayerDeath("Took 10 damage from your face".to_string());
         }
         let entities = self.ecs.read_resource::<specs::world::EntitiesRes>();
         let character_infos = self.ecs.read_storage::<CharacterInfoComponent>();
