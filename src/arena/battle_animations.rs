@@ -129,24 +129,20 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
     projectile_animation(ecs, bolt, target, sprite, EventKind::Field(FieldState::CompleteFlyingAnimation));
 }
 
-pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+pub fn melee_cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     if matches!(kind, EventKind::Melee(state) if state.is_begin_animation()) {
-        begin_melee_animation(ecs, target.unwrap());
+        begin_weapon_animation(ecs, target.unwrap(), EventKind::Melee(MeleeState::CompleteAnimation));
+    } else if matches!(kind, EventKind::Cone(state) if state.is_begin_animation()) {
+        begin_weapon_animation(ecs, target.unwrap(), EventKind::Cone(ConeState::CompleteAnimation));
     }
 }
 
-pub fn begin_melee_animation(ecs: &mut World, target: Entity) {
+fn begin_weapon_animation(ecs: &mut World, target: Entity, post_event: EventKind) {
     let frame = ecs.get_current_frame();
-    let animation = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.grab(target).attack.melee_kind() {
-            WeaponKind::Sword => CharacterAnimationState::AttackTwo,
-        }
-    };
 
     const MELEE_ATTACK_LENGTH: u64 = 18;
-    let attack_animation = Animation::sprite_state(animation, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH)
-        .with_post_event(EventKind::Melee(MeleeState::CompleteAnimation), Some(target));
+    let attack_animation = Animation::sprite_state(CharacterAnimationState::AttackTwo, CharacterAnimationState::Idle, frame, MELEE_ATTACK_LENGTH)
+        .with_post_event(post_event, Some(target));
     add_animation(ecs, target, attack_animation);
 }
 

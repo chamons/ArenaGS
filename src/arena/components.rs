@@ -116,7 +116,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.subscribe(super::battle_scene::create_view_event);
     ecs.subscribe(super::battle_animations::move_event);
     ecs.subscribe(super::battle_animations::battle_animation_event);
-    ecs.subscribe(super::battle_animations::melee_event);
+    ecs.subscribe(super::battle_animations::melee_cone_event);
     ecs.subscribe(super::battle_animations::field_event);
     ecs.subscribe(super::battle_animations::explode_event);
 

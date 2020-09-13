@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::content::spawner;
 use super::*;
-use crate::atlas::{extend_line_along_path, EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::{extend_line_along_path, Direction, EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::EventCoordinator;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -15,6 +15,11 @@ pub enum FieldEffect {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
+    Fire,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize)]
+pub enum ConeKind {
     Fire,
 }
 
@@ -41,6 +46,7 @@ pub enum OrbKind {
 pub enum AttackKind {
     Ranged(BoltKind),
     Melee(WeaponKind),
+    Cone(ConeKind, u32),
     Explode(u32),
     DamageTick,
     Orb(OrbKind),
@@ -59,13 +65,6 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Ranged(kind) => kind,
             _ => panic!("Wrong type in ranged_kind"),
-        }
-    }
-
-    pub fn melee_kind(&self) -> WeaponKind {
-        match self.kind {
-            AttackKind::Melee(kind) => kind,
-            _ => panic!("Wrong type in melee_kind"),
         }
     }
 
@@ -377,6 +376,35 @@ pub fn tick_damage(ecs: &mut World, entity: &Entity) {
             apply_damage_to_character(ecs, attack.damage, &target, Some(p));
         }
     }
+}
+
+pub fn begin_cone(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: ConeKind, size: u32) {
+    let source_position = Some(ecs.get_position(source).origin);
+    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Cone(kind, size), source_position));
+    ecs.raise_event(EventKind::Cone(ConeState::BeginAnimation), Some(*source));
+}
+
+pub fn cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
+    if matches!(kind, EventKind::Cone(state) if state.is_complete_animation()) {
+        apply_cone(ecs, target.unwrap());
+    }
+}
+
+pub fn apply_cone(ecs: &mut World, character: Entity) {
+    let attack = {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        attacks.grab(character).attack
+    };
+    let (kind, size) = match attack.kind {
+        AttackKind::Cone(kind, size) => (kind, size),
+        _ => panic!("Unexpected kind in apply_cone"),
+    };
+    let cone_direction = Direction::from_two_points(&attack.source.unwrap(), &attack.target);
+    for p in attack.source.unwrap().get_cone(cone_direction, size) {
+        apply_damage_to_location(ecs, p, attack.source, attack.damage);
+    }
+
+    ecs.write_storage::<AttackComponent>().remove(character);
 }
 
 #[cfg(test)]
@@ -831,5 +859,34 @@ mod tests {
 
         assert_character_at(&ecs, 2, 5);
         assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+    }
+
+    #[test]
+    fn cone_hits() {
+        // Cone of size 2 from (1,2) to (1,3) hits:
+        //      (0,3) (1,3) (2,3)
+        //(-1,4) (0,4) (1,4) (2,4) (3,4)
+        let mut ecs = create_test_state()
+            .with_player(1, 2, 100)
+            .with_character(2, 3, 10)
+            .with_character(0, 4, 10)
+            .with_character(1, 5, 10)
+            .build();
+        let player = find_player(&ecs);
+        let player_health = ecs.get_defenses(&player).health;
+        let target_one = find_at(&ecs, 2, 3);
+        let target_one_health = ecs.get_defenses(&target_one).health;
+        let target_two = find_at(&ecs, 0, 4);
+        let target_two_health = ecs.get_defenses(&target_two).health;
+        let bystander = find_at(&ecs, 1, 5);
+        let bystander_health = ecs.get_defenses(&bystander).health;
+
+        begin_cone(&mut ecs, &player, Point::init(1, 3), Damage::init(1), ConeKind::Fire, 2);
+        wait_for_animations(&mut ecs);
+
+        assert_eq!(ecs.get_defenses(&player).health, player_health);
+        assert!(ecs.get_defenses(&target_one).health < target_one_health);
+        assert!(ecs.get_defenses(&target_two).health < target_two_health);
+        assert_eq!(ecs.get_defenses(&bystander).health, bystander_health);
     }
 }

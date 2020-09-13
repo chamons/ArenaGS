@@ -27,6 +27,7 @@ pub enum SkillEffect {
     Move,
     RangedAttack(Damage, BoltKind),
     MeleeAttack(Damage, WeaponKind),
+    ConeAttack(Damage, ConeKind, u32),
     Reload(AmmoKind),
     Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
@@ -369,6 +370,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         }
         SkillEffect::RangedAttack(damage, kind) => begin_bolt(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
+        SkillEffect::ConeAttack(damage, kind, size) => begin_cone(ecs, &invoker, target.unwrap(), *damage, *kind, *size),
         SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
         SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
@@ -398,6 +400,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::MoveAndShoot(_, _, _) => 3,
         SkillEffect::RangedAttack(_, _) => 3,
         SkillEffect::MeleeAttack(_, _) => 3,
+        SkillEffect::ConeAttack(_, _, _) => 3,
         SkillEffect::Reload(_) => 2,
         SkillEffect::Field(_, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
