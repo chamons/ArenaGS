@@ -64,7 +64,20 @@ impl SpriteLoader {
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
                     1.0,
                 )?),
+                SpriteKinds::NoBolt => Box::new(Bolt::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "lightning"),
+                    30, // Just an empty part of the sheet
+                    1,
+                )?),
                 SpriteKinds::FireBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 0, 4)?),
+                SpriteKinds::WaterBolt => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "water"), 44, 3)?),
+                SpriteKinds::LightningOrb => Box::new(Bolt::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "lightning"),
+                    13,
+                    4,
+                )?),
                 SpriteKinds::Bullet => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "weapons_2"), 6, 1)?.with_render_offset(bullet_offset()),
                 ),
@@ -80,8 +93,20 @@ impl SpriteLoader {
                         .with_render_offset(SDLPoint::new(0, 25))
                         .with_scale(2.0),
                 ),
+                SpriteKinds::LightningStrike => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "lightning"), 0, 6)?.with_scale(2.5))
+                }
+                SpriteKinds::Cloud => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 0, 6)?.with_scale(2.0)),
+                SpriteKinds::FireColumn => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 16, 5)?.with_scale(2.0))
+                }
+                SpriteKinds::WaterColumn => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "water"), 30, 3)?.with_scale(2.0))
+                }
                 SpriteKinds::Smoke => Box::new(
-                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?.with_render_offset(bullet_offset()),
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?
+                        .with_render_offset(bullet_offset())
+                        .with_scale(2.0),
                 ),
                 SpriteKinds::Egg => Box::new(StandardCharacter::init(
                     render_context,

@@ -243,6 +243,15 @@ impl SizedPoint {
             None
         }
     }
+
+    pub fn nearest_point_to(&self, point: SizedPoint) -> Point {
+        *self
+            .all_positions()
+            .iter()
+            .min_by(|&&x, &&y| point.distance_to(x).cmp(&point.distance_to(y)))
+            .take()
+            .unwrap()
+    }
 }
 
 impl fmt::Display for SizedPoint {
@@ -499,5 +508,12 @@ mod tests {
         assert!(points.contains(&Point::init(0, 4)));
         assert!(points.contains(&Point::init(0, 3)));
         assert!(points.contains(&Point::init(0, 5)));
+    }
+
+    #[test]
+    fn nearest_to_multi_point() {
+        let point = SizedPoint::init(2, 2);
+        let target = SizedPoint::init_multi(3, 3, 2, 2);
+        assert_points_equal(target.nearest_point_to(point), Point::init(3, 2));
     }
 }

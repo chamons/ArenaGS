@@ -28,7 +28,10 @@ pub enum SpriteKinds {
     WindElemental,
     EarthElemental,
 
+    NoBolt,
     FireBolt,
+    WaterBolt,
+    LightningOrb,
     Bullet,
     FireBullet,
     AirBullet,
@@ -36,6 +39,10 @@ pub enum SpriteKinds {
 
     Bomb,
     Explosion,
+    LightningStrike,
+    Cloud,
+    FireColumn,
+    WaterColumn,
 }
 
 #[derive(PartialEq, IntoEnumIterator, Serialize, Deserialize, Clone)]

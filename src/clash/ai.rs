@@ -1,3 +1,5 @@
+use std::cmp;
+
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -5,7 +7,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, EasyMutECS, SizedPoint};
+use crate::atlas::{Direction, EasyECS, EasyMutECS, Point, SizedPoint};
 
 #[macro_export]
 macro_rules! try_behavior {
@@ -146,7 +148,6 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-#[allow(dead_code)]
 pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
         invoke_skill(ecs, enemy, skill_name, None);
@@ -154,6 +155,14 @@ pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
     } else {
         false
     }
+}
+
+pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: &Point) -> bool {
+    if is_good_target(ecs, enemy, get_skill(skill_name), *target_point) {
+        invoke_skill(ecs, enemy, skill_name, Some(*target_point));
+        return true;
+    }
+    false
 }
 
 pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
@@ -272,12 +281,29 @@ pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
     ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
 }
 
+pub fn reduce_behavior_value(ecs: &World, enemy: &Entity, key: &str, reduction_amount: u32) {
+    let value = get_behavior_value(ecs, enemy, key, 0);
+    set_behavior_value(ecs, enemy, key, cmp::max(value as i32 - reduction_amount as i32, 0) as u32);
+}
+
+pub fn increment_behavior_value(ecs: &World, enemy: &Entity, key: &str, increment_amount: u32) {
+    let value = get_behavior_value(ecs, enemy, key, 0);
+    set_behavior_value(ecs, enemy, key, value + increment_amount);
+}
+
 pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
     check_behavior_cooldown_calculate(ecs, enemy, key, |_| length)
 }
 
 pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str, length: impl Fn(&World) -> u32) -> bool {
-    let value = get_behavior_value_calculate(ecs, enemy, key, &length);
+    // First one is "free"
+    let value = {
+        if has_behavior_value(ecs, enemy, key) {
+            get_behavior_value_calculate(ecs, enemy, key, &length)
+        } else {
+            0
+        }
+    };
     if value <= 1 {
         set_behavior_value(ecs, enemy, key, length(ecs));
         true
@@ -313,6 +339,30 @@ pub fn check_behavior_single_use_ammo(ecs: &World, enemy: &Entity, key: &str, am
     }
 }
 
+pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) -> Option<Point> {
+    let position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(&ecs));
+    for origin in position.all_positions() {
+        for d in &[Direction::North, Direction::East, Direction::South, Direction::East] {
+            if origin.get_cone(*d, size).iter().any(|p| player_position.contains_point(p)) {
+                return Some(d.point_in_direction(&origin).unwrap());
+            }
+        }
+    }
+    None
+}
+
+pub fn any_ally_without_buff_in_range(ecs: &World, enemy: &Entity, buff: StatusKind, range: u32) -> Option<Entity> {
+    let position = ecs.get_position(enemy);
+    let player = find_player(ecs);
+    find_all_characters(ecs)
+        .iter()
+        .filter(|&&c| c != player)
+        .filter(|&c| !ecs.has_status(c, buff))
+        .find(|&c| position.distance_to_multi(ecs.get_position(c)).unwrap_or(std::u32::MAX) <= range)
+        .copied()
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -344,7 +394,7 @@ mod tests {
             .with(AttackComponent::init(
                 Point::init(2, 2),
                 Damage::init(2),
-                AttackKind::Explode(2),
+                AttackKind::Explode(ExplosionKind::Bomb, 2),
                 Some(Point::init(2, 2)),
             ))
             .build();
@@ -363,12 +413,16 @@ mod tests {
         let target = find_at(&ecs, 2, 2);
         ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
 
+        // First one is "free"
+        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+
+        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert_eq!(4, get_behavior_value(&ecs, &target, "TestKey", 5));
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
         assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
+
         assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
     }
 
@@ -426,6 +480,21 @@ mod tests {
         assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
         assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
         assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
+    }
+
+    #[test]
+    fn raise_lower_behavior_values() {
+        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
+        let target = find_at(&ecs, 2, 2);
+        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
+
+        set_behavior_value(&ecs, &target, "TestKey", 50);
+        increment_behavior_value(&ecs, &target, "TestKey", 5);
+        assert_eq!(55, get_behavior_value(&ecs, &target, "TestKey", 0));
+        reduce_behavior_value(&ecs, &target, "TestKey", 25);
+        assert_eq!(30, get_behavior_value(&ecs, &target, "TestKey", 0));
+        reduce_behavior_value(&ecs, &target, "TestKey", 45);
+        assert_eq!(0, get_behavior_value(&ecs, &target, "TestKey", 0));
     }
 
     #[test]

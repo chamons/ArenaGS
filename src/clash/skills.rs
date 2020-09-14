@@ -19,6 +19,7 @@ pub enum TargetType {
     Player,
     Enemy,
     Any,
+    AnyoneButSelf,
 }
 
 #[allow(dead_code)]
@@ -250,7 +251,7 @@ fn assert_correct_targeting(ecs: &mut World, invoker: &Entity, name: &str, targe
 
     let requires_point = match skill.target {
         TargetType::None => false,
-        TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
+        TargetType::AnyoneButSelf | TargetType::Tile | TargetType::Enemy | TargetType::Player | TargetType::Any => true,
     };
 
     if requires_point != target.is_some() {
@@ -267,13 +268,14 @@ pub fn is_good_target(ecs: &World, invoker: &Entity, skill: &SkillInfo, target: 
         TargetType::Tile => is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Player => ecs.get_position(&find_player(ecs)).contains_point(&target),
-        TargetType::Any => {
+        TargetType::AnyoneButSelf => {
             if let Some(initial) = ecs.read_storage::<PositionComponent>().get(*invoker) {
                 !initial.position.contains_point(&target)
             } else {
                 true
             }
         }
+        TargetType::Any => true,
         TargetType::None => false,
     } {
         return false;
@@ -377,7 +379,7 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
-            ecs.add_status(invoker, *buff, *duration);
+            ecs.add_status(&find_valid_buff_target(ecs, invoker, target), *buff, *duration);
         }
         SkillEffect::BuffThen(buff, duration, next_skill) => {
             ecs.add_status(invoker, *buff, *duration);
@@ -394,6 +396,19 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
         SkillEffect::None => {}
     }
+}
+
+fn find_valid_buff_target(ecs: &World, invoker: &Entity, target: Option<Point>) -> Entity {
+    if let Some(target) = target {
+        if let Some(target) = find_character_at_location(ecs, target) {
+            // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
+            let player = find_player(ecs);
+            if *invoker != player && target != player {
+                return target;
+            }
+        }
+    }
+    *invoker
 }
 
 fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
@@ -553,6 +568,17 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+    }
+
+    #[test]
+    fn skill_info_any_but_self_target() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let entity = find_at(&ecs, 2, 2);
+
+        let info = SkillInfo::init_with_distance(None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
@@ -974,6 +1000,34 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert!(ecs.has_status(&player, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn buff_others_same_size() {
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 100)
+            .with_character(2, 3, 100)
+            .with_character(2, 4, 100)
+            .with_map()
+            .build();
+        let caster = find_at(&ecs, 2, 3);
+        let target = find_at(&ecs, 2, 4);
+
+        invoke_skill(&mut ecs, &caster, "BuffOthers", Some(Point::init(2, 4)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.has_status(&target, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn buff_self_and_attack_still_buffs_caster() {
+        let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "BuffAndSwing", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        assert!(ecs.has_status(&player, StatusKind::Armored));
     }
 
     #[test]

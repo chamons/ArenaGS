@@ -80,12 +80,7 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
             crate::clash::content::spawner::bird_monster(&mut ecs, enemy_position, difficulty);
         }
         BattleKind::Elementalist => {
-            enum ElementalKind {
-                Water,
-                Fire,
-                Wind,
-                Earth,
-            }
+            use crate::clash::content::elementalist::ElementalKind;
             // Since we are creating an entire new world, it is acceptable to use thread RNG
             let mut random = rand::thread_rng();
             let mut elements = vec![ElementalKind::Water, ElementalKind::Fire, ElementalKind::Wind, ElementalKind::Earth];
@@ -100,8 +95,8 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
                     ElementalKind::Earth => spawner::earth_elemental(&mut ecs, enemy_position, difficulty),
                 }
             }
-            // let enemy_position = find_placement(&ecs, 1, 1);
-            // crate::clash::content::spawner::elementalist(&mut ecs, enemy_position, difficulty);
+            let enemy_position = find_placement(&ecs, 1, 1);
+            spawner::elementalist(&mut ecs, enemy_position, difficulty);
         }
     }
 
