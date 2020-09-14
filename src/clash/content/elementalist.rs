@@ -3,6 +3,9 @@
 
 use std::collections::HashMap;
 
+use rand::distributions::{Distribution, Standard};
+use rand::prelude::*;
+use rand::Rng;
 use specs::prelude::*;
 
 use super::super::*;
@@ -165,22 +168,63 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 const CHARGE_TO_SUMMON: u32 = 50;
 const MAX_ELEMENTS_SUMMONED: u32 = 4;
 
+fn get_elemental_kind(ecs: &World, entity: Entity) -> Option<ElementalKind> {
+    if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(entity) {
+        match b.behavior {
+            BehaviorKind::WaterElemental => Some(ElementalKind::Water),
+            BehaviorKind::FireElemental => Some(ElementalKind::Fire),
+            BehaviorKind::WindElemental => Some(ElementalKind::Wind),
+            BehaviorKind::EarthElemental => Some(ElementalKind::Earth),
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+fn is_elemental(ecs: &World, entity: Entity) -> bool {
+    get_elemental_kind(ecs, entity).is_some()
+}
+
 fn get_elemental_summon_count(ecs: &World) -> u32 {
-    find_all_characters(ecs)
-        .iter()
-        .filter(|&&c| {
-            if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(c) {
-                match b.behavior {
-                    BehaviorKind::WaterElemental | BehaviorKind::FireElemental | BehaviorKind::WindElemental | BehaviorKind::EarthElemental => {
-                        return true;
-                    }
-                    _ => return false,
-                }
-            } else {
-                false
+    find_all_characters(ecs).iter().filter(|&&c| is_elemental(ecs, c)).count() as u32
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum ElementalKind {
+    Water,
+    Fire,
+    Wind,
+    Earth,
+}
+
+pub fn get_elemental_summon_to_use(ecs: &World) -> &'static str {
+    let mut elements = vec![ElementalKind::Water, ElementalKind::Fire, ElementalKind::Wind, ElementalKind::Earth];
+
+    for e in find_all_characters(ecs).iter().filter(|&&c| is_elemental(ecs, c)) {
+        match get_elemental_kind(ecs, *e) {
+            Some(ElementalKind::Water) => {
+                elements.swap_remove(elements.iter().position(|x| *x == ElementalKind::Water).unwrap());
             }
-        })
-        .count() as u32
+            Some(ElementalKind::Fire) => {
+                elements.swap_remove(elements.iter().position(|x| *x == ElementalKind::Fire).unwrap());
+            }
+            Some(ElementalKind::Wind) => {
+                elements.swap_remove(elements.iter().position(|x| *x == ElementalKind::Wind).unwrap());
+            }
+            Some(ElementalKind::Earth) => {
+                elements.swap_remove(elements.iter().position(|x| *x == ElementalKind::Earth).unwrap());
+            }
+            _ => panic!("Unexpected item in get_elemental_summon_to_use"),
+        }
+    }
+    elements.shuffle(&mut ecs.fetch_mut::<RandomComponent>().rand);
+    match elements[0] {
+        ElementalKind::Water => "Summon Elemental (Water)",
+        ElementalKind::Fire => "Summon Elemental (Fire)",
+        ElementalKind::Wind => "Summon Elemental (Wind)",
+        ElementalKind::Earth => "Summon Elemental (Earth)",
+    }
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
@@ -188,7 +232,7 @@ pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
     if current_charge > CHARGE_TO_SUMMON {
         if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
             try_behavior_and_if!(
-                use_skill_with_random_target(ecs, enemy, "Summon Elemental (Fire)", 6),
+                use_skill_with_random_target(ecs, enemy, get_elemental_summon_to_use(ecs), 6),
                 reduce_behavior_value(ecs, enemy, "Charge", CHARGE_TO_SUMMON)
             );
         }
