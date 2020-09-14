@@ -115,9 +115,7 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let field_casts = ecs.read_storage::<FieldCastComponent>();
         match field_casts.grab(target).kind {
-            FieldKind::Fire => CharacterAnimationState::Crouch,
-            FieldKind::Hail => CharacterAnimationState::Crouch,
-            FieldKind::Lightning => CharacterAnimationState::Crouch,
+            _ => CharacterAnimationState::Crouch,
         }
     };
     cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCastAnimation));
@@ -131,6 +129,7 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
             FieldKind::Fire => SpriteKinds::FireBolt,
             FieldKind::Hail => SpriteKinds::NoBolt,
             FieldKind::Lightning => SpriteKinds::NoBolt,
+            FieldKind::Earth => SpriteKinds::NoBolt,
         };
         (cast.target.origin, sprite)
     };
@@ -212,6 +211,7 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
         ExplosionKind::Lightning => SpriteKinds::LightningStrike,
         ExplosionKind::Fire => SpriteKinds::FireColumn,
         ExplosionKind::Water => SpriteKinds::WaterColumn,
+        ExplosionKind::Earth => SpriteKinds::EarthColumn,
     };
     ecs.shovel(target, RenderComponent::init(RenderInfo::init(sprite)));
     ecs.write_storage::<FieldComponent>().remove(target);

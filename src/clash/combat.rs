@@ -15,6 +15,7 @@ pub enum FieldEffect {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum FieldKind {
+    Earth,
     Fire,
     Hail,
     Lightning,
@@ -52,6 +53,7 @@ pub enum ExplosionKind {
     Fire,
     Bomb,
     Lightning,
+    Earth,
     Cloud,
     Water,
 }
@@ -260,6 +262,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 FieldKind::Fire => ((255, 0, 0), ExplosionKind::Fire),
                 FieldKind::Hail => ((0, 43, 102), ExplosionKind::Water),
                 FieldKind::Lightning => ((166, 171, 35), ExplosionKind::Lightning),
+                FieldKind::Earth => ((122, 72, 60), ExplosionKind::Earth),
             };
 
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(explosion_kind, explosion_size), None);
@@ -278,6 +281,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 FieldKind::Fire => (255, 140, 0),
                 FieldKind::Hail => (0, 42, 102),
                 FieldKind::Lightning => (166, 171, 35),
+                FieldKind::Earth => (122, 72, 60),
             };
 
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));

@@ -108,6 +108,9 @@ impl SpriteLoader {
                 SpriteKinds::WaterColumn => {
                     Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "water"), 30, 3)?.with_scale(2.0))
                 }
+                SpriteKinds::EarthColumn => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "earth1"), 12, 6)?.with_scale(2.0))
+                }
                 SpriteKinds::Smoke => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?
                         .with_render_offset(bullet_offset())

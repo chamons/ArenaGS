@@ -115,7 +115,7 @@ pub fn simple_golem(ecs: &mut World, position: Point) {
         "Simple Golem",
         SpawnKind::SimpleGolem,
         BehaviorKind::SimpleGolem,
-        Defenses::init(0, 1, 0, 40),
+        Defenses::init(0, 1, 0, 60),
         SizedPoint::init(position.x, position.y),
         0,
     );
