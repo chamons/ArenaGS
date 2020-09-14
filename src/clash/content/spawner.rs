@@ -109,6 +109,18 @@ pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
     );
 }
 
+pub fn simple_golem(ecs: &mut World, position: Point) {
+    create_monster(
+        ecs,
+        "Simple Golem",
+        SpawnKind::SimpleGolem,
+        BehaviorKind::SimpleGolem,
+        Defenses::init(0, 1, 0, 60),
+        SizedPoint::init(position.x, position.y),
+        0,
+    );
+}
+
 pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,

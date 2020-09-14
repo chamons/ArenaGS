@@ -34,35 +34,40 @@ impl SpriteLoader {
                 SpriteKinds::BeachBackground => Box::new(Background::init(render_context, "beach")?),
                 SpriteKinds::MaleBrownHairBlueBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
                 SpriteKinds::MaleBlueHairRedBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
+                SpriteKinds::SimpleGolem => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_golem1"),
+                    LargeCharacterSize::Normal,
+                )?),
                 SpriteKinds::MonsterBirdBrown => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
-                    1.5,
+                    LargeCharacterSize::LargeBird,
                 )?),
                 SpriteKinds::MonsterBirdBlue => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
-                    1.5,
+                    LargeCharacterSize::LargeBird,
                 )?),
                 SpriteKinds::MonsterBirdRed => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
-                    1.5,
+                    LargeCharacterSize::LargeBird,
                 )?),
                 SpriteKinds::SmallMonsterBirdBrown => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),
-                    1.0,
+                    LargeCharacterSize::Bird,
                 )?),
                 SpriteKinds::SmallMonsterBirdBlue => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird2"),
-                    1.0,
+                    LargeCharacterSize::Bird,
                 )?),
                 SpriteKinds::SmallMonsterBirdRed => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird3"),
-                    1.0,
+                    LargeCharacterSize::Bird,
                 )?),
                 SpriteKinds::NoBolt => Box::new(Bolt::init(
                     render_context,
@@ -102,6 +107,9 @@ impl SpriteLoader {
                 }
                 SpriteKinds::WaterColumn => {
                     Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "water"), 30, 3)?.with_scale(2.0))
+                }
+                SpriteKinds::EarthColumn => {
+                    Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "earth1"), 12, 6)?.with_scale(2.0))
                 }
                 SpriteKinds::Smoke => Box::new(
                     Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 6, 4)?
