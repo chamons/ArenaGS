@@ -25,3 +25,8 @@ cargo build
 cargo test
 ```
 
+# Art
+
+Q: Where did you get this amazing art if you didn't draw it?
+
+A: It came from a number of sources but primarily [finalbossblues](https://finalbossblues.itch.io/) for the gameplay and [REXARD](https://assetstore.unity.com/publishers/13229) for the icons.
