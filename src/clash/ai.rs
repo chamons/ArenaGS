@@ -285,7 +285,14 @@ pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u
 }
 
 pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str, length: impl Fn(&World) -> u32) -> bool {
-    let value = get_behavior_value_calculate(ecs, enemy, key, &length);
+    // First one is "free"
+    let value = {
+        if has_behavior_value(ecs, enemy, key) {
+            get_behavior_value_calculate(ecs, enemy, key, &length)
+        } else {
+            0
+        }
+    };
     if value <= 1 {
         set_behavior_value(ecs, enemy, key, length(ecs));
         true

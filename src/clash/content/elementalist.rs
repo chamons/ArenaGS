@@ -92,6 +92,39 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             false,
         ),
     );
+
+    m.insert(
+        "Earthen Rage",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
+            Some(5),
+            false,
+        ),
+    );
+
+    m.insert(
+        "Rock Slide",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::ChargeAttack(Damage::init(2), WeaponKind::Sword),
+            Some(3),
+            false,
+        ),
+    );
+
+    m.insert(
+        "Pummel",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+            Some(1),
+            false,
+        ),
+    );
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
@@ -153,5 +186,19 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
     wait(ecs, *enemy);
 }
 pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
+    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    if distance < 6 {
+        if check_behavior_cooldown(ecs, enemy, "Earthen Rage", 4) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
+        }
+    }
+    if distance < 4 {
+        if check_behavior_cooldown(ecs, enemy, "Rock Slide", 3) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
+        }
+    }
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
