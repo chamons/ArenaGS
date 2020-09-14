@@ -189,7 +189,7 @@ pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
         if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
             try_behavior_and_if!(
                 use_skill_with_random_target(ecs, enemy, "Summon Elemental (Fire)", 6),
-                reduce_behavior_value(ecs, enemy, "Charge", 50)
+                reduce_behavior_value(ecs, enemy, "Charge", CHARGE_TO_SUMMON)
             );
         }
     }
