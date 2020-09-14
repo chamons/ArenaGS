@@ -43,13 +43,15 @@ fn find_placement(ecs: &World, width: u32, height: u32) -> Point {
 pub enum BattleKind {
     Bird,
     Elementalist,
+    SimpleGolem,
 }
 
 impl Distribution<BattleKind> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> BattleKind {
-        match rng.gen_range(0, 2) {
+        match rng.gen_range(0, 4) {
             0 => BattleKind::Bird,
             1 => BattleKind::Elementalist,
+            2 => BattleKind::SimpleGolem,
             _ => unreachable!(),
         }
     }
@@ -72,12 +74,16 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
     ecs.write_resource::<GameDifficultyComponent>().difficulty = difficulty;
 
     let player_position = find_placement(&ecs, 1, 1);
-    crate::clash::content::spawner::player(&mut ecs, player_position);
+    spawner::player(&mut ecs, player_position);
 
     match kind {
+        BattleKind::SimpleGolem => {
+            let enemy_position = find_placement(&ecs, 1, 1);
+            spawner::simple_golem(&mut ecs, enemy_position);
+        }
         BattleKind::Bird => {
             let enemy_position = find_placement(&ecs, 2, 2);
-            crate::clash::content::spawner::bird_monster(&mut ecs, enemy_position, difficulty);
+            spawner::bird_monster(&mut ecs, enemy_position, difficulty);
         }
         BattleKind::Elementalist => {
             use crate::clash::content::elementalist::ElementalKind;

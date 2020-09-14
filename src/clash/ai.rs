@@ -48,6 +48,7 @@ pub enum BehaviorKind {
     FireElemental,
     WindElemental,
     EarthElemental,
+    SimpleGolem,
     TickDamage,
     Explode,
     Orb,
@@ -65,6 +66,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: &Entity) {
         BehaviorKind::FireElemental => super::content::elementalist::fire_elemental_action(ecs, enemy),
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
+        BehaviorKind::SimpleGolem => super::content::tutorial::golem_action(ecs, enemy),
         BehaviorKind::Explode => begin_explode(ecs, &enemy),
         BehaviorKind::TickDamage => {
             wait(ecs, *enemy);

@@ -17,6 +17,7 @@ pub enum SpawnKind {
     WindElemental,
     EarthElemental,
     Elementalist,
+    SimpleGolem,
 }
 
 pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {

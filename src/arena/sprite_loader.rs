@@ -34,6 +34,11 @@ impl SpriteLoader {
                 SpriteKinds::BeachBackground => Box::new(Background::init(render_context, "beach")?),
                 SpriteKinds::MaleBrownHairBlueBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
                 SpriteKinds::MaleBlueHairRedBody => Box::new(DetailedCharacter::init(render_context, &SpriteFolderDescription::init(&folder, "1", "1"))?),
+                SpriteKinds::SimpleGolem => Box::new(LargeEnemy::init(
+                    render_context,
+                    &SpriteFolderDescription::init_without_set(&folder, "$monster_golem1"),
+                    1.5,
+                )?),
                 SpriteKinds::MonsterBirdBrown => Box::new(LargeEnemy::init(
                     render_context,
                     &SpriteFolderDescription::init_without_set(&folder, "$monster_bird1"),

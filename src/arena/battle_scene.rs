@@ -281,6 +281,7 @@ pub fn create_view_event(ecs: &mut World, kind: EventKind, target: Option<Entity
             SpawnKind::FireElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::FireElemental))),
             SpawnKind::WindElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::WindElemental))),
             SpawnKind::EarthElemental => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::EarthElemental))),
+            SpawnKind::SimpleGolem => ecs.shovel(target.unwrap(), RenderComponent::init(RenderInfo::init(SpriteKinds::SimpleGolem))),
             SpawnKind::Player => ecs.shovel(
                 target.unwrap(),
                 RenderComponent::init(RenderInfo::init_with_char_state(

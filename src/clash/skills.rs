@@ -228,6 +228,7 @@ lazy_static! {
         super::content::gunslinger::gunslinger_skills(&mut m);
         super::content::bird::bird_skills(&mut m);
         super::content::elementalist::elementalist_skills(&mut m);
+        super::content::tutorial::golem_skills(&mut m);
 
         m.insert(
             "Dash",
