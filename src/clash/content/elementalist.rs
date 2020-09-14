@@ -70,6 +70,28 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             false,
         ),
     );
+
+    m.insert(
+        "Lightning Surge",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
+            Some(4),
+            false,
+        ),
+    );
+
+    m.insert(
+        "Hailstone",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Hail),
+            Some(8),
+            false,
+        ),
+    );
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
@@ -117,6 +139,17 @@ pub fn fire_elemental_action(ecs: &mut World, enemy: &Entity) {
 }
 
 pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lightning Surge"));
+
+    let player_position = ecs.get_position(&find_player(ecs));
+    if find_field_at_location(ecs, &player_position).is_none() {
+        if check_behavior_cooldown(ecs, enemy, "Hailstone", 2) {
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Hailstone"));
+        }
+    }
+
+    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
 pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {

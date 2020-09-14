@@ -50,6 +50,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
         match attacks.grab(target).attack.ranged_kind() {
             BoltKind::Fire => CharacterAnimationState::Magic,
             BoltKind::Water => CharacterAnimationState::Magic,
+            BoltKind::Lightning => CharacterAnimationState::Magic,
             BoltKind::Bullet => CharacterAnimationState::Crouch,
             BoltKind::FireBullet => CharacterAnimationState::Crouch,
             BoltKind::AirBullet => CharacterAnimationState::Crouch,
@@ -88,6 +89,7 @@ pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
         let sprite = match attack.ranged_kind() {
             BoltKind::Fire => SpriteKinds::FireBolt,
             BoltKind::Water => SpriteKinds::WaterBolt,
+            BoltKind::Lightning => SpriteKinds::LightningOrb,
             BoltKind::Bullet => SpriteKinds::Bullet,
             BoltKind::FireBullet => SpriteKinds::FireBullet,
             BoltKind::AirBullet => SpriteKinds::AirBullet,
@@ -114,6 +116,7 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
         let field_casts = ecs.read_storage::<FieldCastComponent>();
         match field_casts.grab(target).kind {
             FieldKind::Fire => CharacterAnimationState::Crouch,
+            FieldKind::Hail => CharacterAnimationState::Crouch,
         }
     };
     cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCastAnimation));
@@ -125,6 +128,7 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
         let cast = field_casts.grab(bolt);
         let sprite = match cast.kind {
             FieldKind::Fire => SpriteKinds::FireBolt,
+            FieldKind::Hail => SpriteKinds::NoBolt,
         };
         (cast.target.origin, sprite)
     };
@@ -199,10 +203,18 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
 pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
-    ecs.shovel(target, RenderComponent::init(RenderInfo::init(SpriteKinds::Explosion)));
+    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
+    let sprite = match attack_info.explode_kind() {
+        ExplosionKind::Bomb => SpriteKinds::Explosion,
+        ExplosionKind::Cloud => SpriteKinds::Cloud,
+        ExplosionKind::Lightning => SpriteKinds::LightningStrike,
+        ExplosionKind::Fire => SpriteKinds::FireColumn,
+        ExplosionKind::Water => SpriteKinds::WaterColumn,
+    };
+    ecs.shovel(target, RenderComponent::init(RenderInfo::init(sprite)));
     ecs.write_storage::<FieldComponent>().remove(target);
 
-    const EXPLOSION_LENGTH: u64 = 18;
+    const EXPLOSION_LENGTH: u64 = 22;
     let attack_animation = Animation::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::CompleteAnimation), Some(target));
     add_animation(ecs, target, attack_animation);
 }
