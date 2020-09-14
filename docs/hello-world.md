@@ -6,10 +6,10 @@ Before I got into details, let's see what it looks like today:
 
 This is the full game window:
 
-![Full Screen](images/hello-world-1.png)
+![Full Screen]({{ site.baseurl }}/images/hello-world-1.png)
 
 and these are stippets of the other two fights:
 
-![Golem](images/hello-world-2.png)
+![Golem]({{ site.baseurl }}/images/hello-world-2.png)
 
-![Summoner](images/hello-world-3.png)
+![Summoner]({{ site.baseurl }}/images/hello-world-3.png)
