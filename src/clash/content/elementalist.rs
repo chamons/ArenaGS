@@ -210,7 +210,7 @@ pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
             );
         }
     }
-    try_behavior_and_if!(use_skill(ecs, enemy, "Invoke the Elements"), increment_behavior_value(ecs, enemy, "Charge", 20));
+    try_behavior_and_if!(use_skill(ecs, enemy, "Invoke the Elements"), increment_behavior_value(ecs, enemy, "Charge", 10));
     wait(ecs, *enemy);
 }
 
