@@ -20,10 +20,17 @@ mod detailed_character;
 pub use detailed_character::{CharacterAnimationState, DetailedCharacter};
 
 // Spritesheet (3 by 4) (1 character, 4 directions)
-// Image Size (122x122)
-// Blit Size (122x96) (We cut off the shadow bottom for now https://github.com/chamons/ArenaGS/issues/207)
+// Normal
+//    Image Size (94x100)
+//    Blit Size (94x100) (We cut off the shadow bottom for now https://github.com/chamons/ArenaGS/issues/207)
+// Bird
+//    Image Size (122x122)
+//    Blit Size (122x96) (We cut off the shadow bottom for now https://github.com/chamons/ArenaGS/issues/207)
+// LargeBird
+//    Image Size (122x122)
+//    Blit Size (122x96) (zoom 1.5) (We cut off the shadow bottom for now https://github.com/chamons/ArenaGS/issues/207)
 mod large_enemy;
-pub use large_enemy::LargeEnemy;
+pub use large_enemy::{LargeCharacterSize, LargeEnemy};
 
 // Spritesheet (12 by 8) (8 characters, 4 directions)
 // Micro Size:

@@ -48,7 +48,7 @@ pub enum BattleKind {
 
 impl Distribution<BattleKind> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> BattleKind {
-        match rng.gen_range(0, 4) {
+        match rng.gen_range(0, 3) {
             0 => BattleKind::Bird,
             1 => BattleKind::Elementalist,
             2 => BattleKind::SimpleGolem,
