@@ -100,8 +100,8 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
                     ElementalKind::Earth => spawner::earth_elemental(&mut ecs, enemy_position, difficulty),
                 }
             }
-            // let enemy_position = find_placement(&ecs, 1, 1);
-            // crate::clash::content::spawner::elementalist(&mut ecs, enemy_position, difficulty);
+            let enemy_position = find_placement(&ecs, 1, 1);
+            spawner::elementalist(&mut ecs, enemy_position, difficulty);
         }
     }
 

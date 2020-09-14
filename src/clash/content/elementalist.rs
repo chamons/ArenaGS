@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use specs::prelude::*;
 
 use super::super::*;
-use crate::try_behavior;
+use crate::{try_behavior, try_behavior_and_if};
 
 const TIDAL_SURGE_SIZE: u32 = 2;
 const HEALING_MIST_RANGE: u32 = 5;
@@ -125,11 +125,95 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             false,
         ),
     );
+    m.insert(
+        "Summon Elemental (Water)",
+        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WaterElemental)),
+    );
+    m.insert(
+        "Summon Elemental (Fire)",
+        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)),
+    );
+    m.insert(
+        "Summon Elemental (Wind)",
+        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)),
+    );
+    m.insert(
+        "Summon Elemental (Earth)",
+        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::EarthElemental)),
+    );
+
+    m.insert(
+        "Frost Armor",
+        SkillInfo::init(None, TargetType::Any, SkillEffect::Buff(StatusKind::Armored, 2000)),
+    );
+
+    // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
+    m.insert("Invoke the Elements", SkillInfo::init(None, TargetType::None, SkillEffect::None));
+
+    m.insert(
+        "Call Lightning",
+        SkillInfo::init_with_distance(
+            None,
+            TargetType::Player,
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+            Some(6),
+            false,
+        ),
+    );
+}
+
+const CHARGE_TO_SUMMON: u32 = 50;
+const MAX_ELEMENTS_SUMMONED: u32 = 4;
+
+fn get_elemental_summon_count(ecs: &World) -> u32 {
+    find_all_characters(ecs)
+        .iter()
+        .filter(|&&c| {
+            if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(c) {
+                match b.behavior {
+                    BehaviorKind::WaterElemental | BehaviorKind::FireElemental | BehaviorKind::WindElemental | BehaviorKind::EarthElemental => {
+                        return true;
+                    }
+                    _ => return false,
+                }
+            } else {
+                false
+            }
+        })
+        .count() as u32
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
+    let current_charge = get_behavior_value(ecs, enemy, "Charge", 0);
+    if current_charge > CHARGE_TO_SUMMON {
+        if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
+            try_behavior_and_if!(
+                use_skill_with_random_target(ecs, enemy, "Summon Elemental (Fire)", 6),
+                reduce_behavior_value(ecs, enemy, "Charge", 50)
+            );
+        }
+    }
+
+    if !ecs.has_status(enemy, StatusKind::Armored) {
+        try_behavior_and_if!(
+            use_skill_with_random_target(ecs, enemy, "Frost Armor", 6),
+            increment_behavior_value(ecs, enemy, "Charge", 5)
+        );
+    }
+
+    let player_position = ecs.get_position(&find_player(ecs));
+    if find_field_at_location(ecs, &player_position).is_none() {
+        if check_behavior_cooldown(ecs, enemy, "Call Lightning", 2) {
+            try_behavior_and_if!(
+                use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"),
+                increment_behavior_value(ecs, enemy, "Charge", 5)
+            );
+        }
+    }
+    try_behavior_and_if!(use_skill(ecs, enemy, "Invoke the Elements"), increment_behavior_value(ecs, enemy, "Charge", 20));
     wait(ecs, *enemy);
 }
+
 pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
     let current_position = ecs.get_position(enemy);
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);

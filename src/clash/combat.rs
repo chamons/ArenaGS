@@ -17,6 +17,7 @@ pub enum FieldEffect {
 pub enum FieldKind {
     Fire,
     Hail,
+    Lightning,
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
@@ -258,6 +259,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
             let ((r, g, b), explosion_kind) = match cast.kind {
                 FieldKind::Fire => ((255, 0, 0), ExplosionKind::Fire),
                 FieldKind::Hail => ((0, 43, 102), ExplosionKind::Water),
+                FieldKind::Lightning => ((166, 171, 35), ExplosionKind::Lightning),
             };
 
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::Explode(explosion_kind, explosion_size), None);
@@ -275,6 +277,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
             let (r, g, b) = match cast.kind {
                 FieldKind::Fire => (255, 140, 0),
                 FieldKind::Hail => (0, 42, 102),
+                FieldKind::Lightning => (166, 171, 35),
             };
 
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));
@@ -519,7 +522,12 @@ mod tests {
         let starting_health = ecs.get_defenses(&target).health;
         ecs.shovel(
             exploder,
-            AttackComponent::init(Point::init(2, 3), Damage::init(2), AttackKind::Explode(1), Some(Point::init(2, 3))),
+            AttackComponent::init(
+                Point::init(2, 3),
+                Damage::init(2),
+                AttackKind::Explode(ExplosionKind::Bomb, 1),
+                Some(Point::init(2, 3)),
+            ),
         );
         begin_explode(&mut ecs, &exploder);
         wait_for_animations(&mut ecs);

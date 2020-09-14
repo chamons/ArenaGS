@@ -117,6 +117,7 @@ pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
         match field_casts.grab(target).kind {
             FieldKind::Fire => CharacterAnimationState::Crouch,
             FieldKind::Hail => CharacterAnimationState::Crouch,
+            FieldKind::Lightning => CharacterAnimationState::Crouch,
         }
     };
     cast_animation(ecs, target, animation, EventKind::Field(FieldState::CompleteCastAnimation));
@@ -129,6 +130,7 @@ pub fn begin_ranged_field_animation(ecs: &mut World, bolt: Entity) {
         let sprite = match cast.kind {
             FieldKind::Fire => SpriteKinds::FireBolt,
             FieldKind::Hail => SpriteKinds::NoBolt,
+            FieldKind::Lightning => SpriteKinds::NoBolt,
         };
         (cast.target.origin, sprite)
     };

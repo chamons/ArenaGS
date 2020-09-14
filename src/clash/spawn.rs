@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
+use super::content::spawner;
 use super::find_clear_landing;
 use super::ShortInfo;
 use crate::atlas::SizedPoint;
@@ -21,8 +22,12 @@ pub enum SpawnKind {
 pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
     let target = find_clear_landing(ecs, &target, None);
     match kind {
-        SpawnKind::Egg => super::content::spawner::bird_monster_add_egg(ecs, target),
-        SpawnKind::BirdSpawn => super::content::spawner::bird_monster_add(ecs, target),
+        SpawnKind::Egg => spawner::bird_monster_add_egg(ecs, target),
+        SpawnKind::BirdSpawn => spawner::bird_monster_add(ecs, target),
+        SpawnKind::WaterElemental => spawner::water_elemental(ecs, target.origin, 0),
+        SpawnKind::FireElemental => spawner::fire_elemental(ecs, target.origin, 0),
+        SpawnKind::WindElemental => spawner::wind_elemental(ecs, target.origin, 0),
+        SpawnKind::EarthElemental => spawner::earth_elemental(ecs, target.origin, 0),
         _ => panic!("Can not spawn {:?} during combat", kind),
     }
 }
