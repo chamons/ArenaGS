@@ -6,10 +6,10 @@ Before I got into details, let's see what it looks like today:
 
 This is the full game window:
 
-![Full Screen](/images/hello-world-1.jpg)
+![Full Screen](https://chamons.github.io/ArenaGS/images/hello-world-1.jpg)
 
 and these are stippets of the other two fights:
 
-![Golem](/images/hello-world-2.jpg)
+![Golem](https://chamons.github.io/ArenaGS/images/hello-world-2.jpg)
 
-![Summoner](/images/hello-world-3.jpg)
+![Summoner](https://chamons.github.io/ArenaGS/images/hello-world-3.jpg)
