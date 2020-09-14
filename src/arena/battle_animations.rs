@@ -114,6 +114,7 @@ pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 pub fn begin_ranged_cast_field_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let field_casts = ecs.read_storage::<FieldCastComponent>();
+        #[allow(clippy::match_single_binding)]
         match field_casts.grab(target).kind {
             _ => CharacterAnimationState::Crouch,
         }
