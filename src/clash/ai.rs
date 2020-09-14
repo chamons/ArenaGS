@@ -343,8 +343,8 @@ pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) ->
     let position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(&ecs));
     for origin in position.all_positions() {
-        for d in vec![Direction::North, Direction::East, Direction::South, Direction::East] {
-            if origin.get_cone(d, size).iter().any(|p| player_position.contains_point(p)) {
+        for d in &[Direction::North, Direction::East, Direction::South, Direction::East] {
+            if origin.get_cone(*d, size).iter().any(|p| player_position.contains_point(p)) {
                 return Some(d.point_in_direction(&origin).unwrap());
             }
         }
