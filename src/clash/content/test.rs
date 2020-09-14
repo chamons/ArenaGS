@@ -82,6 +82,19 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 
     m.insert("Buff", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Aimed, 300)));
+    m.insert("BuffOthers", SkillInfo::init(None, TargetType::Any, SkillEffect::Buff(StatusKind::Aimed, 300)));
+    m.insert(
+        "BuffAndSwing",
+        SkillInfo::init(
+            None,
+            TargetType::Enemy,
+            SkillEffect::BuffThen(
+                StatusKind::Armored,
+                300,
+                Box::from(SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword)),
+            ),
+        ),
+    );
 
     m.insert(
         "BuffAndMove",
