@@ -6,6 +6,10 @@ pub fn get_exe_folder() -> String {
     let exe_path = exe.to_str().unwrap();
     let mut bits: Vec<&str> = exe_path.split(MAIN_SEPARATOR).collect();
     bits.pop();
+
+    #[cfg(test)]
+    bits.pop();
+
     bits.join(&MAIN_SEPARATOR.to_string())
 }
 

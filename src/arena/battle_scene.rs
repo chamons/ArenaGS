@@ -219,18 +219,7 @@ impl Scene for BattleScene {
     }
 
     fn tick(&mut self, frame: u64) {
-        process_tick_events(&mut self.ecs, frame);
-
-        if !battle_actions::has_animations_blocking(&self.ecs) {
-            let player_can_act = tick_next_action(&mut self.ecs);
-            if player_can_act {
-                battle_actions::process_any_queued_action(&mut self.ecs);
-                #[cfg(feature = "self_play")]
-                {
-                    super::self_play::take_player_action(&mut self.ecs);
-                }
-            }
-        }
+        battle_tick(&mut self.ecs, frame);
     }
 
     fn on_quit(&mut self) -> BoxResult<()> {
@@ -241,19 +230,38 @@ impl Scene for BattleScene {
     }
 
     fn ask_stage_direction(&self) -> StageDirection {
-        if self.ecs.try_fetch::<PlayerDeadComponent>().is_some() {
-            return StageDirection::BattlePlayerDeath("This is where detailed death info goes".to_string());
-        }
-        let entities = self.ecs.read_resource::<specs::world::EntitiesRes>();
-        let character_infos = self.ecs.read_storage::<CharacterInfoComponent>();
-        let player = self.ecs.read_storage::<PlayerComponent>();
-
-        let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
-        if non_player_character_count == 0 {
-            return StageDirection::BattleEnemyDefeated(self.ecs.read_resource::<GameDifficultyComponent>().difficulty + 1);
-        }
-        StageDirection::Continue
+        battle_stage_direction(&self.ecs)
     }
+}
+
+pub fn battle_tick(ecs: &mut World, frame: u64) {
+    process_tick_events(ecs, frame);
+
+    if !battle_actions::has_animations_blocking(ecs) {
+        let player_can_act = tick_next_action(ecs);
+        if player_can_act {
+            battle_actions::process_any_queued_action(ecs);
+            #[cfg(feature = "self_play")]
+            {
+                super::self_play::take_player_action(ecs);
+            }
+        }
+    }
+}
+
+pub fn battle_stage_direction(ecs: &World) -> StageDirection {
+    if ecs.try_fetch::<PlayerDeadComponent>().is_some() {
+        return StageDirection::BattlePlayerDeath("This is where detailed death info goes".to_string());
+    }
+    let entities = ecs.read_resource::<specs::world::EntitiesRes>();
+    let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let player = ecs.read_storage::<PlayerComponent>();
+
+    let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
+    if non_player_character_count == 0 {
+        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GameDifficultyComponent>().difficulty + 1);
+    }
+    StageDirection::Continue
 }
 
 pub fn process_tick_events(ecs: &mut World, frame: u64) {
