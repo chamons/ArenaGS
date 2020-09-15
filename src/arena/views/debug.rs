@@ -51,6 +51,7 @@ impl View for DebugView {
                             canvas.fill_rect(field_rect)?;
                         }
                     }
+                    canvas.set_blend_mode(BlendMode::None);
                 }
             }
         }
