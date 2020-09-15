@@ -1,3 +1,5 @@
+# Hello World
+
 Welcome to the first development update for Arena: Gunpowder and Sorcery. 
 
 It's a game that's been in development for about 3 months at this point as a side passion project. It's around 10k lines of source code, which sounds more than it really since everything is currently defined in source code. 
