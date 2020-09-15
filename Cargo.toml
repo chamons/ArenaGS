@@ -5,6 +5,10 @@ authors = ["Chris Hamons <chris.hamons@gmail.com>"]
 edition = "2018"
 build = "build.rs"
 
+[features]
+self_play = []
+default = ["self_play"]
+
 [dependencies]
 specs = {  version = "0.16.1", features = ["serde"] }
 specs-derive = "0.4.1"

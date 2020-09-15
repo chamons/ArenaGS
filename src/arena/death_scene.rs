@@ -29,13 +29,15 @@ impl DeathScene {
         let box_height = 300;
         let position = SDLRect::from_center(SDLPoint::new(mid_x, mid_y), box_width, box_height);
 
+        let interacted = if cfg!(feature = "self_play") { true } else { false };
+
         Ok(DeathScene {
             background,
             presentation_frame: std::u64::MAX,
             message,
             text: Rc::clone(text),
             position,
-            interacted: false,
+            interacted,
         })
     }
 
