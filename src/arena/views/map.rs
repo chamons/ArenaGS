@@ -136,6 +136,7 @@ impl MapView {
                 }
             }
         }
+        canvas.set_blend_mode(BlendMode::None);
 
         Ok(())
     }
