@@ -14,18 +14,13 @@ pub fn print_selfplay_stats(ecs: &World) {
     println!("Hey World!")
 }
 
-#[cfg(any(test, feature = "profile_self_play"))]
+#[cfg(feature = "profile_self_play")]
 pub mod tests {
     use std::time::Instant;
 
     use crate::conductor::StageDirection;
 
-    #[test]
-    fn self_play_10000_games() {
-        self_play_10000_games_core();
-    }
-
-    pub fn self_play_10000_games_core() {
+    pub fn self_play_10000_games() {
         let start = Instant::now();
         for _ in 0..10000 {
             let mut ecs = super::super::new_game::random_new_world(0).unwrap();

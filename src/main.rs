@@ -36,7 +36,7 @@ mod arena;
 pub fn main() -> BoxResult<()> {
     #[cfg(feature = "profile_self_play")]
     {
-        crate::arena::self_play::tests::self_play_10000_games_core();
+        crate::arena::self_play::tests::self_play_10000_games();
         return Ok(());
     }
 
