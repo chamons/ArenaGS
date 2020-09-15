@@ -20,7 +20,8 @@ use std::panic;
 
 mod atlas;
 #[cfg(debug_assertions)]
-use atlas::{on_crash, BoxResult};
+use atlas::on_crash;
+use atlas::BoxResult;
 
 mod after_image;
 use after_image::{FontContext, RenderContext, TextRenderer};
