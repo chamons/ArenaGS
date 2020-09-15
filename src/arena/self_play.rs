@@ -10,10 +10,6 @@ pub fn take_player_action(ecs: &mut World) {
     wait(ecs, find_player(ecs));
 }
 
-pub fn print_selfplay_stats(ecs: &World) {
-    println!("Hey World!")
-}
-
 #[cfg(feature = "profile_self_play")]
 pub mod tests {
     use std::time::Instant;
@@ -22,6 +18,10 @@ pub mod tests {
 
     pub fn self_play_10000_games() {
         let start = Instant::now();
+
+        let mut deaths = 0;
+        let mut wins = 0;
+
         for _ in 0..10000 {
             let mut ecs = super::super::new_game::random_new_world(0).unwrap();
             let mut frame: u64 = 0;
@@ -31,9 +31,11 @@ pub mod tests {
 
                 match super::super::battle_scene::battle_stage_direction(&ecs) {
                     StageDirection::BattleEnemyDefeated(_) => {
+                        wins += 1;
                         break;
                     }
                     StageDirection::BattlePlayerDeath(_) => {
+                        deaths += 1;
                         break;
                     }
                     _ => {}
@@ -43,5 +45,7 @@ pub mod tests {
 
         let duration = start.elapsed();
         println!("That took {} ms", duration.as_millis());
+        println!("Won: {}", wins);
+        println!("Deaths: {}", deaths);
     }
 }

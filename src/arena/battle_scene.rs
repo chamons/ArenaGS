@@ -85,12 +85,6 @@ impl BattleScene {
                     self.ecs = new_world;
                 }
             }
-            #[cfg(feature = "self_play")]
-            Keycode::Q => {
-                super::self_play::print_selfplay_stats(&self.ecs);
-                std::process::exit(0);
-            }
-
             _ => {}
         }
     }
