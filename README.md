@@ -25,6 +25,14 @@ cargo build
 cargo test
 ```
 
+You can run 10,000 games for profiling via:
+
+```
+cargo run --release --features="profile_self_play"
+```
+
+which will skip the game and run the associated profiling test.
+
 # Art
 
 Q: Where did you get this amazing art if you didn't draw it?

@@ -34,6 +34,12 @@ mod clash;
 mod arena;
 
 pub fn main() -> BoxResult<()> {
+    #[cfg(feature = "profile_self_play")]
+    {
+        crate::arena::self_play::tests::self_play_10000_games_core();
+        return Ok(());
+    }
+
     std::env::set_var("RUST_BACKTRACE", "1");
 
     #[cfg(debug_assertions)]
