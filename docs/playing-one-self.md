@@ -33,4 +33,6 @@ The idea of throwing random inputs at a system is not new, it's called [Monkey T
 
 I was honestly shocked that _within 5 seconds of running my test_ that it found a really good bug.
 
-Before I get back to working on that balance tool, I'll be running the game against itself for awhile to see if we can flush out more fun bugs.
+I shelved working on making the script do more than wonder around, writing the logic was a bit more involved that I expect.
+
+Until I make time to do that though, running the game against itself every so often will still be useful to find bugs. 
