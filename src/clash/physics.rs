@@ -150,6 +150,14 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
         }
     };
 
+    // A 2x2 character can't move their origin to the 0'th row, as their 'head' would poke off the map
+    // Same goes for one of the 13th column
+    let top_x = new.origin.x + new.width;
+    let top_y = new.origin.y as i32 - new.height as i32;
+    if top_x >= MAX_MAP_TILES || top_y < 0 {
+        return false;
+    }
+
     is_area_clear_of_others(ecs, &new.all_positions(), mover) && has_exhaustion
 }
 
@@ -365,5 +373,15 @@ mod tests {
 
         assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn can_move_boundary_crash() {
+        let ecs = create_test_state()
+            .with_sized_character(SizedPoint::init_multi(8, 1, 2, 2), 100)
+            .with_map()
+            .build();
+        let enemy = find_at(&ecs, 8, 1);
+        can_move_character(&ecs, &enemy, SizedPoint::init_multi(8, 0, 2, 2));
     }
 }

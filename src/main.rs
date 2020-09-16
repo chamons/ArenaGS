@@ -20,7 +20,8 @@ use std::panic;
 
 mod atlas;
 #[cfg(debug_assertions)]
-use atlas::{on_crash, BoxResult};
+use atlas::on_crash;
+use atlas::BoxResult;
 
 mod after_image;
 use after_image::{FontContext, RenderContext, TextRenderer};
@@ -33,6 +34,12 @@ mod clash;
 mod arena;
 
 pub fn main() -> BoxResult<()> {
+    #[cfg(feature = "profile_self_play")]
+    {
+        crate::arena::self_play::tests::self_play_10000_games();
+        return Ok(());
+    }
+
     std::env::set_var("RUST_BACKTRACE", "1");
 
     #[cfg(debug_assertions)]

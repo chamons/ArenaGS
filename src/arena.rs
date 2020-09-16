@@ -26,3 +26,6 @@ pub mod battle_scene;
 pub mod death_scene;
 pub mod new_game;
 pub mod round_fade_scene;
+
+#[cfg(feature = "self_play")]
+pub mod self_play;
