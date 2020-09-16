@@ -99,7 +99,7 @@ impl Distribution<Direction> for Standard {
     }
 }
 
-fn get_random_direction(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
+fn get_random_direction_to_move(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
     for _ in 0..5 {
         let direction: Direction = random.gen();
@@ -142,7 +142,7 @@ pub fn get_random_full_direction_list(ecs: &mut World) -> Vec<Direction> {
 
 pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     let position = ecs.get_position(enemy);
-    if let Some(direction) = get_random_direction(ecs, position, enemy) {
+    if let Some(direction) = get_random_direction_to_move(ecs, position, enemy) {
         let point = point_in_direction(&position, direction).unwrap();
         move_character_action(ecs, *enemy, point)
     } else {

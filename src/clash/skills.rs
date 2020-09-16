@@ -314,6 +314,19 @@ pub fn in_possible_skill_range(ecs: &World, invoker: &Entity, skill: &SkillInfo,
     true
 }
 
+pub fn in_possible_skill_range_for_secondary(position: &SizedPoint, skill: &SkillInfo, target: Point) -> bool {
+    if let Some(skill_range) = skill_secondary_range(skill) {
+        if let Some(range_to_target) = position.distance_to(target) {
+            if range_to_target > skill_range {
+                return false;
+            }
+        }
+    }
+
+    // Ignore must_be_clear since for secondary skills that is talking about movement location
+    true
+}
+
 pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
     match skill.effect {
         SkillEffect::MoveAndShoot(_, range, _) => range,
