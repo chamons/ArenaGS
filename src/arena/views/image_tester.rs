@@ -7,7 +7,7 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::{ContextData, View};
-use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer, UILoader};
+use crate::after_image::{IconLoader, RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene, StageDirection, Storyteller};
 
@@ -17,10 +17,14 @@ pub struct ImageTesterScene {
 }
 
 impl ImageTesterScene {
-    pub fn init(_render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>, ui_loader: &Rc<UILoader>) -> BoxResult<ImageTesterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
         Ok(ImageTesterScene {
             ecs: World::new(),
-            view: Box::new(super::view_components::Frame::init(SDLPoint::new(20, 20), ui_loader)?),
+            view: Box::new(super::view_components::Frame::init(
+                SDLPoint::new(20, 20),
+                &render_context_holder.borrow(),
+                &IconLoader::init_ui()?,
+            )?),
         })
     }
 }
@@ -55,7 +59,6 @@ impl Scene for ImageTesterScene {
 pub struct ImageTesterStoryteller {
     render_context: RenderContextHolder,
     text_renderer: Rc<TextRenderer>,
-    ui_loader: Rc<UILoader>,
 }
 
 impl ImageTesterStoryteller {
@@ -63,7 +66,6 @@ impl ImageTesterStoryteller {
         Ok(ImageTesterStoryteller {
             render_context: Rc::clone(render_context_holder),
             text_renderer: Rc::clone(&text_renderer),
-            ui_loader: Rc::new(UILoader::init(&render_context_holder.borrow())?),
         })
     }
 }
@@ -74,6 +76,6 @@ impl Storyteller for ImageTesterStoryteller {
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
-        Box::new(ImageTesterScene::init(&self.render_context, &self.text_renderer, &self.ui_loader).unwrap())
+        Box::new(ImageTesterScene::init(&self.render_context, &self.text_renderer).unwrap())
     }
 }
