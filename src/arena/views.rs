@@ -10,6 +10,7 @@ mod log;
 mod map;
 mod skillbar;
 mod status_display;
+pub mod view_components;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone)]
