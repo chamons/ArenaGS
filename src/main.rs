@@ -24,10 +24,10 @@ use atlas::on_crash;
 use atlas::BoxResult;
 
 mod after_image;
-use after_image::{FontContext, RenderContext, TextRenderer};
+use after_image::{FontContext, RenderContext, TextRenderer, RenderContextHolder};
 
 mod conductor;
-use conductor::Director;
+use conductor::{Director, Storyteller};
 
 mod clash;
 
@@ -52,13 +52,23 @@ pub fn main() -> BoxResult<()> {
     }
 
     let render_context = Rc::new(RefCell::new(RenderContext::initialize()?));
-    // See text_renderer.rs for details on this hack
-    let font_context = Box::from(FontContext::initialize()?).leak();
-    let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
-
-    let storyteller = Box::new(arena::arena_storyteller::ArenaStoryteller::init(&render_context, &text_renderer));
-    let mut director = Director::init(storyteller);
+    let mut director = Director::init(get_storyteller(&render_context)?);
     director.run(render_context)?;
 
     Ok(())
+}
+
+fn get_storyteller (render_context: &RenderContextHolder) -> BoxResult<Box<dyn Storyteller>> {
+    // See text_renderer.rs for details on this hack
+    let font_context = Box::from(FontContext::initialize()?).leak();
+    let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
+    
+    #[cfg(feature = "image_tester")]
+    {
+        return Ok(Box::new(arena::ImageTesterStoryteller::init(&render_context, &text_renderer)));
+    }
+    #[cfg(not(feature = "image_tester"))]
+    {
+        return Ok(Box::new(arena::arena_storyteller::ArenaStoryteller::init(&render_context, &text_renderer)));
+    }
 }

@@ -12,6 +12,7 @@ pub struct ArenaStoryteller {
     text_renderer: Rc<TextRenderer>,
 }
 
+#[allow(dead_code)]
 impl ArenaStoryteller {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> ArenaStoryteller {
         ArenaStoryteller {
