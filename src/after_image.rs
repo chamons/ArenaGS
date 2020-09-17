@@ -11,6 +11,7 @@ mod image_loader;
 mod render_context;
 mod sprites;
 mod text_renderer;
+mod ui_loader;
 
 pub use icon_cache::IconCache;
 pub use icon_loader::IconLoader;
@@ -18,3 +19,4 @@ pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::*;
 pub use text_renderer::{FontColor, FontSize, TextRenderer};
+pub use ui_loader::UILoader;

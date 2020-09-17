@@ -24,7 +24,7 @@ use atlas::on_crash;
 use atlas::BoxResult;
 
 mod after_image;
-use after_image::{FontContext, RenderContext, TextRenderer, RenderContextHolder};
+use after_image::{FontContext, RenderContext, RenderContextHolder, TextRenderer};
 
 mod conductor;
 use conductor::{Director, Storyteller};
@@ -58,14 +58,14 @@ pub fn main() -> BoxResult<()> {
     Ok(())
 }
 
-fn get_storyteller (render_context: &RenderContextHolder) -> BoxResult<Box<dyn Storyteller>> {
+fn get_storyteller(render_context: &RenderContextHolder) -> BoxResult<Box<dyn Storyteller>> {
     // See text_renderer.rs for details on this hack
     let font_context = Box::from(FontContext::initialize()?).leak();
     let text_renderer = Rc::new(TextRenderer::init(&font_context)?);
-    
+
     #[cfg(feature = "image_tester")]
     {
-        return Ok(Box::new(arena::ImageTesterStoryteller::init(&render_context, &text_renderer)));
+        return Ok(Box::new(arena::ImageTesterStoryteller::init(&render_context, &text_renderer)?));
     }
     #[cfg(not(feature = "image_tester"))]
     {

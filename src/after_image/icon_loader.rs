@@ -8,6 +8,8 @@ use crate::after_image::{load_image, RenderContext};
 
 use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
 
+// IconLoader lazily loads on first access. This means consumers must
+// all get all all relevent images outside of a render loop (else we die)
 pub struct IconLoader {
     images: HashMap<String, String>,
 }

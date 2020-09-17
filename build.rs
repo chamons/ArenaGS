@@ -58,7 +58,7 @@ fn main() {
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir.stringify()));
     }
 
-    for (folder, extension) in &[("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png")] {
+    for (folder, extension) in &[("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png"), ("ui", "png")] {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("ArenaGS-Data").join(folder);
         if path.exists() {
             copy_all_with_extension(&path, &dest_dir.join(folder).stringify(), extension).unwrap_or_else(|_| panic!(format!("Unable to copy {}", folder)));

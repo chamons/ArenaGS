@@ -7,7 +7,7 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::{ContextData, View};
-use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
+use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer, UILoader};
 use crate::atlas::BoxResult;
 use crate::conductor::{EventStatus, Scene, StageDirection, Storyteller};
 
@@ -17,10 +17,10 @@ pub struct ImageTesterScene {
 }
 
 impl ImageTesterScene {
-    pub fn init(_render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
+    pub fn init(_render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>, ui_loader: &Rc<UILoader>) -> BoxResult<ImageTesterScene> {
         Ok(ImageTesterScene {
             ecs: World::new(),
-            view: Box::new(super::view_components::Frame::init(SDLPoint::new(20, 20))?),
+            view: Box::new(super::view_components::Frame::init(SDLPoint::new(20, 20), ui_loader)?),
         })
     }
 }
@@ -55,14 +55,16 @@ impl Scene for ImageTesterScene {
 pub struct ImageTesterStoryteller {
     render_context: RenderContextHolder,
     text_renderer: Rc<TextRenderer>,
+    ui_loader: Rc<UILoader>,
 }
 
 impl ImageTesterStoryteller {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> ImageTesterStoryteller {
-        ImageTesterStoryteller {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterStoryteller> {
+        Ok(ImageTesterStoryteller {
             render_context: Rc::clone(render_context_holder),
             text_renderer: Rc::clone(&text_renderer),
-        }
+            ui_loader: Rc::new(UILoader::init(&render_context_holder.borrow())?),
+        })
     }
 }
 
@@ -72,6 +74,6 @@ impl Storyteller for ImageTesterStoryteller {
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
-        Box::new(ImageTesterScene::init(&self.render_context, &self.text_renderer).unwrap())
+        Box::new(ImageTesterScene::init(&self.render_context, &self.text_renderer, &self.ui_loader).unwrap())
     }
 }
