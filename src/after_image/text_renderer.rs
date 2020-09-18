@@ -9,6 +9,7 @@ use crate::atlas::{get_exe_folder, BoxResult};
 
 #[allow(dead_code)]
 pub enum FontSize {
+    Micro,
     Small,
     Large,
     Bold,
@@ -28,6 +29,7 @@ pub enum FontColor {
 // the game, all of this goes away.
 // This is safe, right?!?
 pub struct TextRenderer {
+    micro_font: sdl2::ttf::Font<'static, 'static>,
     small_font: sdl2::ttf::Font<'static, 'static>,
     bold_font: sdl2::ttf::Font<'static, 'static>,
     large_font: sdl2::ttf::Font<'static, 'static>,
@@ -37,6 +39,8 @@ impl TextRenderer {
     pub fn init(font_context: &'static FontContext) -> BoxResult<TextRenderer> {
         let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
 
+        let mut micro_font = font_context.ttf_context.load_font(font_path.clone(), 9)?;
+        micro_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
         small_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut bold_font = font_context.ttf_context.load_font(font_path.clone(), 16)?;
@@ -45,6 +49,7 @@ impl TextRenderer {
         large_font.set_style(sdl2::ttf::FontStyle::NORMAL);
 
         Ok(TextRenderer {
+            micro_font,
             small_font,
             bold_font,
             large_font,
@@ -53,6 +58,7 @@ impl TextRenderer {
 
     pub fn render_texture(&self, canvas: &RenderCanvas, text: &str, size: FontSize, color: FontColor) -> BoxResult<((u32, u32), Texture)> {
         let font = match size {
+            FontSize::Micro => &self.micro_font,
             FontSize::Small => &self.small_font,
             FontSize::Bold => &self.bold_font,
             FontSize::Large => &self.large_font,

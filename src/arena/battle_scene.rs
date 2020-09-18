@@ -32,7 +32,7 @@ impl BattleScene {
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
-                SDLPoint::new(137, 41 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
+                SDLPoint::new(137, 25 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
             Box::from(LogView::init(SDLPoint::new(780, 550), &render_context, Rc::clone(&text_renderer))?),
