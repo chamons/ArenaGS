@@ -8,37 +8,40 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
-use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
+use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::conductor::{Scene, StageDirection};
 
 pub struct DeathScene {
-    background: Texture,
+    screen_background: Texture,
     presentation_frame: u64,
     message: String,
     text: Rc<TextRenderer>,
     position: SDLRect,
     interacted: bool,
+    frame: Texture,
 }
 
 impl DeathScene {
-    pub fn init(background: Texture, canvas: &mut RenderCanvas, text: &Rc<TextRenderer>, message: String) -> BoxResult<DeathScene> {
-        let output_size = canvas.output_size()?;
+    pub fn init(screen_background: Texture, render_context: &RenderContextHolder, text: &Rc<TextRenderer>, message: String) -> BoxResult<DeathScene> {
+        let output_size = { render_context.borrow().canvas.output_size()? };
         let (mid_x, mid_y) = ((output_size.0 / 2) as i32, (output_size.1 / 2) as i32);
         let box_width = 500;
         let box_height = 300;
         let position = SDLRect::from_center(SDLPoint::new(mid_x, mid_y), box_width, box_height);
+        let ui = IconLoader::init_ui()?;
 
         // Default to interacted to skip dialog in self play
         let interacted = cfg!(feature = "self_play");
 
         Ok(DeathScene {
-            background,
+            screen_background,
             presentation_frame: std::u64::MAX,
             message,
             text: Rc::clone(text),
             position,
             interacted,
+            frame: ui.get(&render_context.borrow(), "death_background.png")?,
         })
     }
 
@@ -55,11 +58,11 @@ impl DeathScene {
     fn small_text(&self, canvas: &mut RenderCanvas, text: &str, offset: &mut i32) -> BoxResult<()> {
         self.text.render_text(
             text,
-            self.position.x() + 30,
+            self.position.x() + 40,
             self.position.y() + 20 + *offset,
             canvas,
             FontSize::Small,
-            FontColor::White,
+            FontColor::Black,
         )?;
         *offset += 20;
         Ok(())
@@ -84,17 +87,17 @@ impl Scene for DeathScene {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.background.set_alpha_mod(alpha);
+        self.screen_background.set_alpha_mod(alpha);
 
         canvas.copy(
-            &self.background,
+            &self.screen_background,
             SDLRect::new(0, 0, output_size.0, output_size.1),
             SDLRect::new(0, 0, output_size.0, output_size.1),
         )?;
 
-        canvas.fill_rect(self.position)?;
+        canvas.copy(&self.frame, None, self.position)?;
 
-        let mut offset = 10;
+        let mut offset = 30;
         self.small_text(canvas, "You Died!", &mut offset)?;
         offset += 30;
         self.small_text(canvas, &self.message, &mut offset)?;
