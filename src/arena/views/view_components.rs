@@ -16,6 +16,7 @@ pub struct Frame {
 pub enum FrameKind {
     InfoBar,
     Log,
+    Map,
 }
 
 impl Frame {
@@ -23,6 +24,7 @@ impl Frame {
         let image = match kind {
             FrameKind::InfoBar => "info_frame.png",
             FrameKind::Log => "log_frame.png",
+            FrameKind::Map => "map_frame.png",
         };
         Ok(Frame {
             position,
@@ -35,6 +37,7 @@ impl Frame {
         match self.kind {
             FrameKind::InfoBar => (271, 541),
             FrameKind::Log => (271, 227),
+            FrameKind::Map => (753, 768),
         }
     }
 }

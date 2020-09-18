@@ -36,7 +36,7 @@ impl BattleScene {
                 Rc::clone(&text_renderer),
             )?),
             Box::from(LogView::init(SDLPoint::new(780, 550), &render_context, Rc::clone(&text_renderer))?),
-            Box::from(StatusBarView::init(&render_context, SDLPoint::new(20, 20))?),
+            Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
         ];
 
         if cfg!(debug_assertions) {
