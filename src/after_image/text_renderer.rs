@@ -64,9 +64,9 @@ impl TextRenderer {
             FontSize::Large => &self.large_font,
         };
         let color = match color {
-            FontColor::Black => Color::RGBA(0, 0, 0, 255),
-            FontColor::White => Color::RGBA(255, 255, 255, 255),
-            FontColor::Red => Color::RGBA(255, 0, 0, 255),
+            FontColor::Black => Color::RGB(0, 0, 0),
+            FontColor::White => Color::RGB(255, 255, 255),
+            FontColor::Red => Color::RGB(255, 0, 0),
         };
 
         let surface = font.render(text).blended(color).map_err(|e| e.to_string())?;

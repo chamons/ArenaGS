@@ -130,7 +130,6 @@ impl MapView {
         let positions = ecs.read_storage::<PositionComponent>();
         let fields = ecs.read_storage::<FieldComponent>();
 
-        canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
             for (p, (r, g, b, a)) in &field.fields {
                 if let Some(p) = p {
@@ -142,7 +141,6 @@ impl MapView {
                 }
             }
         }
-        canvas.set_blend_mode(BlendMode::None);
 
         Ok(())
     }
@@ -237,6 +235,7 @@ impl MapView {
 
 impl View for MapView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
+        canvas.set_blend_mode(BlendMode::Blend);
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
@@ -248,6 +247,7 @@ impl View for MapView {
         self.render_fields(ecs, canvas)?;
 
         self.frame.render(ecs, canvas, frame, context)?;
+        canvas.set_blend_mode(BlendMode::None);
         Ok(())
     }
 
