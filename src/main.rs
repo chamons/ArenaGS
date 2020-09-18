@@ -58,6 +58,7 @@ pub fn main() -> BoxResult<()> {
     Ok(())
 }
 
+#[allow(clippy::needless_return)]
 fn get_storyteller(render_context: &RenderContextHolder) -> BoxResult<Box<dyn Storyteller>> {
     // See text_renderer.rs for details on this hack
     let font_context = Box::from(FontContext::initialize()?).leak();

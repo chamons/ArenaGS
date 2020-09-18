@@ -14,7 +14,6 @@ use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
 
 pub struct SkillBarView {
-    position: SDLPoint,
     views: Vec<SkillBarItemView>,
 }
 
@@ -44,7 +43,7 @@ impl SkillBarView {
             )?;
             views.push(view);
         }
-        Ok(SkillBarView { position, views })
+        Ok(SkillBarView { views })
     }
 }
 
