@@ -4,7 +4,7 @@ use enum_iterator::IntoEnumIterator;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
-use super::view_components::Frame;
+use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
 use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
@@ -21,7 +21,12 @@ impl InfoBarView {
         Ok(InfoBarView {
             position,
             text,
-            frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 20), render_context, &IconLoader::init_ui()?)?,
+            frame: Frame::init(
+                SDLPoint::new(position.x() - 27, position.y() - 20),
+                render_context,
+                &IconLoader::init_ui()?,
+                FrameKind::InfoBar,
+            )?,
         })
     }
 

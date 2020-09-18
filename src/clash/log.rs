@@ -2,7 +2,7 @@ use std::cmp;
 
 use serde::{Deserialize, Serialize};
 
-pub const LOG_COUNT: usize = 14;
+pub const LOG_COUNT: usize = 9;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Log {
