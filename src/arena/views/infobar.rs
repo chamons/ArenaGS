@@ -1,24 +1,28 @@
 use std::rc::Rc;
 
 use enum_iterator::IntoEnumIterator;
-use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
-use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
+use super::view_components::Frame;
 use super::{ContextData, View};
-use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
+use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent, StatusComponent};
 
 pub struct InfoBarView {
     position: SDLPoint,
     text: Rc<TextRenderer>,
+    frame: Frame,
 }
 
 impl InfoBarView {
-    pub fn init(position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<InfoBarView> {
-        Ok(InfoBarView { position, text })
+    pub fn init(position: SDLPoint, render_context: &RenderContext, text: Rc<TextRenderer>) -> BoxResult<InfoBarView> {
+        Ok(InfoBarView {
+            position,
+            text,
+            frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 20), render_context, &IconLoader::init_ui()?)?,
+        })
     }
 
     fn render_character_info(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
@@ -87,7 +91,7 @@ impl InfoBarView {
         Ok(())
     }
 
-    const MAX_INFO_OFFSET: i32 = 380;
+    const MAX_INFO_OFFSET: i32 = 480;
     fn small_text(&self, canvas: &mut RenderCanvas, text: &str, offset: &mut i32) -> BoxResult<()> {
         if *offset > InfoBarView::MAX_INFO_OFFSET {
             return Ok(());
@@ -100,9 +104,8 @@ impl InfoBarView {
 }
 
 impl View for InfoBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
-        canvas.set_draw_color(Color::from((196, 196, 0)));
-        canvas.fill_rect(SDLRect::new(self.position.x, self.position.y, 230, 400))?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
+        self.frame.render(ecs, canvas, frame, context)?;
         self.render_character_info(ecs, canvas)?;
 
         Ok(())
