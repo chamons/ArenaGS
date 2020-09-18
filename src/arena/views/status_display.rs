@@ -42,7 +42,7 @@ impl View for StatusBarView {
         let mut draw_count = 0;
         for i in 0..10 {
             if let Some(kind) = status_names.get(i) {
-                if show_status(*kind) {
+                if kind.should_display() {
                     self.views[draw_count].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
                     draw_count += 1;
                 }
@@ -90,13 +90,6 @@ impl View for StatusBarItemView {
 
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
-    }
-}
-
-pub fn show_status(kind: StatusKind) -> bool {
-    match kind {
-        StatusKind::RegenTick | StatusKind::Flying => false,
-        _ => true,
     }
 }
 
