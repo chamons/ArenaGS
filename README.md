@@ -5,7 +5,7 @@ ArenaGS is a roguelike arena battler with 16-bit aesthetics and hopefully a mode
 
 Here's what it looks like today:
 
-![Full Screen](https://chamons.github.io/ArenaGS/images/hello-world-1.jpg)
+![Full Screen](https://chamons.github.io/ArenaGS/images/ui-refinement-1.jpg)
 
 A public preview is months away at this point.
 
