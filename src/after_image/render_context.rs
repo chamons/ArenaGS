@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::image::{self, InitFlag};
+use sdl2::render::BlendMode;
 
 pub struct FontContext {
     pub ttf_context: sdl2::ttf::Sdl2TtfContext,
@@ -37,7 +38,14 @@ impl RenderContext {
             .build()
             .expect("could not initialize video subsystem");
 
-        let canvas = window.into_canvas().target_texture().present_vsync().build().expect("could not make a canvas");
+        let mut canvas = window
+            .into_canvas()
+            .target_texture()
+            .present_vsync()
+            .accelerated()
+            .build()
+            .expect("could not make a canvas");
+        canvas.set_blend_mode(BlendMode::Blend);
 
         let event_pump = sdl_context.event_pump()?;
 

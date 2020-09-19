@@ -37,7 +37,6 @@ impl View for DebugView {
                 DebugKind::MapOverlay() => {
                     let map = &ecs.read_resource::<MapComponent>().map;
 
-                    canvas.set_blend_mode(BlendMode::Blend);
                     for x in 0..MAX_MAP_TILES {
                         for y in 0..MAX_MAP_TILES {
                             let grid_rect = screen_rect_for_map_grid(x, y);
@@ -51,7 +50,6 @@ impl View for DebugView {
                             canvas.fill_rect(field_rect)?;
                         }
                     }
-                    canvas.set_blend_mode(BlendMode::None);
                 }
             }
         }

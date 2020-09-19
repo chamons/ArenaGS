@@ -51,7 +51,6 @@ impl CharacterOverlay {
         let temperature = ecs.get_temperature(entity);
         let image_rect = SDLRect::new(0, 0, 32, 32);
         let offset = self.status_offset(ecs, entity);
-        canvas.set_blend_mode(BlendMode::Blend);
         canvas.set_draw_color(Color::RGBA(0, 0, 0, 64));
         if temperature.is_burning() {
             let screen_rect = SDLRect::new(screen_position.x() + offset.x(), screen_position.y() + offset.y(), 32, 32);
@@ -64,7 +63,6 @@ impl CharacterOverlay {
             canvas.fill_rect(background_rect)?;
             canvas.copy(&self.ice, image_rect, screen_rect)?
         }
-        canvas.set_blend_mode(BlendMode::None);
 
         Ok(())
     }

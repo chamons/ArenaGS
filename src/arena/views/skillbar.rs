@@ -4,7 +4,7 @@ use std::rc::Rc;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::{BlendMode, Texture};
+use sdl2::render::{BlendMode, Texture, TextureQuery};
 
 use specs::prelude::*;
 
@@ -112,14 +112,17 @@ impl SkillBarItemView {
 
         let hotkey_number = skill_index_to_hotkey(index);
         let hotkey = text.render_texture(&render_context.canvas, &hotkey_number.to_string(), FontSize::Micro, FontColor::White)?;
+        let hotkey_query = hotkey.query();
+
         let hotkey_inactive = text.render_texture(&render_context.canvas, &hotkey_number.to_string(), FontSize::Micro, FontColor::Red)?;
+        let hotkey_inactive_query = hotkey.query();
 
         Ok(SkillBarItemView {
             rect,
             index,
             icons: Rc::clone(icons),
-            hotkey,
-            hotkey_inactive,
+            hotkey: ((hotkey_query.width, hotkey_query.height), hotkey),
+            hotkey_inactive: ((hotkey_inactive_query.width, hotkey_inactive_query.height), hotkey_inactive),
             frame,
         })
     }
@@ -147,10 +150,8 @@ impl View for SkillBarItemView {
         if let Some((((width, height), hotkey_texture), texture, disable_overlay)) = self.get_render_params(ecs) {
             canvas.copy(texture, None, self.rect)?;
             if disable_overlay {
-                canvas.set_blend_mode(BlendMode::Blend);
                 canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
                 canvas.fill_rect(self.rect)?;
-                canvas.set_blend_mode(BlendMode::None);
             }
 
             canvas.copy(&self.frame, None, SDLRect::new(self.rect.x() - 2, self.rect.y() - 2, 52, 60))?;

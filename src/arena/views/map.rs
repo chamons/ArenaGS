@@ -247,7 +247,6 @@ impl View for MapView {
         self.render_fields(ecs, canvas)?;
 
         self.frame.render(ecs, canvas, frame, context)?;
-        canvas.set_blend_mode(BlendMode::None);
         Ok(())
     }
 
