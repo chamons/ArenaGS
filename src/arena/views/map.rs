@@ -1,6 +1,5 @@
 use enum_iterator::IntoEnumIterator;
 use sdl2::pixels::Color;
-use sdl2::render::BlendMode;
 use specs::prelude::*;
 
 use sdl2::rect::Point as SDLPoint;
@@ -235,7 +234,6 @@ impl MapView {
 
 impl View for MapView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        canvas.set_blend_mode(BlendMode::Blend);
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
