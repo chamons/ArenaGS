@@ -4,7 +4,6 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
-
 use specs::prelude::*;
 
 use super::TILE_SIZE;
