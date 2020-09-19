@@ -8,7 +8,8 @@ build = "build.rs"
 [features]
 self_play = []
 profile_self_play = ["self_play"]
-default = ["self_play"]
+image_tester = []
+default = []
 
 [dependencies]
 specs = {  version = "0.16.1", features = ["serde"] }

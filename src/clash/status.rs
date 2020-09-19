@@ -38,6 +38,13 @@ impl StatusKind {
             _ => format!("{:?}", self),
         }
     }
+
+    pub fn should_display(&self) -> bool {
+        match self {
+            StatusKind::Flying | StatusKind::RegenTick => false,
+            _ => true,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -204,9 +211,10 @@ impl StatusStore {
         names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
     }
 
-    pub fn get_all_status(&self) -> Vec<String> {
+    pub fn get_all_display_status(&self) -> Vec<String> {
         self.store
             .iter()
+            .filter(|(k, _)| k.should_display())
             .filter_map(|(k, v)| match v {
                 StatusType::Status(_) => Some(k.description()),
                 StatusType::Trait => None,

@@ -3,7 +3,6 @@ use std::rc::Rc;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::BlendMode;
 use specs::prelude::*;
 
 use super::{screen_rect_for_map_grid, ContextData, View};
@@ -37,7 +36,6 @@ impl View for DebugView {
                 DebugKind::MapOverlay() => {
                     let map = &ecs.read_resource::<MapComponent>().map;
 
-                    canvas.set_blend_mode(BlendMode::Blend);
                     for x in 0..MAX_MAP_TILES {
                         for y in 0..MAX_MAP_TILES {
                             let grid_rect = screen_rect_for_map_grid(x, y);
@@ -51,7 +49,6 @@ impl View for DebugView {
                             canvas.fill_rect(field_rect)?;
                         }
                     }
-                    canvas.set_blend_mode(BlendMode::None);
                 }
             }
         }

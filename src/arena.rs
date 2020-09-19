@@ -29,3 +29,6 @@ pub mod round_fade_scene;
 
 #[cfg(feature = "self_play")]
 pub mod self_play;
+
+#[cfg(feature = "image_tester")]
+pub use views::image_tester::*;

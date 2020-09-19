@@ -1,6 +1,5 @@
 use enum_iterator::IntoEnumIterator;
 use sdl2::pixels::Color;
-use sdl2::render::BlendMode;
 use specs::prelude::*;
 
 use sdl2::rect::Point as SDLPoint;
@@ -8,15 +7,17 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
 use super::super::{battle_actions, AnimationComponent, SpriteLoader};
+use super::view_components::{Frame, FrameKind};
 use super::{CharacterOverlay, ContextData, HitTestResult, View};
 
-use crate::after_image::{RenderCanvas, RenderContext};
+use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
 use crate::clash::*;
 
 pub struct MapView {
     sprites: SpriteLoader,
     overlay: CharacterOverlay,
+    frame: Frame,
 }
 
 pub const MAP_CORNER_X: u32 = 50;
@@ -61,7 +62,11 @@ impl MapView {
     pub fn init(render_context: &RenderContext) -> BoxResult<MapView> {
         let sprites = SpriteLoader::init(render_context)?;
         let overlay = CharacterOverlay::init(render_context)?;
-        Ok(MapView { sprites, overlay })
+        Ok(MapView {
+            sprites,
+            overlay,
+            frame: Frame::init(SDLPoint::new(0, 0), render_context, &IconLoader::init_ui()?, FrameKind::Map)?,
+        })
     }
 
     fn draw_grid(&self, canvas: &mut RenderCanvas) -> BoxResult<()> {
@@ -124,7 +129,6 @@ impl MapView {
         let positions = ecs.read_storage::<PositionComponent>();
         let fields = ecs.read_storage::<FieldComponent>();
 
-        canvas.set_blend_mode(BlendMode::Blend);
         for (position, field) in (&positions, &fields).join() {
             for (p, (r, g, b, a)) in &field.fields {
                 if let Some(p) = p {
@@ -136,7 +140,6 @@ impl MapView {
                 }
             }
         }
-        canvas.set_blend_mode(BlendMode::None);
 
         Ok(())
     }
@@ -230,7 +233,7 @@ impl MapView {
 }
 
 impl View for MapView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
@@ -240,6 +243,8 @@ impl View for MapView {
             self.render_targetting_range(canvas, ecs)?;
         }
         self.render_fields(ecs, canvas)?;
+
+        self.frame.render(ecs, canvas, frame, context)?;
         Ok(())
     }
 

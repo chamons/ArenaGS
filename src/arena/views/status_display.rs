@@ -4,6 +4,7 @@ use num_traits::FromPrimitive;
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
+use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::{ContextData, HitTestResult, View};
@@ -17,10 +18,15 @@ pub struct StatusBarView {
 
 impl StatusBarView {
     pub fn init(render_context: &RenderContext, position: SDLPoint) -> BoxResult<StatusBarView> {
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init()?, all_icon_filenames())?);
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons()?, all_icon_filenames())?);
         let mut views = vec![];
+        let ui = IconLoader::init_ui()?;
         for i in 0..10 {
-            views.push(StatusBarItemView::init(SDLPoint::new(position.x() + i * 58, position.y()), &cache));
+            views.push(StatusBarItemView::init(
+                SDLPoint::new(position.x() + i * 58, position.y()),
+                ui.get(render_context, "status_frame.png")?,
+                &cache,
+            ));
         }
         Ok(StatusBarView { views })
     }
@@ -36,7 +42,7 @@ impl View for StatusBarView {
         let mut draw_count = 0;
         for i in 0..10 {
             if let Some(kind) = status_names.get(i) {
-                if show_status(*kind) {
+                if kind.should_display() {
                     self.views[draw_count].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
                     draw_count += 1;
                 }
@@ -54,13 +60,15 @@ impl View for StatusBarView {
 struct StatusBarItemView {
     position: SDLPoint,
     icons: Rc<IconCache>,
+    frame: Texture,
 }
 
 impl StatusBarItemView {
-    pub fn init(position: SDLPoint, icons: &Rc<IconCache>) -> StatusBarItemView {
+    pub fn init(position: SDLPoint, frame: Texture, icons: &Rc<IconCache>) -> StatusBarItemView {
         StatusBarItemView {
             position,
             icons: Rc::clone(icons),
+            frame,
         }
     }
 }
@@ -71,22 +79,17 @@ impl View for StatusBarItemView {
             ContextData::Number(value) => StatusKind::from_u32(*value).unwrap(),
             _ => panic!("StatusBarItemView context wrong type?"),
         };
+
         let icon = self.icons.get(get_icon_name_for_status(kind));
 
         canvas.copy(&icon, SDLRect::new(0, 0, 48, 48), SDLRect::new(self.position.x(), self.position.y(), 48, 48))?;
+        canvas.copy(&self.frame, None, SDLRect::new(self.position.x() - 2, self.position.y() - 2, 54, 54))?;
 
         Ok(())
     }
 
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
-    }
-}
-
-pub fn show_status(kind: StatusKind) -> bool {
-    match kind {
-        StatusKind::RegenTick | StatusKind::Flying => false,
-        _ => true,
     }
 }
 

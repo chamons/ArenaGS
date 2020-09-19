@@ -12,6 +12,7 @@ pub struct ArenaStoryteller {
     text_renderer: Rc<TextRenderer>,
 }
 
+#[allow(dead_code)]
 impl ArenaStoryteller {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> ArenaStoryteller {
         ArenaStoryteller {
@@ -22,7 +23,7 @@ impl ArenaStoryteller {
 
     fn prepare_battle_end_scene(&self, render_context: &RenderContextHolder, message: String) -> Box<dyn Scene> {
         let snapshot = Director::screen_shot(render_context).unwrap();
-        Box::from(DeathScene::init(snapshot, &mut render_context.borrow_mut().canvas, &self.text_renderer, message).unwrap())
+        Box::from(DeathScene::init(snapshot, render_context, &self.text_renderer, message).unwrap())
     }
 
     fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder, difficulty: u32) -> Box<dyn Scene> {

@@ -8,14 +8,24 @@ use crate::after_image::{load_image, RenderContext};
 
 use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
 
+// IconLoader lazily loads on first access. This means consumers must
+// all get all all relevent images outside of a render loop (else we die)
 pub struct IconLoader {
     images: HashMap<String, String>,
 }
 
 impl IconLoader {
-    pub fn init() -> BoxResult<IconLoader> {
+    pub fn init_icons() -> BoxResult<IconLoader> {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").stringify_owned();
+        find_images(&mut images, &folder)?;
+
+        Ok(IconLoader { images })
+    }
+
+    pub fn init_ui() -> BoxResult<IconLoader> {
+        let mut images = HashMap::new();
+        let folder = Path::new(&get_exe_folder()).join("ui").stringify_owned();
         find_images(&mut images, &folder)?;
 
         Ok(IconLoader { images })
