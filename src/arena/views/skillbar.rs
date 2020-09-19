@@ -62,18 +62,8 @@ impl View for SkillBarView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((33, 33, 33)));
 
-        let skill_count = get_skill_count(ecs);
-        if skill_count > 0 {
-            // canvas.fill_rect(SDLRect::new(
-            //     get_skillbar_offset(ecs, self.position) - (BORDER_WIDTH / 2),
-            //     self.position.y,
-            //     ((ICON_SIZE + BORDER_WIDTH) * skill_count as i32 + BORDER_WIDTH) as u32,
-            //     (ICON_SIZE + BORDER_WIDTH * 2) as u32,
-            // ))?;
-
-            for view in self.views.iter() {
-                view.render(ecs, canvas, frame, context)?;
-            }
+        for view in self.views.iter() {
+            view.render(ecs, canvas, frame, context)?;
         }
 
         Ok(())
