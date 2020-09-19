@@ -3,7 +3,6 @@ use std::rc::Rc;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::BlendMode;
 use specs::prelude::*;
 
 use super::{screen_rect_for_map_grid, ContextData, View};
