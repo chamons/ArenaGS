@@ -22,6 +22,8 @@ pub enum FontColor {
     Red,
 }
 
+pub type Font = sdl2::ttf::Font<'static, 'static>;
+
 // So this is either a beautiful hack, or an abuse
 // The SDL font code wants two lifetimes, which requires
 // TextRenderer to have a lifeime, which causes a bunch
@@ -31,10 +33,10 @@ pub enum FontColor {
 // This is safe, right?!?
 pub struct TextRenderer {
     cache: RefCell<FontCache>,
-    micro_font: sdl2::ttf::Font<'static, 'static>,
-    small_font: sdl2::ttf::Font<'static, 'static>,
-    bold_font: sdl2::ttf::Font<'static, 'static>,
-    large_font: sdl2::ttf::Font<'static, 'static>,
+    micro_font: Font,
+    small_font: Font,
+    bold_font: Font,
+    large_font: Font,
 }
 
 impl TextRenderer {

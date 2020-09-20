@@ -6,6 +6,7 @@
 pub type RenderCanvas = sdl2::render::Canvas<sdl2::video::Window>;
 
 mod font_cache;
+mod font_layout;
 mod icon_cache;
 mod icon_loader;
 mod image_loader;
@@ -14,9 +15,10 @@ mod sprites;
 mod text_renderer;
 
 pub use font_cache::FontCache;
+pub use font_layout::layout_text;
 pub use icon_cache::IconCache;
 pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::*;
-pub use text_renderer::{FontColor, FontSize, TextRenderer};
+pub use text_renderer::{Font, FontColor, FontSize, TextRenderer};
