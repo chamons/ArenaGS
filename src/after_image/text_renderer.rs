@@ -5,12 +5,13 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::{Texture, TextureQuery};
 
-use super::{FontCache, FontContext, RenderCanvas};
+use super::{FontCache, FontContext, LayoutRequest, LayoutResult, RenderCanvas};
 use crate::atlas::{get_exe_folder, BoxResult};
 
 #[allow(dead_code)]
 pub enum FontSize {
     Micro,
+    Tiny,
     Small,
     Large,
     Bold,
@@ -34,6 +35,7 @@ pub type Font = sdl2::ttf::Font<'static, 'static>;
 pub struct TextRenderer {
     cache: RefCell<FontCache>,
     micro_font: Font,
+    tiny_font: Font,
     small_font: Font,
     bold_font: Font,
     large_font: Font,
@@ -45,6 +47,8 @@ impl TextRenderer {
 
         let mut micro_font = font_context.ttf_context.load_font(font_path.clone(), 9)?;
         micro_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut tiny_font = font_context.ttf_context.load_font(font_path.clone(), 12)?;
+        tiny_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
         small_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut bold_font = font_context.ttf_context.load_font(font_path.clone(), 16)?;
@@ -55,26 +59,35 @@ impl TextRenderer {
         Ok(TextRenderer {
             cache: RefCell::new(FontCache::init()),
             micro_font,
+            tiny_font,
             small_font,
             bold_font,
             large_font,
         })
     }
 
-    pub fn render_texture(&self, canvas: &RenderCanvas, text: &str, size: FontSize, color: FontColor) -> BoxResult<Texture> {
-        let font = match size {
+    fn get_font(&self, size: FontSize) -> &Font {
+        match size {
             FontSize::Micro => &self.micro_font,
+            FontSize::Tiny => &self.tiny_font,
             FontSize::Small => &self.small_font,
             FontSize::Bold => &self.bold_font,
             FontSize::Large => &self.large_font,
-        };
+        }
+    }
+
+    pub fn layout_text(&self, text: &str, size: FontSize, request: LayoutRequest) -> BoxResult<LayoutResult> {
+        super::font_layout::layout_text(text, self.get_font(size), request)
+    }
+
+    pub fn render_texture(&self, canvas: &RenderCanvas, text: &str, size: FontSize, color: FontColor) -> BoxResult<Texture> {
         let color = match color {
             FontColor::Black => Color::RGB(0, 0, 0),
             FontColor::White => Color::RGB(255, 255, 255),
             FontColor::Red => Color::RGB(255, 0, 0),
         };
 
-        let surface = font.render(text).solid(color).map_err(|e| e.to_string())?;
+        let surface = self.get_font(size).render(text).blended(color).map_err(|e| e.to_string())?;
         let texture_creator = canvas.texture_creator();
         let mut texture = texture_creator.create_texture_from_surface(&surface).map_err(|e| e.to_string())?;
         texture.set_blend_mode(sdl2::render::BlendMode::Blend);

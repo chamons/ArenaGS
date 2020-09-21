@@ -28,7 +28,7 @@ pub struct LayoutResult {
     pub lines: Vec<LayoutChunk>,
 }
 
-pub fn layout_text(text: &str, font: Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
+pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
     let mut current_line_width = 0;
     let mut largest_line_height = 0;
     let mut current_line = String::new();
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn layout_text_one_line() {
-        let result = layout_text("Hello World", get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
+        let result = layout_text("Hello World", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(1, result.lines.len());
         assert_eq!("Hello World", result.lines[0].text);
         assert_points_equal(Point::init(10, 10), result.lines[0].position);
@@ -99,7 +99,7 @@ mod tests {
     fn layout_text_multiple_line() {
         let result = layout_text(
             "Hello World Hello World Hello",
-            get_test_font(),
+            &get_test_font(),
             LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
         )
         .unwrap();
@@ -114,7 +114,7 @@ mod tests {
     fn layout_text_one_super_long_word() {
         let result = layout_text(
             "HelloWorldHelloWorldHello",
-            get_test_font(),
+            &get_test_font(),
             LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
         )
         .unwrap();

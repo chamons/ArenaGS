@@ -21,11 +21,7 @@ impl Log {
         }
         // Take as many items as you can before hitting the end
         let length = cmp::min(index + length, self.logs.len()) - index;
-        if length == 1 {
-            &self.logs[index..index + 1]
-        } else {
-            &self.logs[index..index + length]
-        }
+        &self.logs[index..index + length]
     }
 
     pub fn add(&mut self, entry: &str) {

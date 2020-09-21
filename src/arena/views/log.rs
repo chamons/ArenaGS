@@ -5,7 +5,7 @@ use specs::prelude::*;
 
 use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
-use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{FontColor, FontSize, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::clash::{LogComponent, LOG_COUNT};
 
@@ -37,7 +37,7 @@ impl LogView {
                 self.position.x,
                 self.position.y + (i as i32 * 20) + 15,
                 canvas,
-                FontSize::Small,
+                FontSize::Tiny,
                 FontColor::Black,
             )?;
         }

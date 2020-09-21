@@ -15,7 +15,7 @@ mod sprites;
 mod text_renderer;
 
 pub use font_cache::FontCache;
-pub use font_layout::layout_text;
+pub use font_layout::{layout_text, LayoutRequest, LayoutResult};
 pub use icon_cache::IconCache;
 pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
