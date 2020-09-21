@@ -25,7 +25,7 @@ pub struct LayoutChunk {
 }
 
 pub struct LayoutResult {
-    pub lines: Vec<LayoutChunk>,
+    pub chunks: Vec<LayoutChunk>,
 }
 
 pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
@@ -33,14 +33,14 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
     let mut largest_line_height = 0;
     let mut current_line = String::new();
     let mut current_y_offset = request.position.y;
-    let mut result = LayoutResult { lines: vec![] };
+    let mut result = LayoutResult { chunks: vec![] };
 
     for word in text.split_ascii_whitespace() {
         let (width, height) = font.size_of_latin1(word.as_bytes())?;
 
         // If we've any text and the next word casues a wrap, commit the line and start a new
         if current_line_width + width > request.width_to_render_in && current_line_width > 0 {
-            result.lines.push(LayoutChunk {
+            result.chunks.push(LayoutChunk {
                 text: current_line,
                 position: Point::init(request.position.x, current_y_offset),
             });
@@ -59,7 +59,7 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
     }
 
     // Apply leftovers to the last line
-    result.lines.push(LayoutChunk {
+    result.chunks.push(LayoutChunk {
         text: current_line,
         position: Point::init(request.position.x, current_y_offset),
     });
@@ -90,9 +90,9 @@ mod tests {
     #[test]
     fn layout_text_one_line() {
         let result = layout_text("Hello World", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
-        assert_eq!(1, result.lines.len());
-        assert_eq!("Hello World", result.lines[0].text);
-        assert_points_equal(Point::init(10, 10), result.lines[0].position);
+        assert_eq!(1, result.chunks.len());
+        assert_eq!("Hello World", result.chunks[0].text);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
 
     #[test]
@@ -103,11 +103,11 @@ mod tests {
             LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
         )
         .unwrap();
-        assert_eq!(3, result.lines.len());
-        assert_eq!("Hello World", result.lines[0].text);
-        assert_eq!("Hello World", result.lines[1].text);
-        assert_eq!("Hello", result.lines[2].text);
-        assert_points_equal(Point::init(10, 10), result.lines[0].position);
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("Hello World", result.chunks[0].text);
+        assert_eq!("Hello World", result.chunks[1].text);
+        assert_eq!("Hello", result.chunks[2].text);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
 
     #[test]
@@ -118,8 +118,8 @@ mod tests {
             LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
         )
         .unwrap();
-        assert_eq!(1, result.lines.len());
-        assert_eq!("HelloWorldHelloWorldHello", result.lines[0].text);
-        assert_points_equal(Point::init(10, 10), result.lines[0].position);
+        assert_eq!(1, result.chunks.len());
+        assert_eq!("HelloWorldHelloWorldHello", result.chunks[0].text);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
 }

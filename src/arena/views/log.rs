@@ -32,14 +32,22 @@ impl LogView {
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let log = &ecs.read_resource::<LogComponent>().log;
         for (i, entry) in log.get(log.index, LOG_COUNT).iter().enumerate() {
-            self.text.render_text(
+            let layout = self.text.layout_text(
                 &entry,
-                self.position.x,
-                self.position.y + (i as i32 * 20) + 15,
-                canvas,
                 FontSize::Tiny,
-                FontColor::Black,
+                LayoutRequest::init(self.position.x as u32, self.position.y as u32 + (i as u32 * 20) + 15, 210, 2),
             )?;
+
+            for line in &layout.chunks {
+                self.text.render_text(
+                    &line.text,
+                    line.position.x as i32,
+                    line.position.y as i32,
+                    canvas,
+                    FontSize::Tiny,
+                    FontColor::Black,
+                )?;
+            }
         }
 
         Ok(())
