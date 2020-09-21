@@ -38,7 +38,6 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
     for word in text.split_ascii_whitespace() {
         let (width, height) = font.size_of_latin1(word.as_bytes())?;
 
-        // If we've any text and the next word casues a wrap, commit the line and start a new
         if current_line_width + width > request.width_to_render_in && current_line_width > 0 {
             result.chunks.push(LayoutChunk {
                 text: current_line,
@@ -88,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_text_one_line() {
+    fn layout_one_line() {
         let result = layout_text("Hello World", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(1, result.chunks.len());
         assert_eq!("Hello World", result.chunks[0].text);
@@ -96,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_text_multiple_line() {
+    fn layout_multiple_line() {
         let result = layout_text(
             "Hello World Hello World Hello",
             &get_test_font(),
@@ -111,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn layout_text_one_super_long_word() {
+    fn layout_one_super_long_word() {
         let result = layout_text(
             "HelloWorldHelloWorldHello",
             &get_test_font(),
@@ -121,5 +120,39 @@ mod tests {
         assert_eq!(1, result.chunks.len());
         assert_eq!("HelloWorldHelloWorldHello", result.chunks[0].text);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+    }
+
+    #[test]
+    fn layout_line_with_link() {
+        let result = layout_text(
+            "Hello [[World]] Bye",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("Hello", result.chunks[0].text);
+        assert_eq!("World", result.chunks[1].text);
+        assert_eq!("Bye", result.chunks[2].text);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(10, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn layout_line_with_link_sandwhich() {
+        let result = layout_text(
+            "A [[World]] B",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(2, result.chunks.len());
+        assert_eq!("A", result.chunks[0].text);
+        assert_eq!("World", result.chunks[1].text);
+        assert_eq!("B", result.chunks[2].text);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(10, 10), result.chunks[2].position);
     }
 }

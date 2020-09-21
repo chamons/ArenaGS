@@ -13,6 +13,7 @@ pub enum FontSize {
     Micro,
     Tiny,
     Small,
+    SmallUnderline,
     Large,
     Bold,
 }
@@ -37,6 +38,7 @@ pub struct TextRenderer {
     micro_font: Font,
     tiny_font: Font,
     small_font: Font,
+    small_underline_font: Font,
     bold_font: Font,
     large_font: Font,
 }
@@ -51,6 +53,8 @@ impl TextRenderer {
         tiny_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
         small_font.set_style(sdl2::ttf::FontStyle::NORMAL);
+        let mut small_underline_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
+        small_underline_font.set_style(sdl2::ttf::FontStyle::UNDERLINE);
         let mut bold_font = font_context.ttf_context.load_font(font_path.clone(), 16)?;
         bold_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut large_font = font_context.ttf_context.load_font(font_path, 20)?;
@@ -61,6 +65,7 @@ impl TextRenderer {
             micro_font,
             tiny_font,
             small_font,
+            small_underline_font,
             bold_font,
             large_font,
         })
@@ -71,13 +76,14 @@ impl TextRenderer {
             FontSize::Micro => &self.micro_font,
             FontSize::Tiny => &self.tiny_font,
             FontSize::Small => &self.small_font,
+            FontSize::SmallUnderline => &self.small_underline_font,
             FontSize::Bold => &self.bold_font,
             FontSize::Large => &self.large_font,
         }
     }
 
     pub fn layout_text(&self, text: &str, size: FontSize, request: LayoutRequest) -> BoxResult<LayoutResult> {
-        super::font_layout::layout_text(text, self.get_font(size), request)
+        super::text_layout::layout_text(text, self.get_font(size), request)
     }
 
     pub fn render_texture(&self, canvas: &RenderCanvas, text: &str, size: FontSize, color: FontColor) -> BoxResult<Texture> {
