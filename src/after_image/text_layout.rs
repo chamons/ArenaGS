@@ -1,4 +1,5 @@
 use std::cmp;
+use std::mem;
 
 use super::Font;
 use crate::atlas::{BoxResult, Point};
@@ -28,41 +29,62 @@ pub struct LayoutResult {
     pub chunks: Vec<LayoutChunk>,
 }
 
-pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
-    let mut current_line_width = 0;
-    let mut largest_line_height = 0;
-    let mut current_line = String::new();
-    let mut current_y_offset = request.position.y;
-    let mut result = LayoutResult { chunks: vec![] };
+struct Layout {
+    current_line_width: u32,
+    largest_line_height: u32,
+    current_line: String,
+    current_y_offset: u32,
+    request: LayoutRequest,
+}
 
-    for word in text.split_ascii_whitespace() {
-        let (width, height) = font.size_of_latin1(word.as_bytes())?;
-
-        if current_line_width + width > request.width_to_render_in && current_line_width > 0 {
-            result.chunks.push(LayoutChunk {
-                text: current_line,
-                position: Point::init(request.position.x, current_y_offset),
-            });
-            current_y_offset += largest_line_height + request.space_between_lines;
-            current_line = String::new();
-            current_line_width = 0;
-            largest_line_height = 0;
+impl Layout {
+    fn init(request: LayoutRequest) -> Layout {
+        Layout {
+            current_line_width: 0,
+            largest_line_height: 0,
+            current_line: String::new(),
+            current_y_offset: request.position.y,
+            request,
         }
-
-        largest_line_height = cmp::max(largest_line_height, height);
-        current_line_width += width;
-        if current_line.len() > 0 {
-            current_line.push_str(" ");
-        }
-        current_line.push_str(word);
     }
 
-    // Apply leftovers to the last line
-    result.chunks.push(LayoutChunk {
-        text: current_line,
-        position: Point::init(request.position.x, current_y_offset),
-    });
-    Ok(result)
+    fn run(&mut self, text: &str, font: &Font) -> BoxResult<LayoutResult> {
+        let mut result = LayoutResult { chunks: vec![] };
+
+        for word in text.split_ascii_whitespace() {
+            let (width, height) = font.size_of_latin1(word.as_bytes())?;
+
+            if self.current_line_width + width > self.request.width_to_render_in && self.current_line_width > 0 {
+                result.chunks.push(LayoutChunk {
+                    text: mem::replace(&mut self.current_line, String::new()),
+                    position: Point::init(self.request.position.x, self.current_y_offset),
+                });
+                self.current_y_offset += self.largest_line_height + self.request.space_between_lines;
+                self.current_line = String::new();
+                self.current_line_width = 0;
+                self.largest_line_height = 0;
+            }
+
+            self.largest_line_height = cmp::max(self.largest_line_height, height);
+            self.current_line_width += width;
+            if self.current_line.len() > 0 {
+                self.current_line.push_str(" ");
+            }
+            self.current_line.push_str(word);
+        }
+
+        // Apply leftovers to the last line
+        result.chunks.push(LayoutChunk {
+            text: mem::replace(&mut self.current_line, String::new()),
+            position: Point::init(self.request.position.x, self.current_y_offset),
+        });
+
+        Ok(result)
+    }
+}
+
+pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
+    Layout::init(request).run(text, font)
 }
 
 #[cfg(test)]
