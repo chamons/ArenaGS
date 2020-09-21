@@ -31,23 +31,38 @@ impl LogView {
 
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
         let log = &ecs.read_resource::<LogComponent>().log;
-        for (i, entry) in log.get(log.index, LOG_COUNT).iter().enumerate() {
-            let layout = self.text.layout_text(
-                &entry,
-                FontSize::Tiny,
-                LayoutRequest::init(self.position.x as u32, self.position.y as u32 + (i as u32 * 20) + 15, 210, 2),
-            )?;
+        let mut logs = vec![];
+        let mut line_count = 0;
 
-            for line in &layout.chunks {
+        // Start from the index and collect until you hit the front or LOG_COUNT lines
+        for l in log.logs.iter().skip(log.index) {
+            let layout = self.text.layout_text(
+                &l,
+                FontSize::Small,
+                LayoutRequest::init(self.position.x as u32, self.position.y as u32 + 15, 210, 2),
+            )?;
+            if line_count + layout.line_count <= LOG_COUNT as u32 {
+                line_count += layout.line_count;
+                logs.push(layout);
+            } else {
+                break;
+            }
+        }
+
+        // Then reverse the list to paint
+        line_count = 0;
+        for layout in logs.iter().rev() {
+            for l in &layout.chunks {
                 self.text.render_text(
-                    &line.text,
-                    line.position.x as i32,
-                    line.position.y as i32,
+                    &l.text,
+                    l.position.x as i32,
+                    l.position.y as i32 + 20 * line_count as i32,
                     canvas,
                     FontSize::Tiny,
                     FontColor::Black,
                 )?;
             }
+            line_count += layout.line_count;
         }
 
         Ok(())

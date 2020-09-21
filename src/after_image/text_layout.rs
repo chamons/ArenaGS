@@ -27,6 +27,7 @@ pub struct LayoutChunk {
 
 pub struct LayoutResult {
     pub chunks: Vec<LayoutChunk>,
+    pub line_count: u32,
 }
 
 struct Layout {
@@ -41,7 +42,7 @@ struct Layout {
 impl Layout {
     fn init(request: LayoutRequest) -> Layout {
         Layout {
-            result: LayoutResult { chunks: vec![] },
+            result: LayoutResult { chunks: vec![], line_count: 0 },
             current_line_width: 0,
             largest_line_height: 0,
             current_line: String::new(),
@@ -67,6 +68,7 @@ impl Layout {
                 self.create_next_chunk();
                 self.current_y_offset += self.largest_line_height + self.request.space_between_lines;
                 self.largest_line_height = 0;
+                self.result.line_count += 1;
             }
 
             self.largest_line_height = cmp::max(self.largest_line_height, height);
