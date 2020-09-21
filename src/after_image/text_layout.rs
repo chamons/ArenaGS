@@ -30,6 +30,7 @@ pub struct LayoutResult {
 }
 
 struct Layout {
+    result: LayoutResult,
     current_line_width: u32,
     largest_line_height: u32,
     current_line: String,
@@ -40,6 +41,7 @@ struct Layout {
 impl Layout {
     fn init(request: LayoutRequest) -> Layout {
         Layout {
+            result: LayoutResult { chunks: vec![] },
             current_line_width: 0,
             largest_line_height: 0,
             current_line: String::new(),
@@ -48,20 +50,22 @@ impl Layout {
         }
     }
 
-    fn run(&mut self, text: &str, font: &Font) -> BoxResult<LayoutResult> {
-        let mut result = LayoutResult { chunks: vec![] };
+    fn create_next_chunk(&mut self) {
+        self.result.chunks.push(LayoutChunk {
+            text: mem::replace(&mut self.current_line, String::new()),
+            position: Point::init(self.request.position.x, self.current_y_offset),
+        });
+        self.current_line = String::new();
+        self.current_line_width = 0
+    }
 
+    fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         for word in text.split_ascii_whitespace() {
             let (width, height) = font.size_of_latin1(word.as_bytes())?;
 
             if self.current_line_width + width > self.request.width_to_render_in && self.current_line_width > 0 {
-                result.chunks.push(LayoutChunk {
-                    text: mem::replace(&mut self.current_line, String::new()),
-                    position: Point::init(self.request.position.x, self.current_y_offset),
-                });
+                self.create_next_chunk();
                 self.current_y_offset += self.largest_line_height + self.request.space_between_lines;
-                self.current_line = String::new();
-                self.current_line_width = 0;
                 self.largest_line_height = 0;
             }
 
@@ -74,17 +78,20 @@ impl Layout {
         }
 
         // Apply leftovers to the last line
-        result.chunks.push(LayoutChunk {
-            text: mem::replace(&mut self.current_line, String::new()),
-            position: Point::init(self.request.position.x, self.current_y_offset),
-        });
+        self.create_next_chunk();
 
-        Ok(result)
+        Ok(())
+    }
+
+    fn results(self) -> LayoutResult {
+        self.result
     }
 }
 
 pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult<LayoutResult> {
-    Layout::init(request).run(text, font)
+    let mut layout = Layout::init(request);
+    layout.run(text, font)?;
+    Ok(layout.results())
 }
 
 #[cfg(test)]
