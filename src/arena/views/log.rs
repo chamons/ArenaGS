@@ -35,7 +35,8 @@ impl LogView {
         let mut line_count = 0;
 
         // Start from the index and collect until you hit the front or LOG_COUNT lines
-        for l in log.logs.iter().skip(log.index) {
+        let mut found_enough = false;
+        for l in log.logs.iter().rev().skip(log.logs.len() - (log.index + 1)) {
             let layout = self.text.layout_text(
                 &l,
                 FontSize::Small,
@@ -45,7 +46,32 @@ impl LogView {
                 line_count += layout.line_count;
                 logs.push(layout);
             } else {
+                found_enough = true;
                 break;
+            }
+        }
+        // But if we hit the 0th element and don't have enough don't let it scroll so far by walking forward
+        // and adding until we hit enough, collecting in vec to push to front
+        if !found_enough {
+            let mut additional_logs = vec![];
+            for l in log.logs.iter().skip(log.index + 1) {
+                let layout = self.text.layout_text(
+                    &l,
+                    FontSize::Small,
+                    LayoutRequest::init(self.position.x as u32, self.position.y as u32 + 15, 210, 2),
+                )?;
+                if line_count + layout.line_count <= LOG_COUNT as u32 {
+                    line_count += layout.line_count;
+                    additional_logs.push(layout);
+                } else {
+                    break;
+                }
+            }
+            if additional_logs.len() > 0 {
+                let mut combined_list = vec![];
+                combined_list.extend(additional_logs.drain(..).rev());
+                combined_list.extend(logs.drain(..));
+                logs = combined_list;
             }
         }
 
