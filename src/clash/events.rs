@@ -61,6 +61,12 @@ pub enum ExplodeState {
 }
 
 #[derive(Copy, Clone)]
+pub enum LogDirection {
+    Forward,
+    Backwards,
+}
+
+#[derive(Copy, Clone)]
 pub enum EventKind {
     Creation(SpawnKind),
     Move(MoveState, PostMoveAction),
@@ -77,6 +83,7 @@ pub enum EventKind {
     StatusAdded(StatusKind),
     StatusRemoved(StatusKind),
     StatusExpired(StatusKind),
+    LogScrolled(LogDirection),
 }
 
 pub type EventCallback = fn(ecs: &mut World, kind: EventKind, target: Option<Entity>) -> ();

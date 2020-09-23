@@ -105,6 +105,28 @@ impl AccelerateAnimations {
     }
 }
 
+pub enum LogIndexDelta {
+    None,
+    PageUp,
+    PageDown,
+    JumpToEnd,
+}
+
+#[derive(Component)] // NotConvertSaveload
+pub struct LogIndexPosition {
+    pub index: usize,
+    pub delta: LogIndexDelta,
+}
+
+impl LogIndexPosition {
+    pub fn init() -> LogIndexPosition {
+        LogIndexPosition {
+            index: 0,
+            delta: LogIndexDelta::None,
+        }
+    }
+}
+
 pub fn add_ui_extension(ecs: &mut World) {
     ecs.register::<RenderComponent>();
     ecs.register::<BattleSceneStateComponent>();
@@ -119,11 +141,13 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.subscribe(super::battle_animations::melee_cone_event);
     ecs.subscribe(super::battle_animations::field_event);
     ecs.subscribe(super::battle_animations::explode_event);
+    ecs.subscribe(super::views::log_event);
 
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
     ecs.insert(BufferedInputComponent::init());
     ecs.insert(AccelerateAnimations::init());
+    ecs.insert(LogIndexPosition::init());
 }
 
 pub trait UIState {

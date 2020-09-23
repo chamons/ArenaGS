@@ -167,8 +167,12 @@ impl BattleScene {
 impl Scene for BattleScene {
     fn handle_key(&mut self, keycode: Keycode) {
         match keycode {
-            Keycode::PageUp => self.ecs.log_scroll_back(),
-            Keycode::PageDown => self.ecs.log_scroll_forward(),
+            Keycode::PageUp => {
+                self.ecs.raise_event(EventKind::LogScrolled(LogDirection::Backwards), None);
+            }
+            Keycode::PageDown => {
+                self.ecs.raise_event(EventKind::LogScrolled(LogDirection::Forward), None);
+            }
             _ => {}
         }
 

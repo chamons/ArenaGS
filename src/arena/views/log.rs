@@ -3,11 +3,12 @@ use std::rc::Rc;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
+use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
 use crate::after_image::{FontColor, FontSize, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
-use crate::clash::{LogComponent, LOG_COUNT};
+use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
 pub struct LogView {
     position: SDLPoint,
@@ -29,69 +30,83 @@ impl LogView {
         })
     }
 
-    fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
+    fn find_end_index(&self, ecs: &World) -> BoxResult<usize> {
         let log = &ecs.read_resource::<LogComponent>().log;
-        let mut logs = vec![];
         let mut line_count = 0;
 
-        // Start from the index and collect until you hit the front or LOG_COUNT lines
-        let mut found_enough = false;
-        for l in log.logs.iter().rev().skip(log.logs.len() - (log.index + 1)) {
+        // Walk back countint until we hit LOG_SIZE lines
+        for (i, l) in log.logs.iter().enumerate().rev() {
+            let count = self.text.layout_text(&l, FontSize::Small, LayoutRequest::init(0, 0, 210, 0))?.line_count;
+            if count + line_count > LOG_COUNT as u32 {
+                return Ok(i + 1);
+            }
+            line_count += count;
+        }
+
+        // If we don't find enough, your end is 0
+        Ok(0)
+    }
+
+    fn calculate_index(&self, ecs: &World) -> BoxResult<usize> {
+        let mut index = ecs.read_resource::<LogIndexPosition>().index;
+        match ecs.read_resource::<LogIndexPosition>().delta {
+            LogIndexDelta::PageDown => index = std::cmp::min(index + LOG_COUNT, self.find_end_index(ecs)?),
+            LogIndexDelta::PageUp => index = std::cmp::max(index as i32 - LOG_COUNT as i32, 0) as usize,
+            LogIndexDelta::JumpToEnd => index = self.find_end_index(ecs)?,
+            LogIndexDelta::None => {}
+        }
+
+        ecs.write_resource::<LogIndexPosition>().index = index;
+        ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::None;
+        Ok(index)
+    }
+
+    fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
+        let index = self.calculate_index(ecs)?;
+        let log = &ecs.read_resource::<LogComponent>().log;
+        let mut line_count = 0;
+
+        for l in log.logs.iter().skip(index) {
             let layout = self.text.layout_text(
                 &l,
                 FontSize::Small,
                 LayoutRequest::init(self.position.x as u32, self.position.y as u32 + 15, 210, 2),
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
+                for chunk in &layout.chunks {
+                    self.text.render_text(
+                        &chunk.text,
+                        chunk.position.x as i32,
+                        chunk.position.y as i32 + 20 * line_count as i32,
+                        canvas,
+                        FontSize::Tiny,
+                        FontColor::Black,
+                    )?;
+                }
+
                 line_count += layout.line_count;
-                logs.push(layout);
             } else {
-                found_enough = true;
                 break;
             }
         }
-        // But if we hit the 0th element and don't have enough don't let it scroll so far by walking forward
-        // and adding until we hit enough, collecting in vec to push to front
-        if !found_enough {
-            let mut additional_logs = vec![];
-            for l in log.logs.iter().skip(log.index + 1) {
-                let layout = self.text.layout_text(
-                    &l,
-                    FontSize::Small,
-                    LayoutRequest::init(self.position.x as u32, self.position.y as u32 + 15, 210, 2),
-                )?;
-                if line_count + layout.line_count <= LOG_COUNT as u32 {
-                    line_count += layout.line_count;
-                    additional_logs.push(layout);
-                } else {
-                    break;
-                }
-            }
-            if additional_logs.len() > 0 {
-                let mut combined_list = vec![];
-                combined_list.extend(additional_logs.drain(..).rev());
-                combined_list.extend(logs.drain(..));
-                logs = combined_list;
-            }
-        }
-
-        // Then reverse the list to paint
-        line_count = 0;
-        for layout in logs.iter().rev() {
-            for l in &layout.chunks {
-                self.text.render_text(
-                    &l.text,
-                    l.position.x as i32,
-                    l.position.y as i32 + 20 * line_count as i32,
-                    canvas,
-                    FontSize::Tiny,
-                    FontColor::Black,
-                )?;
-            }
-            line_count += layout.line_count;
-        }
 
         Ok(())
+    }
+}
+
+// The trouble is that it is not possible to know how many lines a log entry
+// will take without the font, and without shoving that into global state (ewwww)
+// we can't scroll with any reasonableness, and we can't (yet) dispatch into a view
+// So we shove into LogIndexPosition the last delta and it'll get accounted for
+// next render. :shrug:
+pub fn log_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
+    match kind {
+        EventKind::LogScrolled(direction) => match direction {
+            LogDirection::Forward => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::PageDown,
+            LogDirection::Backwards => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::PageUp,
+        },
+        EventKind::Tick(_) => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::JumpToEnd,
+        _ => {}
     }
 }
 
