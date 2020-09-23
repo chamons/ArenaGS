@@ -20,9 +20,13 @@ impl LayoutRequest {
     }
 }
 
+pub enum LayoutChunkValue {
+    String(String),
+}
+
 pub struct LayoutChunk {
     pub position: Point,
-    pub text: String,
+    pub value: LayoutChunkValue,
 }
 
 pub struct LayoutResult {
@@ -53,7 +57,7 @@ impl Layout {
 
     fn create_next_chunk(&mut self) {
         self.result.chunks.push(LayoutChunk {
-            text: mem::replace(&mut self.current_line, String::new()),
+            value: LayoutChunkValue::String(mem::replace(&mut self.current_line, String::new())),
             position: Point::init(self.request.position.x, self.current_y_offset),
         });
         self.current_line = String::new();

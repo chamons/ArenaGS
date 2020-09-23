@@ -20,5 +20,5 @@ pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::*;
-pub use text_layout::{layout_text, LayoutRequest, LayoutResult};
-pub use text_renderer::{Font, FontColor, FontSize, TextRenderer};
+pub use text_layout::*;
+pub use text_renderer::*;

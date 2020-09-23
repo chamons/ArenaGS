@@ -6,7 +6,7 @@ use specs::prelude::*;
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
-use crate::after_image::{FontColor, FontSize, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{FontColor, FontSize, IconLoader, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
@@ -74,14 +74,18 @@ impl LogView {
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
                 for chunk in &layout.chunks {
-                    self.text.render_text(
-                        &chunk.text,
-                        chunk.position.x as i32,
-                        chunk.position.y as i32 + 20 * line_count as i32,
-                        canvas,
-                        FontSize::Tiny,
-                        FontColor::Black,
-                    )?;
+                    match &chunk.value {
+                        LayoutChunkValue::String(s) => {
+                            self.text.render_text(
+                                &s,
+                                chunk.position.x as i32,
+                                chunk.position.y as i32 + 20 * line_count as i32,
+                                canvas,
+                                FontSize::Tiny,
+                                FontColor::Black,
+                            )?;
+                        }
+                    }
                 }
 
                 line_count += layout.line_count;
