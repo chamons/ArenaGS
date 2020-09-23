@@ -122,11 +122,18 @@ mod tests {
         font
     }
 
+    fn get_text(chunk: &LayoutChunkValue) -> &String {
+        match chunk {
+            LayoutChunkValue::String(s) => s,
+            _ => panic!("Wrong type?"),
+        }
+    }
+
     #[test]
     fn layout_one_line() {
         let result = layout_text("Hello World", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(1, result.chunks.len());
-        assert_eq!("Hello World", result.chunks[0].text);
+        assert_eq!("Hello World", get_text(&result.chunks[0].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
@@ -140,9 +147,9 @@ mod tests {
         )
         .unwrap();
         assert_eq!(3, result.chunks.len());
-        assert_eq!("Hello World", result.chunks[0].text);
-        assert_eq!("Hello World", result.chunks[1].text);
-        assert_eq!("Hello", result.chunks[2].text);
+        assert_eq!("Hello World", get_text(&result.chunks[0].value));
+        assert_eq!("Hello World", get_text(&result.chunks[1].value));
+        assert_eq!("Hello", get_text(&result.chunks[2].value));
         assert_eq!(3, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
@@ -156,7 +163,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(1, result.chunks.len());
-        assert_eq!("HelloWorldHelloWorldHello", result.chunks[0].text);
+        assert_eq!("HelloWorldHelloWorldHello", get_text(&result.chunks[0].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
@@ -170,9 +177,9 @@ mod tests {
         )
         .unwrap();
         assert_eq!(3, result.chunks.len());
-        assert_eq!("Hello", result.chunks[0].text);
-        assert_eq!("World", result.chunks[1].text);
-        assert_eq!("Bye", result.chunks[2].text);
+        assert_eq!("Hello", get_text(&result.chunks[0].value));
+        assert_eq!("World", get_text(&result.chunks[1].value));
+        assert_eq!("Bye", get_text(&result.chunks[2].value));
         assert_eq!(2, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 37), result.chunks[1].position);
@@ -188,9 +195,9 @@ mod tests {
         )
         .unwrap();
         assert_eq!(3, result.chunks.len());
-        assert_eq!("A", result.chunks[0].text);
-        assert_eq!("World", result.chunks[1].text);
-        assert_eq!("B", result.chunks[2].text);
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("World", get_text(&result.chunks[1].value));
+        assert_eq!("B", get_text(&result.chunks[2].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 10), result.chunks[1].position);
