@@ -1,18 +1,22 @@
 use std::rc::Rc;
 
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
-use crate::after_image::{FontColor, FontSize, IconLoader, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::{
+    FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer,
+};
 use crate::atlas::BoxResult;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
 pub struct LogView {
     position: SDLPoint,
     text: Rc<TextRenderer>,
+    icons: IconCache,
     frame: Frame,
 }
 
@@ -27,6 +31,7 @@ impl LogView {
                 &IconLoader::init_ui()?,
                 FrameKind::Log,
             )?,
+            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["stiletto.png"])?,
         })
     }
 
@@ -85,6 +90,15 @@ impl LogView {
                                 FontColor::Black,
                             )?;
                         }
+                        LayoutChunkValue::Icon(icon) => match icon {
+                            LayoutChunkIcon::Sword => {
+                                canvas.copy(
+                                    self.icons.get("stiletto.png"),
+                                    None,
+                                    SDLRect::new(chunk.position.x as i32, chunk.position.y as i32, 24, 24),
+                                )?;
+                            }
+                        },
                     }
                 }
 
