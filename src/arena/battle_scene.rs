@@ -46,6 +46,7 @@ impl BattleScene {
         for i in 0..25 {
             ecs.log(format!("{}", i));
         }
+        ecs.log("A {{Sword}} hits");
 
         Ok(BattleScene { ecs, views })
     }

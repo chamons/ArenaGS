@@ -40,34 +40,137 @@ pub struct LayoutResult {
     pub line_count: u32,
 }
 
-struct Layout {
-    result: LayoutResult,
-    current_line_width: u32,
-    largest_line_height: u32,
+// We collect words until we line wrap or non a non-word
+// then flush it as a single Layout chunk
+struct WordBuffer {
     current_line: String,
-    current_y_offset: u32,
-    request: LayoutRequest,
+    width: u32,
 }
+
+impl WordBuffer {
+    pub fn init() -> WordBuffer {
+        WordBuffer {
+            current_line: String::new(),
+            width: 0,
+        }
+    }
+
+    pub fn has_content(&self) -> bool {
+        self.width > 0
+    }
+
+    pub fn add(&mut self, text: &str, width: u32) {
+        if self.current_line.len() > 0 {
+            self.current_line.push_str(" ");
+            self.width += 3; // Spacing hack
+        }
+        self.current_line.push_str(text);
+        self.width += width;
+    }
+
+    pub fn flush(&mut self) -> (String, u32) {
+        let value = mem::replace(&mut self.current_line, String::new());
+        let width = self.width;
+        self.width = 0;
+        (value, width)
+    }
+}
+
+struct LayoutRect {
+    corner: Point,
+    largest_line_height: u32,
+    current_line_width: u32,
+    // Current x position based upon flushed content
+    current_x_offset: u32,
+    // Current y position based upon flushed content
+    current_y_offset: u32,
+}
+
+impl LayoutRect {
+    pub fn init(corner: &Point) -> LayoutRect {
+        LayoutRect {
+            corner: *corner,
+            current_line_width: 0,
+            largest_line_height: 0,
+            current_x_offset: corner.x,
+            current_y_offset: corner.y,
+        }
+    }
+
+    // We 'spend' line width but do not update x,y cursor
+    pub fn add_text_to_buffer(&mut self, height: u32, width: u32) {
+        self.current_line_width += width;
+        self.largest_line_height = cmp::max(self.largest_line_height, height);
+    }
+
+    // Updates for flushed content and returns cursor before move
+    pub fn flush(&mut self, width: u32) -> Point {
+        let point = Point::init(self.current_x_offset, self.current_y_offset);
+        self.current_x_offset += width;
+        point
+    }
+
+    // We've completed a line, reset for next
+    pub fn new_line(&mut self, space_between_lines: u32) {
+        self.current_x_offset = self.corner.x;
+        self.current_y_offset += self.largest_line_height + space_between_lines;
+        self.largest_line_height = 0;
+        self.current_line_width = 0;
+    }
+}
+
+struct Layout {
+    request: LayoutRequest,
+
+    // Buffer for words until wrap/non-word content
+    word_buffer: WordBuffer,
+    // Tracks current cursor location, spent width, etc
+    rect: LayoutRect,
+
+    result: LayoutResult,
+}
+
+pub const TEXT_ICON_SIZE: u32 = 18;
 
 impl Layout {
     fn init(request: LayoutRequest) -> Layout {
         Layout {
             result: LayoutResult { chunks: vec![], line_count: 0 },
-            current_line_width: 0,
-            largest_line_height: 0,
-            current_line: String::new(),
-            current_y_offset: request.position.y,
+            word_buffer: WordBuffer::init(),
+            rect: LayoutRect::init(&request.position),
             request,
         }
     }
 
-    fn create_next_chunk(&mut self) {
+    fn should_wrap(&self, width: u32) -> bool {
+        // If it's longer than the remaining space AND we've moved a bit over
+        // A word longer than an entire line should not wrap an empty space
+        self.rect.current_line_width + width > self.request.width_to_render_in && self.rect.current_line_width > 0
+    }
+
+    fn flush_any_text(&mut self) {
+        if self.word_buffer.has_content() {
+            let (text, text_width) = self.word_buffer.flush();
+            let position = self.rect.flush(text_width);
+
+            self.result.chunks.push(LayoutChunk {
+                value: LayoutChunkValue::String(text),
+                position,
+            });
+        }
+    }
+
+    fn flush_icon(&mut self, name: &str) {
+        let icon = match name {
+            "Sword" => LayoutChunkIcon::Sword,
+            _ => panic!("Unknown icon kind {}", name),
+        };
+
+        let position = self.rect.flush(TEXT_ICON_SIZE + 2);
         self.result.chunks.push(LayoutChunk {
-            value: LayoutChunkValue::String(mem::replace(&mut self.current_line, String::new())),
-            position: Point::init(self.request.position.x, self.current_y_offset),
+            value: LayoutChunkValue::Icon(icon),
+            position,
         });
-        self.current_line = String::new();
-        self.current_line_width = 0
     }
 
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
@@ -76,43 +179,30 @@ impl Layout {
 
             let is_symbol = word.starts_with("{{") && word.ends_with("}}");
             if is_symbol {
-                width = 24;
-                height = 24;
+                width = TEXT_ICON_SIZE;
+                height = TEXT_ICON_SIZE;
             }
 
-            let is_line_wrapping = self.current_line_width + width > self.request.width_to_render_in && self.current_line_width > 0;
+            let is_line_wrapping = self.should_wrap(width);
+
+            if is_line_wrapping | is_symbol {
+                self.flush_any_text();
+            }
             if is_line_wrapping {
-                self.create_next_chunk();
-                self.current_y_offset += self.largest_line_height + self.request.space_between_lines;
-                self.largest_line_height = 0;
+                self.rect.new_line(self.request.space_between_lines);
                 self.result.line_count += 1;
             }
 
-            if is_symbol && !is_line_wrapping {
-                self.create_next_chunk();
-            }
-
             if is_symbol {
-                let icon = match &word[2..word.len() - 2] {
-                    "Sword" => LayoutChunkIcon::Sword,
-                    _ => panic!("Unknown icon kind {}", &word[2..word.len() - 2]),
-                };
-                self.result.chunks.push(LayoutChunk {
-                    value: LayoutChunkValue::Icon(icon),
-                    position: Point::init(self.request.position.x, self.current_y_offset),
-                });
+                self.flush_icon(&word[2..word.len() - 2]);
             } else {
-                self.largest_line_height = cmp::max(self.largest_line_height, height);
-                self.current_line_width += width;
-                if self.current_line.len() > 0 {
-                    self.current_line.push_str(" ");
-                }
-                self.current_line.push_str(word);
+                self.rect.add_text_to_buffer(height, width);
+                self.word_buffer.add(word, width);
             }
         }
 
         // Apply leftovers to the last line
-        self.create_next_chunk();
+        self.flush_any_text();
         self.result.line_count += 1;
 
         Ok(())
@@ -187,6 +277,8 @@ mod tests {
         assert_eq!("Hello", get_text(&result.chunks[2].value));
         assert_eq!(3, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(10, 64), result.chunks[2].position);
     }
 
     #[test]
@@ -217,8 +309,48 @@ mod tests {
         assert_eq!("B", get_text(&result.chunks[2].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(20, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(40, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn layout_line_with_duel_icons() {
+        let result = layout_text(
+            "{{Sword}} {{Sword}}",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(2, result.chunks.len());
+        assert!(get_icon(&result.chunks[0].value).is_sword());
+        assert!(get_icon(&result.chunks[1].value).is_sword());
+        assert_eq!(1, result.line_count);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(30, 10), result.chunks[1].position);
+    }
+
+    #[test]
+    fn layout_icon_multiline_text() {
+        let result = layout_text(
+            "Hello World Hello {{Sword}} LongerWorld {{Sword}} Board",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(6, result.chunks.len());
+        assert_eq!("Hello World", get_text(&result.chunks[0].value));
+        assert_eq!("Hello", get_text(&result.chunks[1].value));
+        assert!(get_icon(&result.chunks[2].value).is_sword());
+        assert_eq!("LongerWorld", get_text(&result.chunks[3].value));
+        assert!(get_icon(&result.chunks[4].value).is_sword());
+        assert_eq!("Board", get_text(&result.chunks[5].value));
+        assert_eq!(4, result.line_count);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 37), result.chunks[1].position);
-        assert_points_equal(Point::init(10, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(42, 37), result.chunks[2].position);
+        assert_points_equal(Point::init(10, 64), result.chunks[3].position);
+        assert_points_equal(Point::init(10, 91), result.chunks[4].position);
+        assert_points_equal(Point::init(30, 91), result.chunks[5].position);
     }
 
     //#[test]

@@ -8,7 +8,7 @@ use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
 use super::{ContextData, View};
 use crate::after_image::{
-    FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer,
+    FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer, TEXT_ICON_SIZE,
 };
 use crate::atlas::BoxResult;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
@@ -31,7 +31,7 @@ impl LogView {
                 &IconLoader::init_ui()?,
                 FrameKind::Log,
             )?,
-            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["stiletto.png"])?,
+            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
         })
     }
 
@@ -78,27 +78,34 @@ impl LogView {
                 LayoutRequest::init(self.position.x as u32, self.position.y as u32 + 15, 210, 2),
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
+                let line_y_offset = 20 * line_count as i32;
                 for chunk in &layout.chunks {
                     match &chunk.value {
                         LayoutChunkValue::String(s) => {
                             self.text.render_text(
                                 &s,
                                 chunk.position.x as i32,
-                                chunk.position.y as i32 + 20 * line_count as i32,
+                                line_y_offset + chunk.position.y as i32,
                                 canvas,
                                 FontSize::Tiny,
                                 FontColor::Black,
                             )?;
                         }
-                        LayoutChunkValue::Icon(icon) => match icon {
-                            LayoutChunkIcon::Sword => {
-                                canvas.copy(
-                                    self.icons.get("stiletto.png"),
-                                    None,
-                                    SDLRect::new(chunk.position.x as i32, chunk.position.y as i32, 24, 24),
-                                )?;
-                            }
-                        },
+                        LayoutChunkValue::Icon(icon) => {
+                            let icon_image = match icon {
+                                LayoutChunkIcon::Sword => self.icons.get("plain-dagger.png"),
+                            };
+                            canvas.copy(
+                                icon_image,
+                                None,
+                                SDLRect::new(
+                                    chunk.position.x as i32,
+                                    line_y_offset + chunk.position.y as i32 - 2,
+                                    TEXT_ICON_SIZE,
+                                    TEXT_ICON_SIZE,
+                                ),
+                            )?;
+                        }
                     }
                 }
 
