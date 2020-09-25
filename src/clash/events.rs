@@ -64,6 +64,7 @@ pub enum ExplodeState {
 pub enum LogDirection {
     Forward,
     Backwards,
+    SnapToEnd,
 }
 
 #[derive(Copy, Clone)]

@@ -99,9 +99,9 @@ pub struct AccelerateAnimationsComponent {
     pub state: bool,
 }
 
-impl AccelerateAnimations {
-    pub fn init() -> AccelerateAnimations {
-        AccelerateAnimations { state: false }
+impl AccelerateAnimationsComponent {
+    pub fn init() -> AccelerateAnimationsComponent {
+        AccelerateAnimationsComponent { state: false }
     }
 }
 
@@ -146,7 +146,7 @@ pub fn add_ui_extension(ecs: &mut World) {
     ecs.insert(BattleSceneStateComponent::init());
     ecs.insert(MousePositionComponent::init());
     ecs.insert(BufferedInputComponent::init());
-    ecs.insert(AccelerateAnimations::init());
+    ecs.insert(AccelerateAnimationsComponent::init());
     ecs.insert(LogIndexPosition::init());
 }
 

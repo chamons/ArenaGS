@@ -139,8 +139,8 @@ pub fn log_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
         EventKind::LogScrolled(direction) => match direction {
             LogDirection::Forward => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::PageDown,
             LogDirection::Backwards => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::PageUp,
+            LogDirection::SnapToEnd => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::JumpToEnd,
         },
-        EventKind::Tick(_) => ecs.write_resource::<LogIndexPosition>().delta = LogIndexDelta::JumpToEnd,
         _ => {}
     }
 }

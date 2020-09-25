@@ -424,14 +424,3 @@ impl StatusApplier for World {
         StatusStore::add_trait_to(self, entity, kind);
     }
 }
-
-pub trait Logger {
-    fn log<T: AsRef<str>>(&mut self, message: T);
-}
-
-impl Logger for World {
-    fn log<T: AsRef<str>>(&mut self, message: T) {
-        let log = &mut self.write_resource::<LogComponent>().log;
-        log.add(message.as_ref());
-    }
-}

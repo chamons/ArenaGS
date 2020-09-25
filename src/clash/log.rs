@@ -12,12 +12,29 @@ impl Log {
         Log { logs: vec![] }
     }
 
-    pub fn add(&mut self, entry: &str) {
+    fn add(&mut self, entry: &str) {
         self.logs.push(entry.to_string());
     }
 
     #[cfg(test)]
     pub fn contains_count(&self, value: &str) -> usize {
         self.logs.iter().filter(|x| x.contains(value)).count()
+    }
+}
+
+use super::{EventCoordinator, EventKind, LogComponent, LogDirection};
+use specs::prelude::*;
+
+pub trait Logger {
+    fn log<T: AsRef<str>>(&mut self, message: T);
+}
+
+impl Logger for World {
+    fn log<T: AsRef<str>>(&mut self, message: T) {
+        {
+            let log = &mut self.write_resource::<LogComponent>().log;
+            log.add(message.as_ref());
+        }
+        self.raise_event(EventKind::LogScrolled(LogDirection::SnapToEnd), None);
     }
 }
