@@ -120,7 +120,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         }
     };
     ecs.log(format!(
-        "{} took {} damage (Str {}).",
+        "{} took {} damage ({{{{Sword}}}} {}).",
         ecs.get_name(&target).unwrap().as_str(),
         rolled_damage.amount,
         damage.dice()

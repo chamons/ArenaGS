@@ -1,6 +1,9 @@
 use std::cmp;
 use std::mem;
 
+use lazy_static::lazy_static;
+use regex::Regex;
+
 use super::Font;
 use crate::atlas::{BoxResult, Point};
 
@@ -62,7 +65,6 @@ impl WordBuffer {
     pub fn add(&mut self, text: &str, width: u32) {
         if self.current_line.len() > 0 {
             self.current_line.push_str(" ");
-            self.width += 3; // Spacing hack
         }
         self.current_line.push_str(text);
         self.width += width;
@@ -173,37 +175,59 @@ impl Layout {
         });
     }
 
+    pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         for word in text.split_ascii_whitespace() {
-            let (mut width, mut height) = font.size_of_latin1(word.as_bytes())?;
-
-            let is_symbol = word.starts_with("{{") && word.ends_with("}}");
-            if is_symbol {
-                width = TEXT_ICON_SIZE;
-                height = TEXT_ICON_SIZE;
+            lazy_static! {
+                static ref RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
             }
-
-            let is_line_wrapping = self.should_wrap(width);
-
-            if is_line_wrapping | is_symbol {
-                self.flush_any_text();
-            }
-            if is_line_wrapping {
-                self.rect.new_line(self.request.space_between_lines);
-                self.result.line_count += 1;
-            }
-
-            if is_symbol {
-                self.flush_icon(&word[2..word.len() - 2]);
+            if let Some(m) = RE.captures(word) {
+                let cap: Vec<String> = m.iter().map(|x| x.unwrap().as_str().to_owned()).collect();
+                for i in 1..4 {
+                    if let Some(chunk) = m.get(i) {
+                        let chunk = chunk.as_str();
+                        if chunk.len() > 0 {
+                            self.process_word(chunk, font)?;
+                        }
+                    }
+                }
             } else {
-                self.rect.add_text_to_buffer(height, width);
-                self.word_buffer.add(word, width);
+                self.process_word(word, font)?;
             }
         }
 
         // Apply leftovers to the last line
         self.flush_any_text();
         self.result.line_count += 1;
+
+        Ok(())
+    }
+
+    fn process_word(&mut self, word: &str, font: &Font) -> BoxResult<()> {
+        let (mut width, mut height) = font.size_of_latin1(word.as_bytes())?;
+
+        let is_symbol = word.starts_with("{{") && word.ends_with("}}");
+        if is_symbol {
+            width = TEXT_ICON_SIZE;
+            height = TEXT_ICON_SIZE;
+        }
+
+        let is_line_wrapping = self.should_wrap(width);
+
+        if is_line_wrapping | is_symbol {
+            self.flush_any_text();
+        }
+        if is_line_wrapping {
+            self.rect.new_line(self.request.space_between_lines);
+            self.result.line_count += 1;
+        }
+
+        if is_symbol {
+            self.flush_icon(&word[2..word.len() - 2]);
+        } else {
+            self.rect.add_text_to_buffer(height, width);
+            self.word_buffer.add(word, width);
+        }
 
         Ok(())
     }
@@ -296,6 +320,15 @@ mod tests {
     }
 
     #[test]
+    fn recognize_icon_with_parens() {
+        let result = layout_text("({{Sword}})", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
+        assert_eq!(4, result.chunks.len());
+        assert_eq!("(", get_text(&result.chunks[0].value));
+        assert!(get_icon(&result.chunks[1].value).is_sword());
+        assert_eq!(")", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
     fn layout_line_with_icon() {
         let result = layout_text(
             "A {{Sword}} B",
@@ -351,6 +384,19 @@ mod tests {
         assert_points_equal(Point::init(10, 64), result.chunks[3].position);
         assert_points_equal(Point::init(10, 91), result.chunks[4].position);
         assert_points_equal(Point::init(30, 91), result.chunks[5].position);
+    }
+
+    #[test]
+    fn layout_icon_paren_combat_text() {
+        let result = layout_text("Player took 4 damage ({{Sword}} 4).", &get_test_font(), LayoutRequest::init(10, 10, 210, 10)).unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("Player took 4 damage (", get_text(&result.chunks[0].value));
+        assert!(get_icon(&result.chunks[1].value).is_sword());
+        assert_eq!("4).", get_text(&result.chunks[2].value));
+        assert_eq!(1, result.line_count);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(159, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(179, 10), result.chunks[2].position);
     }
 
     //#[test]
