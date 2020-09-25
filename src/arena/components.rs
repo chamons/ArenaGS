@@ -95,7 +95,7 @@ impl BufferedInputComponent {
 }
 
 #[derive(Component)] // NotConvertSaveload
-pub struct AccelerateAnimations {
+pub struct AccelerateAnimationsComponent {
     pub state: bool,
 }
 

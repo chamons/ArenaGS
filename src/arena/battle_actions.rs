@@ -13,7 +13,7 @@ pub enum BattleActionRequest {
 }
 
 pub fn request_action(ecs: &mut World, request: BattleActionRequest) {
-    ecs.write_resource::<AccelerateAnimations>().state = false;
+    ecs.write_resource::<AccelerateAnimationsComponent>().state = false;
 
     let animation_blocked = has_animations_blocking(ecs);
     let action_blocked = !can_act(ecs);

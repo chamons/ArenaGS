@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{AccelerateAnimations, AnimationComponent};
+use super::{AccelerateAnimationsComponent, AnimationComponent};
 use crate::after_image::CharacterAnimationState;
 use crate::atlas::{EasyMutECS, EasyMutWorld, Point};
 use crate::clash::{EventCoordinator, EventKind};
@@ -143,7 +143,7 @@ pub fn tick_animations(ecs: &mut World, frame: u64) {
 }
 
 pub fn add_animation(ecs: &mut World, entity: Entity, mut animation: Animation) {
-    if ecs.read_resource::<AccelerateAnimations>().state {
+    if ecs.read_resource::<AccelerateAnimationsComponent>().state {
         animation.duration /= 4;
     }
     ecs.shovel(entity, AnimationComponent::init(animation));
@@ -162,7 +162,7 @@ pub fn accelerate_animations(ecs: &mut World) {
     for a in to_speedup {
         ecs.write_storage::<AnimationComponent>().grab_mut(a).animation.duration /= 4;
     }
-    ecs.write_resource::<AccelerateAnimations>().state = true;
+    ecs.write_resource::<AccelerateAnimationsComponent>().state = true;
 }
 
 pub fn force_complete_animations(ecs: &mut World) {
