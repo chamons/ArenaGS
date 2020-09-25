@@ -344,7 +344,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(20, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(40, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(35, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -360,7 +360,7 @@ mod tests {
         assert!(get_icon(&result.chunks[1].value).is_sword());
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
-        assert_points_equal(Point::init(30, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(25, 10), result.chunks[1].position);
     }
 
     #[test]
@@ -384,7 +384,7 @@ mod tests {
         assert_points_equal(Point::init(42, 37), result.chunks[2].position);
         assert_points_equal(Point::init(10, 64), result.chunks[3].position);
         assert_points_equal(Point::init(10, 91), result.chunks[4].position);
-        assert_points_equal(Point::init(30, 91), result.chunks[5].position);
+        assert_points_equal(Point::init(25, 91), result.chunks[5].position);
     }
 
     #[test]
@@ -397,7 +397,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(147, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(167, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(162, 10), result.chunks[2].position);
     }
 
     //#[test]
