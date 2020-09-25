@@ -23,7 +23,7 @@ pub struct BattleScene {
 
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let mut ecs = new_game::random_new_world(difficulty).unwrap();
+        let ecs = new_game::random_new_world(difficulty).unwrap();
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -41,10 +41,6 @@ impl BattleScene {
 
         if cfg!(debug_assertions) {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
-        }
-
-        for i in 0..25 {
-            ecs.log(format!("{}", i));
         }
 
         Ok(BattleScene { ecs, views })

@@ -87,7 +87,17 @@ impl LogView {
                                 chunk.position.x as i32,
                                 line_y_offset + chunk.position.y as i32,
                                 canvas,
-                                FontSize::Tiny,
+                                FontSize::Small,
+                                FontColor::Black,
+                            )?;
+                        }
+                        LayoutChunkValue::Link(s) => {
+                            self.text.render_text(
+                                &s,
+                                chunk.position.x as i32,
+                                line_y_offset + chunk.position.y as i32,
+                                canvas,
+                                FontSize::SmallUnderline,
                                 FontColor::Black,
                             )?;
                         }
