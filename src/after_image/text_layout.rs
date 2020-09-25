@@ -132,7 +132,7 @@ struct Layout {
     result: LayoutResult,
 }
 
-pub const TEXT_ICON_SIZE: u32 = 18;
+pub const TEXT_ICON_SIZE: u32 = 17;
 
 impl Layout {
     fn init(request: LayoutRequest) -> Layout {
@@ -168,13 +168,15 @@ impl Layout {
             _ => panic!("Unknown icon kind {}", name),
         };
 
-        let position = self.rect.flush(TEXT_ICON_SIZE + 2);
+        // Tweaking space here a tad
+        let position = self.rect.flush(TEXT_ICON_SIZE - 2);
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Icon(icon),
             position,
         });
     }
 
+    // Todo the 2nd half of the string is wrong height and a tad too far
     pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         for word in text.split_ascii_whitespace() {
@@ -182,7 +184,6 @@ impl Layout {
                 static ref RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
             }
             if let Some(m) = RE.captures(word) {
-                let cap: Vec<String> = m.iter().map(|x| x.unwrap().as_str().to_owned()).collect();
                 for i in 1..4 {
                     if let Some(chunk) = m.get(i) {
                         let chunk = chunk.as_str();
@@ -322,7 +323,7 @@ mod tests {
     #[test]
     fn recognize_icon_with_parens() {
         let result = layout_text("({{Sword}})", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
-        assert_eq!(4, result.chunks.len());
+        assert_eq!(3, result.chunks.len());
         assert_eq!("(", get_text(&result.chunks[0].value));
         assert!(get_icon(&result.chunks[1].value).is_sword());
         assert_eq!(")", get_text(&result.chunks[2].value));
@@ -395,8 +396,8 @@ mod tests {
         assert_eq!("4).", get_text(&result.chunks[2].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
-        assert_points_equal(Point::init(159, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(179, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(147, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(167, 10), result.chunks[2].position);
     }
 
     //#[test]

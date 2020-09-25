@@ -99,8 +99,8 @@ impl LogView {
                                 icon_image,
                                 None,
                                 SDLRect::new(
-                                    chunk.position.x as i32,
-                                    line_y_offset + chunk.position.y as i32 - 2,
+                                    chunk.position.x as i32 - 4,
+                                    line_y_offset + chunk.position.y as i32 - 1,
                                     TEXT_ICON_SIZE,
                                     TEXT_ICON_SIZE,
                                 ),
