@@ -292,6 +292,11 @@ mod tests {
         static ref TTF_CONTEXT: &'static sdl2::ttf::Sdl2TtfContext = Box::from(sdl2::ttf::init().unwrap()).leak();
     }
 
+    fn has_test_font() -> bool {
+        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
+        font_path.exists()
+    }
+
     fn get_test_font() -> Font {
         let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
         let mut font = TTF_CONTEXT.load_font(font_path, 14).unwrap();
@@ -329,6 +334,10 @@ mod tests {
 
     #[test]
     fn layout_one_line() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text("Hello World", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(1, result.chunks.len());
         assert_eq!("Hello World", get_text(&result.chunks[0].value));
@@ -338,6 +347,10 @@ mod tests {
 
     #[test]
     fn layout_multiple_line() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "Hello World Hello World Hello",
             &get_test_font(),
@@ -356,6 +369,10 @@ mod tests {
 
     #[test]
     fn layout_one_super_long_word() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "HelloWorldHelloWorldHello",
             &get_test_font(),
@@ -370,6 +387,10 @@ mod tests {
 
     #[test]
     fn recognize_icon_with_parens() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text("({{Sword}})", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(3, result.chunks.len());
         assert_eq!("(", get_text(&result.chunks[0].value));
@@ -379,6 +400,10 @@ mod tests {
 
     #[test]
     fn layout_line_with_icon() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "A {{Sword}} B",
             &get_test_font(),
@@ -397,6 +422,10 @@ mod tests {
 
     #[test]
     fn layout_line_with_duel_icons() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "{{Sword}} {{Sword}}",
             &get_test_font(),
@@ -413,6 +442,10 @@ mod tests {
 
     #[test]
     fn layout_icon_multiline_text() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "Hello World Hello {{Sword}} LongerWorld {{Sword}} Board",
             &get_test_font(),
@@ -437,6 +470,10 @@ mod tests {
 
     #[test]
     fn layout_icon_multiline_text_tiny() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "Hello World Hello {{Sword}} LongerWorld {{Sword}} Board",
             &get_tiny_test_font(),
@@ -459,6 +496,10 @@ mod tests {
 
     #[test]
     fn layout_icon_paren_combat_text() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text("Player took 4 damage ({{Sword}} 4).", &get_test_font(), LayoutRequest::init(10, 10, 210, 10)).unwrap();
         assert_eq!(3, result.chunks.len());
         assert_eq!("Player took 4 damage (", get_text(&result.chunks[0].value));
@@ -472,6 +513,10 @@ mod tests {
 
     #[test]
     fn layout_line_with_link() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "Hello [[World]] Bye",
             &get_test_font(),
@@ -490,6 +535,10 @@ mod tests {
 
     #[test]
     fn layout_line_with_link_sandwhich() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text(
             "A [[World]] B",
             &get_test_font(),
@@ -508,6 +557,10 @@ mod tests {
 
     #[test]
     fn recognize_link_with_parens() {
+        if !has_test_font() {
+            return;
+        }
+
         let result = layout_text("([[Sword]])", &get_test_font(), LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10)).unwrap();
         assert_eq!(3, result.chunks.len());
         assert_eq!("(", get_text(&result.chunks[0].value));
