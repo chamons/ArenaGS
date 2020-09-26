@@ -173,7 +173,6 @@ impl Layout {
             _ => panic!("Unknown icon kind {}", name),
         };
 
-        // Tweaking space here a tad
         let position = self.rect.flush(TEXT_ICON_SIZE);
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Icon(icon),
