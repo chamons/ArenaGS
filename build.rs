@@ -48,12 +48,16 @@ fn main() {
     let out_dir = env::var("OUT_DIR").expect("No OUT_DIR set?");
     // ../../.. to get to out of the crate specific folder
     let dest_dir = Path::new(&out_dir).join("..").join("..").join("..");
+    let dest_test_dir = Path::new(&out_dir).join("..").join("..").join("..").join("deps");
 
     let platform = env::var("CARGO_CFG_TARGET_OS").expect("No Target OS?");
     if let "windows" = platform.as_str() {
         let lib_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("lib").join("win");
 
         copy_all_with_extension(&lib_dir, &dest_dir.stringify(), "dll").expect("Unable to copy native libraries");
+
+        // Thanks https://github.com/rust-lang/cargo/issues/4044
+        copy_all_with_extension(&lib_dir, &dest_test_dir.stringify(), "dll").expect("Unable to copy native libraries");
 
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir.stringify()));
     }

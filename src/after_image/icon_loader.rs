@@ -23,6 +23,14 @@ impl IconLoader {
         Ok(IconLoader { images })
     }
 
+    pub fn init_symbols() -> BoxResult<IconLoader> {
+        let mut images = HashMap::new();
+        let folder = Path::new(&get_exe_folder()).join("icons").join("lorc").stringify_owned();
+        find_images(&mut images, &folder)?;
+
+        Ok(IconLoader { images })
+    }
+
     pub fn init_ui() -> BoxResult<IconLoader> {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("ui").stringify_owned();

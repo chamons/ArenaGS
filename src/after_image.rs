@@ -11,6 +11,7 @@ mod icon_loader;
 mod image_loader;
 mod render_context;
 mod sprites;
+mod text_layout;
 mod text_renderer;
 
 pub use font_cache::FontCache;
@@ -19,4 +20,5 @@ pub use icon_loader::IconLoader;
 pub use image_loader::load_image;
 pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::*;
-pub use text_renderer::{FontColor, FontSize, TextRenderer};
+pub use text_layout::*;
+pub use text_renderer::*;

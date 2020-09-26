@@ -120,7 +120,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         }
     };
     ecs.log(format!(
-        "{} took {} damage (Str {}).",
+        "{} took {} damage ({} {{{{Sword}}}})",
         ecs.get_name(&target).unwrap().as_str(),
         rolled_damage.amount,
         damage.dice()
@@ -144,14 +144,14 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
             if let Some(new_origin) = direction_of_impact.point_in_direction(&current_position.origin) {
                 let new_position = current_position.move_to(new_origin);
                 if is_area_clear_of_others(ecs, &new_position.all_positions(), target) {
-                    ecs.log(format!("{} is knocked back", ecs.get_name(target).unwrap()));
+                    ecs.log(format!("{} is knocked back.", ecs.get_name(target).unwrap()));
                     begin_move(ecs, target, new_position, PostMoveAction::CheckNewLocationDamage);
                 }
             }
         }
     }
     if rolled_damage.options.contains(DamageOptions::ADD_CHARGE_STATUS) && !ecs.has_status(target, StatusKind::StaticCharge) {
-        ecs.log(format!("{} crackles with static electricity", ecs.get_name(target).unwrap()));
+        ecs.log(format!("{} crackles with static electricity.", ecs.get_name(target).unwrap()));
         ecs.add_status(target, StatusKind::StaticCharge, 300);
     }
     if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE_DMG) && ecs.has_status(target, StatusKind::StaticCharge) {
@@ -169,7 +169,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         if let Some(source_position) = source_position {
             if let Some(source) = find_character_at_location(ecs, source_position) {
                 if !ecs.has_status(&source, StatusKind::Aimed) {
-                    ecs.log(format!("{} takes aim", ecs.get_name(&source).unwrap()));
+                    ecs.log(format!("{} takes aim.", ecs.get_name(&source).unwrap()));
                     ecs.add_status(&source, StatusKind::Aimed, 300);
                 }
             }
@@ -192,7 +192,7 @@ pub fn regen_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 if ecs.has_status(&target.unwrap(), StatusKind::Regen) {
                     ecs.add_status(&target.unwrap(), StatusKind::RegenTick, REGEN_DURATION);
                 } else {
-                    ecs.log(format!("{} stops regenerating", ecs.get_name(&target.unwrap()).unwrap()));
+                    ecs.log(format!("{} stops regenerating.", ecs.get_name(&target.unwrap()).unwrap()));
                 }
                 const HEALTH_REGEN_PER_TICK: u32 = 1;
                 apply_healing_to_character(ecs, Strength::init(HEALTH_REGEN_PER_TICK), &target.unwrap());

@@ -424,24 +424,3 @@ impl StatusApplier for World {
         StatusStore::add_trait_to(self, entity, kind);
     }
 }
-
-pub trait Logger {
-    fn log<T: AsRef<str>>(&mut self, message: T);
-    fn log_scroll_forward(&mut self);
-    fn log_scroll_back(&mut self);
-}
-
-impl Logger for World {
-    fn log<T: AsRef<str>>(&mut self, message: T) {
-        let log = &mut self.write_resource::<LogComponent>().log;
-        log.add(message.as_ref());
-    }
-    fn log_scroll_forward(&mut self) {
-        let log = &mut self.write_resource::<LogComponent>().log;
-        log.scroll_forward();
-    }
-    fn log_scroll_back(&mut self) {
-        let log = &mut self.write_resource::<LogComponent>().log;
-        log.scroll_back();
-    }
-}
