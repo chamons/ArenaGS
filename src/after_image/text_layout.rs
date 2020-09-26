@@ -63,9 +63,10 @@ impl WordBuffer {
         self.width > 0
     }
 
-    pub fn add(&mut self, text: &str, width: u32) {
+    pub fn add(&mut self, text: &str, mut width: u32, space_size: u32) {
         if self.current_line.len() > 0 {
             self.current_line.push_str(" ");
+            width += space_size;
         }
         self.current_line.push_str(text);
         self.width += width;
@@ -130,6 +131,8 @@ struct Layout {
     // Tracks current cursor location, spent width, etc
     rect: LayoutRect,
 
+    space_size: u32,
+
     result: LayoutResult,
 }
 
@@ -141,6 +144,7 @@ impl Layout {
             result: LayoutResult { chunks: vec![], line_count: 0 },
             word_buffer: WordBuffer::init(),
             rect: LayoutRect::init(&request.position),
+            space_size: 0,
             request,
         }
     }
@@ -170,7 +174,7 @@ impl Layout {
         };
 
         // Tweaking space here a tad
-        let position = self.rect.flush(TEXT_ICON_SIZE - 2);
+        let position = self.rect.flush(TEXT_ICON_SIZE);
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Icon(icon),
             position,
@@ -187,10 +191,12 @@ impl Layout {
         });
     }
 
-    // Todo the 2nd half of the string is wrong height and a tad too far
     pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     pub const LINK_REGEX: &'static str = "^(.*)(\\[\\[\\w*\\]\\])(.*)$";
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
+        let (space_width, _) = font.size_of_latin1(&" ".as_bytes())?;
+        self.space_size = space_width;
+
         for word in text.split_ascii_whitespace() {
             lazy_static! {
                 static ref SYMBOL_RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
@@ -256,7 +262,7 @@ impl Layout {
             self.flush_link(&word[2..word.len() - 2], width)
         } else {
             self.rect.add_text_to_buffer(height, width);
-            self.word_buffer.add(word, width);
+            self.word_buffer.add(word, width, self.space_size);
         }
 
         Ok(())
@@ -290,6 +296,13 @@ mod tests {
     fn get_test_font() -> Font {
         let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
         let mut font = TTF_CONTEXT.load_font(font_path, 14).unwrap();
+        font.set_style(sdl2::ttf::FontStyle::NORMAL);
+        font
+    }
+
+    fn get_tiny_test_font() -> Font {
+        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
+        let mut font = TTF_CONTEXT.load_font(font_path, 9).unwrap();
         font.set_style(sdl2::ttf::FontStyle::NORMAL);
         font
     }
@@ -380,7 +393,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(20, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(35, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(37, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -396,7 +409,7 @@ mod tests {
         assert!(get_icon(&result.chunks[1].value).is_sword());
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
-        assert_points_equal(Point::init(25, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(27, 10), result.chunks[1].position);
     }
 
     #[test]
@@ -420,7 +433,29 @@ mod tests {
         assert_points_equal(Point::init(42, 37), result.chunks[2].position);
         assert_points_equal(Point::init(10, 64), result.chunks[3].position);
         assert_points_equal(Point::init(10, 91), result.chunks[4].position);
-        assert_points_equal(Point::init(25, 91), result.chunks[5].position);
+        assert_points_equal(Point::init(27, 91), result.chunks[5].position);
+    }
+
+    #[test]
+    fn layout_icon_multiline_text_tiny() {
+        let result = layout_text(
+            "Hello World Hello {{Sword}} LongerWorld {{Sword}} Board",
+            &get_tiny_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(5, result.chunks.len());
+        assert_eq!("Hello World Hello", get_text(&result.chunks[0].value));
+        assert!(get_icon(&result.chunks[1].value).is_sword());
+        assert_eq!("LongerWorld", get_text(&result.chunks[2].value));
+        assert!(get_icon(&result.chunks[3].value).is_sword());
+        assert_eq!("Board", get_text(&result.chunks[4].value));
+        assert_eq!(3, result.line_count);
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 31), result.chunks[1].position);
+        assert_points_equal(Point::init(27, 31), result.chunks[2].position);
+        assert_points_equal(Point::init(79, 31), result.chunks[3].position);
+        assert_points_equal(Point::init(10, 52), result.chunks[4].position);
     }
 
     #[test]
@@ -432,8 +467,8 @@ mod tests {
         assert_eq!("4).", get_text(&result.chunks[2].value));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
-        assert_points_equal(Point::init(147, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(162, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(159, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(176, 10), result.chunks[2].position);
     }
 
     #[test]

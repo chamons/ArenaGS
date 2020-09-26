@@ -106,6 +106,12 @@ impl TextRenderer {
         let TextureQuery { width, height, .. } = texture.query();
         canvas.copy(&texture, SDLRect::new(0, 0, width, height), SDLRect::new(x, y, width, height))?;
 
+        #[cfg(feature = "debug_text_alignmnet")]
+        {
+            canvas.set_draw_color(Color::from((128, 0, 0, 128)));
+            canvas.fill_rect(SDLRect::new(x, y, width, height))?;
+        }
+
         Ok(())
     }
 }

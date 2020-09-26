@@ -108,13 +108,19 @@ impl LogView {
                             canvas.copy(
                                 icon_image,
                                 None,
-                                SDLRect::new(
-                                    chunk.position.x as i32 - 4,
+                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
+                            )?;
+
+                            #[cfg(feature = "debug_text_alignmnet")]
+                            {
+                                canvas.set_draw_color(sdl2::pixels::Color::from((0, 128, 0, 128)));
+                                canvas.fill_rect(SDLRect::new(
+                                    chunk.position.x as i32,
                                     line_y_offset + chunk.position.y as i32 - 1,
                                     TEXT_ICON_SIZE,
                                     TEXT_ICON_SIZE,
-                                ),
-                            )?;
+                                ))?;
+                            }
                         }
                     }
                 }
