@@ -194,7 +194,7 @@ impl Layout {
     pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     pub const LINK_REGEX: &'static str = "^(.*)(\\[\\[\\w*\\]\\])(.*)$";
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
-        let (space_width, _) = font.size_of_latin1(&" ".as_bytes())?;
+        let (space_width, _) = font.size_of_latin1(b" ")?;
         self.space_size = space_width;
 
         for word in text.split_ascii_whitespace() {
