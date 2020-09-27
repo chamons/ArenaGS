@@ -19,6 +19,7 @@ use crate::conductor::{Scene, StageDirection};
 pub struct BattleScene {
     ecs: World,
     views: Vec<Box<dyn View>>,
+    help: HelpPopup,
 }
 
 impl BattleScene {
@@ -39,11 +40,13 @@ impl BattleScene {
             Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
         ];
 
+        let help = HelpPopup::init(Rc::clone(&text_renderer));
+
         if cfg!(debug_assertions) {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
         }
 
-        Ok(BattleScene { ecs, views })
+        Ok(BattleScene { ecs, views, help })
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) {
@@ -121,12 +124,6 @@ impl BattleScene {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
             }
-            if let Some(HitTestResult::Text(text)) = &hit {
-                println!("{}", text);
-            }
-            if let Some(HitTestResult::Icon(icon)) = &hit {
-                println!("{:?}", icon);
-            }
         }
     }
 
@@ -188,14 +185,13 @@ impl Scene for BattleScene {
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
+        self.help.handle_mouse(x, y, button);
 
         if let Some(button) = button {
             if button == MouseButton::Middle {
                 let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                match &hit {
-                    Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
-                    Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
-                    _ => {}
+                if let Some(hit) = hit {
+                    self.help.enable(x, y, hit);
                 }
             }
 
@@ -217,6 +213,8 @@ impl Scene for BattleScene {
         for view in self.views.iter() {
             view.render(&self.ecs, canvas, frame, &ContextData::None)?;
         }
+
+        self.help.render(&self.ecs, canvas, frame, &ContextData::None)?;
 
         canvas.present();
         Ok(())

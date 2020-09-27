@@ -5,6 +5,7 @@ use crate::atlas::{BoxResult, Point};
 
 mod character_overlay;
 mod debug;
+mod help_popup;
 mod infobar;
 mod log;
 mod map;
@@ -39,6 +40,7 @@ pub trait View {
 
 pub use character_overlay::CharacterOverlay;
 pub use debug::DebugView;
+pub use help_popup::*;
 pub use infobar::InfoBarView;
 pub use log::{log_event, LogView};
 pub use map::{screen_rect_for_map_grid, screen_to_map_position, MapView, MAP_CORNER_Y, TILE_SIZE};

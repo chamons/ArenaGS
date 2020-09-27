@@ -62,6 +62,7 @@ pub struct Button {
     handler: Box<ButtonHandler>,
 }
 
+#[allow(dead_code)]
 impl Button {
     pub fn init(frame: SDLRect, background: Texture, handler: impl Fn() -> Option<HitTestResult> + 'static) -> BoxResult<Button> {
         Ok(Button {
