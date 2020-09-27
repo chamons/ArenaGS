@@ -13,8 +13,9 @@ mod status_display;
 pub mod view_components;
 
 #[allow(dead_code)]
-#[derive(is_enum_variant, Clone)]
+#[derive(is_enum_variant, Clone, Debug)]
 pub enum HitTestResult {
+    None,
     Skill(String),
     Tile(Point),
     Enemy(Point),

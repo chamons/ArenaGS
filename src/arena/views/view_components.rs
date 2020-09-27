@@ -3,7 +3,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{ContextData, View};
+use super::{ContextData, HitTestResult, View};
 use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
 
@@ -51,5 +51,38 @@ impl View for Frame {
             SDLRect::new(self.position.x(), self.position.y(), frame_size.0, frame_size.1),
         )?;
         Ok(())
+    }
+}
+
+type ButtonHandler = dyn Fn() -> Option<HitTestResult>;
+
+pub struct Button {
+    frame: SDLRect,
+    background: Texture,
+    handler: Box<ButtonHandler>,
+}
+
+impl Button {
+    pub fn init(frame: SDLRect, background: Texture, handler: impl Fn() -> Option<HitTestResult> + 'static) -> BoxResult<Button> {
+        Ok(Button {
+            frame,
+            background,
+            handler: Box::new(handler),
+        })
+    }
+}
+
+impl View for Button {
+    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+        canvas.copy(&self.background, None, self.frame)?;
+        Ok(())
+    }
+
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if self.frame.contains_point(SDLPoint::new(x, y)) {
+            (self.handler)()
+        } else {
+            None
+        }
     }
 }
