@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::rect::Point as SDLPoint;
@@ -6,7 +7,7 @@ use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
-use super::{ContextData, View};
+use super::{ContextData, HitTestResult, TextHitTester, View};
 use crate::after_image::{
     FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer, TEXT_ICON_SIZE,
 };
@@ -18,6 +19,7 @@ pub struct LogView {
     text: Rc<TextRenderer>,
     icons: IconCache,
     frame: Frame,
+    hit_tester: RefCell<TextHitTester>,
 }
 
 impl LogView {
@@ -32,6 +34,7 @@ impl LogView {
                 FrameKind::Log,
             )?,
             icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            hit_tester: RefCell::new(TextHitTester::init()),
         })
     }
 
@@ -67,6 +70,9 @@ impl LogView {
     }
 
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
+        let mut hit_test = self.hit_tester.borrow_mut();
+        hit_test.clear();
+
         let index = self.calculate_index(ecs)?;
         let log = &ecs.read_resource::<LogComponent>().log;
         let mut line_count = 0;
@@ -92,7 +98,7 @@ impl LogView {
                             )?;
                         }
                         LayoutChunkValue::Link(s) => {
-                            self.text.render_text(
+                            let (width, height) = self.text.render_text(
                                 &s,
                                 chunk.position.x as i32,
                                 line_y_offset + chunk.position.y as i32,
@@ -100,6 +106,10 @@ impl LogView {
                                 FontSize::SmallUnderline,
                                 FontColor::Black,
                             )?;
+                            hit_test.add(
+                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, width, height),
+                                HitTestResult::Text(s.to_string()),
+                            );
                         }
                         LayoutChunkValue::Icon(icon) => {
                             let icon_image = match icon {
@@ -110,6 +120,10 @@ impl LogView {
                                 None,
                                 SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
                             )?;
+                            hit_test.add(
+                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
+                                HitTestResult::Icon(*icon),
+                            );
 
                             #[cfg(feature = "debug_text_alignmnet")]
                             {
@@ -157,5 +171,9 @@ impl View for LogView {
         self.render_log(ecs, canvas)?;
 
         Ok(())
+    }
+
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        self.hit_tester.borrow().hit_test(x, y)
     }
 }

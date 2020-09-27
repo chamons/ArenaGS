@@ -100,7 +100,7 @@ impl TextRenderer {
         Ok(texture)
     }
 
-    pub fn render_text(&self, text: &str, x: i32, y: i32, canvas: &mut RenderCanvas, size: FontSize, color: FontColor) -> BoxResult<()> {
+    pub fn render_text(&self, text: &str, x: i32, y: i32, canvas: &mut RenderCanvas, size: FontSize, color: FontColor) -> BoxResult<(u32, u32)> {
         let mut cache = self.cache.borrow_mut();
         let texture = cache.get(&self, canvas, size, color, text)?;
         let TextureQuery { width, height, .. } = texture.query();
@@ -112,6 +112,6 @@ impl TextRenderer {
             canvas.fill_rect(SDLRect::new(x, y, width, height))?;
         }
 
-        Ok(())
+        Ok((width, height))
     }
 }

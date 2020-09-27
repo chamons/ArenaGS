@@ -23,7 +23,7 @@ impl LayoutRequest {
     }
 }
 
-#[derive(Copy, Clone, is_enum_variant)]
+#[derive(Copy, Clone, is_enum_variant, Debug)]
 pub enum LayoutChunkIcon {
     Sword,
 }

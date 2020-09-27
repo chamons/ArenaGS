@@ -121,6 +121,12 @@ impl BattleScene {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
             }
+            if let Some(HitTestResult::Text(text)) = &hit {
+                println!("{}", text);
+            }
+            if let Some(HitTestResult::Icon(icon)) = &hit {
+                println!("{:?}", icon);
+            }
         }
     }
 
