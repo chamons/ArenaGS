@@ -191,6 +191,9 @@ impl Layout {
 
     pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     pub const LINK_REGEX: &'static str = "^(.*)(\\[\\[\\w*\\]\\])(.*)$";
+    pub const LINK_REGEX_FRONT: &'static str = "^(.*)(\\[\\[\\w*)$";
+    pub const LINK_REGEX_END: &'static str = "^(\\w*\\]\\])(.*)$";
+
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         let (space_width, _) = font.size_of_latin1(b" ")?;
         self.space_size = space_width;
@@ -199,10 +202,16 @@ impl Layout {
             lazy_static! {
                 static ref SYMBOL_RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
                 static ref LINK_RE: Regex = Regex::new(Layout::LINK_REGEX).unwrap();
+                static ref FRONT_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_FRONT).unwrap();
+                static ref END_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_END).unwrap();
             }
             if let Some(m) = SYMBOL_RE.captures(word) {
                 self.process_complex_chunk(m, font)?;
             } else if let Some(m) = LINK_RE.captures(word) {
+                self.process_complex_chunk(m, font)?;
+            } else if let Some(m) = FRONT_LINK_RE.captures(word) {
+                self.process_complex_chunk(m, font)?;
+            } else if let Some(m) = END_LINK_RE.captures(word) {
                 self.process_complex_chunk(m, font)?;
             } else {
                 self.process_word(word, font)?;
@@ -629,7 +638,7 @@ mod tests {
         assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
     }
 
-    //#[test]
+    #[test]
     fn recognize_link_with_spaces_and_period() {
         if !has_test_font() {
             return;
