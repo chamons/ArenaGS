@@ -9,11 +9,19 @@ use super::{ContextData, HitTestResult, View};
 use crate::after_image::{IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, Point};
 
+enum HelpPopupSize {
+    Unknown,
+    Large,
+    Medium,
+}
+
 pub struct HelpPopup {
     enabled: bool,
     start_mouse: Point,
     text_renderer: Rc<TextRenderer>,
-    background: Texture,
+    medium_frame: Texture,
+    large_frame: Texture,
+    size: HelpPopupSize,
 }
 
 impl HelpPopup {
@@ -22,7 +30,9 @@ impl HelpPopup {
             enabled: false,
             start_mouse: Point::init(0, 0),
             text_renderer,
-            background: IconLoader::init_ui()?.get(render_context, "help_large.png")?,
+            medium_frame: IconLoader::init_ui()?.get(render_context, "help_medium.png")?,
+            large_frame: IconLoader::init_ui()?.get(render_context, "help_large.png")?,
+            size: HelpPopupSize::Unknown,
         })
     }
 
@@ -35,6 +45,9 @@ impl HelpPopup {
         if let Some(text) = text {
             self.enabled = true;
             self.start_mouse = Point::init(x as u32, y as u32);
+
+            // Should calculate from text here
+            self.size = HelpPopupSize::Medium;
         }
     }
 
@@ -55,7 +68,11 @@ impl HelpPopup {
     }
 
     fn get_frame_size(&self) -> (i32, i32) {
-        (335, 523)
+        match self.size {
+            HelpPopupSize::Medium => (224, 321),
+            HelpPopupSize::Large => (335, 523),
+            HelpPopupSize::Unknown => panic!("Unknown help size"),
+        }
     }
 
     fn get_help_popup_frame(&self, canvas: &mut RenderCanvas) -> BoxResult<SDLRect> {
@@ -69,13 +86,21 @@ impl HelpPopup {
 
         Ok(SDLRect::new(popup_x, popup_y, width as u32, height as u32))
     }
+
+    fn get_background(&self) -> &Texture {
+        match self.size {
+            HelpPopupSize::Medium => &self.medium_frame,
+            HelpPopupSize::Large => &self.large_frame,
+            HelpPopupSize::Unknown => panic!("Unknown help size"),
+        }
+    }
 }
 
 impl View for HelpPopup {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
         if self.enabled {
             let frame = self.get_help_popup_frame(canvas)?;
-            canvas.copy(&self.background, None, frame)?;
+            canvas.copy(self.get_background(), None, frame)?;
         }
 
         Ok(())
