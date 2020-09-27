@@ -126,12 +126,10 @@ impl LayoutRect {
 struct Layout {
     request: LayoutRequest,
 
-    // Buffer for words until wrap/non-word content
-    word_buffer: WordBuffer,
-    // Tracks current cursor location, spent width, etc
-    rect: LayoutRect,
-
+    word_buffer: WordBuffer, // Buffer for words until wrap/non-word content
+    rect: LayoutRect,        // Tracks current cursor location, spent width, etc
     space_size: u32,
+    links_in_flight: String, // Links can have spaces in the middle, this buffers them until closing ]]
 
     result: LayoutResult,
 }
@@ -146,6 +144,7 @@ impl Layout {
             rect: LayoutRect::init(&request.position),
             space_size: 0,
             request,
+            links_in_flight: String::new(),
         }
     }
 
@@ -230,6 +229,28 @@ impl Layout {
         Ok(())
     }
 
+    fn process_link_word(&mut self, word: &str) -> (bool, Option<String>) {
+        let is_link_start = word.starts_with("[[");
+        let is_link_end = word.ends_with("]]");
+        let is_full_link = is_link_start && is_link_end;
+
+        if is_full_link {
+            (false, Some(word[2..word.len() - 2].to_string()))
+        } else if is_link_start {
+            if self.links_in_flight.len() > 0 {
+                self.links_in_flight.push_str(" ");
+            }
+            self.links_in_flight.push_str(word);
+            (true, None)
+        } else if is_link_end {
+            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push_str(word);
+            (false, Some(self.links_in_flight[2..self.links_in_flight.len() - 2].to_string()))
+        } else {
+            (false, None)
+        }
+    }
+
     fn process_word(&mut self, word: &str, font: &Font) -> BoxResult<()> {
         let (mut width, mut height) = font.size_of_latin1(word.as_bytes())?;
 
@@ -238,16 +259,21 @@ impl Layout {
             width = TEXT_ICON_SIZE;
             height = TEXT_ICON_SIZE;
         }
-        let is_link = word.starts_with("[[") && word.ends_with("]]");
-        if is_link {
-            let (w, h) = font.size_of_latin1(&word[2..word.len() - 2].as_bytes())?;
+
+        let (skip, link_text) = self.process_link_word(word);
+        if skip {
+            return Ok(());
+        }
+
+        if let Some(link_text) = &link_text {
+            let (w, h) = font.size_of_latin1(link_text.as_bytes())?;
             width = w;
             height = h;
         }
 
         let is_line_wrapping = self.should_wrap(width);
 
-        if is_line_wrapping | is_symbol | is_link {
+        if is_line_wrapping | is_symbol | link_text.is_some() {
             self.flush_any_text();
         }
         if is_line_wrapping {
@@ -257,8 +283,8 @@ impl Layout {
 
         if is_symbol {
             self.flush_icon(&word[2..word.len() - 2]);
-        } else if is_link {
-            self.flush_link(&word[2..word.len() - 2], width)
+        } else if let Some(link_text) = &link_text {
+            self.flush_link(&link_text, width)
         } else {
             self.rect.add_text_to_buffer(height, width);
             self.word_buffer.add(word, width, self.space_size);
@@ -566,5 +592,58 @@ mod tests {
         assert_eq!("(", get_text(&result.chunks[0].value));
         assert_eq!("Sword", get_link(&result.chunks[1].value));
         assert_eq!(")", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_link_with_period() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_link_with_spaces() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword Strike]]",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(2, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
+    }
+
+    //#[test]
+    fn recognize_link_with_spaces_and_period() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword Strike]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
     }
 }
