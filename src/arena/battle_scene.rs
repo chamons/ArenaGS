@@ -191,7 +191,7 @@ impl Scene for BattleScene {
             if button == MouseButton::Middle {
                 let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
                 if let Some(hit) = hit {
-                    self.help.enable(x, y, hit);
+                    self.help.enable(&self.ecs, x, y, hit);
                 }
             }
 

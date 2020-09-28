@@ -5,9 +5,10 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{ContextData, HitTestResult, View};
-use crate::after_image::{IconLoader, RenderCanvas, RenderContext, TextRenderer};
+use super::{render_text_layout, ContextData, HitTestResult, View};
+use crate::after_image::*;
 use crate::atlas::{BoxResult, Point};
+use crate::clash::{find_entity_at_location, HelpInfo};
 
 enum HelpPopupSize {
     Unknown,
@@ -17,11 +18,13 @@ enum HelpPopupSize {
 
 pub struct HelpPopup {
     enabled: bool,
+    help: Option<HelpInfo>,
     start_mouse: Point,
     text_renderer: Rc<TextRenderer>,
     medium_frame: Texture,
     large_frame: Texture,
     size: HelpPopupSize,
+    icons: IconCache,
 }
 
 impl HelpPopup {
@@ -32,23 +35,30 @@ impl HelpPopup {
             text_renderer,
             medium_frame: IconLoader::init_ui()?.get(render_context, "help_medium.png")?,
             large_frame: IconLoader::init_ui()?.get(render_context, "help_large.png")?,
+            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
             size: HelpPopupSize::Unknown,
+            help: None,
         })
     }
 
-    pub fn enable(&mut self, x: i32, y: i32, result: HitTestResult) {
-        let text = match result {
-            HitTestResult::Text(text) => Some(text),
-            HitTestResult::Icon(icon) => Some(format!("{:?}", icon)),
+    pub fn enable(&mut self, ecs: &World, x: i32, y: i32, result: HitTestResult) {
+        let help = match result {
+            HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
+            HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
+            HitTestResult::Enemy(point) | HitTestResult::Field(point) => {
+                if let Some(entity) = find_entity_at_location(ecs, point) {
+                    Some(HelpInfo::find_entity(ecs, entity))
+                } else {
+                    None
+                }
+            }
+            HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             _ => None,
         };
-        if let Some(text) = text {
-            self.enabled = true;
-            self.start_mouse = Point::init(x as u32, y as u32);
-
-            // Should calculate from text here
-            self.size = HelpPopupSize::Medium;
-        }
+        self.enabled = true;
+        self.start_mouse = Point::init(x as u32, y as u32);
+        self.size = HelpPopupSize::Medium;
+        self.help = help;
     }
 
     const MOUSE_POPUP_DRIFT: u32 = 10;
@@ -96,11 +106,28 @@ impl HelpPopup {
     }
 }
 
+const HELP_OFFSET: u32 = 25;
 impl View for HelpPopup {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
         if self.enabled {
             let frame = self.get_help_popup_frame(canvas)?;
             canvas.copy(self.get_background(), None, frame)?;
+
+            if let Some(help) = &self.help {
+                for help_chunk in &help.text {
+                    let layout = self.text_renderer.layout_text(
+                        &help_chunk,
+                        FontSize::Small,
+                        LayoutRequest::init(
+                            frame.x() as u32 + HELP_OFFSET,
+                            frame.y() as u32 + HELP_OFFSET,
+                            frame.width() - (HELP_OFFSET * 2),
+                            2,
+                        ),
+                    )?;
+                    render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.icons, FontColor::White, 0)?;
+                }
+            }
         }
 
         Ok(())

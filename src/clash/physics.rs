@@ -80,7 +80,6 @@ pub fn is_area_clear(ecs: &World, area: &[Point], invoker: Option<Entity>) -> bo
     true
 }
 
-#[allow(dead_code)]
 pub fn find_entity_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();

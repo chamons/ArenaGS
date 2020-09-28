@@ -18,6 +18,7 @@ pub enum FontSize {
     Bold,
 }
 
+#[derive(Copy, Clone)]
 pub enum FontColor {
     Black,
     White,
