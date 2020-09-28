@@ -18,7 +18,20 @@ pub fn render_text_layout(
     for chunk in &layout.chunks {
         match &chunk.value {
             LayoutChunkValue::String(s) => {
-                text.render_text(&s, chunk.position.x as i32, y_offset + chunk.position.y as i32, canvas, FontSize::Small, color)?;
+                let (size, y_font_offset) = if chunk.attributes.contains(LayoutChunkAttributes::SMALLER_TEXT) {
+                    (FontSize::VeryTiny, 2)
+                } else {
+                    (FontSize::Small, 0)
+                };
+
+                text.render_text(
+                    &s,
+                    chunk.position.x as i32,
+                    y_font_offset + y_offset + chunk.position.y as i32,
+                    canvas,
+                    size,
+                    color,
+                )?;
             }
             LayoutChunkValue::Link(s) => {
                 let (width, height) = text.render_text(

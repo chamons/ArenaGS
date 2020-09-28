@@ -11,6 +11,7 @@ use crate::atlas::{get_exe_folder, BoxResult};
 #[allow(dead_code)]
 pub enum FontSize {
     Micro,
+    VeryTiny,
     Tiny,
     Small,
     SmallUnderline,
@@ -37,6 +38,7 @@ pub type Font = sdl2::ttf::Font<'static, 'static>;
 pub struct TextRenderer {
     cache: RefCell<FontCache>,
     micro_font: Font,
+    very_tiny_font: Font,
     tiny_font: Font,
     small_font: Font,
     small_underline_font: Font,
@@ -50,6 +52,8 @@ impl TextRenderer {
 
         let mut micro_font = font_context.ttf_context.load_font(font_path.clone(), 9)?;
         micro_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut very_tiny_font = font_context.ttf_context.load_font(font_path.clone(), 11)?;
+        very_tiny_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut tiny_font = font_context.ttf_context.load_font(font_path.clone(), 12)?;
         tiny_font.set_style(sdl2::ttf::FontStyle::NORMAL);
         let mut small_font = font_context.ttf_context.load_font(font_path.clone(), 14)?;
@@ -64,6 +68,7 @@ impl TextRenderer {
         Ok(TextRenderer {
             cache: RefCell::new(FontCache::init()),
             micro_font,
+            very_tiny_font,
             tiny_font,
             small_font,
             small_underline_font,
@@ -75,6 +80,7 @@ impl TextRenderer {
     fn get_font(&self, size: FontSize) -> &Font {
         match size {
             FontSize::Micro => &self.micro_font,
+            FontSize::VeryTiny => &self.very_tiny_font,
             FontSize::Tiny => &self.tiny_font,
             FontSize::Small => &self.small_font,
             FontSize::SmallUnderline => &self.small_underline_font,

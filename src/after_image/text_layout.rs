@@ -34,9 +34,16 @@ pub enum LayoutChunkValue {
     Icon(LayoutChunkIcon),
 }
 
+bitflags! {
+    pub struct LayoutChunkAttributes : u32 {
+        const SMALLER_TEXT =         0b00000001;
+    }
+}
+
 pub struct LayoutChunk {
     pub position: Point,
     pub value: LayoutChunkValue,
+    pub attributes: LayoutChunkAttributes,
 }
 
 pub struct LayoutResult {
@@ -102,7 +109,7 @@ impl LayoutRect {
     }
 
     // We 'spend' line width but do not update x,y cursor
-    pub fn add_text_to_buffer(&mut self, height: u32, width: u32) {
+    pub fn add_text(&mut self, height: u32, width: u32) {
         self.current_line_width += width;
         self.largest_line_height = cmp::max(self.largest_line_height, height);
     }
@@ -154,6 +161,10 @@ impl Layout {
         self.rect.current_line_width + width > self.request.width_to_render_in && self.rect.current_line_width > 0
     }
 
+    fn longer_single_line(&self, width: u32) -> bool {
+        width > self.request.width_to_render_in
+    }
+
     fn flush_any_text(&mut self) {
         if self.word_buffer.has_content() {
             let (text, text_width) = self.word_buffer.flush();
@@ -162,8 +173,19 @@ impl Layout {
             self.result.chunks.push(LayoutChunk {
                 value: LayoutChunkValue::String(text),
                 position,
+                attributes: LayoutChunkAttributes::empty(),
             });
         }
+    }
+
+    fn flush_small_text(&mut self, text: &str, text_width: u32) {
+        let position = self.rect.flush(text_width + 4);
+
+        self.result.chunks.push(LayoutChunk {
+            value: LayoutChunkValue::String(text.to_string()),
+            position,
+            attributes: LayoutChunkAttributes::SMALLER_TEXT,
+        });
     }
 
     fn flush_icon(&mut self, name: &str) {
@@ -176,6 +198,7 @@ impl Layout {
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Icon(icon),
             position,
+            attributes: LayoutChunkAttributes::empty(),
         });
     }
 
@@ -183,9 +206,15 @@ impl Layout {
         let mut position = self.rect.flush(text_width + 4);
         position.x += 3;
 
+        let mut attributes = LayoutChunkAttributes::empty();
+        if self.longer_single_line(text_width) {
+            attributes.insert(LayoutChunkAttributes::SMALLER_TEXT);
+        }
+
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Link(text.to_string()),
             position,
+            attributes,
         });
     }
 
@@ -281,8 +310,9 @@ impl Layout {
         }
 
         let is_line_wrapping = self.should_wrap(width);
+        let longer_single_line = self.longer_single_line(width);
 
-        if is_line_wrapping | is_symbol | link_text.is_some() {
+        if is_line_wrapping | longer_single_line | is_symbol | link_text.is_some() {
             self.flush_any_text();
         }
         if is_line_wrapping {
@@ -294,8 +324,14 @@ impl Layout {
             self.flush_icon(&word[2..word.len() - 2]);
         } else if let Some(link_text) = &link_text {
             self.flush_link(&link_text, width)
+        } else if longer_single_line {
+            // Spend the correct width
+            self.rect.add_text(height, width);
+
+            // Then flush right away (so nothing else is marked small)
+            self.flush_small_text(word, width);
         } else {
-            self.rect.add_text_to_buffer(height, width);
+            self.rect.add_text(height, width);
             self.word_buffer.add(word, width, self.space_size);
         }
 
@@ -416,6 +452,7 @@ mod tests {
         .unwrap();
         assert_eq!(1, result.chunks.len());
         assert_eq!("HelloWorldHelloWorldHello", get_text(&result.chunks[0].value));
+        assert!(result.chunks[0].attributes.contains(LayoutChunkAttributes::SMALLER_TEXT));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
