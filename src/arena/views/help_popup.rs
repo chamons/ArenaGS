@@ -51,7 +51,7 @@ impl HelpPopup {
         }
     }
 
-    const MOUSE_POPUP_DRIFT: u32 = 5;
+    const MOUSE_POPUP_DRIFT: u32 = 10;
     pub fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         if !self.enabled {
             return;

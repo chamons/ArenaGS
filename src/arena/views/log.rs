@@ -7,7 +7,7 @@ use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
-use super::{ContextData, HitTestResult, TextHitTester, View};
+use super::{render_text_layout, ContextData, HitTestResult, TextHitTester, View};
 use crate::after_image::{
     FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer, TEXT_ICON_SIZE,
 };
@@ -85,59 +85,7 @@ impl LogView {
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
                 let line_y_offset = 20 * line_count as i32;
-                for chunk in &layout.chunks {
-                    match &chunk.value {
-                        LayoutChunkValue::String(s) => {
-                            self.text.render_text(
-                                &s,
-                                chunk.position.x as i32,
-                                line_y_offset + chunk.position.y as i32,
-                                canvas,
-                                FontSize::Small,
-                                FontColor::Black,
-                            )?;
-                        }
-                        LayoutChunkValue::Link(s) => {
-                            let (width, height) = self.text.render_text(
-                                &s,
-                                chunk.position.x as i32,
-                                line_y_offset + chunk.position.y as i32,
-                                canvas,
-                                FontSize::SmallUnderline,
-                                FontColor::Black,
-                            )?;
-                            hit_test.add(
-                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, width, height),
-                                HitTestResult::Text(s.to_string()),
-                            );
-                        }
-                        LayoutChunkValue::Icon(icon) => {
-                            let icon_image = match icon {
-                                LayoutChunkIcon::Sword => self.icons.get("plain-dagger.png"),
-                            };
-                            canvas.copy(
-                                icon_image,
-                                None,
-                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
-                            )?;
-                            hit_test.add(
-                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
-                                HitTestResult::Icon(*icon),
-                            );
-
-                            #[cfg(feature = "debug_text_alignmnet")]
-                            {
-                                canvas.set_draw_color(sdl2::pixels::Color::from((0, 128, 0, 128)));
-                                canvas.fill_rect(SDLRect::new(
-                                    chunk.position.x as i32,
-                                    line_y_offset + chunk.position.y as i32 - 1,
-                                    TEXT_ICON_SIZE,
-                                    TEXT_ICON_SIZE,
-                                ))?;
-                            }
-                        }
-                    }
-                }
+                render_text_layout(&layout, canvas, &mut hit_test, &self.text, &self.icons, line_y_offset)?;
 
                 line_count += layout.line_count;
             } else {
