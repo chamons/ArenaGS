@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{get_skill, is_skill, AmmoKind, Damage, ShortInfo, SkillEffect, TargetType};
+use super::{get_skill, is_skill, AmmoKind, Damage, FieldEffect, ShortInfo, SkillEffect, SpawnKind, TargetType};
 use crate::after_image::LayoutChunkIcon;
 
 pub enum HelpHeader {
@@ -45,6 +45,26 @@ impl HelpInfo {
         }
     }
 
+    fn get_spawn_name(kind: SpawnKind) -> &'static str {
+        match kind {
+            SpawnKind::Player => "Player",
+            SpawnKind::Bird => "Giant Bird",
+            SpawnKind::BirdSpawn => "Bird",
+            SpawnKind::Egg => "Egg",
+            SpawnKind::WaterElemental => "Water Elemental",
+            SpawnKind::FireElemental => "Fire Elemental",
+            SpawnKind::WindElemental => "Wind Elemental",
+            SpawnKind::EarthElemental => "Earth Elemental",
+            SpawnKind::Elementalist => "Elementalist",
+            SpawnKind::SimpleGolem => "Simple Golem",
+        }
+    }
+
+    fn report_damage(details: &mut Vec<String>, damage: &Damage) {
+        details.push(format!("Strength: {}", damage.dice()));
+        // TODO - Report damage attributes
+    }
+
     fn get_skill_help(word: &str) -> HelpInfo {
         let skill = get_skill(word);
         let header = {
@@ -75,16 +95,42 @@ impl HelpInfo {
         match &skill.effect {
             SkillEffect::None => {}
             SkillEffect::Move => details.push("Effect: Move to Location".to_string()),
-            SkillEffect::RangedAttack(damage, _) => details.push(format!("Effect: Ranged {{{{Sword}}}} {}", damage.dice())),
-            SkillEffect::MeleeAttack(damage, _) => details.push(format!("Effect: Attack {{{{Sword}}}} {}", damage.dice())),
-            SkillEffect::ConeAttack(damage, _, size) => details.push(format!("Effect: Cone of Width {} {{{{Sword}}}} {}", size, damage.dice())),
-            SkillEffect::ChargeAttack(damage, _) => details.push(format!(
-                "Effect: Move towards location, attacking first impacted character {{{{Sword}}}} {}",
-                damage.dice()
-            )),
-            SkillEffect::Reload(kind) => details.push(format!("Reload all {}", HelpInfo::get_ammo_name(*kind))),
-            SkillEffect::Field(effect, _) => {}
-            SkillEffect::MoveAndShoot(damage, shoot_range, _) => {}
+            SkillEffect::RangedAttack(damage, _) => {
+                details.push("Effect: Ranged Attack".to_string());
+                HelpInfo::report_damage(&mut details, &damage);
+            }
+            SkillEffect::MeleeAttack(damage, _) => {
+                details.push("Effect: Melee Attack".to_string());
+                HelpInfo::report_damage(&mut details, &damage);
+            }
+            SkillEffect::ConeAttack(damage, _, size) => {
+                details.push(format!("Effect: Cone of Width {}", size));
+                HelpInfo::report_damage(&mut details, &damage);
+            }
+            SkillEffect::ChargeAttack(damage, _) => {
+                details.push("Effect: Move towards location, attacking first character in path".to_string());
+                HelpInfo::report_damage(&mut details, &damage);
+            }
+            SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::Field(effect, _) => match effect {
+                FieldEffect::Damage(damage, duration) => {
+                    details.push(format!("Effect: Damage after {} ticks", duration));
+                    HelpInfo::report_damage(&mut details, &damage);
+                }
+                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a new {} after 100 ticks", HelpInfo::get_spawn_name(*kind))),
+                FieldEffect::SustainedDamage(damage, duration) => {
+                    details.push(format!("Effect: Damage every 100 ticks with {} duration", duration));
+                    HelpInfo::report_damage(&mut details, &damage);
+                }
+            },
+            SkillEffect::MoveAndShoot(damage, shoot_range, _) => {
+                details.push(format!(
+                    "Effect: Move to targt location and shoot nearest enemy{}.",
+                    &shoot_range.map_or("".to_string(), |r| format!(" within range {}", r))
+                ));
+                HelpInfo::report_damage(&mut details, &damage);
+            }
+            // TODO - Finish up
             SkillEffect::ReloadAndRotateAmmo() => {}
             SkillEffect::Buff(kind, duration) => {}
             SkillEffect::BuffThen(kind, duration, other_effect) => {}
