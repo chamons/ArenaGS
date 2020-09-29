@@ -24,7 +24,7 @@ pub fn render_text_layout(
                     (FontSize::Small, 0)
                 };
 
-                text.render_text(
+                let (_, height) = text.render_text(
                     &s,
                     chunk.position.x as i32,
                     y_font_offset + y_offset + chunk.position.y as i32,

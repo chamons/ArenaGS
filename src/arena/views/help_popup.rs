@@ -113,6 +113,7 @@ impl View for HelpPopup {
             let frame = self.get_help_popup_frame(canvas)?;
             canvas.copy(self.get_background(), None, frame)?;
 
+            let mut y = 0;
             if let Some(help) = &self.help {
                 for help_chunk in &help.text {
                     let layout = self.text_renderer.layout_text(
@@ -120,12 +121,13 @@ impl View for HelpPopup {
                         FontSize::Small,
                         LayoutRequest::init(
                             frame.x() as u32 + HELP_OFFSET,
-                            frame.y() as u32 + HELP_OFFSET,
+                            y + frame.y() as u32 + HELP_OFFSET,
                             frame.width() - (HELP_OFFSET * 2),
                             2,
                         ),
                     )?;
                     render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.icons, FontColor::White, 0)?;
+                    y += layout.line_count * 20;
                 }
             }
         }

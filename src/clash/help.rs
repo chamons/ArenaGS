@@ -30,10 +30,11 @@ impl HelpInfo {
     }
 
     fn get_error(key: &str) -> HelpInfo {
-        HelpInfo::no_header(&[&format!(
-            "Please file an issue at https://tinyurl.com/ArenaGS-Issue with a description ({}) on how you reached this message.",
-            key
-        )])
+        HelpInfo::no_header(&[
+            "Internal Help Error:",
+            "Please file an issue at https://tinyurl.com/ArenaGS-Issue",
+            &format!("Include '{}' in the description.", key),
+        ])
     }
 
     pub fn find(word: &str) -> HelpInfo {
