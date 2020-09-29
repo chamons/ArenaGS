@@ -8,7 +8,7 @@ use specs::prelude::*;
 use super::{render_text_layout, ContextData, HitTestResult, View};
 use crate::after_image::*;
 use crate::atlas::{BoxResult, Point};
-use crate::clash::{find_entity_at_location, HelpInfo};
+use crate::clash::{all_skill_image_filesnames, find_entity_at_location, HelpHeader, HelpInfo};
 
 enum HelpPopupSize {
     Unknown,
@@ -24,6 +24,7 @@ pub struct HelpPopup {
     medium_frame: Texture,
     large_frame: Texture,
     size: HelpPopupSize,
+    symbol_cache: IconCache,
     icons: IconCache,
 }
 
@@ -35,7 +36,8 @@ impl HelpPopup {
             text_renderer,
             medium_frame: IconLoader::init_ui()?.get(render_context, "help_medium.png")?,
             large_frame: IconLoader::init_ui()?.get(render_context, "help_large.png")?,
-            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            symbol_cache: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
             size: HelpPopupSize::Unknown,
             help: None,
         })
@@ -115,6 +117,38 @@ impl View for HelpPopup {
 
             let mut y = 0;
             if let Some(help) = &self.help {
+                match &help.header {
+                    HelpHeader::Image(title, file) => {
+                        let (text_width, _) = self.text_renderer.render_text(
+                            &title,
+                            frame.x() + HELP_OFFSET as i32,
+                            frame.y() + 2 + HELP_OFFSET as i32,
+                            canvas,
+                            FontSize::Bold,
+                            FontColor::White,
+                        )?;
+
+                        let image = self.icons.get(file);
+                        canvas.copy(
+                            image,
+                            None,
+                            SDLRect::new(text_width as i32 + 10 + frame.x() + HELP_OFFSET as i32, frame.y() + HELP_OFFSET as i32, 24, 24),
+                        )?;
+                        y += 40;
+                    }
+                    HelpHeader::Text(title) => {
+                        self.text_renderer.render_text(
+                            &title,
+                            frame.x() + HELP_OFFSET as i32,
+                            frame.y() + HELP_OFFSET as i32,
+                            canvas,
+                            FontSize::Bold,
+                            FontColor::White,
+                        )?;
+                        y += 40;
+                    }
+                    HelpHeader::None => {}
+                }
                 for help_chunk in &help.text {
                     let layout = self.text_renderer.layout_text(
                         &help_chunk,
@@ -126,7 +160,7 @@ impl View for HelpPopup {
                             2,
                         ),
                     )?;
-                    render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.icons, FontColor::White, 0)?;
+                    render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbol_cache, FontColor::White, 0)?;
                     y += layout.line_count * 20;
                 }
             }

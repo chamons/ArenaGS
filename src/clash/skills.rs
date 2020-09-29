@@ -239,6 +239,10 @@ lazy_static! {
     };
 }
 
+pub fn is_skill(name: &str) -> bool {
+    SKILLS.contains_key(name)
+}
+
 pub fn get_skill(name: &str) -> &'static SkillInfo {
     &SKILLS[name]
 }
