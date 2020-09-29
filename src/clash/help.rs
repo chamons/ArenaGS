@@ -31,8 +31,11 @@ impl HelpInfo {
 
     fn get_error(key: &str) -> HelpInfo {
         HelpInfo::no_header(&[
-            "Internal Help Error:",
-            "Please file an issue at https://tinyurl.com/ArenaGS-Issue",
+            "|tab| Internal Help Error:",
+            "",
+            "Please file an issue at:",
+            "https://tinyurl.com/ArenaGS-Issue",
+            "",
             &format!("Include '{}' in the description.", key),
         ])
     }

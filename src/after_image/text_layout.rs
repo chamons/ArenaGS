@@ -222,18 +222,27 @@ impl Layout {
     pub const LINK_REGEX: &'static str = "^(.*)(\\[\\[\\w*\\]\\])(.*)$";
     pub const LINK_REGEX_FRONT: &'static str = "^(.*)(\\[\\[\\w*)$";
     pub const LINK_REGEX_END: &'static str = "^(\\w*\\]\\])(.*)$";
+    pub const TAB_REGEX: &'static str = "^\\|tab\\|(.*)$";
 
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         let (space_width, _) = font.size_of_latin1(b" ")?;
         self.space_size = space_width;
 
-        for word in text.split_ascii_whitespace() {
+        for mut word in text.split_ascii_whitespace() {
             lazy_static! {
                 static ref SYMBOL_RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
                 static ref LINK_RE: Regex = Regex::new(Layout::LINK_REGEX).unwrap();
                 static ref FRONT_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_FRONT).unwrap();
                 static ref END_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_END).unwrap();
+                static ref TAB_RE: Regex = Regex::new(Layout::TAB_REGEX).unwrap();
             }
+
+            if let Some(_) = TAB_RE.captures(word) {
+                // Four spaces, the 5th will be added between this chunk and the first word
+                self.process_word("    ", font)?;
+                word = word.trim_start_matches("|tab|")
+            }
+
             if let Some(m) = SYMBOL_RE.captures(word) {
                 self.process_complex_chunk(m, font)?;
             } else if let Some(m) = LINK_RE.captures(word) {
@@ -691,5 +700,44 @@ mod tests {
         assert_eq!("A", get_text(&result.chunks[0].value));
         assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
         assert_eq!(".", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_tabbed_words() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "|tab|A thing.",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(1, result.chunks.len());
+        assert_eq!("     A thing.", get_text(&result.chunks[0].value));
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+    }
+
+    #[test]
+    fn recognize_tabbed_links() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "|tab|[[A Link]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("    ", get_text(&result.chunks[0].value));
+        assert_eq!("A Link", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(25, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(66, 10), result.chunks[2].position);
     }
 }
