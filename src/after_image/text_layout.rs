@@ -203,8 +203,13 @@ impl Layout {
     }
 
     fn flush_link(&mut self, text: &str, text_width: u32) {
-        let mut position = self.rect.flush(text_width + 4);
-        position.x += 3;
+        // Add space sized space after link
+        let mut position = self.rect.flush(text_width + self.space_size);
+
+        // If we're not at the beginning of the line, also add to front
+        if position.x != self.rect.corner.x {
+            position.x += self.space_size;
+        }
 
         let mut attributes = LayoutChunkAttributes::empty();
         if self.longer_single_line(text_width) {
@@ -292,7 +297,13 @@ impl Layout {
         } else if is_link_end {
             self.links_in_flight.push_str(" ");
             self.links_in_flight.push_str(word);
-            (false, Some(self.links_in_flight[2..self.links_in_flight.len() - 2].to_string()))
+            let link = self.links_in_flight[2..self.links_in_flight.len() - 2].to_string();
+            self.links_in_flight.clear();
+            (false, Some(link))
+        } else if self.links_in_flight.len() > 0 {
+            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push_str(word);
+            (true, None)
         } else {
             (false, None)
         }
@@ -611,7 +622,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(45, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(85, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(84, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -633,7 +644,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(23, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(63, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(62, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -738,6 +749,29 @@ mod tests {
         assert_eq!(".", get_text(&result.chunks[2].value));
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(25, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(66, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(65, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn three_part_link() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "Elementalist used [[Invoke the Elements]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 150, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("Elementalist used", get_text(&result.chunks[0].value));
+        assert_eq!("Invoke the Elements", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(145, 37), result.chunks[2].position);
     }
 }
