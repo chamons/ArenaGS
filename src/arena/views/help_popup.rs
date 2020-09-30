@@ -88,8 +88,8 @@ impl HelpPopup {
 
     fn get_frame_size(&self) -> (i32, i32) {
         match self.size {
-            HelpPopupSize::Small => (224, 146),
-            HelpPopupSize::Medium => (224, 321),
+            HelpPopupSize::Small => (225, 146),
+            HelpPopupSize::Medium => (225, 321),
             HelpPopupSize::Large => (335, 523),
             HelpPopupSize::Unknown => panic!("Unknown help size"),
         }

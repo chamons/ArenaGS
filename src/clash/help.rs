@@ -1,3 +1,4 @@
+use enum_iterator::IntoEnumIterator;
 use specs::prelude::*;
 
 use super::*;
@@ -355,7 +356,11 @@ impl HelpInfo {
     }
 
     pub fn find_entity(ecs: &World, entity: Entity) -> HelpInfo {
-        HelpInfo::get_error(&ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()))
+        let mut details = vec![];
+
+        summarize_character(ecs, entity, true, |t| details.push(t.to_string()));
+
+        HelpInfo::text_header(ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()).as_str(), details)
     }
 
     pub fn find_field(ecs: &World, entity: Entity) -> HelpInfo {
@@ -377,5 +382,57 @@ impl HelpInfo {
         HelpInfo::report_damage(&mut details, &attack.damage);
 
         HelpInfo::text_header("Orb Projectile", details)
+    }
+}
+
+pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, mut on_text: impl FnMut(&str) + 'a) {
+    let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
+    let char_info = char_infos.grab(entity);
+    let defenses = &char_info.character.defenses;
+    let health_text = {
+        if defenses.absorb != 0 {
+            format!("Health: (+{:.2}) {:.2}/{:.2}", defenses.absorb, defenses.health, defenses.max_health)
+        } else {
+            format!("Health: {:.2}/{:.2}", defenses.health, defenses.max_health)
+        }
+    };
+    on_text(&health_text);
+
+    if defenses.max_dodge != 0 {
+        on_text(&format!("Dodge : {:.2}/{:.2}", defenses.dodge, defenses.max_dodge));
+    }
+    if defenses.armor != 0 {
+        on_text(&format!("Armor: {:.2}", defenses.armor));
+    }
+
+    let resources = &ecs.read_storage::<SkillResourceComponent>();
+    if let Some(resource) = resources.get(entity) {
+        on_text(&format!("Exhaustion: {:.2}", resource.exhaustion));
+
+        on_text(&format!("Focus: {:.2}", resource.focus).as_str());
+
+        for kind in AmmoKind::into_enum_iter() {
+            match resource.max.get(&kind) {
+                Some(value) => {
+                    on_text(&format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value));
+                }
+                None => {}
+            }
+        }
+    }
+
+    let temperature = char_info.character.temperature.current_temperature();
+    if temperature != 0 {
+        on_text(&format!("Temperature: {:.2}", temperature));
+    }
+
+    if show_status_effect {
+        let statuses = &ecs.read_storage::<StatusComponent>();
+        if let Some(status) = statuses.get(entity) {
+            let all = status.status.get_all_display_status();
+            if !all.is_empty() {
+                on_text(&format!("Status: {}", all.join(" ")));
+            }
+        }
     }
 }
