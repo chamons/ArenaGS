@@ -63,7 +63,6 @@ impl HelpPopup {
         };
         self.enabled = true;
         self.start_mouse = Point::init(x as u32, y as u32);
-
         self.size = if let Some(help) = &help {
             match help.text.len() {
                 1..=2 => HelpPopupSize::Small,

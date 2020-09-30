@@ -119,7 +119,7 @@ impl BattleScene {
     }
 
     fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
-        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+        let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
@@ -189,7 +189,7 @@ impl Scene for BattleScene {
 
         if let Some(button) = button {
             if button == MouseButton::Middle {
-                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+                let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
                 if let Some(hit) = hit {
                     self.help.enable(&self.ecs, x, y, hit);
                 }
