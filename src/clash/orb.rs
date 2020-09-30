@@ -205,7 +205,7 @@ mod tests {
         dump_all_position(&ecs);
         new_turn_wait_characters(&mut ecs);
         dump_all_position(&ecs);
-    tick_next_action(&mut ecs);
+        tick_next_action(&mut ecs);
         wait_for_animations(&mut ecs);
         dump_all_position(&ecs);
         // Bolt #1 to (2,7)
