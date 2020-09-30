@@ -60,6 +60,24 @@ impl HelpInfo {
         }
     }
 
+    fn get_status_effect_name(kind: StatusKind) -> &'static str {
+        match kind {
+            StatusKind::Burning => "Burning",
+            StatusKind::Frozen => "Frozen",
+            StatusKind::Magnum => "Magnum",
+            StatusKind::Ignite => "Ignite",
+            StatusKind::Cyclone => "Cyclone",
+            StatusKind::StaticCharge => "Static Charge",
+            StatusKind::Aimed => "Aimed",
+            StatusKind::Armored => "Armored",
+            StatusKind::Flying => "Flying",
+            StatusKind::Regen => "Regen",
+            StatusKind::RegenTick => panic!("RegenTick should not be visible to help"),
+            #[cfg(test)]
+            StatusKind::TestStatus | StatusKind::TestTrait => "",
+        }
+    }
+
     fn report_damage(details: &mut Vec<String>, damage: &Damage) {
         details.push(format!("Strength: {}", damage.dice()));
         let opt = &damage.options;
@@ -102,6 +120,78 @@ impl HelpInfo {
         }
     }
 
+    fn report_skill_effect(details: &mut Vec<String>, effect: &SkillEffect) {
+        match effect {
+            SkillEffect::None => {}
+            SkillEffect::Move => details.push("Effect: Move to Location".to_string()),
+            SkillEffect::RangedAttack(damage, _) => {
+                details.push("Effect: Ranged Attack".to_string());
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::MeleeAttack(damage, _) => {
+                details.push("Effect: Melee Attack".to_string());
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::ConeAttack(damage, _, size) => {
+                details.push(format!("Effect: Cone of Width {}", size));
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::ChargeAttack(damage, _) => {
+                details.push("Effect: Move towards location, attacking first character in path".to_string());
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::Field(effect, _) => match effect {
+                FieldEffect::Damage(damage, _) => {
+                    details.push("Effect: Damage after 200 ticks".to_string());
+                    HelpInfo::report_damage(details, &damage);
+                }
+                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a {} after 100 ticks", HelpInfo::get_spawn_name(*kind))),
+                FieldEffect::SustainedDamage(damage, duration) => {
+                    details.push(format!("Effect: Damage every 100 ticks with {} duration", duration));
+                    HelpInfo::report_damage(details, &damage);
+                }
+            },
+            SkillEffect::MoveAndShoot(damage, shoot_range, _) => {
+                details.push(format!(
+                    "Effect: Move to targt location and shoot nearest enemy{}.",
+                    &shoot_range.map_or("".to_string(), |r| format!(" within range {}", r))
+                ));
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::ReloadAndRotateAmmo() => details.push("Effect: Reloads Bullets and rotates to next ammo type.".to_string()),
+            SkillEffect::Buff(kind, duration) => details.push(format!(
+                "Effect: Applies {} status effect for {} ticks.",
+                HelpInfo::get_status_effect_name(*kind),
+                duration
+            )),
+            SkillEffect::BuffThen(kind, duration, other_effect) => {
+                details.push(format!(
+                    "Effect: Applies {} status effect for {} ticks.",
+                    HelpInfo::get_status_effect_name(*kind),
+                    duration
+                ));
+                details.push("|tab|Then".to_string());
+                HelpInfo::report_skill_effect(details, other_effect);
+            }
+            SkillEffect::ThenBuff(other_effect, kind, duration) => {
+                HelpInfo::report_skill_effect(details, other_effect);
+                details.push("|tab|Then".to_string());
+                details.push(format!(
+                    "Effect: Applies {} status effect for {} ticks.",
+                    HelpInfo::get_status_effect_name(*kind),
+                    duration
+                ));
+            }
+            SkillEffect::Orb(damage, _, _, _) => {
+                details.push("Effect: Fire a slow moving a orb along a path.".to_string());
+                HelpInfo::report_damage(details, &damage);
+            }
+            SkillEffect::Spawn(kind) => details.push(format!("Effect: Summon a {}.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::SpawnReplace(kind) => details.push(format!("Effect: Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
+        }
+    }
+
     fn get_skill_help(word: &str) -> HelpInfo {
         let skill = get_skill(word);
         let header = {
@@ -129,53 +219,7 @@ impl HelpInfo {
         }
 
         // TODO - Need to get icon in white (?)
-        match &skill.effect {
-            SkillEffect::None => {}
-            SkillEffect::Move => details.push("Effect: Move to Location".to_string()),
-            SkillEffect::RangedAttack(damage, _) => {
-                details.push("Effect: Ranged Attack".to_string());
-                HelpInfo::report_damage(&mut details, &damage);
-            }
-            SkillEffect::MeleeAttack(damage, _) => {
-                details.push("Effect: Melee Attack".to_string());
-                HelpInfo::report_damage(&mut details, &damage);
-            }
-            SkillEffect::ConeAttack(damage, _, size) => {
-                details.push(format!("Effect: Cone of Width {}", size));
-                HelpInfo::report_damage(&mut details, &damage);
-            }
-            SkillEffect::ChargeAttack(damage, _) => {
-                details.push("Effect: Move towards location, attacking first character in path".to_string());
-                HelpInfo::report_damage(&mut details, &damage);
-            }
-            SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
-            SkillEffect::Field(effect, _) => match effect {
-                FieldEffect::Damage(damage, duration) => {
-                    details.push(format!("Effect: Damage after {} ticks", duration));
-                    HelpInfo::report_damage(&mut details, &damage);
-                }
-                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a new {} after 100 ticks", HelpInfo::get_spawn_name(*kind))),
-                FieldEffect::SustainedDamage(damage, duration) => {
-                    details.push(format!("Effect: Damage every 100 ticks with {} duration", duration));
-                    HelpInfo::report_damage(&mut details, &damage);
-                }
-            },
-            SkillEffect::MoveAndShoot(damage, shoot_range, _) => {
-                details.push(format!(
-                    "Effect: Move to targt location and shoot nearest enemy{}.",
-                    &shoot_range.map_or("".to_string(), |r| format!(" within range {}", r))
-                ));
-                HelpInfo::report_damage(&mut details, &damage);
-            }
-            // TODO - Finish up
-            SkillEffect::ReloadAndRotateAmmo() => {}
-            SkillEffect::Buff(kind, duration) => {}
-            SkillEffect::BuffThen(kind, duration, other_effect) => {}
-            SkillEffect::ThenBuff(other_effect, kind, duration) => {}
-            SkillEffect::Orb(damage, _, speed, duration) => {}
-            SkillEffect::Spawn(kind) => {}
-            SkillEffect::SpawnReplace(kind) => {}
-        }
+        HelpInfo::report_skill_effect(&mut details, &skill.effect);
 
         details.push("".to_string());
 
@@ -208,7 +252,7 @@ impl HelpInfo {
             "Invoke the Elements" => {
                 return HelpInfo::init(
                     HelpHeader::Text("Invoke the Elements".to_string()),
-                    vec!["Internally focus to more quickly summon additional elements.".to_string()],
+                    vec!["Internally focus to more quickly summon additional elementals.".to_string()],
                 )
             }
             _ => {}
