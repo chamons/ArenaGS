@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::after_image::LayoutChunkIcon;
+use crate::atlas::EasyECS;
 
 pub enum HelpHeader {
     None,
@@ -355,5 +356,20 @@ impl HelpInfo {
 
     pub fn find_entity(ecs: &World, entity: Entity) -> HelpInfo {
         HelpInfo::get_error(&ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()))
+    }
+
+    pub fn find_field(ecs: &World, entity: Entity) -> HelpInfo {
+        HelpInfo::get_error(&ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()))
+    }
+
+    pub fn find_orb(ecs: &World, entity: Entity) -> HelpInfo {
+        let attacks = ecs.read_storage::<AttackComponent>();
+        let attack = attacks.grab(entity).attack;
+
+        let mut details = vec![];
+
+        HelpInfo::report_damage(&mut details, &attack.damage);
+
+        HelpInfo::text_header("Orb Projectile", details)
     }
 }

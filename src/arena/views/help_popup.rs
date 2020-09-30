@@ -50,27 +50,9 @@ impl HelpPopup {
         let help = match result {
             HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
             HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
-            HitTestResult::Enemy(point) => {
-                if let Some(entity) = find_entity_at_location(ecs, point) {
-                    Some(HelpInfo::find_entity(ecs, entity))
-                } else {
-                    return;
-                }
-            }
-            HitTestResult::Field(point) => {
-                if let Some(entity) = find_entity_at_location(ecs, point) {
-                    Some(HelpInfo::find_entity(ecs, entity))
-                } else {
-                    return;
-                }
-            }
-            HitTestResult::Orb(point) => {
-                if let Some(entity) = find_entity_at_location(ecs, point) {
-                    Some(HelpInfo::find_entity(ecs, entity))
-                } else {
-                    return;
-                }
-            }
+            HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, point).unwrap())),
+            HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_entity_at_location(ecs, point).unwrap())),
+            HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, point).unwrap())),
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
             HitTestResult::None | HitTestResult::Tile(_) => return,
