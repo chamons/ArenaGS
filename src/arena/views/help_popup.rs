@@ -12,8 +12,9 @@ use crate::clash::{all_skill_image_filesnames, find_entity_at_location, HelpHead
 
 enum HelpPopupSize {
     Unknown,
-    Large,
+    Small,
     Medium,
+    Large,
 }
 
 pub struct HelpPopup {
@@ -21,6 +22,7 @@ pub struct HelpPopup {
     help: Option<HelpInfo>,
     start_mouse: Point,
     text_renderer: Rc<TextRenderer>,
+    small_frame: Texture,
     medium_frame: Texture,
     large_frame: Texture,
     size: HelpPopupSize,
@@ -34,6 +36,7 @@ impl HelpPopup {
             enabled: false,
             start_mouse: Point::init(0, 0),
             text_renderer,
+            small_frame: IconLoader::init_ui()?.get(render_context, "help_small.png")?,
             medium_frame: IconLoader::init_ui()?.get(render_context, "help_medium.png")?,
             large_frame: IconLoader::init_ui()?.get(render_context, "help_large.png")?,
             symbol_cache: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
@@ -60,7 +63,15 @@ impl HelpPopup {
         };
         self.enabled = true;
         self.start_mouse = Point::init(x as u32, y as u32);
-        self.size = HelpPopupSize::Medium;
+
+        self.size = if let Some(help) = &help {
+            match help.text.len() {
+                1..=2 => HelpPopupSize::Small,
+                _ => HelpPopupSize::Medium,
+            }
+        } else {
+            HelpPopupSize::Medium
+        };
         self.help = help;
     }
 
@@ -82,6 +93,7 @@ impl HelpPopup {
 
     fn get_frame_size(&self) -> (i32, i32) {
         match self.size {
+            HelpPopupSize::Small => (224, 146),
             HelpPopupSize::Medium => (224, 321),
             HelpPopupSize::Large => (335, 523),
             HelpPopupSize::Unknown => panic!("Unknown help size"),
@@ -102,6 +114,7 @@ impl HelpPopup {
 
     fn get_background(&self) -> &Texture {
         match self.size {
+            HelpPopupSize::Small => &self.small_frame,
             HelpPopupSize::Medium => &self.medium_frame,
             HelpPopupSize::Large => &self.large_frame,
             HelpPopupSize::Unknown => panic!("Unknown help size"),
