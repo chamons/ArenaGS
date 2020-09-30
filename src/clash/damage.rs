@@ -23,6 +23,8 @@ bitflags! {
     }
 }
 
+pub const STATIC_CHARGE_DAMAGE: u32 = 4;
+
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct Damage {
     pub amount: Strength,
@@ -155,7 +157,6 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         ecs.add_status(target, StatusKind::StaticCharge, 300);
     }
     if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE_DMG) && ecs.has_status(target, StatusKind::StaticCharge) {
-        const STATIC_CHARGE_DAMAGE: u32 = 4;
         apply_damage_to_character(
             ecs,
             Damage::init(STATIC_CHARGE_DAMAGE).with_option(DamageOptions::PIERCE_DEFENSES),

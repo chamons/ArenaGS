@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{get_skill, is_skill, AmmoKind, Damage, FieldEffect, ShortInfo, SkillEffect, SpawnKind, TargetType};
+use super::*;
 use crate::after_image::LayoutChunkIcon;
 
 pub enum HelpHeader {
@@ -62,7 +62,44 @@ impl HelpInfo {
 
     fn report_damage(details: &mut Vec<String>, damage: &Damage) {
         details.push(format!("Strength: {}", damage.dice()));
-        // TODO - Report damage attributes
+        let opt = &damage.options;
+        let raises = opt.contains(DamageOptions::RAISE_TEMPERATURE);
+        let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
+        if raises || lowers {
+            details.push(format!(
+                "{} target's temperature{}",
+                if raises { "Raises" } else { "Lowers" },
+                if opt.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
+                    " by a large amount."
+                } else {
+                    "."
+                }
+            ));
+        }
+        if opt.contains(DamageOptions::KNOCKBACK) {
+            details.push("Knocks target back.".to_string());
+        }
+        if opt.contains(DamageOptions::ADD_CHARGE_STATUS) {
+            details.push("Applies static charge.".to_string());
+        }
+        if opt.contains(DamageOptions::CONSUMES_CHARGE_DMG) {
+            details.push(format!(
+                "Consumes static charge to do {} {{Sword}} additional piercing damage.",
+                STATIC_CHARGE_DAMAGE
+            ));
+        }
+        if opt.contains(DamageOptions::CONSUMES_CHARGE_KNOCKBACK) {
+            details.push("Consumes static charge to knockback target.".to_string());
+        }
+        if opt.contains(DamageOptions::PIERCE_DEFENSES) {
+            details.push("Ignores target's Armor and Dodge.".to_string());
+        }
+        if opt.contains(DamageOptions::TRIPLE_SHOT) {
+            details.push("Applies three instances of damage".to_string());
+        }
+        if opt.contains(DamageOptions::AIMED_SHOT) {
+            details.push("Grants 'Aimed Shot' status effect.".to_string());
+        }
     }
 
     fn get_skill_help(word: &str) -> HelpInfo {
@@ -139,6 +176,8 @@ impl HelpInfo {
             SkillEffect::Spawn(kind) => {}
             SkillEffect::SpawnReplace(kind) => {}
         }
+
+        details.push("".to_string());
 
         if let Some(focus) = skill.focus_use {
             details.push(format!("Costs {} Focus", focus))
