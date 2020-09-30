@@ -7,8 +7,8 @@ use specs::prelude::*;
 
 use super::{render_text_layout, HitTestResult, View};
 use crate::after_image::*;
-use crate::atlas::{BoxResult, Point};
-use crate::clash::{all_skill_image_filesnames, find_entity_at_location, HelpHeader, HelpInfo};
+use crate::atlas::{BoxResult, Point, SizedPoint};
+use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
 
 enum HelpPopupSize {
     Unknown,
@@ -51,7 +51,7 @@ impl HelpPopup {
             HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
             HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
             HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, point).unwrap())),
-            HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_entity_at_location(ecs, point).unwrap())),
+            HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_field_at_location(ecs, &SizedPoint::from(point)).unwrap())),
             HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, point).unwrap())),
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),

@@ -121,9 +121,19 @@ pub fn find_field_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let fields = ecs.read_storage::<FieldComponent>();
     let positions = ecs.read_storage::<PositionComponent>();
-    for (entity, _, position) in (&entities, &fields, &positions).join() {
-        if target.contains_point(&position.position.single_position()) {
-            return Some(entity);
+    for (entity, field, position) in (&entities, &fields, &positions).join() {
+        for (p, _) in &field.fields {
+            if let Some(p) = p {
+                if target.contains_point(p) {
+                    return Some(entity);
+                }
+            } else {
+                for p in position.position.all_positions() {
+                    if target.contains_point(&p) {
+                        return Some(entity);
+                    }
+                }
+            }
         }
     }
     None

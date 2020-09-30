@@ -359,7 +359,13 @@ impl HelpInfo {
     }
 
     pub fn find_field(ecs: &World, entity: Entity) -> HelpInfo {
-        HelpInfo::get_error(&ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()))
+        let mut details = vec![];
+
+        let attacks = ecs.read_storage::<AttackComponent>();
+
+        HelpInfo::report_damage(&mut details, &attacks.grab(entity).attack.damage);
+
+        HelpInfo::text_header("Field", details)
     }
 
     pub fn find_orb(ecs: &World, entity: Entity) -> HelpInfo {

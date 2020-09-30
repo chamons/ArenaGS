@@ -254,7 +254,7 @@ impl View for MapView {
                 MapHitTestResult::Enemy => Some(HitTestResult::Enemy(map_position)),
                 MapHitTestResult::Field => Some(HitTestResult::Field(map_position)),
                 MapHitTestResult::Orb => Some(HitTestResult::Orb(map_position)),
-                MapHitTestResult::Player | MapHitTestResult::None => Some(HitTestResult::Tile(map_position)),
+                MapHitTestResult::None => Some(HitTestResult::Tile(map_position)),
             }
         } else {
             None
