@@ -251,8 +251,10 @@ impl View for MapView {
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(map_position) = screen_to_map_position(x, y) {
             match element_at_location(ecs, &map_position) {
-                MapHitTestResult::Enemy() => Some(HitTestResult::Enemy(map_position)),
-                MapHitTestResult::Player() | MapHitTestResult::Field() | MapHitTestResult::None() => Some(HitTestResult::Tile(map_position)),
+                MapHitTestResult::Enemy => Some(HitTestResult::Enemy(map_position)),
+                MapHitTestResult::Field => Some(HitTestResult::Field(map_position)),
+                MapHitTestResult::Orb => Some(HitTestResult::Orb(map_position)),
+                MapHitTestResult::Player | MapHitTestResult::None => Some(HitTestResult::Tile(map_position)),
             }
         } else {
             None

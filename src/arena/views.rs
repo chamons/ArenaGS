@@ -24,6 +24,7 @@ pub enum HitTestResult {
     Tile(Point),
     Enemy(Point),
     Field(Point),
+    Orb(Point),
     Icon(LayoutChunkIcon),
     Text(String),
     Status(StatusKind),

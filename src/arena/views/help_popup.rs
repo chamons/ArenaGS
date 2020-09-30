@@ -50,16 +50,30 @@ impl HelpPopup {
         let help = match result {
             HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
             HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
-            HitTestResult::Enemy(point) | HitTestResult::Field(point) => {
+            HitTestResult::Enemy(point) => {
                 if let Some(entity) = find_entity_at_location(ecs, point) {
                     Some(HelpInfo::find_entity(ecs, entity))
                 } else {
-                    None
+                    return;
+                }
+            }
+            HitTestResult::Field(point) => {
+                if let Some(entity) = find_entity_at_location(ecs, point) {
+                    Some(HelpInfo::find_entity(ecs, entity))
+                } else {
+                    return;
+                }
+            }
+            HitTestResult::Orb(point) => {
+                if let Some(entity) = find_entity_at_location(ecs, point) {
+                    Some(HelpInfo::find_entity(ecs, entity))
+                } else {
+                    return;
                 }
             }
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
-            _ => None,
+            HitTestResult::None | HitTestResult::Tile(_) => return,
         };
         self.enabled = true;
         self.start_mouse = Point::init(x as u32, y as u32);
