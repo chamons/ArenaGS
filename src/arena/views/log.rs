@@ -2,15 +2,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::rect::Point as SDLPoint;
-use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
-use super::{render_text_layout, ContextData, HitTestResult, TextHitTester, View};
-use crate::after_image::{
-    FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer, TEXT_ICON_SIZE,
-};
+use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
@@ -122,8 +119,8 @@ pub fn log_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
 }
 
 impl View for LogView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        self.frame.render(ecs, canvas, frame, context)?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        self.frame.render(ecs, canvas, frame)?;
         self.render_log(ecs, canvas)?;
 
         Ok(())

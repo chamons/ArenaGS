@@ -3,7 +3,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{ContextData, HitTestResult, View};
+use super::{HitTestResult, View};
 use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::BoxResult;
 
@@ -43,7 +43,7 @@ impl Frame {
 }
 
 impl View for Frame {
-    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         let frame_size = self.frame_size();
         canvas.copy(
             &self.frame,
@@ -74,7 +74,7 @@ impl Button {
 }
 
 impl View for Button {
-    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.copy(&self.background, None, self.frame)?;
         Ok(())
     }

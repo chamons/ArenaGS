@@ -10,6 +10,7 @@ pub const TEMPERATURE_MIDPOINT: i32 = 0;
 pub const TEMPERATURE_BURN_POINT: i32 = 100;
 pub const TEMPERATURE_FREEZE_POINT: i32 = -100;
 pub const BURN_DURATION: i32 = 100;
+pub const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Temperature {
@@ -150,7 +151,6 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                     ecs.log(format!("{} stops burning.", ecs.get_name(&target.unwrap()).unwrap()));
                 }
 
-                const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
                 apply_damage_to_character(
                     ecs,
                     Damage::init(TEMPERATURE_DAMAGE_PER_TICK).with_option(DamageOptions::PIERCE_DEFENSES),

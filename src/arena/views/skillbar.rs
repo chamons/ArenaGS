@@ -7,7 +7,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{ContextData, HitTestResult, View};
+use super::{HitTestResult, View};
 use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
@@ -58,11 +58,11 @@ fn get_skill_count(ecs: &World) -> usize {
 }
 
 impl View for SkillBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((33, 33, 33)));
 
         for view in self.views.iter() {
-            view.render(ecs, canvas, frame, context)?;
+            view.render(ecs, canvas, frame)?;
         }
 
         Ok(())
@@ -135,7 +135,7 @@ impl SkillBarItemView {
 }
 
 impl View for SkillBarItemView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         if let Some((((width, height), hotkey_texture), texture, disable_overlay)) = self.get_render_params(ecs) {
             canvas.copy(texture, None, self.rect)?;
             if disable_overlay {

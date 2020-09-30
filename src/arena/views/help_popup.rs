@@ -5,7 +5,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{render_text_layout, ContextData, HitTestResult, View};
+use super::{render_text_layout, HitTestResult, View};
 use crate::after_image::*;
 use crate::atlas::{BoxResult, Point};
 use crate::clash::{all_skill_image_filesnames, find_entity_at_location, HelpHeader, HelpInfo};
@@ -55,6 +55,7 @@ impl HelpPopup {
                 }
             }
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
+            HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
             _ => None,
         };
         self.enabled = true;
@@ -110,7 +111,7 @@ impl HelpPopup {
 
 const HELP_OFFSET: u32 = 25;
 impl View for HelpPopup {
-    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         if self.enabled {
             let frame = self.get_help_popup_frame(canvas)?;
             canvas.copy(self.get_background(), None, frame)?;

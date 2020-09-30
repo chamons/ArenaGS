@@ -8,7 +8,7 @@ use sdl2::rect::Rect as SDLRect;
 use super::super::components::*;
 use super::super::{battle_actions, AnimationComponent, SpriteLoader};
 use super::view_components::{Frame, FrameKind};
-use super::{CharacterOverlay, ContextData, HitTestResult, View};
+use super::{CharacterOverlay, HitTestResult, View};
 
 use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, Point};
@@ -233,7 +233,7 @@ impl MapView {
 }
 
 impl View for MapView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.render_entities(ecs, canvas, frame)?;
         if should_draw_grid(ecs) {
             self.draw_grid(canvas)?;
@@ -244,7 +244,7 @@ impl View for MapView {
         }
         self.render_fields(ecs, canvas)?;
 
-        self.frame.render(ecs, canvas, frame, context)?;
+        self.frame.render(ecs, canvas, frame)?;
         Ok(())
     }
 

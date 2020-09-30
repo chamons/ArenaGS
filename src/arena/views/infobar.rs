@@ -5,7 +5,7 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::view_components::{Frame, FrameKind};
-use super::{ContextData, View};
+use super::View;
 use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent, StatusComponent};
@@ -109,8 +109,8 @@ impl InfoBarView {
 }
 
 impl View for InfoBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        self.frame.render(ecs, canvas, frame, context)?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        self.frame.render(ecs, canvas, frame)?;
         self.render_character_info(ecs, canvas)?;
 
         Ok(())

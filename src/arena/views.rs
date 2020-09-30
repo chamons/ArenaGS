@@ -2,6 +2,7 @@ use specs::prelude::*;
 
 use crate::after_image::{LayoutChunkIcon, RenderCanvas};
 use crate::atlas::{BoxResult, Point};
+use crate::clash::StatusKind;
 
 mod character_overlay;
 mod debug;
@@ -25,15 +26,11 @@ pub enum HitTestResult {
     Field(Point),
     Icon(LayoutChunkIcon),
     Text(String),
-}
-
-pub enum ContextData {
-    None,
-    Number(u32),
+    Status(StatusKind),
 }
 
 pub trait View {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()>;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()>;
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }

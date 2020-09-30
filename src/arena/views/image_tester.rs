@@ -6,7 +6,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::{ContextData, View};
+use super::View;
 use crate::after_image::{IconLoader, RenderCanvas, RenderContextHolder, TextRenderer};
 use crate::atlas::{BoxResult, Point};
 use crate::conductor::{EventStatus, Scene, StageDirection, Storyteller};
@@ -45,7 +45,7 @@ impl Scene for ImageTesterScene {
         canvas.set_draw_color(Color::from((0, 128, 255)));
         canvas.clear();
 
-        self.view.render(&self.ecs, canvas, frame, &ContextData::None)?;
+        self.view.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
 

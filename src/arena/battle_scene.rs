@@ -211,10 +211,10 @@ impl Scene for BattleScene {
         canvas.clear();
 
         for view in self.views.iter() {
-            view.render(&self.ecs, canvas, frame, &ContextData::None)?;
+            view.render(&self.ecs, canvas, frame)?;
         }
 
-        self.help.render(&self.ecs, canvas, frame, &ContextData::None)?;
+        self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
         Ok(())

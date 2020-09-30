@@ -104,6 +104,7 @@ pub fn apply_damage_to_character(ecs: &mut World, damage: Damage, target: &Entit
     }
 }
 
+const ARMORED_ADDITIONAL_ARMOR: u32 = 3;
 fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_position: Option<Point>) {
     // Flying should not be visible, and are immune to all damage
     if ecs.has_status(target, StatusKind::Flying) {
@@ -115,8 +116,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
 
         if ecs.has_status(target, StatusKind::Armored) {
-            const ADDITIONAL_ARMOR: u32 = 3;
-            defenses.apply_damage_with_addditional_armor(damage, ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
+            defenses.apply_damage_with_addditional_armor(damage, ARMORED_ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
         } else {
             defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
         }
@@ -181,6 +181,8 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
 }
 
 pub const REGEN_DURATION: i32 = 100;
+pub const HEALTH_REGEN_PER_TICK: u32 = 1;
+
 pub fn regen_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
         EventKind::StatusAdded(kind) => {
@@ -195,7 +197,7 @@ pub fn regen_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                 } else {
                     ecs.log(format!("{} stops regenerating.", ecs.get_name(&target.unwrap()).unwrap()));
                 }
-                const HEALTH_REGEN_PER_TICK: u32 = 1;
+
                 apply_healing_to_character(ecs, Strength::init(HEALTH_REGEN_PER_TICK), &target.unwrap());
             }
         }

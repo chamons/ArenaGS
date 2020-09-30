@@ -27,6 +27,10 @@ impl HelpInfo {
         HelpInfo::init(HelpHeader::None, text)
     }
 
+    pub fn text_header(header: &str, text: Vec<String>) -> HelpInfo {
+        HelpInfo::init(HelpHeader::Text(header.to_string()), text)
+    }
+
     fn get_error(key: &str) -> HelpInfo {
         HelpInfo::no_header(vec_of_strings![
             "|tab| Internal Help Error:",
@@ -110,13 +114,13 @@ impl HelpInfo {
             details.push("Consumes static charge to knockback target.".to_string());
         }
         if opt.contains(DamageOptions::PIERCE_DEFENSES) {
-            details.push("Ignores target's Armor and Dodge.".to_string());
+            details.push("Pierce target's Armor and Dodge.".to_string());
         }
         if opt.contains(DamageOptions::TRIPLE_SHOT) {
             details.push("Applies three instances of damage".to_string());
         }
         if opt.contains(DamageOptions::AIMED_SHOT) {
-            details.push("Grants 'Aimed Shot' status effect.".to_string());
+            details.push("Grants 'Aimed Shot' effect.".to_string());
         }
     }
 
@@ -161,13 +165,13 @@ impl HelpInfo {
             }
             SkillEffect::ReloadAndRotateAmmo() => details.push("Effect: Reloads Bullets and rotates to next ammo type.".to_string()),
             SkillEffect::Buff(kind, duration) => details.push(format!(
-                "Effect: Applies {} status effect for {} ticks.",
+                "Effect: Applies {} effect for {} ticks.",
                 HelpInfo::get_status_effect_name(*kind),
                 duration
             )),
             SkillEffect::BuffThen(kind, duration, other_effect) => {
                 details.push(format!(
-                    "Effect: Applies {} status effect for {} ticks.",
+                    "Effect: Applies {} effect for {} ticks.",
                     HelpInfo::get_status_effect_name(*kind),
                     duration
                 ));
@@ -178,7 +182,7 @@ impl HelpInfo {
                 HelpInfo::report_skill_effect(details, other_effect);
                 details.push("|tab|Then".to_string());
                 details.push(format!(
-                    "Effect: Applies {} status effect for {} ticks.",
+                    "Effect: Applies {} effect for {} ticks.",
                     HelpInfo::get_status_effect_name(*kind),
                     duration
                 ));
@@ -218,7 +222,6 @@ impl HelpInfo {
             details.push("".to_string());
         }
 
-        // TODO - Need to get icon in white (?)
         HelpInfo::report_skill_effect(&mut details, &skill.effect);
 
         details.push("".to_string());
@@ -263,6 +266,86 @@ impl HelpInfo {
 
         match word {
             _ => HelpInfo::get_error(word),
+        }
+    }
+
+    pub fn find_status(status: StatusKind) -> HelpInfo {
+        match status {
+            StatusKind::Burning => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings![format!(
+                        "Burning: Take {} piercing damage every turn while temperature is above {}.",
+                        TEMPERATURE_DAMAGE_PER_TICK, TEMPERATURE_BURN_POINT
+                    )],
+                )
+            }
+            StatusKind::Frozen => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings![format!(
+                        "Frozen: Movements take 150% longer while temperature is below {}.",
+                        TEMPERATURE_FREEZE_POINT
+                    )],
+                )
+            }
+            StatusKind::Magnum => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings!["Enable shorter range high power gunslinger abilities."],
+                )
+            }
+            StatusKind::Ignite => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings!["Enable average range gunslinger abilities which can ignite foes."],
+                )
+            }
+            StatusKind::Cyclone => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings!["Enable long range shocking gunslinger abilities."],
+                )
+            }
+            StatusKind::StaticCharge => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings!["Charged with electricity - a lightning rod in the storm. Beware!"],
+                )
+            }
+            StatusKind::Aimed => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec![format!(
+                        "Focued on nailing the next shot. Next ranged attack's strength incrased by {}.",
+                        AIMED_SHOT_ADDITIONAL_STRENGTH
+                    )],
+                )
+            }
+            StatusKind::Armored => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec![format!(
+                        "Well prepared for the next blow. {} Additional Armor through next attack.",
+                        AIMED_SHOT_ADDITIONAL_STRENGTH
+                    )],
+                )
+            }
+            StatusKind::Flying => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec_of_strings!["High above the battleground, unreachable for now."],
+                )
+            }
+            StatusKind::Regen => {
+                return HelpInfo::text_header(
+                    HelpInfo::get_status_effect_name(status),
+                    vec![format!("Rapidly healing injuries. A {} strength heal every turn.", HEALTH_REGEN_PER_TICK)],
+                )
+            }
+            StatusKind::RegenTick => panic!("{:?} should not be visible to help", status),
+            #[cfg(test)]
+            StatusKind::TestStatus | StatusKind::TestTrait => panic!("{:?} should not be visible to help", status),
         }
     }
 

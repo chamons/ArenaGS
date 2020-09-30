@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use sdl2::rect::Rect as SDLRect;
 
 use super::{HitTestResult, TextHitTester};
@@ -24,7 +22,7 @@ pub fn render_text_layout(
                     (FontSize::Small, 0)
                 };
 
-                let (_, height) = text.render_text(
+                text.render_text(
                     &s,
                     chunk.position.x as i32,
                     y_font_offset + y_offset + chunk.position.y as i32,
