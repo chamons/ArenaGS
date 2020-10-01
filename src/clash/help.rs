@@ -253,6 +253,12 @@ impl HelpInfo {
 
     pub fn find(word: &str) -> HelpInfo {
         match word {
+            "Top Level Help" => {
+                return HelpInfo::init(
+                    HelpHeader::Text("Help".to_string()),
+                    top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>(),
+                )
+            }
             // A 'fake' spell for gaining charge
             "Invoke the Elements" => {
                 return HelpInfo::init(
@@ -383,6 +389,10 @@ impl HelpInfo {
 
         HelpInfo::text_header("Orb Projectile", details)
     }
+}
+
+fn top_level_topics() -> Vec<&'static str> {
+    vec!["Defenses", "Status Effects", "Temperature"]
 }
 
 pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, mut on_text: impl FnMut(&str) + 'a) {

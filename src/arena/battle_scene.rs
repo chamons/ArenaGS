@@ -51,7 +51,7 @@ impl BattleScene {
 
     fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
-            if keycode == Keycode::F1 {
+            if keycode == Keycode::F10 {
                 battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
             }
         }
@@ -87,6 +87,10 @@ impl BattleScene {
                 if let Ok(new_world) = saveload::load_from_disk() {
                     self.ecs = new_world;
                 }
+            }
+            Keycode::F1 => {
+                self.help.enable(&self.ecs, None, HitTestResult::Text("Top Level Help".to_string()));
+                self.help.force_size_large();
             }
             _ => {}
         }
@@ -165,6 +169,10 @@ impl BattleScene {
 
 impl Scene for BattleScene {
     fn handle_key(&mut self, keycode: Keycode) {
+        if self.help.is_enabled() && keycode == Keycode::Escape {
+            self.help.disable();
+        }
+
         match keycode {
             Keycode::PageUp => {
                 self.ecs.raise_event(EventKind::LogScrolled(LogDirection::Backwards), None);
@@ -186,12 +194,16 @@ impl Scene for BattleScene {
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
         self.help.handle_mouse(x, y, button);
+        // Prevent stray clicks from passing through
+        if self.help.is_enabled() {
+            return;
+        }
 
         if let Some(button) = button {
             if button == MouseButton::Middle {
                 let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
                 if let Some(hit) = hit {
-                    self.help.enable(&self.ecs, x, y, hit);
+                    self.help.enable(&self.ecs, Some(Point::init(x as u32, y as u32)), hit);
                 }
             }
 
