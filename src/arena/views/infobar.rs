@@ -1,14 +1,13 @@
 use std::rc::Rc;
 
-use enum_iterator::IntoEnumIterator;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::view_components::{Frame, FrameKind};
 use super::View;
 use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_enemies, find_player, summarize_character, AmmoKind, CharacterInfoComponent, SkillResourceComponent, StatusComponent};
+use crate::atlas::BoxResult;
+use crate::clash::{find_enemies, find_player, summarize_character};
 
 pub struct InfoBarView {
     position: SDLPoint,

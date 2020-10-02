@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::mouse::MouseButton;
-use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
@@ -118,6 +117,17 @@ impl HelpPopup {
         self.state = HelpPopupState::None;
     }
 
+    pub fn pop_topic(&mut self, ecs: &World) {
+        match &mut self.state {
+            HelpPopupState::Modal { topic_history, .. } => {
+                topic_history.pop();
+                self.help = HelpPopup::lookup_hittest(&topic_history.last().unwrap(), ecs);
+                assert!(topic_history.len() >= 1);
+            }
+            _ => panic!("Pop help topic in non-modal"),
+        }
+    }
+
     const MOUSE_POPUP_DRIFT: u32 = 10;
     fn should_close_popup_from_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
@@ -153,10 +163,14 @@ impl HelpPopup {
             if button == MouseButton::Left || button == MouseButton::Middle {
                 match &mut self.state {
                     HelpPopupState::Modal { hit_tester, topic_history } => {
-                        if let Some(hit) = hit_tester.borrow().hit_test(x, y) {
-                            let help = HelpPopup::lookup_hittest(&hit, ecs);
-                            self.help = help;
-                            topic_history.push(hit);
+                        let hit = hit_tester.borrow().hit_test(x, y);
+                        if let Some(hit) = hit {
+                            if let Some(help) = HelpPopup::lookup_hittest(&hit, ecs) {
+                                self.help = Some(help);
+                                topic_history.push(hit);
+                            } else if hit.is_back_button() {
+                                self.pop_topic(ecs);
+                            }
                         }
                     }
                     _ => {}
@@ -234,7 +248,7 @@ impl View for HelpPopup {
                 self.note_hit_area(close_frame, HitTestResult::CloseButton);
 
                 if topic_history.len() > 1 {
-                    let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 40, frame.y() + 16, 12, 17);
+                    let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 42 - 18, frame.y() + 19, 12, 17);
                     canvas.copy(&self.ui.get("back_button.png"), None, close_frame)?;
                     self.note_hit_area(close_frame, HitTestResult::BackButton);
                 }
