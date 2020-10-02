@@ -21,8 +21,13 @@ enum HelpPopupSize {
 
 enum HelpPopupState {
     None,
-    Tooltip { start_mouse: Point },
-    Modal { hit_tester: RefCell<TextHitTester> },
+    Tooltip {
+        start_mouse: Point,
+    },
+    Modal {
+        hit_tester: RefCell<TextHitTester>,
+        topic_history: Vec<HitTestResult>,
+    },
 }
 
 pub struct HelpPopup {
@@ -52,21 +57,21 @@ impl HelpPopup {
         })
     }
 
-    fn lookup_hittest(result: HitTestResult, ecs: &World) -> Option<HelpInfo> {
+    fn lookup_hittest(result: &HitTestResult, ecs: &World) -> Option<HelpInfo> {
         match result {
             HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
-            HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
-            HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, point).unwrap())),
-            HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_field_at_location(ecs, &SizedPoint::from(point)).unwrap())),
-            HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, point).unwrap())),
+            HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(*icon)),
+            HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, *point).unwrap())),
+            HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_field_at_location(ecs, &SizedPoint::from(*point)).unwrap())),
+            HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, *point).unwrap())),
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
-            HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
+            HitTestResult::Status(status) => Some(HelpInfo::find_status(*status)),
             HitTestResult::None | HitTestResult::Tile(_) | HitTestResult::CloseButton => None,
         }
     }
 
     pub fn enable(&mut self, ecs: &World, mouse_position: Option<Point>, result: HitTestResult) {
-        let help = HelpPopup::lookup_hittest(result, ecs);
+        let help = HelpPopup::lookup_hittest(&result, ecs);
         if help.is_none() {
             return;
         }
@@ -76,6 +81,7 @@ impl HelpPopup {
         } else {
             self.state = HelpPopupState::Modal {
                 hit_tester: RefCell::new(TextHitTester::init()),
+                topic_history: vec![result],
             }
         }
         self.size = if let Some(help) = &help {
@@ -86,6 +92,7 @@ impl HelpPopup {
         } else {
             HelpPopupSize::Medium
         };
+
         self.help = help;
     }
 
@@ -116,7 +123,7 @@ impl HelpPopup {
                     return true;
                 }
             }
-            HelpPopupState::Modal { hit_tester } => {
+            HelpPopupState::Modal { hit_tester, .. } => {
                 // Look for the close button
                 if let Some(button) = button {
                     if button == MouseButton::Left {
@@ -137,11 +144,12 @@ impl HelpPopup {
         }
         if let Some(button) = button {
             if button == MouseButton::Left || button == MouseButton::Middle {
-                match &self.state {
-                    HelpPopupState::Modal { hit_tester } => {
+                match &mut self.state {
+                    HelpPopupState::Modal { hit_tester, topic_history } => {
                         if let Some(hit) = hit_tester.borrow().hit_test(x, y) {
-                            let help = HelpPopup::lookup_hittest(hit, ecs);
+                            let help = HelpPopup::lookup_hittest(&hit, ecs);
                             self.help = help;
+                            topic_history.push(hit);
                         }
                     }
                     _ => {}
@@ -196,7 +204,7 @@ impl HelpPopup {
 
     fn note_hit_area(&self, rect: SDLRect, result: HitTestResult) {
         match &self.state {
-            HelpPopupState::Modal { hit_tester } => {
+            HelpPopupState::Modal { hit_tester, .. } => {
                 hit_tester.borrow_mut().add(rect, result);
             }
             _ => {}
