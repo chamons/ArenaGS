@@ -22,6 +22,7 @@ enum HelpPopupState {
     None,
     Tooltip {
         start_mouse: Point,
+        topic: HitTestResult,
     },
     Modal {
         hit_tester: RefCell<TextHitTester>,
@@ -83,7 +84,10 @@ impl HelpPopup {
         }
 
         if let Some(mouse_position) = mouse_position {
-            self.state = HelpPopupState::Tooltip { start_mouse: mouse_position }
+            self.state = HelpPopupState::Tooltip {
+                start_mouse: mouse_position,
+                topic: result,
+            }
         } else {
             self.state = HelpPopupState::Modal {
                 hit_tester: RefCell::new(TextHitTester::init()),
@@ -117,6 +121,19 @@ impl HelpPopup {
         self.state = HelpPopupState::None;
     }
 
+    pub fn pin_help_open(&mut self) {
+        let current_topic = match &self.state {
+            HelpPopupState::Tooltip { topic, .. } => topic.clone(),
+            _ => panic!("pin_help_open called on non-tooltip help?"),
+        };
+
+        self.state = HelpPopupState::Modal {
+            hit_tester: RefCell::new(TextHitTester::init()),
+            topic_history: vec![HitTestResult::Text("Top Level Help".to_string()), current_topic],
+        };
+        self.force_size_large();
+    }
+
     pub fn pop_topic(&mut self, ecs: &World) {
         match &mut self.state {
             HelpPopupState::Modal { topic_history, .. } => {
@@ -131,7 +148,7 @@ impl HelpPopup {
     const MOUSE_POPUP_DRIFT: u32 = 10;
     fn should_close_popup_from_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
-            HelpPopupState::Tooltip { start_mouse } => {
+            HelpPopupState::Tooltip { start_mouse, .. } => {
                 if button.is_some() {
                     return true;
                 }
@@ -156,9 +173,23 @@ impl HelpPopup {
     }
 
     pub fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        match self.state {
+            HelpPopupState::Tooltip { .. } => {
+                if let Some(button) = button {
+                    if button == MouseButton::Middle {
+                        self.pin_help_open();
+                        return;
+                    }
+                }
+            }
+            _ => {}
+        }
+
         if self.should_close_popup_from_mouse(x, y, button) {
             self.disable();
+            return;
         }
+
         if let Some(button) = button {
             if button == MouseButton::Left || button == MouseButton::Middle {
                 match &mut self.state {
@@ -168,8 +199,10 @@ impl HelpPopup {
                             if let Some(help) = HelpPopup::lookup_hittest(&hit, ecs) {
                                 self.help = Some(help);
                                 topic_history.push(hit);
+                                return;
                             } else if hit.is_back_button() {
                                 self.pop_topic(ecs);
+                                return;
                             }
                         }
                     }
@@ -190,7 +223,7 @@ impl HelpPopup {
 
     fn get_popup_origin(&self) -> (i32, i32) {
         match self.state {
-            HelpPopupState::Tooltip { start_mouse } => (start_mouse.x as i32, start_mouse.y as i32),
+            HelpPopupState::Tooltip { start_mouse, .. } => (start_mouse.x as i32, start_mouse.y as i32),
             HelpPopupState::Modal { .. } | HelpPopupState::None => (100, 100),
         }
     }
@@ -218,6 +251,15 @@ impl HelpPopup {
         }
     }
 
+    fn clear_hit_areas(&self) {
+        match &self.state {
+            HelpPopupState::Modal { hit_tester, .. } => {
+                hit_tester.borrow_mut().clear();
+            }
+            _ => {}
+        }
+    }
+
     fn note_hit_area(&self, rect: SDLRect, result: HitTestResult) {
         match &self.state {
             HelpPopupState::Modal { hit_tester, .. } => {
@@ -231,6 +273,7 @@ impl HelpPopup {
 const HELP_OFFSET: u32 = 25;
 impl View for HelpPopup {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        self.clear_hit_areas();
         match &self.state {
             HelpPopupState::None => {
                 return Ok(());
