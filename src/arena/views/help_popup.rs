@@ -29,25 +29,22 @@ pub struct HelpPopup {
     help: Option<HelpInfo>,
     state: HelpPopupState,
     text_renderer: Rc<TextRenderer>,
-    small_frame: Texture,
-    medium_frame: Texture,
-    large_frame: Texture,
-    close_button: Texture,
     size: HelpPopupSize,
     symbol_cache: IconCache,
+    ui_cache: IconCache,
     icons: IconCache,
 }
 
 impl HelpPopup {
     pub fn init(render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
-        let loader = IconLoader::init_ui()?;
         Ok(HelpPopup {
             state: HelpPopupState::None,
             text_renderer,
-            small_frame: loader.get(render_context, "help_small.png")?,
-            medium_frame: loader.get(render_context, "help_medium.png")?,
-            large_frame: loader.get(render_context, "help_large.png")?,
-            close_button: loader.get(render_context, "close.png")?,
+            ui_cache: IconCache::init(
+                render_context,
+                IconLoader::init_ui()?,
+                &["help_small.png", "help_medium.png", "help_large.png", "close.png"],
+            )?,
             symbol_cache: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
             icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
             size: HelpPopupSize::Unknown,
@@ -173,9 +170,9 @@ impl HelpPopup {
 
     fn get_background(&self) -> &Texture {
         match self.size {
-            HelpPopupSize::Small => &self.small_frame,
-            HelpPopupSize::Medium => &self.medium_frame,
-            HelpPopupSize::Large => &self.large_frame,
+            HelpPopupSize::Small => &self.ui_cache.get("help_small.png"),
+            HelpPopupSize::Medium => &self.ui_cache.get("help_medium.png"),
+            HelpPopupSize::Large => &self.ui_cache.get("help_large.png"),
             HelpPopupSize::Unknown => panic!("Unknown help size"),
         }
     }
@@ -205,7 +202,7 @@ impl View for HelpPopup {
                     f.unwrap()
                 };
 
-                canvas.copy(&self.close_button, None, close_frame)?;
+                canvas.copy(&self.ui_cache.get("close.png"), None, close_frame)?;
             }
             _ => {}
         }
