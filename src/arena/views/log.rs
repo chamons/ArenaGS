@@ -82,15 +82,9 @@ impl LogView {
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
                 let line_y_offset = 20 * line_count as i32;
-                render_text_layout(
-                    &layout,
-                    canvas,
-                    &mut Some(&mut hit_test),
-                    &self.text,
-                    &self.icons,
-                    FontColor::Black,
-                    line_y_offset,
-                )?;
+                render_text_layout(&layout, canvas, &self.text, &self.icons, FontColor::Black, line_y_offset, |rect, result| {
+                    hit_test.add(rect, result);
+                })?;
 
                 line_count += layout.line_count;
             } else {

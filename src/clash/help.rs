@@ -253,12 +253,10 @@ impl HelpInfo {
 
     pub fn find(word: &str) -> HelpInfo {
         match word {
-            "Top Level Help" => {
-                return HelpInfo::init(
-                    HelpHeader::Text("Help".to_string()),
-                    top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>(),
-                )
-            }
+            "Top Level Help" => return HelpInfo::text_header("Help", top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>()),
+            "Defenses" => return HelpInfo::text_header("Defenses", vec![]),
+            "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
+            "Temperature" => return HelpInfo::text_header("Temperature", vec![]),
             // A 'fake' spell for gaining charge
             "Invoke the Elements" => {
                 return HelpInfo::init(

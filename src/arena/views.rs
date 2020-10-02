@@ -28,6 +28,7 @@ pub enum HitTestResult {
     Icon(LayoutChunkIcon),
     Text(String),
     Status(StatusKind),
+    CloseButton,
 }
 
 pub trait View {

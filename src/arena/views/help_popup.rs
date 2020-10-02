@@ -7,7 +7,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{render_text_layout, HitTestResult, View};
+use super::{render_text_layout, HitTestResult, TextHitTester, View};
 use crate::after_image::*;
 use crate::atlas::{BoxResult, Point, SizedPoint};
 use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
@@ -22,7 +22,7 @@ enum HelpPopupSize {
 enum HelpPopupState {
     None,
     Tooltip { start_mouse: Point },
-    Modal { close_button_frame: RefCell<Option<SDLRect>> },
+    Modal { hit_tester: RefCell<TextHitTester> },
 }
 
 pub struct HelpPopup {
@@ -52,8 +52,8 @@ impl HelpPopup {
         })
     }
 
-    pub fn enable(&mut self, ecs: &World, mouse_position: Option<Point>, result: HitTestResult) {
-        let help = match result {
+    fn lookup_hittest(result: HitTestResult, ecs: &World) -> Option<HelpInfo> {
+        match result {
             HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
             HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(icon)),
             HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, point).unwrap())),
@@ -61,14 +61,21 @@ impl HelpPopup {
             HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, point).unwrap())),
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
-            HitTestResult::None | HitTestResult::Tile(_) => return,
-        };
+            HitTestResult::None | HitTestResult::Tile(_) | HitTestResult::CloseButton => None,
+        }
+    }
+
+    pub fn enable(&mut self, ecs: &World, mouse_position: Option<Point>, result: HitTestResult) {
+        let help = HelpPopup::lookup_hittest(result, ecs);
+        if help.is_none() {
+            return;
+        }
 
         if let Some(mouse_position) = mouse_position {
             self.state = HelpPopupState::Tooltip { start_mouse: mouse_position }
         } else {
             self.state = HelpPopupState::Modal {
-                close_button_frame: RefCell::new(None),
+                hit_tester: RefCell::new(TextHitTester::init()),
             }
         }
         self.size = if let Some(help) = &help {
@@ -109,15 +116,12 @@ impl HelpPopup {
                     return true;
                 }
             }
-            HelpPopupState::Modal { close_button_frame } => {
+            HelpPopupState::Modal { hit_tester } => {
                 // Look for the close button
                 if let Some(button) = button {
                     if button == MouseButton::Left {
-                        let f = close_button_frame.borrow();
-                        if let Some(close_button_frame) = *f {
-                            if close_button_frame.contains_point(SDLPoint::new(x, y)) {
-                                return true;
-                            }
+                        if hit_tester.borrow().hit_test(x, y).map_or(false, |h| h.is_close_button()) {
+                            return true;
                         }
                     }
                 }
@@ -127,9 +131,22 @@ impl HelpPopup {
         false
     }
 
-    pub fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    pub fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         if self.should_close_popup_from_mouse(x, y, button) {
             self.disable();
+        }
+        if let Some(button) = button {
+            if button == MouseButton::Left || button == MouseButton::Middle {
+                match &self.state {
+                    HelpPopupState::Modal { hit_tester } => {
+                        if let Some(hit) = hit_tester.borrow().hit_test(x, y) {
+                            let help = HelpPopup::lookup_hittest(hit, ecs);
+                            self.help = help;
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 
@@ -176,6 +193,15 @@ impl HelpPopup {
             HelpPopupSize::Unknown => panic!("Unknown help size"),
         }
     }
+
+    fn note_hit_area(&self, rect: SDLRect, result: HitTestResult) {
+        match &self.state {
+            HelpPopupState::Modal { hit_tester } => {
+                hit_tester.borrow_mut().add(rect, result);
+            }
+            _ => {}
+        }
+    }
 }
 
 const HELP_OFFSET: u32 = 25;
@@ -192,17 +218,10 @@ impl View for HelpPopup {
         canvas.copy(self.get_background(), None, frame)?;
 
         match &self.state {
-            HelpPopupState::Modal { close_button_frame } => {
-                // Cache this as we can't calculate this during mouse events
-                let close_frame = {
-                    let mut f = close_button_frame.borrow_mut();
-                    if f.is_none() {
-                        *f = Some(self.get_help_popup_close_frame(canvas)?);
-                    }
-                    f.unwrap()
-                };
-
+            HelpPopupState::Modal { .. } => {
+                let close_frame = self.get_help_popup_close_frame(canvas)?;
                 canvas.copy(&self.ui.get("close.png"), None, close_frame)?;
+                self.note_hit_area(close_frame, HitTestResult::CloseButton);
             }
             _ => {}
         }
@@ -252,7 +271,9 @@ impl View for HelpPopup {
                         2,
                     ),
                 )?;
-                render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbols, FontColor::White, 0)?;
+                render_text_layout(&layout, canvas, &self.text_renderer, &self.symbols, FontColor::White, 0, |rect, result| {
+                    self.note_hit_area(rect, result)
+                })?;
                 y += layout.line_count * 20;
             }
         }

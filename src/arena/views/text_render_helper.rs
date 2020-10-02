@@ -1,17 +1,17 @@
 use sdl2::rect::Rect as SDLRect;
 
-use super::{HitTestResult, TextHitTester};
+use super::HitTestResult;
 use crate::after_image::*;
 use crate::atlas::BoxResult;
 
-pub fn render_text_layout(
-    layout: &LayoutResult,
+pub fn render_text_layout<'a>(
+    layout: &'a LayoutResult,
     canvas: &mut RenderCanvas,
-    hit_tester: &mut Option<&mut TextHitTester>,
     text: &TextRenderer,
     icons: &IconCache,
     color: FontColor,
     y_offset: i32,
+    mut on_hittest_text: impl FnMut(SDLRect, HitTestResult) + 'a,
 ) -> BoxResult<()> {
     for chunk in &layout.chunks {
         match &chunk.value {
@@ -40,12 +40,10 @@ pub fn render_text_layout(
                     FontSize::SmallUnderline,
                     color,
                 )?;
-                if let Some(ref mut hit_tester) = hit_tester.as_mut() {
-                    hit_tester.add(
-                        SDLRect::new(chunk.position.x as i32, y_offset + chunk.position.y as i32, width, height),
-                        HitTestResult::Text(s.to_string()),
-                    );
-                }
+                on_hittest_text(
+                    SDLRect::new(chunk.position.x as i32, y_offset + chunk.position.y as i32, width, height),
+                    HitTestResult::Text(s.to_string()),
+                );
             }
             LayoutChunkValue::Icon(icon) => {
                 let icon_image = match icon {
@@ -56,12 +54,10 @@ pub fn render_text_layout(
                     None,
                     SDLRect::new(chunk.position.x as i32, y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
                 )?;
-                if let Some(ref mut hit_tester) = hit_tester.as_mut() {
-                    hit_tester.add(
-                        SDLRect::new(chunk.position.x as i32, y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
-                        HitTestResult::Icon(*icon),
-                    );
-                }
+                on_hittest_text(
+                    SDLRect::new(chunk.position.x as i32, y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
+                    HitTestResult::Icon(*icon),
+                );
 
                 #[cfg(feature = "debug_text_alignmnet")]
                 {

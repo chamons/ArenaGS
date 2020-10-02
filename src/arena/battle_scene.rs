@@ -193,7 +193,7 @@ impl Scene for BattleScene {
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
-        self.help.handle_mouse(x, y, button);
+        self.help.handle_mouse(&self.ecs, x, y, button);
         // Prevent stray clicks from passing through
         if self.help.is_enabled() {
             return;
