@@ -26,13 +26,13 @@ enum HelpPopupState {
 }
 
 pub struct HelpPopup {
-    help: Option<HelpInfo>,
-    state: HelpPopupState,
     text_renderer: Rc<TextRenderer>,
+    state: HelpPopupState,
+    help: Option<HelpInfo>,
     size: HelpPopupSize,
-    symbol_cache: IconCache,
-    ui_cache: IconCache,
     icons: IconCache,
+    symbols: IconCache,
+    ui: IconCache,
 }
 
 impl HelpPopup {
@@ -40,12 +40,12 @@ impl HelpPopup {
         Ok(HelpPopup {
             state: HelpPopupState::None,
             text_renderer,
-            ui_cache: IconCache::init(
+            ui: IconCache::init(
                 render_context,
                 IconLoader::init_ui()?,
                 &["help_small.png", "help_medium.png", "help_large.png", "close.png"],
             )?,
-            symbol_cache: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            symbols: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
             icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
             size: HelpPopupSize::Unknown,
             help: None,
@@ -170,9 +170,9 @@ impl HelpPopup {
 
     fn get_background(&self) -> &Texture {
         match self.size {
-            HelpPopupSize::Small => &self.ui_cache.get("help_small.png"),
-            HelpPopupSize::Medium => &self.ui_cache.get("help_medium.png"),
-            HelpPopupSize::Large => &self.ui_cache.get("help_large.png"),
+            HelpPopupSize::Small => &self.ui.get("help_small.png"),
+            HelpPopupSize::Medium => &self.ui.get("help_medium.png"),
+            HelpPopupSize::Large => &self.ui.get("help_large.png"),
             HelpPopupSize::Unknown => panic!("Unknown help size"),
         }
     }
@@ -202,7 +202,7 @@ impl View for HelpPopup {
                     f.unwrap()
                 };
 
-                canvas.copy(&self.ui_cache.get("close.png"), None, close_frame)?;
+                canvas.copy(&self.ui.get("close.png"), None, close_frame)?;
             }
             _ => {}
         }
@@ -252,7 +252,7 @@ impl View for HelpPopup {
                         2,
                     ),
                 )?;
-                render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbol_cache, FontColor::White, 0)?;
+                render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbols, FontColor::White, 0)?;
                 y += layout.line_count * 20;
             }
         }
