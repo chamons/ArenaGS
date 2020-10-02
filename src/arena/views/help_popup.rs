@@ -48,7 +48,14 @@ impl HelpPopup {
             ui: IconCache::init(
                 render_context,
                 IconLoader::init_ui()?,
-                &["help_small.png", "help_medium.png", "help_large.png", "close.png"],
+                &[
+                    "help_small.png",
+                    "help_medium.png",
+                    "help_large.png",
+                    "close.png",
+                    "back_button.png",
+                    "forward_button.png",
+                ],
             )?,
             symbols: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
             icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
@@ -66,7 +73,7 @@ impl HelpPopup {
             HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, *point).unwrap())),
             HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
             HitTestResult::Status(status) => Some(HelpInfo::find_status(*status)),
-            HitTestResult::None | HitTestResult::Tile(_) | HitTestResult::CloseButton => None,
+            _ => None,
         }
     }
 
@@ -188,11 +195,6 @@ impl HelpPopup {
         Ok(SDLRect::new(popup_x, popup_y, width as u32, height as u32))
     }
 
-    fn get_help_popup_close_frame(&self, canvas: &RenderCanvas) -> BoxResult<SDLRect> {
-        let frame = self.get_help_popup_frame(canvas)?;
-        Ok(SDLRect::new(frame.x() + frame.width() as i32 - 24 - 2, frame.y() + 2, 24, 24))
-    }
-
     fn get_background(&self) -> &Texture {
         match self.size {
             HelpPopupSize::Small => &self.ui.get("help_small.png"),
@@ -226,10 +228,16 @@ impl View for HelpPopup {
         canvas.copy(self.get_background(), None, frame)?;
 
         match &self.state {
-            HelpPopupState::Modal { .. } => {
-                let close_frame = self.get_help_popup_close_frame(canvas)?;
+            HelpPopupState::Modal { topic_history, .. } => {
+                let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 24 - 18, frame.y() + 16, 24, 24);
                 canvas.copy(&self.ui.get("close.png"), None, close_frame)?;
                 self.note_hit_area(close_frame, HitTestResult::CloseButton);
+
+                if topic_history.len() > 1 {
+                    let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 40, frame.y() + 16, 12, 17);
+                    canvas.copy(&self.ui.get("back_button.png"), None, close_frame)?;
+                    self.note_hit_area(close_frame, HitTestResult::BackButton);
+                }
             }
             _ => {}
         }

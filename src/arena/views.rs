@@ -28,7 +28,9 @@ pub enum HitTestResult {
     Icon(LayoutChunkIcon),
     Text(String),
     Status(StatusKind),
+    BackButton,
     CloseButton,
+    // Consider adding a check in lookup_hittest if we need it to display help
 }
 
 pub trait View {
