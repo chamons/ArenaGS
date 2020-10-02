@@ -26,7 +26,6 @@ enum HelpPopupState {
 }
 
 pub struct HelpPopup {
-    enabled: bool,
     help: Option<HelpInfo>,
     state: HelpPopupState,
     text_renderer: Rc<TextRenderer>,
@@ -43,7 +42,6 @@ impl HelpPopup {
     pub fn init(render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
         let loader = IconLoader::init_ui()?;
         Ok(HelpPopup {
-            enabled: false,
             state: HelpPopupState::None,
             text_renderer,
             small_frame: loader.get(render_context, "help_small.png")?,
@@ -68,7 +66,7 @@ impl HelpPopup {
             HitTestResult::Status(status) => Some(HelpInfo::find_status(status)),
             HitTestResult::None | HitTestResult::Tile(_) => return,
         };
-        self.enabled = true;
+
         if let Some(mouse_position) = mouse_position {
             self.state = HelpPopupState::Tooltip { start_mouse: mouse_position }
         } else {
@@ -92,28 +90,26 @@ impl HelpPopup {
     }
 
     pub fn is_enabled(&self) -> bool {
-        self.enabled
+        match self.state {
+            HelpPopupState::Modal { .. } | HelpPopupState::Tooltip { .. } => true,
+            HelpPopupState::None => false,
+        }
     }
 
     pub fn disable(&mut self) {
-        self.enabled = false;
+        self.state = HelpPopupState::None;
     }
 
     const MOUSE_POPUP_DRIFT: u32 = 10;
-    pub fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
-        if !self.enabled {
-            return;
-        }
-
+    fn should_close_popup_from_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
             HelpPopupState::Tooltip { start_mouse } => {
                 if button.is_some() {
-                    self.enabled = false;
-                    return;
+                    return true;
                 }
 
                 if start_mouse.distance_to(Point::init(x as u32, y as u32)).unwrap_or(10) > HelpPopup::MOUSE_POPUP_DRIFT {
-                    self.enabled = false;
+                    return true;
                 }
             }
             HelpPopupState::Modal { close_button_frame } => {
@@ -123,13 +119,20 @@ impl HelpPopup {
                         let f = close_button_frame.borrow();
                         if let Some(close_button_frame) = *f {
                             if close_button_frame.contains_point(SDLPoint::new(x, y)) {
-                                self.enabled = false;
+                                return true;
                             }
                         }
                     }
                 }
             }
             HelpPopupState::None => {}
+        }
+        false
+    }
+
+    pub fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+        if self.should_close_popup_from_mouse(x, y, button) {
+            self.disable();
         }
     }
 
@@ -181,74 +184,79 @@ impl HelpPopup {
 const HELP_OFFSET: u32 = 25;
 impl View for HelpPopup {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
-        if self.enabled {
-            let frame = self.get_help_popup_frame(canvas)?;
-            canvas.copy(self.get_background(), None, frame)?;
-
-            match &self.state {
-                HelpPopupState::Modal { close_button_frame } => {
-                    // Cache this as we can't calculate this during mouse events
-                    let close_frame = {
-                        let mut f = close_button_frame.borrow_mut();
-                        if f.is_none() {
-                            *f = Some(self.get_help_popup_close_frame(canvas)?);
-                        }
-                        f.unwrap()
-                    };
-
-                    canvas.copy(&self.close_button, None, close_frame)?;
-                }
-                _ => {}
+        match &self.state {
+            HelpPopupState::None => {
+                return Ok(());
             }
+            _ => {}
+        }
 
-            let mut y = 0;
-            if let Some(help) = &self.help {
-                match &help.header {
-                    HelpHeader::Image(title, file) => {
-                        let (text_width, _) = self.text_renderer.render_text(
-                            &title,
-                            frame.x() + HELP_OFFSET as i32,
-                            frame.y() + 2 + HELP_OFFSET as i32,
-                            canvas,
-                            FontSize::Bold,
-                            FontColor::White,
-                        )?;
+        let frame = self.get_help_popup_frame(canvas)?;
+        canvas.copy(self.get_background(), None, frame)?;
 
-                        let image = self.icons.get(file);
-                        canvas.copy(
-                            image,
-                            None,
-                            SDLRect::new(text_width as i32 + 10 + frame.x() + HELP_OFFSET as i32, frame.y() + HELP_OFFSET as i32, 24, 24),
-                        )?;
-                        y += 40;
+        match &self.state {
+            HelpPopupState::Modal { close_button_frame } => {
+                // Cache this as we can't calculate this during mouse events
+                let close_frame = {
+                    let mut f = close_button_frame.borrow_mut();
+                    if f.is_none() {
+                        *f = Some(self.get_help_popup_close_frame(canvas)?);
                     }
-                    HelpHeader::Text(title) => {
-                        self.text_renderer.render_text(
-                            &title,
-                            frame.x() + HELP_OFFSET as i32,
-                            frame.y() + HELP_OFFSET as i32,
-                            canvas,
-                            FontSize::Bold,
-                            FontColor::White,
-                        )?;
-                        y += 40;
-                    }
-                    HelpHeader::None => {}
-                }
-                for help_chunk in &help.text {
-                    let layout = self.text_renderer.layout_text(
-                        &help_chunk,
-                        FontSize::Small,
-                        LayoutRequest::init(
-                            frame.x() as u32 + HELP_OFFSET,
-                            y + frame.y() as u32 + HELP_OFFSET,
-                            frame.width() - (HELP_OFFSET * 2) - 10,
-                            2,
-                        ),
+                    f.unwrap()
+                };
+
+                canvas.copy(&self.close_button, None, close_frame)?;
+            }
+            _ => {}
+        }
+
+        let mut y = 0;
+        if let Some(help) = &self.help {
+            match &help.header {
+                HelpHeader::Image(title, file) => {
+                    let (text_width, _) = self.text_renderer.render_text(
+                        &title,
+                        frame.x() + HELP_OFFSET as i32,
+                        frame.y() + 2 + HELP_OFFSET as i32,
+                        canvas,
+                        FontSize::Bold,
+                        FontColor::White,
                     )?;
-                    render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbol_cache, FontColor::White, 0)?;
-                    y += layout.line_count * 20;
+
+                    let image = self.icons.get(file);
+                    canvas.copy(
+                        image,
+                        None,
+                        SDLRect::new(text_width as i32 + 10 + frame.x() + HELP_OFFSET as i32, frame.y() + HELP_OFFSET as i32, 24, 24),
+                    )?;
+                    y += 40;
                 }
+                HelpHeader::Text(title) => {
+                    self.text_renderer.render_text(
+                        &title,
+                        frame.x() + HELP_OFFSET as i32,
+                        frame.y() + HELP_OFFSET as i32,
+                        canvas,
+                        FontSize::Bold,
+                        FontColor::White,
+                    )?;
+                    y += 40;
+                }
+                HelpHeader::None => {}
+            }
+            for help_chunk in &help.text {
+                let layout = self.text_renderer.layout_text(
+                    &help_chunk,
+                    FontSize::Small,
+                    LayoutRequest::init(
+                        frame.x() as u32 + HELP_OFFSET,
+                        y + frame.y() as u32 + HELP_OFFSET,
+                        frame.width() - (HELP_OFFSET * 2) - 10,
+                        2,
+                    ),
+                )?;
+                render_text_layout(&layout, canvas, &mut None, &self.text_renderer, &self.symbol_cache, FontColor::White, 0)?;
+                y += layout.line_count * 20;
             }
         }
 
