@@ -19,16 +19,21 @@ enum HelpPopupSize {
     Large,
 }
 
+enum HelpPopupState {
+    None,
+    Tooltip { start_mouse: Point },
+    Modal { close_button_frame: RefCell<Option<SDLRect>> },
+}
+
 pub struct HelpPopup {
     enabled: bool,
     help: Option<HelpInfo>,
-    start_mouse: Option<Point>,
+    state: HelpPopupState,
     text_renderer: Rc<TextRenderer>,
     small_frame: Texture,
     medium_frame: Texture,
     large_frame: Texture,
     close_button: Texture,
-    close_button_frame: RefCell<Option<SDLRect>>,
     size: HelpPopupSize,
     symbol_cache: IconCache,
     icons: IconCache,
@@ -39,13 +44,12 @@ impl HelpPopup {
         let loader = IconLoader::init_ui()?;
         Ok(HelpPopup {
             enabled: false,
-            start_mouse: None,
+            state: HelpPopupState::None,
             text_renderer,
             small_frame: loader.get(render_context, "help_small.png")?,
             medium_frame: loader.get(render_context, "help_medium.png")?,
             large_frame: loader.get(render_context, "help_large.png")?,
             close_button: loader.get(render_context, "close.png")?,
-            close_button_frame: RefCell::new(None),
             symbol_cache: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
             icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
             size: HelpPopupSize::Unknown,
@@ -65,7 +69,13 @@ impl HelpPopup {
             HitTestResult::None | HitTestResult::Tile(_) => return,
         };
         self.enabled = true;
-        self.start_mouse = mouse_position;
+        if let Some(mouse_position) = mouse_position {
+            self.state = HelpPopupState::Tooltip { start_mouse: mouse_position }
+        } else {
+            self.state = HelpPopupState::Modal {
+                close_button_frame: RefCell::new(None),
+            }
+        }
         self.size = if let Some(help) = &help {
             match help.text.len() {
                 1..=2 => HelpPopupSize::Small,
@@ -95,28 +105,31 @@ impl HelpPopup {
             return;
         }
 
-        // If we have a mouse relative position, movement and clicking close
-        if let Some(start_mouse) = self.start_mouse {
-            if button.is_some() {
-                self.enabled = false;
-                return;
-            }
+        match &self.state {
+            HelpPopupState::Tooltip { start_mouse } => {
+                if button.is_some() {
+                    self.enabled = false;
+                    return;
+                }
 
-            if start_mouse.distance_to(Point::init(x as u32, y as u32)).unwrap_or(10) > HelpPopup::MOUSE_POPUP_DRIFT {
-                self.enabled = false;
+                if start_mouse.distance_to(Point::init(x as u32, y as u32)).unwrap_or(10) > HelpPopup::MOUSE_POPUP_DRIFT {
+                    self.enabled = false;
+                }
             }
-        } else {
-            // Else look for the close button
-            if let Some(button) = button {
-                if button == MouseButton::Left {
-                    let f = self.close_button_frame.borrow();
-                    if let Some(close_button_frame) = *f {
-                        if close_button_frame.contains_point(SDLPoint::new(x, y)) {
-                            self.enabled = false;
+            HelpPopupState::Modal { close_button_frame } => {
+                // Look for the close button
+                if let Some(button) = button {
+                    if button == MouseButton::Left {
+                        let f = close_button_frame.borrow();
+                        if let Some(close_button_frame) = *f {
+                            if close_button_frame.contains_point(SDLPoint::new(x, y)) {
+                                self.enabled = false;
+                            }
                         }
                     }
                 }
             }
+            HelpPopupState::None => {}
         }
     }
 
@@ -129,14 +142,19 @@ impl HelpPopup {
         }
     }
 
+    fn get_popup_origin(&self) -> (i32, i32) {
+        match self.state {
+            HelpPopupState::Tooltip { start_mouse } => (start_mouse.x as i32, start_mouse.y as i32),
+            HelpPopupState::Modal { .. } | HelpPopupState::None => (100, 100),
+        }
+    }
+
     fn get_help_popup_frame(&self, canvas: &RenderCanvas) -> BoxResult<SDLRect> {
         let (output_width, _) = canvas.output_size()?;
         let (width, height) = self.get_frame_size();
-        let (mouse_x, mouse_y) = if let Some(start_mouse) = self.start_mouse {
-            (start_mouse.x as i32, start_mouse.y as i32)
-        } else {
-            (100, 100)
-        };
+
+        let (mouse_x, mouse_y) = self.get_popup_origin();
+
         let on_right = width + mouse_x < output_width as i32;
         let on_top = mouse_y - height > 0;
         let popup_x = if on_right { mouse_x } else { mouse_x - width };
@@ -167,17 +185,20 @@ impl View for HelpPopup {
             let frame = self.get_help_popup_frame(canvas)?;
             canvas.copy(self.get_background(), None, frame)?;
 
-            if self.start_mouse.is_none() {
-                // Cache this as we can't calculate this during mouse events
-                let close_frame = {
-                    let mut f = self.close_button_frame.borrow_mut();
-                    if f.is_none() {
-                        *f = Some(self.get_help_popup_close_frame(canvas)?);
-                    }
-                    f.unwrap()
-                };
+            match &self.state {
+                HelpPopupState::Modal { close_button_frame } => {
+                    // Cache this as we can't calculate this during mouse events
+                    let close_frame = {
+                        let mut f = close_button_frame.borrow_mut();
+                        if f.is_none() {
+                            *f = Some(self.get_help_popup_close_frame(canvas)?);
+                        }
+                        f.unwrap()
+                    };
 
-                canvas.copy(&self.close_button, None, close_frame)?;
+                    canvas.copy(&self.close_button, None, close_frame)?;
+                }
+                _ => {}
             }
 
             let mut y = 0;
