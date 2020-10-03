@@ -71,6 +71,9 @@ impl WordBuffer {
     }
 
     pub fn add(&mut self, text: &str, mut width: u32, space_size: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: WordBuffer::add");
+
         if self.current_line.len() > 0 {
             self.current_line.push_str(" ");
             width += space_size;
@@ -80,6 +83,9 @@ impl WordBuffer {
     }
 
     pub fn flush(&mut self) -> (String, u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: WordBuffer::flush");
+
         let value = mem::replace(&mut self.current_line, String::new());
         let width = self.width;
         self.width = 0;
@@ -114,15 +120,28 @@ impl LayoutRect {
         self.largest_line_height = cmp::max(self.largest_line_height, height);
     }
 
+    // Spent space includes both any non-flushed text (current_line_width) and
+    // other content (self.current_x_offset - self.corner.x)
+    pub fn spent_width(&self) -> u32 {
+        self.current_line_width + self.current_x_offset - self.corner.x
+    }
+
     // Updates for flushed content and returns cursor before move
     pub fn flush(&mut self, width: u32) -> Point {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: LayoutRect::flush");
+
         let point = Point::init(self.current_x_offset, self.current_y_offset);
         self.current_x_offset += width;
+        self.current_line_width = 0;
         point
     }
 
     // We've completed a line, reset for next
     pub fn new_line(&mut self, space_between_lines: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: LayoutRect::new_line");
+
         self.current_x_offset = self.corner.x;
         self.current_y_offset += self.largest_line_height + space_between_lines;
         self.largest_line_height = 0;
@@ -130,7 +149,7 @@ impl LayoutRect {
     }
 
     pub fn at_start_of_line(&self) -> bool {
-        self.current_line_width == 0
+        self.current_x_offset == self.corner.x
     }
 }
 
@@ -162,7 +181,7 @@ impl Layout {
     fn should_wrap(&self, width: u32) -> bool {
         // If it's longer than the remaining space AND we've moved a bit over
         // A word longer than an entire line should not wrap an empty space
-        self.rect.current_line_width + width > self.request.width_to_render_in && self.rect.current_line_width > 0
+        self.rect.spent_width() + width > self.request.width_to_render_in && self.rect.current_line_width > 0
     }
 
     fn longer_single_line(&self, width: u32) -> bool {
@@ -170,6 +189,9 @@ impl Layout {
     }
 
     fn flush_any_text(&mut self) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_any_text");
+
         if self.word_buffer.has_content() {
             let (text, text_width) = self.word_buffer.flush();
             let position = self.rect.flush(text_width);
@@ -183,6 +205,9 @@ impl Layout {
     }
 
     fn flush_small_text(&mut self, text: &str, text_width: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_small_text");
+
         let position = self.rect.flush(text_width + 4);
 
         self.result.chunks.push(LayoutChunk {
@@ -193,6 +218,9 @@ impl Layout {
     }
 
     fn flush_icon(&mut self, name: &str) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_icon");
+
         let icon = match name {
             "Sword" => LayoutChunkIcon::Sword,
             _ => panic!("Unknown icon kind {}", name),
@@ -207,6 +235,9 @@ impl Layout {
     }
 
     fn flush_link(&mut self, text: &str, text_width: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_link");
+
         // Add space sized space after link
         let mid_line_link = !self.rect.at_start_of_line();
         let number_spaces_added = if mid_line_link { 2 } else { 1 };
@@ -267,7 +298,6 @@ impl Layout {
             }
         }
 
-        // Apply leftovers to the last line
         self.flush_any_text();
         self.result.line_count += 1;
 
@@ -802,5 +832,33 @@ mod tests {
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(38, 10), result.chunks[1].position);
         assert_points_equal(Point::init(158, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn super_long_text() {
+        if !has_test_font() {
+            return;
+        }
+
+        // The last bit should be wrapping to line 4 but isn't
+        // Somehow we are resetting the width taken but not the x
+        let result = layout_text(
+            "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]] Let's say it was 10 total.",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 240, 10),
+        )
+        .unwrap();
+        assert_eq!(5, result.chunks.len());
+        assert_eq!("- First the 6 strength is rolled into an", get_text(&result.chunks[0].value));
+        assert_eq!("attack damage as described in", get_text(&result.chunks[1].value));
+        assert_eq!("Strength in Depth", get_link(&result.chunks[2].value));
+        assert_eq!("Let's say it was 10", get_text(&result.chunks[3].value));
+        assert_eq!("total.", get_text(&result.chunks[4].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(10, 64), result.chunks[2].position);
+        assert_points_equal(Point::init(125, 64), result.chunks[3].position);
+        assert_points_equal(Point::init(10, 91), result.chunks[4].position);
     }
 }

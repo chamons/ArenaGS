@@ -10,7 +10,8 @@ self_play = []
 profile_self_play = ["self_play"]
 image_tester = []
 debug_text_alignmnet = []
-default = []
+debug_text_layout = []
+default = ["debug_text_alignmnet"]
 
 [dependencies]
 specs = {  version = "0.16.1", features = ["serde"] }
