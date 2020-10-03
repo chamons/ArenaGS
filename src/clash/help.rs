@@ -267,9 +267,77 @@ impl HelpInfo {
 
         match word {
             "Top Level Help" => return HelpInfo::text_header("Help", top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>()),
-            "Getting Started" => return HelpInfo::text_header("Getting Started", vec![]),
+            "Getting Started" => {
+                return HelpInfo::text_header(
+                    "Getting Started",
+                    vec_of_strings![
+                        "Welcome to Arena: Gunpower and Sorcery!",
+                        "Survive arena combat with all sorts of man, beast, and the arcane.",
+                        "- Arrows move your character one square North/South/East/West.",
+                        "- 1-5 or clicking on the skillbar will activate a skill.",
+                        "- Press F1 at any time to bring up the global help.",
+                        "- Middle clicking anymost anywhere, specially on underlined text will bring up a context help.",
+                        "- Middle click again to promote the tooltip into a full help window.",
+                        "In the future, there will hopefully be a full featured tutorial.",
+                        "Good Luck!"
+                    ],
+                )
+            }
 
-            "Damage & Defenses" => return HelpInfo::text_header("Damage & Defenses", vec![]),
+            "Damage & Defenses" => {
+                return HelpInfo::text_header(
+                    "Damage & Defenses",
+                    vec_of_strings![
+                        "Combat in ArenaGS is based upon the interaction of skills Strength and character's Defenses.",
+                        "Strength: Each ability as a base strength rating, which is primarily modified by status effects",
+                        "When a skill is resolved, the strength is rolled into a single value which impacts the damage/healing done.",
+                        "Each point of strength converts to roughly 1.5 points of damage or healing. See [[Strength in Depth]] for details.",
+                        "That damage is then applied to the character's defenses.",
+                        "Armor and Dodge values are applied as strength and subtracted from the total damage.",
+                        "The remaining damage is applied first to any absorb barrier, and then to the health total.",
+                        "See [[Defenses in Depth]] for details."
+                    ],
+                )
+            }
+            "Strength in Depth" => {
+                return HelpInfo::text_header(
+                    "Strength in Depth",
+                    vec_of_strings![
+                        "Each point of strength is added to a pool of two sided dice (d2's).",
+                        "Half of the pool is immediately set to the max value of 2, and the rest is rolled.",
+                        "This gives a random result, but with a small range.",
+                        "Example: 8 Strength",
+                        "- Resolved they becomes 8 two sided dice (8d2)",
+                        "- 4 of them are set to their 2 side and set aside (8 so far)",
+                        "- 4 of them are individually rolled, each can roll value 1 or 2",
+                        "The total result will be in the range of 12 to 16 (8 + 4 to 8 + 8)"
+                    ],
+                )
+            }
+            "Defenses in Depth" => {
+                return HelpInfo::text_header(
+                    "Defenses in Depth",
+                    vec_of_strings![
+                        "Defenses in ArenaGS come in four forms (Dodge, Armor, Absord, and Health",
+                        "Dodge and Armor are strength values rolled to a value which reduces the raw damage taken.",
+                        "Absorb and Health are pools of health that are depleted by damage, Absord being a shield that goes first.",
+                        "Once health is reduced to zero or below, the character dies.",
+                        "Shown in [[Defense Example]]."
+                    ],
+                );
+            }
+            "Defense Example" => {
+                return HelpInfo::text_header("Defense Example", vec_of_strings![
+                    "6 Strength attack against 1 Armor/1 Dodge character with 5 Absorb and 20 Health",
+                    "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]]. Let's say it was 10 total.",
+                    "- Dodge applies first, apply as many dodge dice as available (up to the total strength). Roll 1d2 (1) and subtract from 10. (9 current total).",
+                    "- Dodge pool is now 0/1, and won't reduce damage until refilled (2 points per square traveled).",
+                    "- Next armor applies same way, but it does not deplete so applies to every attack. Rolls a 2. (Total now 7)",
+                    "- Damage is now applied to Absorb/Health. Absorb takes 5 and is reduced to 0. Health is reduced from 20 to 18"
+                ]);
+            }
+
+            "Gunslinger" => return HelpInfo::text_header("Damage & Defenses", vec![]),
             "Resources" => return HelpInfo::text_header("Resources", vec![]),
             "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
             "Temperature" => return HelpInfo::text_header("Temperature", vec![]),
@@ -407,7 +475,15 @@ impl HelpInfo {
 }
 
 fn top_level_topics() -> Vec<&'static str> {
-    vec!["Getting Started", "Damage & Defenses", "Resources", "Status Effects", "Temperature", "Time"]
+    vec![
+        "Getting Started",
+        "Damage & Defenses",
+        "Gunslinger",
+        "Resources",
+        "Status Effects",
+        "Temperature",
+        "Time",
+    ]
 }
 
 pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, use_links: bool, mut on_text: impl FnMut(&str) + 'a) {

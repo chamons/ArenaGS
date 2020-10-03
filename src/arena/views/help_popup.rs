@@ -347,7 +347,7 @@ impl View for HelpPopup {
                     LayoutRequest::init(
                         frame.x() as u32 + HELP_OFFSET,
                         y + frame.y() as u32 + HELP_OFFSET,
-                        frame.width() - (HELP_OFFSET * 2) - 10,
+                        frame.width() - (HELP_OFFSET * 2) - 20,
                         2,
                     ),
                 )?;
@@ -362,7 +362,7 @@ impl View for HelpPopup {
                     underline_links,
                     |rect, result| self.note_hit_area(rect, result),
                 )?;
-                y += layout.line_count * 24;
+                y += layout.line_count * 22;
             }
         }
 
