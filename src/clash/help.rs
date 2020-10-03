@@ -370,7 +370,7 @@ impl HelpInfo {
     pub fn find_entity(ecs: &World, entity: Entity) -> HelpInfo {
         let mut details = vec![];
 
-        summarize_character(ecs, entity, true, |t| details.push(t.to_string()));
+        summarize_character(ecs, entity, true, false, |t| details.push(t.to_string()));
 
         HelpInfo::text_header(ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()).as_str(), details)
     }
@@ -401,36 +401,51 @@ fn top_level_topics() -> Vec<&'static str> {
     vec!["Getting Started", "Defenses", "Status Effects", "Strength", "Temperature"]
 }
 
-pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, mut on_text: impl FnMut(&str) + 'a) {
+pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, use_links: bool, mut on_text: impl FnMut(&str) + 'a) {
     let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
     let char_info = char_infos.grab(entity);
     let defenses = &char_info.character.defenses;
+
+    let linkify = |s: &str| -> String {
+        if use_links {
+            format!("[[{}]]", s)
+        } else {
+            s.to_string()
+        }
+    };
+
     let health_text = {
         if defenses.absorb != 0 {
-            format!("Health: (+{:.2}) {:.2}/{:.2}", defenses.absorb, defenses.health, defenses.max_health)
+            format!(
+                "{}: (+{:.2}) {:.2}/{:.2}",
+                linkify("Health"),
+                defenses.absorb,
+                defenses.health,
+                defenses.max_health
+            )
         } else {
-            format!("Health: {:.2}/{:.2}", defenses.health, defenses.max_health)
+            format!("{}: {:.2}/{:.2}", linkify("Health"), defenses.health, defenses.max_health)
         }
     };
     on_text(&health_text);
 
     if defenses.max_dodge != 0 {
-        on_text(&format!("Dodge : {:.2}/{:.2}", defenses.dodge, defenses.max_dodge));
+        on_text(&format!("{}: {:.2}/{:.2}", linkify("Dodge"), defenses.dodge, defenses.max_dodge));
     }
     if defenses.armor != 0 {
-        on_text(&format!("Armor: {:.2}", defenses.armor));
+        on_text(&format!("{}: {:.2}", linkify("Armor"), defenses.armor));
     }
 
     let resources = &ecs.read_storage::<SkillResourceComponent>();
     if let Some(resource) = resources.get(entity) {
-        on_text(&format!("Exhaustion: {:.2}", resource.exhaustion));
+        on_text(&format!("{}: {:.2}", linkify("Exhaustion"), resource.exhaustion));
 
-        on_text(&format!("Focus: {:.2}", resource.focus).as_str());
+        on_text(&format!("{}: {:.2}", linkify("Focus"), resource.focus).as_str());
 
         for kind in AmmoKind::into_enum_iter() {
             match resource.max.get(&kind) {
                 Some(value) => {
-                    on_text(&format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value));
+                    on_text(&format!("{}: {:.2}/{:.2}", linkify(&format!("{:?}", kind)), resource.ammo[&kind], value));
                 }
                 None => {}
             }
@@ -439,7 +454,7 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
 
     let temperature = char_info.character.temperature.current_temperature();
     if temperature != 0 {
-        on_text(&format!("Temperature: {:.2}", temperature));
+        on_text(&format!("{}: {:.2}", linkify("Temperature"), temperature));
     }
 
     if show_status_effect {
@@ -447,7 +462,7 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         if let Some(status) = statuses.get(entity) {
             let all = status.status.get_all_display_status();
             if !all.is_empty() {
-                on_text(&format!("Status: {}", all.join(" ")));
+                on_text(&format!("Status: {}", all.iter().map(|a| linkify(a)).collect::<Vec<String>>().join(" ")));
             }
         }
     }

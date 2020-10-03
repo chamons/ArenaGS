@@ -356,7 +356,7 @@ impl View for HelpPopup {
                     &layout,
                     canvas,
                     &self.text_renderer,
-                    &self.symbols,
+                    Some(&self.symbols),
                     FontColor::White,
                     0,
                     underline_links,

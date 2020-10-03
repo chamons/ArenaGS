@@ -86,7 +86,7 @@ impl LogView {
                     &layout,
                     canvas,
                     &self.text,
-                    &self.icons,
+                    Some(&self.icons),
                     FontColor::Black,
                     line_y_offset,
                     true,

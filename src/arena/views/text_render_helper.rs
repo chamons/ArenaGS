@@ -8,7 +8,7 @@ pub fn render_text_layout<'a>(
     layout: &'a LayoutResult,
     canvas: &mut RenderCanvas,
     text: &TextRenderer,
-    icons: &IconCache,
+    icons: Option<&IconCache>,
     color: FontColor,
     y_offset: i32,
     underline_links: bool,
@@ -47,8 +47,9 @@ pub fn render_text_layout<'a>(
                 );
             }
             LayoutChunkValue::Icon(icon) => {
+                let icon_loader = icons.expect("IconLoader not passed in context icons are found?");
                 let icon_image = match icon {
-                    LayoutChunkIcon::Sword => icons.get("plain-dagger.png"),
+                    LayoutChunkIcon::Sword => icon_loader.get("plain-dagger.png"),
                 };
                 canvas.copy(
                     icon_image,
