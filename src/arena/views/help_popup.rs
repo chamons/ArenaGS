@@ -117,6 +117,13 @@ impl HelpPopup {
         }
     }
 
+    pub fn is_modal(&self) -> bool {
+        match self.state {
+            HelpPopupState::Modal { .. } => true,
+            HelpPopupState::Tooltip { .. } | HelpPopupState::None => false,
+        }
+    }
+
     pub fn disable(&mut self) {
         self.state = HelpPopupState::None;
     }
@@ -344,9 +351,17 @@ impl View for HelpPopup {
                         2,
                     ),
                 )?;
-                render_text_layout(&layout, canvas, &self.text_renderer, &self.symbols, FontColor::White, 0, |rect, result| {
-                    self.note_hit_area(rect, result)
-                })?;
+                let underline_links = self.is_modal();
+                render_text_layout(
+                    &layout,
+                    canvas,
+                    &self.text_renderer,
+                    &self.symbols,
+                    FontColor::White,
+                    0,
+                    underline_links,
+                    |rect, result| self.note_hit_area(rect, result),
+                )?;
                 y += layout.line_count * 20;
             }
         }

@@ -11,6 +11,7 @@ pub fn render_text_layout<'a>(
     icons: &IconCache,
     color: FontColor,
     y_offset: i32,
+    underline_links: bool,
     mut on_hittest_text: impl FnMut(SDLRect, HitTestResult) + 'a,
 ) -> BoxResult<()> {
     for chunk in &layout.chunks {
@@ -37,7 +38,7 @@ pub fn render_text_layout<'a>(
                     chunk.position.x as i32,
                     y_offset + chunk.position.y as i32,
                     canvas,
-                    FontSize::SmallUnderline,
+                    if underline_links { FontSize::SmallUnderline } else { FontSize::Small },
                     color,
                 )?;
                 on_hittest_text(

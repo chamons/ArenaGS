@@ -91,7 +91,7 @@ impl HelpInfo {
         let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
         if raises || lowers {
             details.push(format!(
-                "{} target's temperature{}",
+                "{} target's [[temperature]]{}",
                 if raises { "Raises" } else { "Lowers" },
                 if opt.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
                     " by a large amount."
@@ -104,25 +104,25 @@ impl HelpInfo {
             details.push("Knocks target back.".to_string());
         }
         if opt.contains(DamageOptions::ADD_CHARGE_STATUS) {
-            details.push("Applies static charge.".to_string());
+            details.push("Applies [[static charge]].".to_string());
         }
         if opt.contains(DamageOptions::CONSUMES_CHARGE_DMG) {
             details.push(format!(
-                "Consumes static charge to do {} {{Sword}} additional piercing damage.",
+                "Consumes [[static charge]] to do {} {{Sword}} additional [[piercing]] damage.",
                 STATIC_CHARGE_DAMAGE
             ));
         }
         if opt.contains(DamageOptions::CONSUMES_CHARGE_KNOCKBACK) {
-            details.push("Consumes static charge to knockback target.".to_string());
+            details.push("Consumes [[static charge]] to knockback target.".to_string());
         }
         if opt.contains(DamageOptions::PIERCE_DEFENSES) {
-            details.push("Pierce target's Armor and Dodge.".to_string());
+            details.push("[[Pierce]] target's [[Armor]] and [[Dodge]].".to_string());
         }
         if opt.contains(DamageOptions::TRIPLE_SHOT) {
             details.push("Applies three instances of damage".to_string());
         }
         if opt.contains(DamageOptions::AIMED_SHOT) {
-            details.push("Grants 'Aimed Shot' effect.".to_string());
+            details.push("Grants '[[Aimed]]' effect.".to_string());
         }
     }
 
@@ -149,12 +149,12 @@ impl HelpInfo {
             SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
             SkillEffect::Field(effect, _) => match effect {
                 FieldEffect::Damage(damage, _) => {
-                    details.push("Effect: Damage after 200 ticks".to_string());
+                    details.push("Effect: Damage after 200 [[ticks]]".to_string());
                     HelpInfo::report_damage(details, &damage);
                 }
-                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a {} after 100 ticks", HelpInfo::get_spawn_name(*kind))),
+                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a {} after 100 [[ticks]]", HelpInfo::get_spawn_name(*kind))),
                 FieldEffect::SustainedDamage(damage, duration) => {
-                    details.push(format!("Effect: Damage every 100 ticks with {} duration", duration));
+                    details.push(format!("Effect: Damage every 100 [[ticks]] with {} duration", duration));
                     HelpInfo::report_damage(details, &damage);
                 }
             },
@@ -165,15 +165,15 @@ impl HelpInfo {
                 ));
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::ReloadAndRotateAmmo() => details.push("Effect: Reloads Bullets and rotates to next ammo type.".to_string()),
+            SkillEffect::ReloadAndRotateAmmo() => details.push("Effect: Reload Bullets and rotates to next ammo type.".to_string()),
             SkillEffect::Buff(kind, duration) => details.push(format!(
-                "Effect: Applies {} effect for {} ticks.",
+                "Effect: Applies {} effect for {} [[ticks]].",
                 HelpInfo::get_status_effect_name(*kind),
                 duration
             )),
             SkillEffect::BuffThen(kind, duration, other_effect) => {
                 details.push(format!(
-                    "Effect: Applies {} effect for {} ticks.",
+                    "Effect: Applies {} effect for {} [[ticks]].",
                     HelpInfo::get_status_effect_name(*kind),
                     duration
                 ));
@@ -184,7 +184,7 @@ impl HelpInfo {
                 HelpInfo::report_skill_effect(details, other_effect);
                 details.push("|tab|Then".to_string());
                 details.push(format!(
-                    "Effect: Applies {} effect for {} ticks.",
+                    "Effect: Applies {} effect for {} [[ticks]].",
                     HelpInfo::get_status_effect_name(*kind),
                     duration
                 ));
@@ -229,11 +229,11 @@ impl HelpInfo {
         details.push("".to_string());
 
         if let Some(focus) = skill.focus_use {
-            details.push(format!("Costs {} Focus", focus))
+            details.push(format!("Costs {} [[Focus]]", focus))
         }
 
         if let Some(exhaustion) = skill.exhaustion {
-            details.push(format!("Costs {} Exhaustion", exhaustion))
+            details.push(format!("Costs {} [[Exhaustion]]", exhaustion))
         }
 
         if let Some(ammo) = &skill.ammo_info {
@@ -259,6 +259,12 @@ impl HelpInfo {
             "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
             "Strength" => return HelpInfo::text_header("Status Effects", vec![]),
             "Temperature" => return HelpInfo::text_header("Temperature", vec![]),
+            "Static Charge" => return HelpInfo::text_header("Static Charge", vec![]),
+            "Piercing" => return HelpInfo::text_header("Piercing", vec![]),
+            "Ticks" => return HelpInfo::text_header("Ticks", vec![]),
+            "Focus" => return HelpInfo::text_header("Focus", vec![]),
+            "Exhaustion" => return HelpInfo::text_header("Exhaustion", vec![]),
+            "Ignite" => return HelpInfo::text_header("Ignite", vec![]),
             // A 'fake' spell for gaining charge
             "Invoke the Elements" => {
                 return HelpInfo::init(
@@ -283,7 +289,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
                     vec_of_strings![format!(
-                        "Burning: Take {} piercing damage every turn while temperature is above {}.",
+                        "Burning: Take {} [[piercing]] damage every turn while [[temperature]] is above {}.",
                         TEMPERATURE_DAMAGE_PER_TICK, TEMPERATURE_BURN_POINT
                     )],
                 )
@@ -292,7 +298,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
                     vec_of_strings![format!(
-                        "Frozen: Movements take 150% longer while temperature is below {}.",
+                        "Frozen: Movements take 150% longer while [[temperature]] is below {}.",
                         TEMPERATURE_FREEZE_POINT
                     )],
                 )
@@ -306,7 +312,7 @@ impl HelpInfo {
             StatusKind::Ignite => {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["Enable average range gunslinger abilities which can ignite foes."],
+                    vec_of_strings!["Enable average range gunslinger abilities which can [[ignite]] foes."],
                 )
             }
             StatusKind::Cyclone => {
@@ -325,7 +331,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
                     vec![format!(
-                        "Focued on nailing the next shot. Next ranged attack's strength incrased by {}.",
+                        "Focued on nailing the next shot. Next ranged attack's [[strength]] incrased by {}.",
                         AIMED_SHOT_ADDITIONAL_STRENGTH
                     )],
                 )
@@ -334,7 +340,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
                     vec![format!(
-                        "Well prepared for the next blow. {} Additional Armor through next attack.",
+                        "Well prepared for the next blow. {} Additional [[armor]] through next attack.",
                         AIMED_SHOT_ADDITIONAL_STRENGTH
                     )],
                 )
@@ -348,7 +354,7 @@ impl HelpInfo {
             StatusKind::Regen => {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
-                    vec![format!("Rapidly healing injuries. A {} strength heal every turn.", HEALTH_REGEN_PER_TICK)],
+                    vec![format!("Rapidly healing injuries. A {} {{Sword}} heal every turn.", HEALTH_REGEN_PER_TICK)],
                 )
             }
             StatusKind::RegenTick => panic!("{:?} should not be visible to help", status),
