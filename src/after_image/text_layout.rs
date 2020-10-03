@@ -70,6 +70,10 @@ impl WordBuffer {
         self.width > 0
     }
 
+    pub fn get_width(&self) -> u32 {
+        self.width
+    }
+
     pub fn add(&mut self, text: &str, mut width: u32, space_size: u32) {
         #[cfg(feature = "debug_text_layout")]
         println!("debug_text_layout: WordBuffer::add");
@@ -96,7 +100,7 @@ impl WordBuffer {
 struct LayoutRect {
     corner: Point,
     largest_line_height: u32,
-    current_line_width: u32,
+
     // Current x position based upon flushed content
     current_x_offset: u32,
     // Current y position based upon flushed content
@@ -107,7 +111,6 @@ impl LayoutRect {
     pub fn init(corner: &Point) -> LayoutRect {
         LayoutRect {
             corner: *corner,
-            current_line_width: 0,
             largest_line_height: 0,
             current_x_offset: corner.x,
             current_y_offset: corner.y,
@@ -115,15 +118,14 @@ impl LayoutRect {
     }
 
     // We 'spend' line width but do not update x,y cursor
-    pub fn add_text(&mut self, height: u32, width: u32) {
-        self.current_line_width += width;
+    pub fn add_content(&mut self, height: u32) {
         self.largest_line_height = cmp::max(self.largest_line_height, height);
     }
 
     // Spent space includes both any non-flushed text (current_line_width) and
     // other content (self.current_x_offset - self.corner.x)
-    pub fn spent_width(&self) -> u32 {
-        self.current_line_width + self.current_x_offset - self.corner.x
+    pub fn spent_width(&self, buffer: &WordBuffer) -> u32 {
+        buffer.get_width() + self.current_x_offset - self.corner.x
     }
 
     // Updates for flushed content and returns cursor before move
@@ -133,7 +135,6 @@ impl LayoutRect {
 
         let point = Point::init(self.current_x_offset, self.current_y_offset);
         self.current_x_offset += width;
-        self.current_line_width = 0;
         point
     }
 
@@ -145,11 +146,10 @@ impl LayoutRect {
         self.current_x_offset = self.corner.x;
         self.current_y_offset += self.largest_line_height + space_between_lines;
         self.largest_line_height = 0;
-        self.current_line_width = 0;
     }
 
-    pub fn at_start_of_line(&self) -> bool {
-        self.current_x_offset == self.corner.x
+    pub fn at_start_of_line(&self, buffer: &WordBuffer) -> bool {
+        self.current_x_offset == self.corner.x && buffer.get_width() == 0
     }
 }
 
@@ -181,7 +181,7 @@ impl Layout {
     fn should_wrap(&self, width: u32) -> bool {
         // If it's longer than the remaining space AND we've moved a bit over
         // A word longer than an entire line should not wrap an empty space
-        self.rect.spent_width() + width > self.request.width_to_render_in && self.rect.current_line_width > 0
+        self.rect.spent_width(&self.word_buffer) + width > self.request.width_to_render_in && !self.rect.at_start_of_line(&self.word_buffer)
     }
 
     fn longer_single_line(&self, width: u32) -> bool {
@@ -239,7 +239,7 @@ impl Layout {
         println!("debug_text_layout: flush_link");
 
         // Add space sized space after link
-        let mid_line_link = !self.rect.at_start_of_line();
+        let mid_line_link = !self.rect.at_start_of_line(&self.word_buffer);
         let number_spaces_added = if mid_line_link { 2 } else { 1 };
         let mut position = self.rect.flush(text_width + self.space_size * number_spaces_added);
 
@@ -381,15 +381,12 @@ impl Layout {
         } else if let Some(link_text) = &link_text {
             self.flush_link(&link_text, width)
         } else if longer_single_line {
-            // Spend the correct width
-            self.rect.add_text(height, width);
-
-            // Then flush right away (so nothing else is marked small)
             self.flush_small_text(word, width);
         } else {
-            self.rect.add_text(height, width);
             self.word_buffer.add(word, width, self.space_size);
         }
+
+        self.rect.add_content(height);
 
         Ok(())
     }
@@ -618,8 +615,8 @@ mod tests {
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 31), result.chunks[1].position);
         assert_points_equal(Point::init(27, 31), result.chunks[2].position);
-        assert_points_equal(Point::init(79, 31), result.chunks[3].position);
-        assert_points_equal(Point::init(10, 52), result.chunks[4].position);
+        assert_points_equal(Point::init(10, 58), result.chunks[3].position);
+        assert_points_equal(Point::init(27, 58), result.chunks[4].position);
     }
 
     #[test]
@@ -655,10 +652,10 @@ mod tests {
         assert_eq!("Hello", get_text(&result.chunks[0].value));
         assert_eq!("World", get_link(&result.chunks[1].value));
         assert_eq!("Bye", get_text(&result.chunks[2].value));
-        assert_eq!(1, result.line_count);
+        assert_eq!(2, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(45, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(87, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[2].position);
     }
 
     #[test]
