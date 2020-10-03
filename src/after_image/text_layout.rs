@@ -128,6 +128,10 @@ impl LayoutRect {
         self.largest_line_height = 0;
         self.current_line_width = 0;
     }
+
+    pub fn at_start_of_line(&self) -> bool {
+        self.current_line_width == 0
+    }
 }
 
 struct Layout {
@@ -204,10 +208,12 @@ impl Layout {
 
     fn flush_link(&mut self, text: &str, text_width: u32) {
         // Add space sized space after link
-        let mut position = self.rect.flush(text_width + self.space_size);
+        let mid_line_link = !self.rect.at_start_of_line();
+        let number_spaces_added = if mid_line_link { 2 } else { 1 };
+        let mut position = self.rect.flush(text_width + self.space_size * number_spaces_added);
 
-        // If we're not at the beginning of the line, also add to front
-        if position.x != self.rect.corner.x {
+        if mid_line_link {
+            // Add a space by adjust start over one space
             position.x += self.space_size;
         }
 
@@ -622,7 +628,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(45, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(84, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(87, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -644,7 +650,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(23, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(62, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(65, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -743,13 +749,13 @@ mod tests {
         )
         .unwrap();
         assert_eq!(3, result.chunks.len());
-        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        // 4 spaces not 5 due to https://github.com/chamons/ArenaGS/issues/222
         assert_eq!("    ", get_text(&result.chunks[0].value));
         assert_eq!("A Link", get_link(&result.chunks[1].value));
         assert_eq!(".", get_text(&result.chunks[2].value));
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(25, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(65, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(68, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -773,5 +779,28 @@ mod tests {
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 37), result.chunks[1].position);
         assert_points_equal(Point::init(145, 37), result.chunks[2].position);
+    }
+
+    #[test]
+    fn text_after_link() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "See [[Defenses in Depth]] for details..",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 240, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("See", get_text(&result.chunks[0].value));
+        assert_eq!("Defenses in Depth", get_link(&result.chunks[1].value));
+        assert_eq!("for details..", get_text(&result.chunks[2].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(38, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(158, 10), result.chunks[2].position);
     }
 }
