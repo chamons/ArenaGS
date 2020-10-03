@@ -362,7 +362,7 @@ impl View for HelpPopup {
                     underline_links,
                     |rect, result| self.note_hit_area(rect, result),
                 )?;
-                y += layout.line_count * 20;
+                y += layout.line_count * 24;
             }
         }
 

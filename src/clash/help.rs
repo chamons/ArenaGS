@@ -85,7 +85,7 @@ impl HelpInfo {
     }
 
     fn report_damage(details: &mut Vec<String>, damage: &Damage) {
-        details.push(format!("Strength: {}", damage.dice()));
+        details.push(format!("[[Strength]]: {}", damage.dice()));
         let opt = &damage.options;
         let raises = opt.contains(DamageOptions::RAISE_TEMPERATURE);
         let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
@@ -251,20 +251,29 @@ impl HelpInfo {
         return HelpInfo::init(header, details);
     }
 
-    pub fn find(word: &str) -> HelpInfo {
+    pub fn find(mut word: &str) -> HelpInfo {
+        word = match word {
+            "temperature" | "ignite" => "Temperature",
+            "static charge" => "Static Charge",
+            "ticks" => "Time",
+            "Pierce" | "piercing" => "Damage & Defenses",
+            "Armor" | "armor" | "Dodge" | "Health" | "Absorb" => "Defenses",
+            "Exhaustion" | "Focus" => "Resources",
+            "Strength" | "strength" => "Damage & Defenses",
+            "Defenses" => "Damage & Defenses",
+            "Damage" => "Damage & Defenses",
+            _ => word,
+        };
+
         match word {
             "Top Level Help" => return HelpInfo::text_header("Help", top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>()),
             "Getting Started" => return HelpInfo::text_header("Getting Started", vec![]),
-            "Defenses" => return HelpInfo::text_header("Defenses", vec![]),
+
+            "Damage & Defenses" => return HelpInfo::text_header("Damage & Defenses", vec![]),
+            "Resources" => return HelpInfo::text_header("Resources", vec![]),
             "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
-            "Strength" => return HelpInfo::text_header("Status Effects", vec![]),
             "Temperature" => return HelpInfo::text_header("Temperature", vec![]),
-            "Static Charge" => return HelpInfo::text_header("Static Charge", vec![]),
-            "Piercing" => return HelpInfo::text_header("Piercing", vec![]),
-            "Ticks" => return HelpInfo::text_header("Ticks", vec![]),
-            "Focus" => return HelpInfo::text_header("Focus", vec![]),
-            "Exhaustion" => return HelpInfo::text_header("Exhaustion", vec![]),
-            "Ignite" => return HelpInfo::text_header("Ignite", vec![]),
+            "Time" => return HelpInfo::text_header("Time", vec![]),
             // A 'fake' spell for gaining charge
             "Invoke the Elements" => {
                 return HelpInfo::init(
@@ -398,7 +407,7 @@ impl HelpInfo {
 }
 
 fn top_level_topics() -> Vec<&'static str> {
-    vec!["Getting Started", "Defenses", "Status Effects", "Strength", "Temperature"]
+    vec!["Getting Started", "Damage & Defenses", "Resources", "Status Effects", "Temperature", "Time"]
 }
 
 pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, use_links: bool, mut on_text: impl FnMut(&str) + 'a) {
