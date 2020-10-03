@@ -271,7 +271,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     "Getting Started",
                     vec_of_strings![
-                        "Welcome to Arena: Gunpower and Sorcery!",
+                        "Welcome to Arena: Gunpower And Sorcery!",
                         "Survive arena combat with all sorts of man, beast, and the arcane.",
                         "- Arrows move your character one square North/South/East/West.",
                         "- 1-5 or clicking on the skillbar will activate a skill.",
@@ -337,7 +337,7 @@ impl HelpInfo {
                 ]);
             }
 
-            "Gunslinger" => return HelpInfo::text_header("Damage & Defenses", vec![]),
+            "Gunslinger" => return HelpInfo::text_header("Gunslinger", vec![]),
             "Resources" => return HelpInfo::text_header("Resources", vec![]),
             "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
             "Temperature" => return HelpInfo::text_header("Temperature", vec![]),

@@ -223,7 +223,7 @@ impl HelpPopup {
         match self.size {
             HelpPopupSize::Small => (225, 146),
             HelpPopupSize::Medium => (225, 321),
-            HelpPopupSize::Large => (335, 523),
+            HelpPopupSize::Large => (670, 523),
             HelpPopupSize::Unknown => panic!("Unknown help size"),
         }
     }
@@ -231,7 +231,7 @@ impl HelpPopup {
     fn get_popup_origin(&self) -> (i32, i32) {
         match self.state {
             HelpPopupState::Tooltip { start_mouse, .. } => (start_mouse.x as i32, start_mouse.y as i32),
-            HelpPopupState::Modal { .. } | HelpPopupState::None => (100, 100),
+            HelpPopupState::Modal { .. } | HelpPopupState::None => (50, 100),
         }
     }
 
