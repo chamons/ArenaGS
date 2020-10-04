@@ -14,7 +14,7 @@ pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
     set_weapon_trait(ecs, invoker, TargetAmmo::Magnum);
 }
 
-fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
+pub fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
     match ammo {
         TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Blink Shot", "Swap Ammo"],
         TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Showdown", "Swap Ammo"],
@@ -23,7 +23,7 @@ fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
 }
 
 #[derive(Copy, Clone)]
-enum TargetAmmo {
+pub enum TargetAmmo {
     Magnum,
     Ignite,
     Cyclone,

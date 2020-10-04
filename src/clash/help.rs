@@ -253,15 +253,13 @@ impl HelpInfo {
 
     pub fn find(mut word: &str) -> HelpInfo {
         word = match word {
-            "temperature" | "ignite" => "Temperature",
+            "Burning" | "Frozen" | "temperature" | "ignite" => "Temperature",
             "static charge" => "Static Charge",
             "ticks" => "Time",
-            "Pierce" | "piercing" => "Damage & Defenses",
-            "Armor" | "armor" | "Dodge" | "Health" | "Absorb" => "Defenses",
-            "Exhaustion" | "Focus" => "Resources",
-            "Strength" | "strength" => "Damage & Defenses",
-            "Defenses" => "Damage & Defenses",
-            "Damage" => "Damage & Defenses",
+            "Damage" | "Pierce" | "piercing" => "Damage & Defenses",
+            "Strength" | "strength" => "Strength in Depth",
+            "Defenses" | "Armor" | "armor" | "Dodge" | "Health" | "Absorb" => "Defenses in Depth",
+            "Exhaustion" | "Focus" | "Adrenaline" => "Resources",
             _ => word,
         };
 
@@ -351,18 +349,83 @@ impl HelpInfo {
                     vec_of_strings![
                         "6 Strength attack",
                         "against",
-                        "1 Armor/1 Dodge character with 5 Absorb and 20 Health",
+                        "1 Armor/2 Dodge character with 5 Absorb and 20 Health",
                         "",
                         "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]]. It rolls 10 total for this example.",
-                        "- Dodge applies first, apply as many dodge dice as available (up to the total strength). Roll 1d2 (1) and subtract from 10. (9 incoming damage now).",
-                        "- Dodge pool is now 0/1, and won't reduce damage until refilled (2 points per square traveled).",
-                        "- Armor applies same, but it does not deplete so applies to every attack. 1d2 rolls a 2. (7 incoming damage now).",
-                        "- Damage is now applied to Absorb/Health. Absorb is reduced by 5 to 0. Health is reduced from 20 to 18"
+                        "- Dodge applies first, apply as many dodge dice as available (up to the total strength). Roll 2d2 (2) and subtract from 10. (8 incoming damage now).",
+                        "- Dodge pool is now 0/2, and won't reduce damage until refilled (2 points per square traveled).",
+                        "- Armor applies same, but it does not deplete so applies to every attack. 1d2 rolls a 2. (6 incoming damage now).",
+                        "- Damage is now applied to Absorb/Health. Absorb is reduced by 5 to 0. Health is reduced from 20 to 19"
                     ],
                 );
             }
 
-            "Gunslinger" => return HelpInfo::text_header("Gunslinger", vec_of_strings![]),
+            "Gunslinger" => {
+                return HelpInfo::text_header(
+                    "Gunslinger",
+                    vec_of_strings![
+                        "Flashpowder is the explosive marriage of fire and air, throwing lead at unbelievable speeds. Gunslingers harness this power along with elemental ammunition, to forge their will into the law.",
+                        "",
+                        "The gunslinger cycles through three kinds of ammo (Magnum, Ignite, Cyclone).",
+                        "",
+                        "- [[Magnum Bullets]] use a super heavyweight core packed into an extended bullet with custom grain flashpowder to pack the maximum damage into each shot.",
+                        "- [[Ignite Bullets]] pack distilled dragon fire into the hollow shell along with a impact trigger to ignite it upon impact.",
+                        "- [[Cyclone Bullets]] distill crystallized gales and use gravity runes to contain hurricane force winds that can knock back and trigger lightning strikes.",
+                        "",
+                        "Gunslingers are clothed in light armor better for the long trail than battle, and depend upon dexterity to [[Dodge]] incoming fire.",
+                        "",
+                        "As the battle rages gunslinger's [[Adrenaline]] increases until they are able to pull off almost superhuman feats of agility and speed."
+                    ],
+                )
+            }
+            "Magnum Bullets" => {
+                use super::content::gunslinger::*;
+                let mut text =vec_of_strings![
+                    "Since they have the highest base strength, Magnum is the to-go choice when facing heavily armored foes.",
+                    "However since Magnum's oversized design does pretty dramatically reduce range, in comparison to the other choices.",
+                    "Their lack of elemental effects tends to make and overall one dimensional, though forceful, impact.",
+                    "",
+                    "Abilities:",
+                    ""
+                ];
+                text.extend(get_weapon_skills (TargetAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Magnum Bullets",
+                    text
+                )
+            },
+            "Ignite Bullets" => {
+                use super::content::gunslinger::*;
+                let mut text = vec_of_strings![
+                    "Ignite bullets are relatively accurate to medium-long range, and thought they lack the raw stopping power of Magnum rounds they can ignite enemies in flame.",
+                    "Since [[Burning]] enemies take constant [[piercing]] damage, Ignite rounds are a solid all-around solution to armored or agile opponents, assuming you can pour on the heat.",
+                    "",
+                    "Abilities:",
+                    ""
+                ];
+
+                text.extend(get_weapon_skills (TargetAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Ignite Bullets",
+                    text
+                )
+            },
+            "Cyclone Bullets" => {
+                use super::content::gunslinger::*;
+                let mut text = vec_of_strings![
+                    "Though lacking some of the raw offensive power of the other ammo, Cyclone bullets provide superb flexibility both in offense and defense",
+                    "Cyclone abilities place and consume [[Static Charge]] on enemies to knock back or strike with lightning.",
+                    "",
+                    "Abilities:",
+                    ""
+            ];
+
+                text.extend(get_weapon_skills (TargetAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Cyclone Bullets",
+                    text
+                )
+            },
             "Static Charge" => return HelpInfo::text_header("Static Charge", vec_of_strings![]),
             "Resources" => {
                 return HelpInfo::text_header(
@@ -437,7 +500,8 @@ impl HelpInfo {
                     HelpHeader::Text("Invoke the Elements".to_string()),
                     vec_of_strings!["Internally focus to more quickly summon additional elementals."],
                 )
-            }
+            },
+            "Aimed" => return HelpInfo::find_status(StatusKind::Aimed),
             _ => {}
         }
         if is_skill(word) {
@@ -469,35 +533,15 @@ impl HelpInfo {
                     )],
                 )
             }
-            StatusKind::Magnum => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["Enable shorter range high power gunslinger abilities."],
-                )
-            }
-            StatusKind::Ignite => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["Enable average range gunslinger abilities which can [[ignite]] foes."],
-                )
-            }
-            StatusKind::Cyclone => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["Enable long range shocking gunslinger abilities."],
-                )
-            }
-            StatusKind::StaticCharge => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["Charged with electricity - a lightning rod in the storm. Beware!"],
-                )
-            }
+            StatusKind::Magnum => return HelpInfo::find("Magnum Bullets"),
+            StatusKind::Ignite => return HelpInfo::find("Ignite Bullets"),
+            StatusKind::Cyclone => return HelpInfo::find("Cyclone Bullets"),
+            StatusKind::StaticCharge => return HelpInfo::find("Static Charge"),
             StatusKind::Aimed => {
                 return HelpInfo::text_header(
                     HelpInfo::get_status_effect_name(status),
                     vec![format!(
-                        "Focued on nailing the next shot. Next ranged attack's [[strength]] incrased by {}.",
+                        "Focused on nailing the next shot. Next attack [[strength]] increased by {}.",
                         AIMED_SHOT_ADDITIONAL_STRENGTH
                     )],
                 )

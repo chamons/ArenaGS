@@ -288,6 +288,7 @@ impl View for HelpPopup {
             _ => {}
         }
 
+        let frame_size = self.get_frame_size();
         let frame = self.get_help_popup_frame(canvas)?;
         canvas.copy(self.get_background(), None, frame)?;
 
@@ -351,6 +352,12 @@ impl View for HelpPopup {
                         2,
                     ),
                 )?;
+
+                y += layout.line_count * 22;
+                if y as i32 >= frame_size.1 {
+                    break;
+                }
+
                 let underline_links = self.is_modal();
                 render_text_layout(
                     &layout,
@@ -362,7 +369,6 @@ impl View for HelpPopup {
                     underline_links,
                     |rect, result| self.note_hit_area(rect, result),
                 )?;
-                y += layout.line_count * 22;
             }
         }
 
