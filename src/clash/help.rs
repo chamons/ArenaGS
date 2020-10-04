@@ -271,14 +271,18 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     "Getting Started",
                     vec_of_strings![
-                        "Welcome to Arena: Gunpower And Sorcery!",
+                        "Welcome to Arena: Gunpowder And Sorcery!",
                         "Survive arena combat with all sorts of man, beast, and the arcane.",
-                        "- Arrows move your character one square North/South/East/West.",
-                        "- 1-5 or clicking on the skillbar will activate a skill.",
+                        "",
+                        "- Arrow keys move your character one square North/South/East/West.",
+                        "- 1-5 keys or clicking on the skill bar will activate a skill. Most will require a target.",
+                        "- Skill range is indicated by yellow highlighted squares.",
                         "- Press F1 at any time to bring up the global help.",
-                        "- Middle clicking anymost anywhere, specially on underlined text will bring up a context help.",
+                        "- Middle clicking almost anywhere, specially on underlined text will bring up a context help.",
                         "- Middle click again to promote the tooltip into a full help window.",
+                        "",
                         "In the future, there will hopefully be a full featured tutorial.",
+                        "",
                         "Good Luck!"
                     ],
                 )
@@ -289,12 +293,19 @@ impl HelpInfo {
                     "Damage & Defenses",
                     vec_of_strings![
                         "Combat in ArenaGS is based upon the interaction of skills Strength and character's Defenses.",
-                        "Strength: Each ability as a base strength rating, which is primarily modified by status effects",
+                        "",
+                        "Strength: Each ability as a base strength rating, possibly modified by status effects and the situation.",
+                        "",
                         "When a skill is resolved, the strength is rolled into a single value which impacts the damage/healing done.",
-                        "Each point of strength converts to roughly 1.5 points of damage or healing. See [[Strength in Depth]] for details.",
+                        "Each point of strength converts to roughly 1.5 points of damage or healing.",
+                        "",
+                        "See [[Strength in Depth]] for details.",
+                        "",
                         "That damage is then applied to the character's defenses.",
-                        "Armor and Dodge values are applied as strength and subtracted from the total damage.",
-                        "The remaining damage is applied first to any absorb barrier, and then to the health total.",
+                        " - Dodge and Armor values are applied as strength and subtracted from the total damage.",
+                        " - The remaining damage is applied first to any absorb barrier, and then to the health total.",
+                        " - Some damage is 'piercing' and ignores Dodge and Armor completely.",
+                        "",
                         "See [[Defenses in Depth]] for details."
                     ],
                 )
@@ -305,11 +316,13 @@ impl HelpInfo {
                     vec_of_strings![
                         "Each point of strength is added to a pool of two sided dice (d2's).",
                         "Half of the pool is immediately set to the max value of 2, and the rest is rolled.",
-                        "This gives a random result, but with a small range.",
-                        "Example: 8 Strength",
-                        "- Resolved they becomes 8 two sided dice (8d2)",
-                        "- 4 of them are set to their 2 side and set aside (8 so far)",
-                        "- 4 of them are individually rolled, each can roll value 1 or 2",
+                        "This gives a random result, but with a somewhat small range.",
+                        "",
+                        "Example:",
+                        "8 Strength",
+                        "- Create a pool of 8 two sided dice (8d2)",
+                        "- 4 of them are immediately set to 2 and set aside. (Total 8)",
+                        "- 4 of them are individually rolled, each of which can roll value 1 or 2 (4-8)",
                         "The total result will be in the range of 12 to 16 (8 + 4 to 8 + 8)"
                     ],
                 )
@@ -318,35 +331,111 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     "Defenses in Depth",
                     vec_of_strings![
-                        "Defenses in ArenaGS come in four forms (Dodge, Armor, Absord, and Health",
+                        "Defenses in ArenaGS come in four forms (Dodge, Armor, Absorb, and Health)",
+                        "",
                         "Dodge and Armor are strength values rolled to a value which reduces the raw damage taken.",
-                        "Absorb and Health are pools of health that are depleted by damage, Absord being a shield that goes first.",
-                        "Once health is reduced to zero or below, the character dies.",
-                        "Shown in [[Defense Example]]."
+                        "- Dodge is a pool of dice which is consumed to reduce damage, and is replenished by movement.",
+                        "- Armor tends to be lower, but applies equally to reduce attack damage.",
+                        "",
+                        "Absorb and Health are pools of health that are depleted by damage that makes it past.",
+                        "- Absorb is a shield that goes is taken from first.",
+                        "- Once a character's health is reduced to zero or below, they die.",
+                        "",
+                        "See [[Defense Example]] for an example worked out."
                     ],
                 );
             }
             "Defense Example" => {
-                return HelpInfo::text_header("Defense Example", vec_of_strings![
-                    "6 Strength attack against 1 Armor/1 Dodge character with 5 Absorb and 20 Health",
-                    "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]]. Let's say it was 10 total.",
-                    "- Dodge applies first, apply as many dodge dice as available (up to the total strength). Roll 1d2 (1) and subtract from 10. (9 current total).",
-                    "- Dodge pool is now 0/1, and won't reduce damage until refilled (2 points per square traveled).",
-                    "- Next armor applies same way, but it does not deplete so applies to every attack. Rolls a 2. (Total now 7)",
-                    "- Damage is now applied to Absorb/Health. Absorb takes 5 and is reduced to 0. Health is reduced from 20 to 18"
-                ]);
+                return HelpInfo::text_header(
+                    "Defense Example",
+                    vec_of_strings![
+                        "6 Strength attack",
+                        "against",
+                        "1 Armor/1 Dodge character with 5 Absorb and 20 Health",
+                        "",
+                        "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]]. It rolls 10 total for this example.",
+                        "- Dodge applies first, apply as many dodge dice as available (up to the total strength). Roll 1d2 (1) and subtract from 10. (9 incoming damage now).",
+                        "- Dodge pool is now 0/1, and won't reduce damage until refilled (2 points per square traveled).",
+                        "- Armor applies same, but it does not deplete so applies to every attack. 1d2 rolls a 2. (7 incoming damage now).",
+                        "- Damage is now applied to Absorb/Health. Absorb is reduced by 5 to 0. Health is reduced from 20 to 18"
+                    ],
+                );
             }
 
-            "Gunslinger" => return HelpInfo::text_header("Gunslinger", vec![]),
-            "Resources" => return HelpInfo::text_header("Resources", vec![]),
-            "Status Effects" => return HelpInfo::text_header("Status Effects", vec![]),
-            "Temperature" => return HelpInfo::text_header("Temperature", vec![]),
-            "Time" => return HelpInfo::text_header("Time", vec![]),
+            "Gunslinger" => return HelpInfo::text_header("Gunslinger", vec_of_strings![]),
+            "Static Charge" => return HelpInfo::text_header("Static Charge", vec_of_strings![]),
+            "Resources" => {
+                return HelpInfo::text_header(
+                    "Resources",
+                    vec_of_strings![
+                        "Many skills in ArenaGS require one or more resources to be used.",
+                        "",
+                        "The most common include:",
+                        "",
+                        "- Exhaustion: How physically taxing an action is.",
+                        format!(
+                            "|tab|- Starts at 0, with a maximum of {}. Reduces by {} every 100 [[ticks].",
+                            MAX_EXHAUSTION, EXHAUSTION_PER_100_TICKS
+                        ),
+                        format!("|tab|- Standard movement costs {} exhaustion.", EXHAUSTION_COST_PER_MOVE),
+                        "",
+                        "- Focus: How much concentration and grit a character can spent in an effort.",
+                        format!("|tab|- Starts at the maximum of 1.0 and increases by {} every turn.", FOCUS_PER_100_TICKS),
+                        "",
+                        "- Adrenaline: Some skills need the surge of excitement and will one gains as the battle continues.",
+                        "|tab|- Starts at 0 and increases every turn based upon actions.",
+                        "",
+                        "- Bullets: Firearms can only hold so many rounds, and will require reloading when nearing empty.",
+                        "|tab|- Some skills can fire more than one bullet."
+                    ],
+                )
+            }
+            "Status Effects" => return HelpInfo::text_header("Status Effects", vec_of_strings![]),
+            "Temperature" => {
+                return HelpInfo::text_header(
+                    "Temperature",
+                    vec_of_strings![
+                        format!(
+                            "All characters in ArenaGS have a temperature value which slowly reduces towards {}.",
+                            TEMPERATURE_MIDPOINT
+                        ),
+                        "",
+                        "Some skills can raise or lower it:",
+                        "",
+                        format!("- Temperatures above {} will ignite a character in flames", TEMPERATURE_BURN_POINT),
+                        format!(
+                            "|tab|- Burning does {} [[piercing]] strength of damage every {} [[ticks]].",
+                            TEMPERATURE_DAMAGE_PER_TICK, BURN_DURATION
+                        ),
+                        format!("|tab|- Once the temperatures is below {} they will quit burning.", TEMPERATURE_BURN_POINT),
+                        "",
+                        format!("- Temperatures below {} will freeze a character.", TEMPERATURE_FREEZE_POINT),
+                        "|tab|- Movements will cost an additional 50% time ([[ticks]]) to accomplish."
+                    ],
+                )
+            }
+            "Time" => {
+                return HelpInfo::text_header(
+                    "Time",
+                    vec_of_strings![
+                        "Time in ArenaGS is based upon 'ticks', which accumulate until a character can act",
+                        "",
+                        format!(
+                            "By default most actions consume {} ticks and movement {} ticks",
+                            BASE_ACTION_COST, MOVE_ACTION_COST
+                        ),
+                        "",
+                        "Some status can reduce these costs, allowing more actions to be taken over a period of turns.",
+                        "",
+                        "A rare few skills are 'instant speed'  - they do not costs ticks to use, allowing the invoker to take another action."
+                    ],
+                )
+            }
             // A 'fake' spell for gaining charge
             "Invoke the Elements" => {
                 return HelpInfo::init(
                     HelpHeader::Text("Invoke the Elements".to_string()),
-                    vec!["Internally focus to more quickly summon additional elementals.".to_string()],
+                    vec_of_strings!["Internally focus to more quickly summon additional elementals."],
                 )
             }
             _ => {}
