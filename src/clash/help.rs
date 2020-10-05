@@ -426,7 +426,13 @@ impl HelpInfo {
                     text
                 )
             },
-            "Static Charge" => return HelpInfo::text_header("Static Charge", vec_of_strings![]),
+            "Static Charge" => return HelpInfo::text_header("Static Charge", vec_of_strings![
+                "Some abilities charge their targets with high levels of electric charge.",
+                "",
+                "Other abilities can benefit from this charge may (depending on the skill):" ,
+                "- Strike for additional [[piercing]] damage",
+                "- Knock the target back with gale force winds"
+            ]),
             "Resources" => {
                 return HelpInfo::text_header(
                     "Resources",
