@@ -66,3 +66,6 @@ pub use flying::*;
 
 mod spawn;
 pub use spawn::*;
+
+mod help;
+pub use help::*;

@@ -1,19 +1,20 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
-use enum_iterator::IntoEnumIterator;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::view_components::{Frame, FrameKind};
-use super::{ContextData, View};
-use crate::after_image::{FontColor, FontSize, IconLoader, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::{BoxResult, EasyECS};
-use crate::clash::{find_enemies, find_player, AmmoKind, CharacterInfoComponent, SkillResourceComponent, StatusComponent};
+use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use crate::after_image::{FontColor, FontSize, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
+use crate::atlas::BoxResult;
+use crate::clash::{find_enemies, find_player, summarize_character};
 
 pub struct InfoBarView {
     position: SDLPoint,
     text: Rc<TextRenderer>,
     frame: Frame,
+    hit_tester: RefCell<TextHitTester>,
 }
 
 impl InfoBarView {
@@ -27,6 +28,7 @@ impl InfoBarView {
                 &IconLoader::init_ui()?,
                 FrameKind::InfoBar,
             )?,
+            hit_tester: RefCell::new(TextHitTester::init()),
         })
     }
 
@@ -44,75 +46,46 @@ impl InfoBarView {
     }
 
     fn render_character(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, offset: &mut i32, show_status_effect: bool) -> BoxResult<()> {
-        let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
-        let char_info = char_infos.grab(entity);
-        let defenses = &char_info.character.defenses;
-        let health_text = {
-            if defenses.absorb != 0 {
-                format!("Health: (+{:.2}) {:.2}/{:.2}", defenses.absorb, defenses.health, defenses.max_health)
-            } else {
-                format!("Health: {:.2}/{:.2}", defenses.health, defenses.max_health)
-            }
-        };
-        self.small_text(canvas, health_text.as_str(), offset)?;
-
-        if defenses.max_dodge != 0 {
-            self.small_text(canvas, format!("Dodge : {:.2}/{:.2}", defenses.dodge, defenses.max_dodge).as_str(), offset)?;
-        }
-        if defenses.armor != 0 {
-            self.small_text(canvas, format!("Armor: {:.2}", defenses.armor).as_str(), offset)?;
-        }
-
-        let resources = &ecs.read_storage::<SkillResourceComponent>();
-        if let Some(resource) = resources.get(entity) {
-            self.small_text(canvas, format!("Exhaustion: {:.2}", resource.exhaustion).as_str(), offset)?;
-
-            self.small_text(canvas, format!("Focus: {:.2}", resource.focus).as_str(), offset)?;
-
-            for kind in AmmoKind::into_enum_iter() {
-                match resource.max.get(&kind) {
-                    Some(value) => {
-                        self.small_text(canvas, format!("{:?}: {:.2}/{:.2}", kind, resource.ammo[&kind], value).as_str(), offset)?;
-                    }
-                    None => {}
-                }
-            }
-        }
-
-        let temperature = char_info.character.temperature.current_temperature();
-        if temperature != 0 {
-            self.small_text(canvas, format!("Temperature: {:.2}", temperature).as_str(), offset)?;
-        }
-
-        if show_status_effect {
-            let statuses = &ecs.read_storage::<StatusComponent>();
-            if let Some(status) = statuses.get(entity) {
-                let all = status.status.get_all_display_status();
-                if !all.is_empty() {
-                    self.small_text(canvas, &format!("Status: {}", all.join(" ")), offset)?;
-                }
-            }
-        }
+        summarize_character(ecs, entity, show_status_effect, true, |t| self.small_text(canvas, t, offset).unwrap());
         Ok(())
     }
 
     const MAX_INFO_OFFSET: i32 = 480;
     fn small_text(&self, canvas: &mut RenderCanvas, text: &str, offset: &mut i32) -> BoxResult<()> {
+        let mut hit_test = self.hit_tester.borrow_mut();
+
         if *offset > InfoBarView::MAX_INFO_OFFSET {
             return Ok(());
         }
-        self.text
-            .render_text(text, self.position.x + 4, self.position.y + *offset, canvas, FontSize::Small, FontColor::Black)?;
+
+        let layout = self.text.layout_text(
+            &text,
+            FontSize::Small,
+            LayoutRequest::init(self.position.x as u32 + 4, self.position.y as u32 + *offset as u32, 210, 2),
+        )?;
+        render_text_layout(&layout, canvas, &self.text, None, FontColor::Black, 0, false, |rect, result| {
+            hit_test.add(rect, result);
+        })?;
+
         *offset += 20;
         Ok(())
     }
 }
 
 impl View for InfoBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        self.frame.render(ecs, canvas, frame, context)?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        {
+            let mut hit_test = self.hit_tester.borrow_mut();
+            hit_test.clear();
+        }
+
+        self.frame.render(ecs, canvas, frame)?;
         self.render_character_info(ecs, canvas)?;
 
         Ok(())
+    }
+
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        self.hit_tester.borrow().hit_test(x, y)
     }
 }

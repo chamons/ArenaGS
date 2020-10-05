@@ -22,3 +22,6 @@ pub use render_context::{FontContext, RenderContext, RenderContextHolder};
 pub use sprites::*;
 pub use text_layout::*;
 pub use text_renderer::*;
+
+#[cfg(test)]
+pub mod font_test_helpers;

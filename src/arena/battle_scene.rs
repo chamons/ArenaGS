@@ -19,6 +19,7 @@ use crate::conductor::{Scene, StageDirection};
 pub struct BattleScene {
     ecs: World,
     views: Vec<Box<dyn View>>,
+    help: HelpPopup,
 }
 
 impl BattleScene {
@@ -39,16 +40,18 @@ impl BattleScene {
             Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
         ];
 
+        let help = HelpPopup::init(&render_context, Rc::clone(&text_renderer))?;
+
         if cfg!(debug_assertions) {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
         }
 
-        Ok(BattleScene { ecs, views })
+        Ok(BattleScene { ecs, views, help })
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) {
         if cfg!(debug_assertions) {
-            if keycode == Keycode::F1 {
+            if keycode == Keycode::F10 {
                 battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
             }
         }
@@ -85,6 +88,10 @@ impl BattleScene {
                     self.ecs = new_world;
                 }
             }
+            Keycode::F1 => {
+                self.help.enable(&self.ecs, None, HitTestResult::Text("Top Level Help".to_string()));
+                self.help.force_size_large();
+            }
             _ => {}
         }
     }
@@ -116,7 +123,7 @@ impl BattleScene {
     }
 
     fn handle_default_mouse(&mut self, x: i32, y: i32, button: MouseButton) {
-        let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+        let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
@@ -162,6 +169,10 @@ impl BattleScene {
 
 impl Scene for BattleScene {
     fn handle_key(&mut self, keycode: Keycode) {
+        if self.help.is_enabled() && keycode == Keycode::Escape {
+            self.help.disable();
+        }
+
         match keycode {
             Keycode::PageUp => {
                 self.ecs.raise_event(EventKind::LogScrolled(LogDirection::Backwards), None);
@@ -182,14 +193,17 @@ impl Scene for BattleScene {
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
+        self.help.handle_mouse(&self.ecs, x, y, button);
+        // Prevent stray clicks from passing through
+        if self.help.is_enabled() {
+            return;
+        }
 
         if let Some(button) = button {
             if button == MouseButton::Middle {
-                let hit = self.views.iter().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                match &hit {
-                    Some(HitTestResult::Skill(name)) => self.ecs.log(&name),
-                    Some(HitTestResult::Tile(position)) => self.ecs.log(&position.to_string()),
-                    _ => {}
+                let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
+                if let Some(hit) = hit {
+                    self.help.enable(&self.ecs, Some(Point::init(x as u32, y as u32)), hit);
                 }
             }
 
@@ -209,8 +223,10 @@ impl Scene for BattleScene {
         canvas.clear();
 
         for view in self.views.iter() {
-            view.render(&self.ecs, canvas, frame, &ContextData::None)?;
+            view.render(&self.ecs, canvas, frame)?;
         }
+
+        self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
         Ok(())

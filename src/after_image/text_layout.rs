@@ -23,7 +23,7 @@ impl LayoutRequest {
     }
 }
 
-#[derive(Copy, Clone, is_enum_variant)]
+#[derive(Copy, Clone, is_enum_variant, Debug)]
 pub enum LayoutChunkIcon {
     Sword,
 }
@@ -34,9 +34,16 @@ pub enum LayoutChunkValue {
     Icon(LayoutChunkIcon),
 }
 
+bitflags! {
+    pub struct LayoutChunkAttributes : u32 {
+        const SMALLER_TEXT =         0b00000001;
+    }
+}
+
 pub struct LayoutChunk {
     pub position: Point,
     pub value: LayoutChunkValue,
+    pub attributes: LayoutChunkAttributes,
 }
 
 pub struct LayoutResult {
@@ -63,7 +70,14 @@ impl WordBuffer {
         self.width > 0
     }
 
+    pub fn get_width(&self) -> u32 {
+        self.width
+    }
+
     pub fn add(&mut self, text: &str, mut width: u32, space_size: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: WordBuffer::add");
+
         if self.current_line.len() > 0 {
             self.current_line.push_str(" ");
             width += space_size;
@@ -73,6 +87,9 @@ impl WordBuffer {
     }
 
     pub fn flush(&mut self) -> (String, u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: WordBuffer::flush");
+
         let value = mem::replace(&mut self.current_line, String::new());
         let width = self.width;
         self.width = 0;
@@ -83,7 +100,7 @@ impl WordBuffer {
 struct LayoutRect {
     corner: Point,
     largest_line_height: u32,
-    current_line_width: u32,
+
     // Current x position based upon flushed content
     current_x_offset: u32,
     // Current y position based upon flushed content
@@ -94,7 +111,6 @@ impl LayoutRect {
     pub fn init(corner: &Point) -> LayoutRect {
         LayoutRect {
             corner: *corner,
-            current_line_width: 0,
             largest_line_height: 0,
             current_x_offset: corner.x,
             current_y_offset: corner.y,
@@ -102,13 +118,21 @@ impl LayoutRect {
     }
 
     // We 'spend' line width but do not update x,y cursor
-    pub fn add_text_to_buffer(&mut self, height: u32, width: u32) {
-        self.current_line_width += width;
+    pub fn add_content(&mut self, height: u32) {
         self.largest_line_height = cmp::max(self.largest_line_height, height);
+    }
+
+    // Spent space includes both any non-flushed text (current_line_width) and
+    // other content (self.current_x_offset - self.corner.x)
+    pub fn spent_width(&self, buffer: &WordBuffer) -> u32 {
+        buffer.get_width() + self.current_x_offset - self.corner.x
     }
 
     // Updates for flushed content and returns cursor before move
     pub fn flush(&mut self, width: u32) -> Point {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: LayoutRect::flush");
+
         let point = Point::init(self.current_x_offset, self.current_y_offset);
         self.current_x_offset += width;
         point
@@ -116,22 +140,26 @@ impl LayoutRect {
 
     // We've completed a line, reset for next
     pub fn new_line(&mut self, space_between_lines: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: LayoutRect::new_line");
+
         self.current_x_offset = self.corner.x;
         self.current_y_offset += self.largest_line_height + space_between_lines;
         self.largest_line_height = 0;
-        self.current_line_width = 0;
+    }
+
+    pub fn at_start_of_line(&self, buffer: &WordBuffer) -> bool {
+        self.current_x_offset == self.corner.x && buffer.get_width() == 0
     }
 }
 
 struct Layout {
     request: LayoutRequest,
 
-    // Buffer for words until wrap/non-word content
-    word_buffer: WordBuffer,
-    // Tracks current cursor location, spent width, etc
-    rect: LayoutRect,
-
+    word_buffer: WordBuffer, // Buffer for words until wrap/non-word content
+    rect: LayoutRect,        // Tracks current cursor location, spent width, etc
     space_size: u32,
+    links_in_flight: String, // Links can have spaces in the middle, this buffers them until closing ]]
 
     result: LayoutResult,
 }
@@ -146,16 +174,24 @@ impl Layout {
             rect: LayoutRect::init(&request.position),
             space_size: 0,
             request,
+            links_in_flight: String::new(),
         }
     }
 
     fn should_wrap(&self, width: u32) -> bool {
         // If it's longer than the remaining space AND we've moved a bit over
         // A word longer than an entire line should not wrap an empty space
-        self.rect.current_line_width + width > self.request.width_to_render_in && self.rect.current_line_width > 0
+        self.rect.spent_width(&self.word_buffer) + width > self.request.width_to_render_in && !self.rect.at_start_of_line(&self.word_buffer)
+    }
+
+    fn longer_single_line(&self, width: u32) -> bool {
+        width > self.request.width_to_render_in
     }
 
     fn flush_any_text(&mut self) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_any_text");
+
         if self.word_buffer.has_content() {
             let (text, text_width) = self.word_buffer.flush();
             let position = self.rect.flush(text_width);
@@ -163,11 +199,28 @@ impl Layout {
             self.result.chunks.push(LayoutChunk {
                 value: LayoutChunkValue::String(text),
                 position,
+                attributes: LayoutChunkAttributes::empty(),
             });
         }
     }
 
+    fn flush_small_text(&mut self, text: &str, text_width: u32) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_small_text");
+
+        let position = self.rect.flush(text_width + 4);
+
+        self.result.chunks.push(LayoutChunk {
+            value: LayoutChunkValue::String(text.to_string()),
+            position,
+            attributes: LayoutChunkAttributes::SMALLER_TEXT,
+        });
+    }
+
     fn flush_icon(&mut self, name: &str) {
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_icon");
+
         let icon = match name {
             "Sword" => LayoutChunkIcon::Sword,
             _ => panic!("Unknown icon kind {}", name),
@@ -177,40 +230,74 @@ impl Layout {
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Icon(icon),
             position,
+            attributes: LayoutChunkAttributes::empty(),
         });
     }
 
     fn flush_link(&mut self, text: &str, text_width: u32) {
-        let mut position = self.rect.flush(text_width + 4);
-        position.x += 3;
+        #[cfg(feature = "debug_text_layout")]
+        println!("debug_text_layout: flush_link");
+
+        // Add space sized space after link
+        let mid_line_link = !self.rect.at_start_of_line(&self.word_buffer);
+        let number_spaces_added = if mid_line_link { 2 } else { 1 };
+        let mut position = self.rect.flush(text_width + self.space_size * number_spaces_added);
+
+        if mid_line_link {
+            // Add a space by adjust start over one space
+            position.x += self.space_size;
+        }
+
+        let mut attributes = LayoutChunkAttributes::empty();
+        if self.longer_single_line(text_width) {
+            attributes.insert(LayoutChunkAttributes::SMALLER_TEXT);
+        }
 
         self.result.chunks.push(LayoutChunk {
             value: LayoutChunkValue::Link(text.to_string()),
             position,
+            attributes,
         });
     }
 
     pub const SYMBOL_REGEX: &'static str = "^(.*)(\\{\\{\\w*\\}\\})(.*)$";
     pub const LINK_REGEX: &'static str = "^(.*)(\\[\\[\\w*\\]\\])(.*)$";
+    pub const LINK_REGEX_FRONT: &'static str = "^(.*)(\\[\\[\\w*)$";
+    pub const LINK_REGEX_END: &'static str = "^(\\w*\\]\\])(.*)$";
+    pub const TAB_REGEX: &'static str = "^\\|tab\\|(.*)$";
+
     fn run(&mut self, text: &str, font: &Font) -> BoxResult<()> {
         let (space_width, _) = font.size_of_latin1(b" ")?;
         self.space_size = space_width;
 
-        for word in text.split_ascii_whitespace() {
+        for mut word in text.split_ascii_whitespace() {
             lazy_static! {
                 static ref SYMBOL_RE: Regex = Regex::new(Layout::SYMBOL_REGEX).unwrap();
                 static ref LINK_RE: Regex = Regex::new(Layout::LINK_REGEX).unwrap();
+                static ref FRONT_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_FRONT).unwrap();
+                static ref END_LINK_RE: Regex = Regex::new(Layout::LINK_REGEX_END).unwrap();
+                static ref TAB_RE: Regex = Regex::new(Layout::TAB_REGEX).unwrap();
             }
+
+            if TAB_RE.captures(word).is_some() {
+                // Four spaces, the 5th will be added between this chunk and the first word
+                self.process_word("    ", font)?;
+                word = word.trim_start_matches("|tab|")
+            }
+
             if let Some(m) = SYMBOL_RE.captures(word) {
                 self.process_complex_chunk(m, font)?;
             } else if let Some(m) = LINK_RE.captures(word) {
+                self.process_complex_chunk(m, font)?;
+            } else if let Some(m) = FRONT_LINK_RE.captures(word) {
+                self.process_complex_chunk(m, font)?;
+            } else if let Some(m) = END_LINK_RE.captures(word) {
                 self.process_complex_chunk(m, font)?;
             } else {
                 self.process_word(word, font)?;
             }
         }
 
-        // Apply leftovers to the last line
         self.flush_any_text();
         self.result.line_count += 1;
 
@@ -230,6 +317,34 @@ impl Layout {
         Ok(())
     }
 
+    fn process_link_word(&mut self, word: &str) -> (bool, Option<String>) {
+        let is_link_start = word.starts_with("[[");
+        let is_link_end = word.ends_with("]]");
+        let is_full_link = is_link_start && is_link_end;
+
+        if is_full_link {
+            (false, Some(word[2..word.len() - 2].to_string()))
+        } else if is_link_start {
+            if self.links_in_flight.len() > 0 {
+                self.links_in_flight.push_str(" ");
+            }
+            self.links_in_flight.push_str(word);
+            (true, None)
+        } else if is_link_end {
+            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push_str(word);
+            let link = self.links_in_flight[2..self.links_in_flight.len() - 2].to_string();
+            self.links_in_flight.clear();
+            (false, Some(link))
+        } else if self.links_in_flight.len() > 0 {
+            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push_str(word);
+            (true, None)
+        } else {
+            (false, None)
+        }
+    }
+
     fn process_word(&mut self, word: &str, font: &Font) -> BoxResult<()> {
         let (mut width, mut height) = font.size_of_latin1(word.as_bytes())?;
 
@@ -238,16 +353,22 @@ impl Layout {
             width = TEXT_ICON_SIZE;
             height = TEXT_ICON_SIZE;
         }
-        let is_link = word.starts_with("[[") && word.ends_with("]]");
-        if is_link {
-            let (w, h) = font.size_of_latin1(&word[2..word.len() - 2].as_bytes())?;
+
+        let (skip, link_text) = self.process_link_word(word);
+        if skip {
+            return Ok(());
+        }
+
+        if let Some(link_text) = &link_text {
+            let (w, h) = font.size_of_latin1(link_text.as_bytes())?;
             width = w;
             height = h;
         }
 
         let is_line_wrapping = self.should_wrap(width);
+        let longer_single_line = self.longer_single_line(width);
 
-        if is_line_wrapping | is_symbol | is_link {
+        if is_line_wrapping | longer_single_line | is_symbol | link_text.is_some() {
             self.flush_any_text();
         }
         if is_line_wrapping {
@@ -257,12 +378,15 @@ impl Layout {
 
         if is_symbol {
             self.flush_icon(&word[2..word.len() - 2]);
-        } else if is_link {
-            self.flush_link(&word[2..word.len() - 2], width)
+        } else if let Some(link_text) = &link_text {
+            self.flush_link(&link_text, width)
+        } else if longer_single_line {
+            self.flush_small_text(word, width);
         } else {
-            self.rect.add_text_to_buffer(height, width);
             self.word_buffer.add(word, width, self.space_size);
         }
+
+        self.rect.add_content(height);
 
         Ok(())
     }
@@ -280,36 +404,9 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
-    use lazy_static::lazy_static;
-    use leak::Leak;
-
+    use super::super::font_test_helpers::*;
     use super::*;
-    use crate::atlas::{assert_points_equal, get_exe_folder};
-
-    lazy_static! {
-        static ref TTF_CONTEXT: &'static sdl2::ttf::Sdl2TtfContext = Box::from(sdl2::ttf::init().unwrap()).leak();
-    }
-
-    fn has_test_font() -> bool {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        font_path.exists()
-    }
-
-    fn get_test_font() -> Font {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        let mut font = TTF_CONTEXT.load_font(font_path, 14).unwrap();
-        font.set_style(sdl2::ttf::FontStyle::NORMAL);
-        font
-    }
-
-    fn get_tiny_test_font() -> Font {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        let mut font = TTF_CONTEXT.load_font(font_path, 9).unwrap();
-        font.set_style(sdl2::ttf::FontStyle::NORMAL);
-        font
-    }
+    use crate::atlas::assert_points_equal;
 
     fn get_text(chunk: &LayoutChunkValue) -> &String {
         match chunk {
@@ -381,6 +478,7 @@ mod tests {
         .unwrap();
         assert_eq!(1, result.chunks.len());
         assert_eq!("HelloWorldHelloWorldHello", get_text(&result.chunks[0].value));
+        assert!(result.chunks[0].attributes.contains(LayoutChunkAttributes::SMALLER_TEXT));
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
     }
@@ -490,8 +588,8 @@ mod tests {
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(10, 31), result.chunks[1].position);
         assert_points_equal(Point::init(27, 31), result.chunks[2].position);
-        assert_points_equal(Point::init(79, 31), result.chunks[3].position);
-        assert_points_equal(Point::init(10, 52), result.chunks[4].position);
+        assert_points_equal(Point::init(10, 58), result.chunks[3].position);
+        assert_points_equal(Point::init(27, 58), result.chunks[4].position);
     }
 
     #[test]
@@ -527,10 +625,10 @@ mod tests {
         assert_eq!("Hello", get_text(&result.chunks[0].value));
         assert_eq!("World", get_link(&result.chunks[1].value));
         assert_eq!("Bye", get_text(&result.chunks[2].value));
-        assert_eq!(1, result.line_count);
+        assert_eq!(2, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(45, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(85, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[2].position);
     }
 
     #[test]
@@ -552,7 +650,7 @@ mod tests {
         assert_eq!(1, result.line_count);
         assert_points_equal(Point::init(10, 10), result.chunks[0].position);
         assert_points_equal(Point::init(23, 10), result.chunks[1].position);
-        assert_points_equal(Point::init(63, 10), result.chunks[2].position);
+        assert_points_equal(Point::init(65, 10), result.chunks[2].position);
     }
 
     #[test]
@@ -566,5 +664,171 @@ mod tests {
         assert_eq!("(", get_text(&result.chunks[0].value));
         assert_eq!("Sword", get_link(&result.chunks[1].value));
         assert_eq!(")", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_link_with_period() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_link_with_spaces() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword Strike]]",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(2, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
+    }
+
+    #[test]
+    fn recognize_link_with_spaces_and_period() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "A [[Sword Strike]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        assert_eq!("A", get_text(&result.chunks[0].value));
+        assert_eq!("Sword Strike", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+    }
+
+    #[test]
+    fn recognize_tabbed_words() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "|tab|A thing.",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(1, result.chunks.len());
+        assert_eq!("     A thing.", get_text(&result.chunks[0].value));
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+    }
+
+    #[test]
+    fn recognize_tabbed_links() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "|tab|[[A Link]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 32 + 39 /*sizeof Hello World*/, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 spaces not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("    ", get_text(&result.chunks[0].value));
+        assert_eq!("A Link", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(25, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(68, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn three_part_link() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "Elementalist used [[Invoke the Elements]].",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 150, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("Elementalist used", get_text(&result.chunks[0].value));
+        assert_eq!("Invoke the Elements", get_link(&result.chunks[1].value));
+        assert_eq!(".", get_text(&result.chunks[2].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(145, 37), result.chunks[2].position);
+    }
+
+    #[test]
+    fn text_after_link() {
+        if !has_test_font() {
+            return;
+        }
+
+        let result = layout_text(
+            "See [[Defenses in Depth]] for details..",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 240, 10),
+        )
+        .unwrap();
+        assert_eq!(3, result.chunks.len());
+        // 4 not 5 due to https://github.com/chamons/ArenaGS/issues/222
+        assert_eq!("See", get_text(&result.chunks[0].value));
+        assert_eq!("Defenses in Depth", get_link(&result.chunks[1].value));
+        assert_eq!("for details..", get_text(&result.chunks[2].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(38, 10), result.chunks[1].position);
+        assert_points_equal(Point::init(158, 10), result.chunks[2].position);
+    }
+
+    #[test]
+    fn super_long_text() {
+        if !has_test_font() {
+            return;
+        }
+
+        // The last bit should be wrapping to line 4 but isn't
+        // Somehow we are resetting the width taken but not the x
+        let result = layout_text(
+            "- First the 6 strength is rolled into an attack damage as described in [[Strength in Depth]] Let's say it was 10 total.",
+            &get_test_font(),
+            LayoutRequest::init(10, 10, 240, 10),
+        )
+        .unwrap();
+        assert_eq!(5, result.chunks.len());
+        assert_eq!("- First the 6 strength is rolled into an", get_text(&result.chunks[0].value));
+        assert_eq!("attack damage as described in", get_text(&result.chunks[1].value));
+        assert_eq!("Strength in Depth", get_link(&result.chunks[2].value));
+        assert_eq!("Let's say it was 10", get_text(&result.chunks[3].value));
+        assert_eq!("total.", get_text(&result.chunks[4].value));
+
+        assert_points_equal(Point::init(10, 10), result.chunks[0].position);
+        assert_points_equal(Point::init(10, 37), result.chunks[1].position);
+        assert_points_equal(Point::init(10, 64), result.chunks[2].position);
+        assert_points_equal(Point::init(125, 64), result.chunks[3].position);
+        assert_points_equal(Point::init(10, 91), result.chunks[4].position);
     }
 }

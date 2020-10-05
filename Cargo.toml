@@ -10,6 +10,7 @@ self_play = []
 profile_self_play = ["self_play"]
 image_tester = []
 debug_text_alignmnet = []
+debug_text_layout = []
 default = []
 
 [dependencies]

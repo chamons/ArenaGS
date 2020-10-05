@@ -1,15 +1,13 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::rect::Point as SDLPoint;
-use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
-use super::{ContextData, View};
-use crate::after_image::{
-    FontColor, FontSize, IconCache, IconLoader, LayoutChunkIcon, LayoutChunkValue, LayoutRequest, RenderCanvas, RenderContext, TextRenderer, TEXT_ICON_SIZE,
-};
+use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
 use crate::atlas::BoxResult;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
@@ -18,6 +16,7 @@ pub struct LogView {
     text: Rc<TextRenderer>,
     icons: IconCache,
     frame: Frame,
+    hit_tester: RefCell<TextHitTester>,
 }
 
 impl LogView {
@@ -32,6 +31,7 @@ impl LogView {
                 FrameKind::Log,
             )?,
             icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            hit_tester: RefCell::new(TextHitTester::init()),
         })
     }
 
@@ -67,6 +67,9 @@ impl LogView {
     }
 
     fn render_log(&self, ecs: &World, canvas: &mut RenderCanvas) -> BoxResult<()> {
+        let mut hit_test = self.hit_tester.borrow_mut();
+        hit_test.clear();
+
         let index = self.calculate_index(ecs)?;
         let log = &ecs.read_resource::<LogComponent>().log;
         let mut line_count = 0;
@@ -79,51 +82,18 @@ impl LogView {
             )?;
             if line_count + layout.line_count <= LOG_COUNT as u32 {
                 let line_y_offset = 20 * line_count as i32;
-                for chunk in &layout.chunks {
-                    match &chunk.value {
-                        LayoutChunkValue::String(s) => {
-                            self.text.render_text(
-                                &s,
-                                chunk.position.x as i32,
-                                line_y_offset + chunk.position.y as i32,
-                                canvas,
-                                FontSize::Small,
-                                FontColor::Black,
-                            )?;
-                        }
-                        LayoutChunkValue::Link(s) => {
-                            self.text.render_text(
-                                &s,
-                                chunk.position.x as i32,
-                                line_y_offset + chunk.position.y as i32,
-                                canvas,
-                                FontSize::SmallUnderline,
-                                FontColor::Black,
-                            )?;
-                        }
-                        LayoutChunkValue::Icon(icon) => {
-                            let icon_image = match icon {
-                                LayoutChunkIcon::Sword => self.icons.get("plain-dagger.png"),
-                            };
-                            canvas.copy(
-                                icon_image,
-                                None,
-                                SDLRect::new(chunk.position.x as i32, line_y_offset + chunk.position.y as i32, TEXT_ICON_SIZE, TEXT_ICON_SIZE),
-                            )?;
-
-                            #[cfg(feature = "debug_text_alignmnet")]
-                            {
-                                canvas.set_draw_color(sdl2::pixels::Color::from((0, 128, 0, 128)));
-                                canvas.fill_rect(SDLRect::new(
-                                    chunk.position.x as i32,
-                                    line_y_offset + chunk.position.y as i32 - 1,
-                                    TEXT_ICON_SIZE,
-                                    TEXT_ICON_SIZE,
-                                ))?;
-                            }
-                        }
-                    }
-                }
+                render_text_layout(
+                    &layout,
+                    canvas,
+                    &self.text,
+                    Some(&self.icons),
+                    FontColor::Black,
+                    line_y_offset,
+                    true,
+                    |rect, result| {
+                        hit_test.add(rect, result);
+                    },
+                )?;
 
                 line_count += layout.line_count;
             } else {
@@ -152,10 +122,14 @@ pub fn log_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
 }
 
 impl View for LogView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, context: &ContextData) -> BoxResult<()> {
-        self.frame.render(ecs, canvas, frame, context)?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        self.frame.render(ecs, canvas, frame)?;
         self.render_log(ecs, canvas)?;
 
         Ok(())
+    }
+
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        self.hit_tester.borrow().hit_test(x, y)
     }
 }

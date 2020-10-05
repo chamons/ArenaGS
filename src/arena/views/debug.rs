@@ -5,7 +5,7 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::{screen_rect_for_map_grid, ContextData, View};
+use super::{screen_rect_for_map_grid, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::arena::battle_actions;
 use crate::arena::components::*;
@@ -26,7 +26,7 @@ impl DebugView {
 }
 
 impl View for DebugView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64, _context: &ContextData) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         if let BattleSceneState::Debug(kind) = battle_actions::read_action_state(&ecs) {
             let state = format!("Debug: {}", kind.to_string());
             self.text

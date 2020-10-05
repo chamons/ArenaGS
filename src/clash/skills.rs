@@ -239,6 +239,10 @@ lazy_static! {
     };
 }
 
+pub fn is_skill(name: &str) -> bool {
+    SKILLS.contains_key(name)
+}
+
 pub fn get_skill(name: &str) -> &'static SkillInfo {
     &SKILLS[name]
 }
@@ -333,8 +337,8 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     let skill = get_skill(name);
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
-    if let Some(player_name) = ecs.get_name(&invoker) {
-        ecs.log(format!("{} used {}.", player_name.as_str(), name));
+    if let Some(invoker_name) = ecs.get_name(&invoker) {
+        ecs.log(format!("{} used [[{}]].", invoker_name.as_str(), name));
     }
 
     if !skill.no_time {

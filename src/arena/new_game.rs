@@ -68,6 +68,9 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
+    ecs.log("Welcome to ArenaGS!");
+    ecs.log("Press F1 for help.");
+
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)?));

@@ -1,13 +1,11 @@
 use std::rc::Rc;
 
-use num_traits::FromPrimitive;
-
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{ContextData, HitTestResult, View};
+use super::{HitTestResult, View};
 use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
 use crate::atlas::{BoxResult, EasyECS};
 use crate::clash::{find_player, StatusComponent, StatusKind};
@@ -23,9 +21,10 @@ impl StatusBarView {
         let ui = IconLoader::init_ui()?;
         for i in 0..10 {
             views.push(StatusBarItemView::init(
-                SDLPoint::new(position.x() + i * 58, position.y()),
+                SDLPoint::new(position.x() + i as i32 * 58, position.y()),
                 ui.get(render_context, "status_frame.png")?,
                 &cache,
+                i,
             ));
         }
         Ok(StatusBarView { views })
@@ -33,63 +32,73 @@ impl StatusBarView {
 }
 
 impl View for StatusBarView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64, _context: &ContextData) -> BoxResult<()> {
-        let player = find_player(&ecs);
-        let statuses = ecs.read_storage::<StatusComponent>();
-        let status = &statuses.grab(player).status;
-        let status_names = status.get_all();
-
-        let mut draw_count = 0;
-        for i in 0..10 {
-            if let Some(kind) = status_names.get(i) {
-                if kind.should_display() {
-                    self.views[draw_count].render(ecs, canvas, frame, &ContextData::Number((*kind).into()))?;
-                    draw_count += 1;
-                }
-            }
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        for view in self.views.iter() {
+            view.render(ecs, canvas, frame)?;
         }
 
         Ok(())
     }
 
-    fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        for view in self.views.iter() {
+            if view.rect.contains_point(SDLPoint::new(x, y)) {
+                return view.hit_test(ecs, x, y);
+            }
+        }
         None
     }
 }
 
 struct StatusBarItemView {
-    position: SDLPoint,
+    rect: SDLRect,
     icons: Rc<IconCache>,
     frame: Texture,
+    status_index: usize,
 }
 
 impl StatusBarItemView {
-    pub fn init(position: SDLPoint, frame: Texture, icons: &Rc<IconCache>) -> StatusBarItemView {
+    pub fn init(position: SDLPoint, frame: Texture, icons: &Rc<IconCache>, status_index: usize) -> StatusBarItemView {
         StatusBarItemView {
-            position,
+            rect: SDLRect::new(position.x(), position.y(), 48, 48),
             icons: Rc::clone(icons),
             frame,
+            status_index,
         }
+    }
+
+    fn get_associated_status(&self, ecs: &World) -> Option<StatusKind> {
+        let statuses = ecs.read_storage::<StatusComponent>();
+        statuses
+            .grab(find_player(&ecs))
+            .status
+            .get_all()
+            .iter()
+            .filter(|x| x.should_display())
+            .nth(self.status_index)
+            .as_ref()
+            .copied()
+            .copied()
     }
 }
 
 impl View for StatusBarItemView {
-    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64, context: &ContextData) -> BoxResult<()> {
-        let kind = match context {
-            ContextData::Number(value) => StatusKind::from_u32(*value).unwrap(),
-            _ => panic!("StatusBarItemView context wrong type?"),
-        };
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        if let Some(kind) = self.get_associated_status(ecs) {
+            let icon = self.icons.get(get_icon_name_for_status(kind));
 
-        let icon = self.icons.get(get_icon_name_for_status(kind));
-
-        canvas.copy(&icon, SDLRect::new(0, 0, 48, 48), SDLRect::new(self.position.x(), self.position.y(), 48, 48))?;
-        canvas.copy(&self.frame, None, SDLRect::new(self.position.x() - 2, self.position.y() - 2, 54, 54))?;
-
+            canvas.copy(&icon, None, self.rect)?;
+            canvas.copy(&self.frame, None, SDLRect::new(self.rect.x() - 2, self.rect.y() - 2, 54, 54))?;
+        }
         Ok(())
     }
 
-    fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
-        None
+    fn hit_test(&self, ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
+        if let Some(kind) = self.get_associated_status(ecs) {
+            Some(HitTestResult::Status(kind))
+        } else {
+            None
+        }
     }
 }
 
