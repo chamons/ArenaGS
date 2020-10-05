@@ -404,36 +404,9 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
-    use lazy_static::lazy_static;
-    use leak::Leak;
-
+    use super::super::font_test_helpers::*;
     use super::*;
-    use crate::atlas::{assert_points_equal, get_exe_folder};
-
-    lazy_static! {
-        static ref TTF_CONTEXT: &'static sdl2::ttf::Sdl2TtfContext = Box::from(sdl2::ttf::init().unwrap()).leak();
-    }
-
-    fn has_test_font() -> bool {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        font_path.exists()
-    }
-
-    fn get_test_font() -> Font {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        let mut font = TTF_CONTEXT.load_font(font_path, 14).unwrap();
-        font.set_style(sdl2::ttf::FontStyle::NORMAL);
-        font
-    }
-
-    fn get_tiny_test_font() -> Font {
-        let font_path = Path::new(&get_exe_folder()).join("fonts").join("LibreFranklin-Regular.ttf");
-        let mut font = TTF_CONTEXT.load_font(font_path, 9).unwrap();
-        font.set_style(sdl2::ttf::FontStyle::NORMAL);
-        font
-    }
+    use crate::atlas::assert_points_equal;
 
     fn get_text(chunk: &LayoutChunkValue) -> &String {
         match chunk {

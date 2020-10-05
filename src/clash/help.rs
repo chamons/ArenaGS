@@ -691,3 +691,34 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::after_image::font_test_helpers::*;
+    use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
+
+    fn check_links(link: &str, font: &Font) {
+        let help = HelpInfo::find(link);
+        assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
+        for chunk in help.text {
+            let layout = layout_text(&chunk, font, LayoutRequest::init(0, 0, 500, 0)).unwrap();
+            for l in layout.chunks {
+                match l.value {
+                    LayoutChunkValue::Link(new_link) => {
+                        check_links(&new_link, font);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn help_has_no_unresolved_links() {
+        if !has_test_font() {
+            return;
+        }
+        check_links("Top Level Help", &get_test_font());
+    }
+}
