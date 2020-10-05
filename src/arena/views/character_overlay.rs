@@ -6,6 +6,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
+use super::view_components::LifeBar;
 use super::TILE_SIZE;
 use crate::after_image::{load_image, RenderCanvas, RenderContext};
 use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
@@ -16,6 +17,7 @@ pub struct CharacterOverlay {
     small_frame: Texture,
     fire: Texture,
     ice: Texture,
+    lifebar: LifeBar,
 }
 
 impl CharacterOverlay {
@@ -25,6 +27,7 @@ impl CharacterOverlay {
             large_frame: CharacterOverlay::load(render_context, "large_frame.png")?,
             fire: CharacterOverlay::load(render_context, "fire.png")?,
             ice: CharacterOverlay::load(render_context, "ice.png")?,
+            lifebar: LifeBar::init(render_context)?,
         })
     }
 
@@ -47,6 +50,15 @@ impl CharacterOverlay {
             panic!();
         }
 
+        let life_size = self.lifebar_size(ecs, entity);
+        let lifebar_rect = SDLRect::new(
+            screen_position.x() - (life_size as i32 / 2),
+            screen_position.y() + ((4 * TILE_SIZE as i32) / 5) - 2,
+            life_size,
+            8,
+        );
+        self.lifebar.render(lifebar_rect, canvas, 100)?;
+
         let temperature = ecs.get_temperature(entity);
         let image_rect = SDLRect::new(0, 0, 32, 32);
         let offset = self.status_offset(ecs, entity);
@@ -64,6 +76,17 @@ impl CharacterOverlay {
         }
 
         Ok(())
+    }
+
+    fn lifebar_size(&self, ecs: &World, entity: &Entity) -> u32 {
+        let position = ecs.get_position(entity);
+        if position.width == 1 && position.height == 1 {
+            TILE_SIZE - 5
+        } else if position.width == 2 && position.height == 2 {
+            2 * (TILE_SIZE - 5)
+        } else {
+            panic!();
+        }
     }
 
     fn status_offset(&self, ecs: &World, entity: &Entity) -> SDLPoint {
