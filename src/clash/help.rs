@@ -22,7 +22,7 @@ macro_rules! vec_of_strings {
 
 impl HelpInfo {
     pub fn init(header: HelpHeader, text: Vec<String>) -> HelpInfo {
-        HelpInfo { header: header, text }
+        HelpInfo { header, text }
     }
 
     pub fn no_header(text: Vec<String>) -> HelpInfo {
@@ -248,7 +248,7 @@ impl HelpInfo {
         }
 
         // pub effect: SkillEffect,
-        return HelpInfo::init(header, details);
+        HelpInfo::init(header, details)
     }
 
     pub fn find(mut word: &str) -> HelpInfo {
@@ -521,58 +521,46 @@ impl HelpInfo {
 
     pub fn find_status(status: StatusKind) -> HelpInfo {
         match status {
-            StatusKind::Burning => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings![format!(
-                        "Burning: Take {} [[piercing]] damage every turn while [[temperature]] is above {}.",
-                        TEMPERATURE_DAMAGE_PER_TICK, TEMPERATURE_BURN_POINT
-                    )],
-                )
-            }
-            StatusKind::Frozen => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings![format!(
-                        "Frozen: Movements take 150% longer while [[temperature]] is below {}.",
-                        TEMPERATURE_FREEZE_POINT
-                    )],
-                )
-            }
-            StatusKind::Magnum => return HelpInfo::find("Magnum Bullets"),
-            StatusKind::Ignite => return HelpInfo::find("Ignite Bullets"),
-            StatusKind::Cyclone => return HelpInfo::find("Cyclone Bullets"),
-            StatusKind::StaticCharge => return HelpInfo::find("Static Charge"),
-            StatusKind::Aimed => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec![format!(
-                        "Focused on nailing the next shot. Next attack [[strength]] increased by {}.",
-                        AIMED_SHOT_ADDITIONAL_STRENGTH
-                    )],
-                )
-            }
-            StatusKind::Armored => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec![format!(
-                        "Well prepared for the next blow. {} Additional [[armor]] through next attack.",
-                        AIMED_SHOT_ADDITIONAL_STRENGTH
-                    )],
-                )
-            }
-            StatusKind::Flying => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec_of_strings!["High above the battleground, unreachable for now."],
-                )
-            }
-            StatusKind::Regen => {
-                return HelpInfo::text_header(
-                    HelpInfo::get_status_effect_name(status),
-                    vec![format!("Rapidly healing injuries. A {} {{Sword}} heal every turn.", HEALTH_REGEN_PER_TICK)],
-                )
-            }
+            StatusKind::Burning => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec_of_strings![format!(
+                    "Burning: Take {} [[piercing]] damage every turn while [[temperature]] is above {}.",
+                    TEMPERATURE_DAMAGE_PER_TICK, TEMPERATURE_BURN_POINT
+                )],
+            ),
+            StatusKind::Frozen => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec_of_strings![format!(
+                    "Frozen: Movements take 150% longer while [[temperature]] is below {}.",
+                    TEMPERATURE_FREEZE_POINT
+                )],
+            ),
+            StatusKind::Magnum => HelpInfo::find("Magnum Bullets"),
+            StatusKind::Ignite => HelpInfo::find("Ignite Bullets"),
+            StatusKind::Cyclone => HelpInfo::find("Cyclone Bullets"),
+            StatusKind::StaticCharge => HelpInfo::find("Static Charge"),
+            StatusKind::Aimed => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec![format!(
+                    "Focused on nailing the next shot. Next attack [[strength]] increased by {}.",
+                    AIMED_SHOT_ADDITIONAL_STRENGTH
+                )],
+            ),
+            StatusKind::Armored => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec![format!(
+                    "Well prepared for the next blow. {} Additional [[armor]] through next attack.",
+                    AIMED_SHOT_ADDITIONAL_STRENGTH
+                )],
+            ),
+            StatusKind::Flying => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec_of_strings!["High above the battleground, unreachable for now."],
+            ),
+            StatusKind::Regen => HelpInfo::text_header(
+                HelpInfo::get_status_effect_name(status),
+                vec![format!("Rapidly healing injuries. A {} {{Sword}} heal every turn.", HEALTH_REGEN_PER_TICK)],
+            ),
             StatusKind::RegenTick => panic!("{:?} should not be visible to help", status),
             #[cfg(test)]
             StatusKind::TestStatus | StatusKind::TestTrait => panic!("{:?} should not be visible to help", status),

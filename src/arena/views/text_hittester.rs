@@ -27,6 +27,6 @@ impl TextHitTester {
                 return Some(e.1.clone());
             }
         }
-        return None;
+        None
     }
 }
