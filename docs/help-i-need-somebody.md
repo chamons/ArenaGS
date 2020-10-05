@@ -24,8 +24,8 @@ Now the current log position is a UI concern and held in the log view. The log m
 
 Here's what it tooltips look like:
 
-![Tooltip Help](https://chamons.github.io/ArenaGS/images/tooltip-help.jpg)
+![Tooltip Help](https://chamons.github.io/ArenaGS/images/tooltip-help.png)
 
 and here's the full 'modal' help:
 
-![Large Help](https://chamons.github.io/ArenaGS/images/modal-help.jpg)
+![Large Help](https://chamons.github.io/ArenaGS/images/modal-help.png)
