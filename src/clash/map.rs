@@ -90,16 +90,15 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
                 return MapHitTestResult::Field;
             }
         }
+        let field_position_match = |p: Option<Point>| {
+            if let Some(p) = p {
+                p.x == map_position.x && p.y == map_position.y
+            } else {
+                false
+            }
+        };
         if let Some(field) = field {
-            if behavior.is_some()
-                && field.fields.iter().any(|(p, _)| {
-                    if let Some(p) = p {
-                        p.x == map_position.x && p.y == map_position.y
-                    } else {
-                        false
-                    }
-                })
-            {
+            if behavior.is_some() && field.fields.iter().any(|(p, _)| field_position_match(*p)) {
                 return MapHitTestResult::Field;
             }
         }

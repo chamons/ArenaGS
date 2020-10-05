@@ -279,7 +279,7 @@ impl Layout {
                 static ref TAB_RE: Regex = Regex::new(Layout::TAB_REGEX).unwrap();
             }
 
-            if let Some(_) = TAB_RE.captures(word) {
+            if TAB_RE.captures(word).is_some() {
                 // Four spaces, the 5th will be added between this chunk and the first word
                 self.process_word("    ", font)?;
                 word = word.trim_start_matches("|tab|")

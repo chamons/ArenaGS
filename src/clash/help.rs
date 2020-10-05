@@ -514,9 +514,7 @@ impl HelpInfo {
             return HelpInfo::get_skill_help(word);
         }
 
-        match word {
-            _ => HelpInfo::get_error(word),
-        }
+        HelpInfo::get_error(word)
     }
 
     pub fn find_status(status: StatusKind) -> HelpInfo {
@@ -576,7 +574,7 @@ impl HelpInfo {
 
         summarize_character(ecs, entity, true, false, |t| details.push(t.to_string()));
 
-        HelpInfo::text_header(ecs.get_name(&entity).unwrap_or("Unknown Entity".to_string()).as_str(), details)
+        HelpInfo::text_header(ecs.get_name(&entity).unwrap_or_else(|| "Unknown Entity".to_string()).as_str(), details)
     }
 
     pub fn find_field(ecs: &World, entity: Entity) -> HelpInfo {

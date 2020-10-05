@@ -4,6 +4,7 @@ use super::HitTestResult;
 use crate::after_image::*;
 use crate::atlas::BoxResult;
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_text_layout<'a>(
     layout: &'a LayoutResult,
     canvas: &mut RenderCanvas,
