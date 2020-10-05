@@ -299,7 +299,7 @@ impl View for HelpPopup {
                 self.note_hit_area(close_frame, HitTestResult::CloseButton);
 
                 if topic_history.len() > 1 {
-                    let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 42 - 18, frame.y() + 19, 12, 17);
+                    let close_frame = SDLRect::new(frame.x() + frame.width() as i32 - 42 - 18, frame.y() + 19, 12, 18);
                     canvas.copy(&self.ui.get("back_button.png"), None, close_frame)?;
                     self.note_hit_area(close_frame, HitTestResult::BackButton);
                 }
