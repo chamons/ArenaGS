@@ -153,7 +153,7 @@ impl HelpPopup {
     }
 
     const MOUSE_POPUP_DRIFT: u32 = 10;
-    fn should_close_popup_from_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
+    fn should_close_help(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
             HelpPopupState::Tooltip { start_mouse, .. } => {
                 if button.is_some() {
@@ -192,7 +192,7 @@ impl HelpPopup {
             _ => {}
         }
 
-        if self.should_close_popup_from_mouse(x, y, button) {
+        if self.should_close_help(x, y, button) {
             self.disable();
             return;
         }
