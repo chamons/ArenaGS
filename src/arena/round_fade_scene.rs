@@ -1,6 +1,6 @@
 use std::cmp;
 
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
@@ -39,7 +39,7 @@ impl RoundFadeScene {
 }
 
 impl Scene for RoundFadeScene {
-    fn handle_key(&mut self, _keycode: Keycode) {
+    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {
         self.interacted = true;
     }
 

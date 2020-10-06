@@ -60,6 +60,12 @@ fn main() {
         copy_all_with_extension(&lib_dir, &dest_test_dir.stringify(), "dll").expect("Unable to copy native libraries");
 
         println!("{}", format!("cargo:rustc-link-search={}", lib_dir.stringify()));
+
+        let mut res = winres::WindowsResource::new();
+        res.set_manifest_file(lib_dir.join("arena_gunpowder_and_sorcery.manifest").stringify());
+        res.set_icon(lib_dir.join("arena_gunpowder_and_sorcery.ico").stringify());
+
+        res.compile().expect("Unable to run windows resource compiler");
     }
 
     for (folder, extension) in &[("images", "png"), ("maps", "*"), ("fonts", "*"), ("icons", "png"), ("ui", "png")] {

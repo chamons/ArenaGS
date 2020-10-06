@@ -278,6 +278,7 @@ impl HelpInfo {
                         "- Press F1 at any time to bring up the global help.",
                         "- Middle clicking almost anywhere, specially on underlined text will bring up a context help.",
                         "- Middle click again to promote the tooltip into a full help window.",
+                        "- Alt + Enter toggles full-screen mode.",
                         "",
                         "In the future, there will hopefully be a full featured tutorial.",
                         "",

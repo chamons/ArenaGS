@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
@@ -30,7 +30,7 @@ impl ImageTesterScene {
 }
 
 impl Scene for ImageTesterScene {
-    fn handle_key(&mut self, _keycode: Keycode) {}
+    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {

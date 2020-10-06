@@ -2,9 +2,11 @@ use std::time::Duration;
 use std::time::Instant;
 
 use sdl2::event::Event;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
+use sdl2::video::FullscreenType;
 
 use super::{Scene, Storyteller};
 
@@ -37,21 +39,49 @@ impl<'a> Director<'a> {
         let mut frame = 0;
         loop {
             let start_frame = Instant::now();
+
+            let mut change_fullscreen_state = false;
             for event in render_context.borrow_mut().event_pump.poll_iter() {
                 match event {
                     Event::Quit { .. } => {
                         self.scene.on_quit()?;
                         return Ok(());
                     }
-                    Event::KeyDown { keycode, repeat: false, .. } => {
+                    Event::KeyDown {
+                        keycode,
+                        repeat: false,
+                        keymod,
+                        ..
+                    } => {
                         if let Some(keycode) = keycode {
-                            self.scene.handle_key(keycode)
+                            match keycode {
+                                Keycode::Return => {
+                                    if keymod & Mod::LALTMOD == Mod::LALTMOD || keymod & Mod::RALTMOD == Mod::RALTMOD {
+                                        change_fullscreen_state = true;
+                                    }
+                                }
+                                _ => {}
+                            }
+                            self.scene.handle_key(keycode, keymod)
                         }
                     }
                     Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, Some(mouse_btn)),
                     Event::MouseMotion { x, y, .. } => self.scene.handle_mouse(x, y, None),
                     _ => {}
                 };
+            }
+            if change_fullscreen_state {
+                let mut render_context = render_context.borrow_mut();
+
+                let (fullscreen_request, (width, height)) = match render_context.canvas.window().fullscreen_state() {
+                    FullscreenType::Desktop | FullscreenType::True => (FullscreenType::Off, (1024, 768)),
+                    FullscreenType::Off => (FullscreenType::True, (1366, 768)),
+                };
+
+                let window = render_context.canvas.window_mut();
+                window.set_fullscreen(fullscreen_request)?;
+
+                window.set_size(width, height).expect("Unable to set resolution on fullscreen swap");
             }
 
             self.scene.tick(frame);
