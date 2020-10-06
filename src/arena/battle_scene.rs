@@ -171,7 +171,7 @@ impl BattleScene {
 }
 
 impl Scene for BattleScene {
-    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {
+    fn handle_key(&mut self, keycode: Keycode, _keymod: Mod) {
         if self.help.is_enabled() && keycode == Keycode::Escape {
             self.help.disable();
         }

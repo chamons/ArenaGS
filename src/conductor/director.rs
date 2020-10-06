@@ -59,10 +59,10 @@ impl<'a> Director<'a> {
                                     if keymod & Mod::LALTMOD == Mod::LALTMOD || keymod & Mod::RALTMOD == Mod::RALTMOD {
                                         change_fullscreen_state = true;
                                     }
-                                    _ => {}
                                 }
-                                self.scene.handle_key(keycode, keymod)
+                                _ => {}
                             }
+                            self.scene.handle_key(keycode, keymod)
                         }
                     }
                     Event::MouseButtonDown { x, y, mouse_btn, .. } => self.scene.handle_mouse(x, y, Some(mouse_btn)),

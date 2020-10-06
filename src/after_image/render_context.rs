@@ -1,7 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::image::{self, InitFlag};
-use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::BlendMode;
 
