@@ -50,12 +50,6 @@ impl BattleScene {
     }
 
     fn handle_default_key(&mut self, keycode: Keycode) {
-        if cfg!(debug_assertions) {
-            if keycode == Keycode::F10 {
-                battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
-            }
-        }
-
         if let Some(i) = is_keystroke_skill(keycode) {
             if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name))
@@ -66,33 +60,42 @@ impl BattleScene {
             Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
             Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
             Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
-            Keycode::D => {
-                self.ecs
-                    .write_storage::<CharacterInfoComponent>()
-                    .grab_mut(find_player(&self.ecs))
-                    .character
-                    .defenses
-                    .health = 0
-            }
-            Keycode::K => {
-                for e in find_enemies(&self.ecs) {
-                    self.ecs.write_storage::<CharacterInfoComponent>().grab_mut(e).character.defenses.health = 0
-                }
-            }
-            Keycode::N => {
-                self.ecs = new_game::random_new_world(0).unwrap();
-            }
-            Keycode::S => saveload::save_to_disk(&mut self.ecs),
-            Keycode::L => {
-                if let Ok(new_world) = saveload::load_from_disk() {
-                    self.ecs = new_world;
-                }
-            }
             Keycode::F1 => {
                 self.help.enable(&self.ecs, None, HitTestResult::Text("Top Level Help".to_string()));
                 self.help.force_size_large();
             }
+
             _ => {}
+        }
+        if cfg!(debug_assertions) {
+            match keycode {
+                Keycode::D => {
+                    self.ecs
+                        .write_storage::<CharacterInfoComponent>()
+                        .grab_mut(find_player(&self.ecs))
+                        .character
+                        .defenses
+                        .health = 0
+                }
+                Keycode::K => {
+                    for e in find_enemies(&self.ecs) {
+                        self.ecs.write_storage::<CharacterInfoComponent>().grab_mut(e).character.defenses.health = 0
+                    }
+                }
+                Keycode::N => {
+                    self.ecs = new_game::random_new_world(0).unwrap();
+                }
+                Keycode::S => saveload::save_to_disk(&mut self.ecs),
+                Keycode::L => {
+                    if let Ok(new_world) = saveload::load_from_disk() {
+                        self.ecs = new_world;
+                    }
+                }
+                Keycode::F10 => {
+                    battle_actions::set_action_state(&mut self.ecs, BattleSceneState::Debug(DebugKind::MapOverlay()));
+                }
+                _ => {}
+            }
         }
     }
 
