@@ -1,3 +1,4 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
 #![allow(clippy::len_zero)]
@@ -5,9 +6,6 @@
 use std::{cell::RefCell, rc::Rc};
 
 use leak::Leak;
-
-// Disable annoying black terminal
-//#![windows_subsystem = "windows"]
 
 #[macro_use]
 extern crate derive_is_enum_variant;
