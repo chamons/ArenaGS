@@ -52,12 +52,15 @@ impl CharacterOverlay {
 
         let life_size = self.lifebar_size(ecs, entity);
         let lifebar_rect = SDLRect::new(
-            screen_position.x() - (life_size as i32 / 2),
-            screen_position.y() + ((4 * TILE_SIZE as i32) / 5) - 2,
-            life_size,
-            8,
+            screen_position.x() - (life_size as i32 / 2) + 2,
+            screen_position.y() + ((4 * TILE_SIZE as i32) / 5) + 2,
+            life_size - 4,
+            6,
         );
-        self.lifebar.render(lifebar_rect, canvas, 100)?;
+
+        let defenses = ecs.get_defenses(entity);
+        let health = defenses.health as f64 / defenses.max_health as f64;
+        self.lifebar.render(lifebar_rect, canvas, health)?;
 
         let temperature = ecs.get_temperature(entity);
         let image_rect = SDLRect::new(0, 0, 32, 32);

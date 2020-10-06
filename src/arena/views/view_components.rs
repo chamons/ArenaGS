@@ -102,12 +102,16 @@ impl LifeBar {
         })
     }
 
-    pub fn render(&self, frame: SDLRect, canvas: &mut RenderCanvas, percentage: u32) -> BoxResult<()> {
-        canvas.copy(&self.lifebar_frame, None, frame)?;
+    pub fn render(&self, frame: SDLRect, canvas: &mut RenderCanvas, percentage: f64) -> BoxResult<()> {
         let mut lifebar_inner_frame = frame.clone();
-        lifebar_inner_frame.offset(1, 1);
-        lifebar_inner_frame.resize(lifebar_inner_frame.width() - 2, lifebar_inner_frame.height());
+        lifebar_inner_frame.offset(0, 1);
+        lifebar_inner_frame.resize(
+            (lifebar_inner_frame.width() as f64 * percentage).round() as u32,
+            lifebar_inner_frame.height() - 2,
+        );
         canvas.copy(&self.lifebar, None, lifebar_inner_frame)?;
+
+        canvas.copy(&self.lifebar_frame, None, frame)?;
 
         Ok(())
     }
