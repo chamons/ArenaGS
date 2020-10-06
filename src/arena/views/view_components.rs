@@ -87,3 +87,32 @@ impl View for Button {
         }
     }
 }
+
+pub struct LifeBar {
+    lifebar_frame: Texture,
+    lifebar: Texture,
+}
+
+impl LifeBar {
+    pub fn init(render_context: &RenderContext) -> BoxResult<LifeBar> {
+        let loader = IconLoader::init_ui()?;
+        Ok(LifeBar {
+            lifebar_frame: loader.get(render_context, "boss_life_frame.png")?,
+            lifebar: loader.get(render_context, "boss_life_bar.png")?,
+        })
+    }
+
+    pub fn render(&self, frame: SDLRect, canvas: &mut RenderCanvas, percentage: f64) -> BoxResult<()> {
+        let mut lifebar_inner_frame = frame;
+        lifebar_inner_frame.offset(0, 1);
+        lifebar_inner_frame.resize(
+            (lifebar_inner_frame.width() as f64 * percentage).round() as u32,
+            lifebar_inner_frame.height() - 2,
+        );
+        canvas.copy(&self.lifebar, None, lifebar_inner_frame)?;
+
+        canvas.copy(&self.lifebar_frame, None, frame)?;
+
+        Ok(())
+    }
+}
