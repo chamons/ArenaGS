@@ -59,8 +59,9 @@ impl<'a> Director<'a> {
                                     if keymod & Mod::LALTMOD == Mod::LALTMOD || keymod & Mod::RALTMOD == Mod::RALTMOD {
                                         change_fullscreen_state = true;
                                     }
+                                    _ => {}
                                 }
-                                _ => self.scene.handle_key(keycode, keymod),
+                                self.scene.handle_key(keycode, keymod)
                             }
                         }
                     }
