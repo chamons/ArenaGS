@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
@@ -171,7 +171,7 @@ impl BattleScene {
 }
 
 impl Scene for BattleScene {
-    fn handle_key(&mut self, keycode: Keycode) {
+    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {
         if self.help.is_enabled() && keycode == Keycode::Escape {
             self.help.disable();
         }
@@ -183,6 +183,7 @@ impl Scene for BattleScene {
             Keycode::PageDown => {
                 self.ecs.raise_event(EventKind::LogScrolled(LogDirection::Forward), None);
             }
+
             _ => {}
         }
 
@@ -222,7 +223,7 @@ impl Scene for BattleScene {
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         self.ecs.write_resource::<FrameComponent>().current_frame = frame;
 
-        canvas.set_draw_color(Color::from((0, 128, 255)));
+        canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
         for view in self.views.iter() {

@@ -1,6 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::image::{self, InitFlag};
+use sdl2::pixels::Color;
+use sdl2::rect::Rect as SDLRect;
 use sdl2::render::BlendMode;
 
 pub struct FontContext {
@@ -36,7 +38,7 @@ impl RenderContext {
             .window("Arena GS", 1024, 768)
             .position_centered()
             .build()
-            .expect("could not initialize video subsystem");
+            .expect("Could not initialize video subsystem");
 
         let mut canvas = window
             .into_canvas()
@@ -44,8 +46,10 @@ impl RenderContext {
             .present_vsync()
             .accelerated()
             .build()
-            .expect("could not make a canvas");
+            .expect("Could not make a canvas");
         canvas.set_blend_mode(BlendMode::Blend);
+        canvas.set_logical_size(1024, 768).expect("Could not set logical size");
+        canvas.set_clip_rect(SDLRect::new(0, 0, 1024, 768));
 
         let event_pump = sdl_context.event_pump()?;
 

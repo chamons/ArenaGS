@@ -1,7 +1,7 @@
 use std::cmp;
 use std::rc::Rc;
 
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
@@ -70,7 +70,7 @@ impl DeathScene {
 }
 
 impl Scene for DeathScene {
-    fn handle_key(&mut self, _keycode: Keycode) {
+    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {
         self.interacted = true;
     }
 

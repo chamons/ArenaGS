@@ -1,7 +1,11 @@
 {
     "cSpell.ignoreWords": [
+        "fullscreen",
+        "fullscreen type",
+        "keymod",
         "lifebar",
         "rustc",
-        "sdl"
+        "sdl",
+        "type"
     ]
 }
