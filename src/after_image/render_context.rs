@@ -21,6 +21,7 @@ pub struct RenderContext {
     _image_context: sdl2::image::Sdl2ImageContext,
     pub canvas: sdl2::render::Canvas<sdl2::video::Window>,
     pub event_pump: sdl2::EventPump,
+    pub keyboard_util: sdl2::keyboard::KeyboardUtil,
 }
 
 impl RenderContext {
@@ -51,11 +52,13 @@ impl RenderContext {
         canvas.set_clip_rect(SDLRect::new(0, 0, 1024, 768));
 
         let event_pump = sdl_context.event_pump()?;
+        let keyboard_util = sdl_context.keyboard();
 
         Ok(RenderContext {
             _image_context,
             canvas,
             event_pump,
+            keyboard_util,
         })
     }
 }
