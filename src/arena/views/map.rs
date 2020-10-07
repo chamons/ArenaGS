@@ -65,7 +65,7 @@ impl MapView {
         Ok(MapView {
             sprites,
             overlay,
-            frame: Frame::init(SDLPoint::new(0, 0), render_context, &IconLoader::init_ui()?, FrameKind::Map)?,
+            frame: Frame::init(SDLPoint::new(0, 0), render_context, &IconLoader::init_ui(), FrameKind::Map)?,
         })
     }
 

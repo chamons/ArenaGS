@@ -16,9 +16,9 @@ pub struct StatusBarView {
 
 impl StatusBarView {
     pub fn init(render_context: &RenderContext, position: SDLPoint) -> BoxResult<StatusBarView> {
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons()?, all_icon_filenames())?);
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons(), all_icon_filenames())?);
         let mut views = vec![];
-        let ui = IconLoader::init_ui()?;
+        let ui = IconLoader::init_ui();
         for i in 0..10 {
             views.push(StatusBarItemView::init(
                 SDLPoint::new(position.x() + i as i32 * 58, position.y()),

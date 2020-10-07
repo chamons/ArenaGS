@@ -22,12 +22,12 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn init(filename: &str) -> BoxResult<Map> {
+    pub fn init(filename: &str) -> Map {
         let mut data = Vec::new();
-        let mut file = File::open(filename)?;
-        file.read_to_end(&mut data)?;
-        let tiles = bincode::deserialize(&data)?;
-        Ok(Map { tiles })
+        let mut file = File::open(filename).expect("Unable to load map data");
+        file.read_to_end(&mut data).expect("Unable to read map data");
+        let tiles = bincode::deserialize(&data).expect("Unable to parse map data");
+        Map { tiles }
     }
 
     #[allow(dead_code)]

@@ -27,10 +27,10 @@ impl LogView {
             frame: Frame::init(
                 SDLPoint::new(position.x() - 27, position.y() - 9),
                 render_context,
-                &IconLoader::init_ui()?,
+                &IconLoader::init_ui(),
                 FrameKind::Log,
             )?,
-            icons: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
+            icons: IconCache::init(render_context, IconLoader::init_symbols(), &["plain-dagger.png"])?,
             hit_tester: RefCell::new(TextHitTester::init()),
         })
     }

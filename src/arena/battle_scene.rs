@@ -24,7 +24,7 @@ pub struct BattleScene {
 
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(difficulty).unwrap();
+        let ecs = new_game::random_new_world(difficulty);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -83,7 +83,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(0).unwrap();
+                    self.ecs = new_game::random_new_world(0);
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {

@@ -57,14 +57,14 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
-pub fn random_new_world(difficulty: u32) -> BoxResult<World> {
+pub fn random_new_world(difficulty: u32) -> World {
     // Since we are creating an entire new world, it is acceptable to use thread RNG
     let mut random = rand::thread_rng();
     let kind: BattleKind = random.gen();
     new_world(kind, difficulty)
 }
 
-pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
+pub fn new_world(kind: BattleKind, difficulty: u32) -> World {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
@@ -73,7 +73,7 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
 
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
-    ecs.insert(MapComponent::init(Map::init(map_data_path)?));
+    ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.write_resource::<GameDifficultyComponent>().difficulty = difficulty;
 
     let player_position = find_placement(&ecs, 1, 1);
@@ -111,7 +111,7 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
 
     map_background(&mut ecs);
 
-    Ok(ecs)
+    ecs
 }
 
 pub fn map_background(ecs: &mut World) {

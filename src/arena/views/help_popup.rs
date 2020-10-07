@@ -47,7 +47,7 @@ impl HelpPopup {
             text_renderer,
             ui: IconCache::init(
                 render_context,
-                IconLoader::init_ui()?,
+                IconLoader::init_ui(),
                 &[
                     "help_small.png",
                     "help_medium.png",
@@ -57,8 +57,8 @@ impl HelpPopup {
                     "forward_button.png",
                 ],
             )?,
-            symbols: IconCache::init(render_context, IconLoader::init_symbols()?, &["plain-dagger.png"])?,
-            icons: IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?,
+            symbols: IconCache::init(render_context, IconLoader::init_symbols(), &["plain-dagger.png"])?,
+            icons: IconCache::init(render_context, IconLoader::init_icons(), &all_skill_image_filesnames())?,
             size: HelpPopupSize::Unknown,
             help: None,
         })

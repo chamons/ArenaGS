@@ -15,28 +15,28 @@ pub struct IconLoader {
 }
 
 impl IconLoader {
-    pub fn init_icons() -> BoxResult<IconLoader> {
+    pub fn init_icons() -> IconLoader {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").stringify_owned();
-        find_images(&mut images, &folder)?;
+        find_images(&mut images, &folder).expect("IconLoader unable to load icons");
 
-        Ok(IconLoader { images })
+        IconLoader { images }
     }
 
-    pub fn init_symbols() -> BoxResult<IconLoader> {
+    pub fn init_symbols() -> IconLoader {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("icons").join("lorc").stringify_owned();
-        find_images(&mut images, &folder)?;
+        find_images(&mut images, &folder).expect("IconLoader unable to load symbols");
 
-        Ok(IconLoader { images })
+        IconLoader { images }
     }
 
-    pub fn init_ui() -> BoxResult<IconLoader> {
+    pub fn init_ui() -> IconLoader {
         let mut images = HashMap::new();
         let folder = Path::new(&get_exe_folder()).join("ui").stringify_owned();
-        find_images(&mut images, &folder)?;
+        find_images(&mut images, &folder).expect("IconLoader unable to load ui images");
 
-        Ok(IconLoader { images })
+        IconLoader { images }
     }
 
     pub fn get(&self, render_context: &RenderContext, name: &str) -> BoxResult<Texture> {
