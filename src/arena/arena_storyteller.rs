@@ -36,15 +36,15 @@ impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {
             StageDirection::Continue => EventStatus::Continue,
-            StageDirection::NewGame(difficulty) => {
-                EventStatus::NewScene(Box::new(BattleScene::init(&self.render_context, &self.text_renderer, difficulty).unwrap()))
-            }
+            StageDirection::NewGame(difficulty) => EventStatus::NewScene(Box::new(
+                BattleScene::init(&self.render_context, &self.text_renderer, difficulty).expect("Unable to load additional battle scene"),
+            )),
             StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),
             StageDirection::BattleEnemyDefeated(difficulty) => EventStatus::NewScene(self.prepare_round_fade_scene(render_context, difficulty)),
         }
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
-        Box::new(BattleScene::init(&self.render_context, &self.text_renderer, 0).unwrap())
+        Box::new(BattleScene::init(&self.render_context, &self.text_renderer, 0).expect("Unable to load initial battle scene"))
     }
 }
