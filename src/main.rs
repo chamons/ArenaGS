@@ -49,6 +49,9 @@ pub fn main() -> BoxResult<()> {
         }));
     }
 
+    #[cfg(feature = "crash_reporting")]
+    let _guard = sentry::init(include_str!("../lib/sentry.key"));
+
     let render_context = Rc::new(RefCell::new(RenderContext::initialize()?));
     let mut director = Director::init(get_storyteller(&render_context)?);
     director.run(render_context)?;
