@@ -8,7 +8,7 @@ use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::components::*;
-use crate::atlas::{get_exe_folder, BoxResult, Direction, EasyPath, Point, SizedPoint, ToSerialize};
+use crate::atlas::{get_exe_folder, Direction, EasyPath, Point, SizedPoint, ToSerialize};
 use crate::clash::*;
 
 use crate::clash::content::spawner;
