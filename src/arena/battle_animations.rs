@@ -215,7 +215,11 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     }
 }
 
-fn get_explode_info(ecs: &mut World, target: Entity) -> (SpriteKinds, u32) {
+const SECONDARY_START: u64 = 14;
+const SECONDARY_LENGTH: u64 = 8;
+
+pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
+    let frame = ecs.get_current_frame();
     let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
     let (kind, range) = match attack_info.kind {
         AttackKind::Explode(kind, range) => (kind, range),
@@ -230,16 +234,6 @@ fn get_explode_info(ecs: &mut World, target: Entity) -> (SpriteKinds, u32) {
         ExplosionKind::Water => SpriteKinds::WaterColumn,
         ExplosionKind::Earth => SpriteKinds::EarthColumn,
     };
-    (sprite, range)
-}
-
-const SECONDARY_START: u64 = 14;
-const SECONDARY_LENGTH: u64 = 8;
-
-pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
-    let frame = ecs.get_current_frame();
-    let (sprite, _) = get_explode_info(ecs, target);
-
     ecs.shovel(target, RenderComponent::init(RenderInfo::init(sprite)));
     ecs.write_storage::<FieldComponent>().remove(target);
 
@@ -250,7 +244,11 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
 
 fn begin_secondary_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
-    let (sprite, range) = get_explode_info(ecs, target);
+    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
+    let range = match attack_info.kind {
+        AttackKind::Explode(_, range) => range,
+        _ => panic!("begin_secondary_explode_animation with non-explosion attack?"),
+    };
 
     let explosion_origin = ecs.get_position(&target).origin;
     for p in explosion_origin.get_burst(range).iter().filter(|&&p| p != explosion_origin) {
@@ -258,7 +256,7 @@ fn begin_secondary_explode_animation(ecs: &mut World, target: Entity) {
         let second_explode = ecs
             .create_entity()
             .with(PositionComponent::init(SizedPoint::from(*p)))
-            .with(RenderComponent::init(RenderInfo::init(sprite)))
+            .with(RenderComponent::init(RenderInfo::init(SpriteKinds::Cloud)))
             .build();
         let second_explode_animation = Animation::empty(frame, SECONDARY_LENGTH).with_post_event(EventKind::SecondaryExplodeComplete, Some(second_explode));
         add_animation(ecs, second_explode, second_explode_animation);

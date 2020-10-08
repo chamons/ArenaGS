@@ -101,7 +101,11 @@ impl SpriteLoader {
                 SpriteKinds::LightningStrike => {
                     Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "lightning"), 0, 6)?.with_scale(2.5))
                 }
-                SpriteKinds::Cloud => Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 0, 6)?.with_scale(2.0)),
+                SpriteKinds::Cloud => Box::new(
+                    Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "smoke"), 0, 6)?
+                        .with_scale(2.0)
+                        .with_render_offset(SDLPoint::new(0, 44)),
+                ),
                 SpriteKinds::FireColumn => {
                     Box::new(Bolt::init(render_context, &SpriteFolderDescription::init_without_set(&folder, "fire"), 16, 5)?.with_scale(2.0))
                 }
