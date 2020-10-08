@@ -104,13 +104,6 @@ impl AttackInfo {
             _ => panic!("Wrong type in orb_kind"),
         }
     }
-
-    pub fn explode_kind(&self) -> ExplosionKind {
-        match self.kind {
-            AttackKind::Explode(kind, _) => kind,
-            _ => panic!("Wrong type in explode_kind"),
-        }
-    }
 }
 
 impl AttackComponent {

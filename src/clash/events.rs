@@ -57,6 +57,7 @@ pub enum FieldState {
 #[derive(Copy, Clone, is_enum_variant)]
 pub enum ExplodeState {
     BeginAnimation,
+    BeginSecondaryExplosion,
     CompleteAnimation,
 }
 
@@ -77,6 +78,7 @@ pub enum EventKind {
     Cone(ConeState),
     Field(FieldState),
     Explode(ExplodeState),
+    SecondaryExplodeComplete,
     MoveComplete(u32),
     Tick(i32),
     Damage(RolledDamage),

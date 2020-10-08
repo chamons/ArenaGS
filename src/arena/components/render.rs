@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::after_image::CharacterAnimationState;
 
 #[allow(dead_code)]
-#[derive(Hash, PartialEq, Eq, IntoEnumIterator, IntoPrimitive)]
+#[derive(Hash, PartialEq, Eq, IntoEnumIterator, IntoPrimitive, Copy, Clone)]
 #[repr(u32)]
 pub enum SpriteKinds {
     BeachBackground,

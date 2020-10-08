@@ -4,7 +4,7 @@ use super::components::*;
 use super::{add_animation, Animation};
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyECS, EasyMutWorld, Point};
+use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
 use crate::clash::*;
 
 pub fn battle_animation_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -198,15 +198,31 @@ fn animate_move(ecs: &mut World, target: Entity, action: PostMoveAction) {
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
-    if matches!(kind, EventKind::Explode(state) if state.is_begin_animation()) {
-        begin_explode_animation(ecs, target.unwrap());
+    match kind {
+        EventKind::Explode(state) => match state {
+            ExplodeState::BeginAnimation => {
+                begin_explode_animation(ecs, target.unwrap());
+            }
+            ExplodeState::BeginSecondaryExplosion => {
+                begin_secondary_explode_animation(ecs, target.unwrap());
+            }
+            _ => {}
+        },
+        EventKind::SecondaryExplodeComplete => {
+            ecs.delete_entity(target.unwrap()).expect("Unable to delete secondary explosion");
+        }
+        _ => {}
     }
 }
 
-pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
-    let frame = ecs.get_current_frame();
+fn get_explode_info(ecs: &mut World, target: Entity) -> (SpriteKinds, u32) {
     let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
-    let sprite = match attack_info.explode_kind() {
+    let (kind, range) = match attack_info.kind {
+        AttackKind::Explode(kind, range) => (kind, range),
+        _ => panic!("begin_explode_animation with non-explosion attack?"),
+    };
+
+    let sprite = match kind {
         ExplosionKind::Bomb => SpriteKinds::Explosion,
         ExplosionKind::Cloud => SpriteKinds::Cloud,
         ExplosionKind::Lightning => SpriteKinds::LightningStrike,
@@ -214,10 +230,41 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
         ExplosionKind::Water => SpriteKinds::WaterColumn,
         ExplosionKind::Earth => SpriteKinds::EarthColumn,
     };
+    (sprite, range)
+}
+
+const SECONDARY_START: u64 = 14;
+const SECONDARY_LENGTH: u64 = 8;
+
+pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
+    let frame = ecs.get_current_frame();
+    let (sprite, _) = get_explode_info(ecs, target);
+
     ecs.shovel(target, RenderComponent::init(RenderInfo::init(sprite)));
     ecs.write_storage::<FieldComponent>().remove(target);
 
-    const EXPLOSION_LENGTH: u64 = 22;
-    let attack_animation = Animation::empty(frame, EXPLOSION_LENGTH).with_post_event(EventKind::Explode(ExplodeState::CompleteAnimation), Some(target));
+    // This triggers secondary animations half way through
+    let attack_animation = Animation::empty(frame, SECONDARY_START).with_post_event(EventKind::Explode(ExplodeState::BeginSecondaryExplosion), Some(target));
+    add_animation(ecs, target, attack_animation);
+}
+
+fn begin_secondary_explode_animation(ecs: &mut World, target: Entity) {
+    let frame = ecs.get_current_frame();
+    let (sprite, range) = get_explode_info(ecs, target);
+
+    let explosion_origin = ecs.get_position(&target).origin;
+    for p in explosion_origin.get_burst(range).iter().filter(|&&p| p != explosion_origin) {
+        // These are the secondary animations, removed in SecondaryExplodeComplete processing
+        let second_explode = ecs
+            .create_entity()
+            .with(PositionComponent::init(SizedPoint::from(*p)))
+            .with(RenderComponent::init(RenderInfo::init(sprite)))
+            .build();
+        let second_explode_animation = Animation::empty(frame, SECONDARY_LENGTH).with_post_event(EventKind::SecondaryExplodeComplete, Some(second_explode));
+        add_animation(ecs, second_explode, second_explode_animation);
+    }
+
+    // This triggers completion of the explosion animation
+    let attack_animation = Animation::empty(frame, SECONDARY_LENGTH).with_post_event(EventKind::Explode(ExplodeState::CompleteAnimation), Some(target));
     add_animation(ecs, target, attack_animation);
 }
