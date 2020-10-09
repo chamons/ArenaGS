@@ -24,7 +24,7 @@ pub enum StatusKind {
     Flying,
     Regen,
     RegenTick,
-
+    // When you add more here, consider if it should be shown in character_overlay.rs
     #[cfg(test)]
     TestStatus,
     #[cfg(test)]
