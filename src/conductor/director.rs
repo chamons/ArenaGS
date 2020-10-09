@@ -98,6 +98,8 @@ impl<'a> Director<'a> {
                     };
                 }
             }
+
+            #[cfg(windows)] // https://github.com/chamons/ArenaGS/issues/231
             if change_fullscreen_state {
                 let mut render_context = render_context.borrow_mut();
 
