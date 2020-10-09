@@ -221,7 +221,7 @@ const SECONDARY_LENGTH: u64 = 8;
 pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
     let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
-    let (kind, range) = match attack_info.kind {
+    let (kind, _) = match attack_info.kind {
         AttackKind::Explode(kind, range) => (kind, range),
         _ => panic!("begin_explode_animation with non-explosion attack?"),
     };

@@ -1,44 +1,40 @@
-use std::path::Path;
-
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::view_components::LifeBar;
 use super::TILE_SIZE;
-use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
+use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
+use crate::atlas::BoxResult;
 use crate::clash::ShortInfo;
 
 pub struct CharacterOverlay {
-    large_frame: Texture,
-    small_frame: Texture,
-    fire: Texture,
-    ice: Texture,
+    cache: IconCache,
     lifebar: LifeBar,
 }
 
 impl CharacterOverlay {
     pub fn init(render_context: &RenderContext) -> BoxResult<CharacterOverlay> {
         Ok(CharacterOverlay {
-            small_frame: CharacterOverlay::load(render_context, "small_frame.png")?,
-            large_frame: CharacterOverlay::load(render_context, "large_frame.png")?,
-            fire: CharacterOverlay::load(render_context, "fire.png")?,
-            ice: CharacterOverlay::load(render_context, "ice.png")?,
+            cache: IconCache::init_with_alpha(
+                render_context,
+                IconLoader::init_overlay_icons(),
+                &["small_frame.png", "large_frame.png", "fire.png", "ice.png"],
+                Some(212),
+            )?,
             lifebar: LifeBar::init(render_context)?,
         })
     }
 
-    fn load(render_context: &RenderContext, name: &str) -> BoxResult<Texture> {
-        let mut img = load_image(
-            Path::new(&get_exe_folder()).join("images").join("frames").join(name).stringify(),
-            render_context,
-        )?;
-        img.set_alpha_mod(212);
-        Ok(img)
-    }
+    // Collect a list of statuses, draw first N in order
+    // Burning
+    // Frozen
+    // StaticCharge,
+    // Aimed,
+    // Armored,
+    // Flying,
+    // Regen,
 
     pub fn draw_character_overlay(&self, canvas: &mut RenderCanvas, ecs: &World, entity: &Entity, screen_position: SDLPoint) -> BoxResult<()> {
         let position = ecs.get_position(entity);
@@ -70,12 +66,12 @@ impl CharacterOverlay {
             let screen_rect = SDLRect::new(screen_position.x() + offset.x(), screen_position.y() + offset.y(), 32, 32);
             let background_rect = SDLRect::new(screen_rect.x() + 7, screen_rect.y() + 2, 18, 28);
             canvas.fill_rect(background_rect)?;
-            canvas.copy(&self.fire, image_rect, screen_rect)?;
+            canvas.copy(&self.cache.get("fire.png"), image_rect, screen_rect)?;
         } else if temperature.is_freezing() {
             let screen_rect = SDLRect::new(screen_position.x() + offset.x() + 8, screen_position.y() + offset.y() + 6, 20, 20);
             let background_rect = SDLRect::new(screen_rect.x() + 7 - 8, screen_rect.y() + 2 - 6, 22, 28);
             canvas.fill_rect(background_rect)?;
-            canvas.copy(&self.ice, image_rect, screen_rect)?
+            canvas.copy(&self.cache.get("ice.png"), image_rect, screen_rect)?
         }
 
         Ok(())
@@ -111,14 +107,14 @@ impl CharacterOverlay {
             TILE_SIZE * 2,
             TILE_SIZE * 2,
         );
-        canvas.copy(&self.large_frame, image_rect, screen_rect)?;
+        canvas.copy(self.cache.get("small_frame.png"), image_rect, screen_rect)?;
         Ok(())
     }
 
     fn draw_small_bracket(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint) -> BoxResult<()> {
         let image_rect = SDLRect::new(0, 0, TILE_SIZE, TILE_SIZE);
         let screen_rect = SDLRect::new(screen_position.x() - (TILE_SIZE as i32 / 2), screen_position.y(), TILE_SIZE, TILE_SIZE);
-        canvas.copy(&self.small_frame, image_rect, screen_rect)?;
+        canvas.copy(self.cache.get("large_frame.png"), image_rect, screen_rect)?;
         Ok(())
     }
 }

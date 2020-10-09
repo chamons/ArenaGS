@@ -39,6 +39,14 @@ impl IconLoader {
         IconLoader { images }
     }
 
+    pub fn init_overlay_icons() -> IconLoader {
+        let mut images = HashMap::new();
+        let folder = Path::new(&get_exe_folder()).join("images").join("frames").stringify_owned();
+        find_images(&mut images, &folder).expect("IconLoader unable to load overlay icons");
+
+        IconLoader { images }
+    }
+
     pub fn get(&self, render_context: &RenderContext, name: &str) -> BoxResult<Texture> {
         let name = name.to_ascii_lowercase();
         if let Some(path) = self.images.get(&name) {
