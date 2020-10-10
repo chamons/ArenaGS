@@ -348,13 +348,13 @@ impl View for HelpPopup {
                     LayoutRequest::init(
                         frame.x() as u32 + HELP_OFFSET,
                         y + frame.y() as u32 + HELP_OFFSET,
-                        frame.width() - (HELP_OFFSET * 2) - 20,
+                        frame.width() - (HELP_OFFSET * 2) - 10,
                         2,
                     ),
                 )?;
 
                 y += layout.line_count * 22;
-                if y as i32 >= frame_size.1 {
+                if y as i32 >= frame_size.1 - 20 {
                     break;
                 }
 
