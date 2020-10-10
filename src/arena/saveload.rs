@@ -46,7 +46,7 @@ macro_rules! deserialize_individually {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SerializationHelper {
     pub map: Map,
-    pub difficulty: u32,
+    pub phase: u32,
 }
 
 #[cfg(test)]
@@ -69,9 +69,9 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
     let mut serializer = serde_json::Serializer::new(&mut *writer);
     {
         let map = ecs.read_resource::<MapComponent>().map.clone();
-        let difficulty = ecs.read_resource::<GameDifficultyComponent>().difficulty;
+        let phase = ecs.read_resource::<GamePhaseComponent>().phase;
         ecs.create_entity()
-            .with(SerializationHelper { map, difficulty })
+            .with(SerializationHelper { map, phase })
             .marked::<SimpleMarker<ToSerialize>>()
             .build();
     }
@@ -103,7 +103,7 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
         RenderComponent,
         BattleSceneStateComponent,
         MousePositionComponent,
-        GameDifficultyComponent,
+        GamePhaseComponent,
         DurationComponent,
         SerializationHelper
     );
@@ -157,20 +157,20 @@ fn load(data: String) -> BoxResult<World> {
             RenderComponent,
             BattleSceneStateComponent,
             MousePositionComponent,
-            GameDifficultyComponent,
+            GamePhaseComponent,
             DurationComponent,
             SerializationHelper
         );
     }
     {
-        let (map, difficulty, entity) = {
+        let (map, phase, entity) = {
             let entities = ecs.entities();
             let helper = ecs.read_storage::<SerializationHelper>();
             let (entity, helper) = (&entities, &helper).join().next().unwrap();
-            (helper.map.clone(), helper.difficulty, entity)
+            (helper.map.clone(), helper.phase, entity)
         };
         ecs.insert(MapComponent::init(map));
-        ecs.insert(GameDifficultyComponent::init(difficulty));
+        ecs.insert(GamePhaseComponent::init(phase));
         ecs.delete_entity(entity)?;
     }
 

@@ -61,7 +61,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.add_skill(
         SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg))
             .with_ammo(AmmoKind::Eggs, 1)
-            .with_cooldown(700),
+            .with_cooldown(500),
     );
 }
 

@@ -14,16 +14,16 @@ pub struct RoundFadeScene {
     background: Texture,
     presentation_frame: u64,
     interacted: bool,
-    difficulty: u32,
+    phase: u32,
 }
 
 impl RoundFadeScene {
-    pub fn init(background: Texture, difficulty: u32) -> RoundFadeScene {
+    pub fn init(background: Texture, phase: u32) -> RoundFadeScene {
         RoundFadeScene {
             background,
             presentation_frame: std::u64::MAX,
             interacted: false,
-            difficulty,
+            phase,
         }
     }
 
@@ -81,7 +81,7 @@ impl Scene for RoundFadeScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewGame(self.difficulty)
+            StageDirection::NewGame(self.phase)
         } else {
             StageDirection::Continue
         }

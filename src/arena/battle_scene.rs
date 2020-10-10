@@ -23,8 +23,8 @@ pub struct BattleScene {
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(difficulty);
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<BattleScene> {
+        let ecs = new_game::random_new_world(phase);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -277,7 +277,7 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
 
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
-        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GameDifficultyComponent>().difficulty + 1);
+        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GamePhaseComponent>().phase + 1);
     }
     StageDirection::Continue
 }

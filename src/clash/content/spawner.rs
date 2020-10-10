@@ -66,7 +66,7 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
         BehaviorKind::Elementalist,
         Defenses::init(0, 0, 40 + 10 * difficulty, 40),
         SizedPoint::init(position.x, position.y),
-        SkillResourceComponent::init(&[(AmmoKind::Charge, 0, 100)]),
+        SkillResourceComponent::init(&[(AmmoKind::Charge, 50, 100)]),
         difficulty,
     );
 }
