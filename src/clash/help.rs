@@ -253,7 +253,7 @@ impl HelpInfo {
                         "Welcome to Arena: Gunpowder And Sorcery!",
                         "Survive arena combat with all sorts of man, beast, and the arcane.",
                         "",
-                        "- Arrow keys move your character one square North/South/East/West.",
+                        "- Right click adjacent tile or use arrow keys to move your character one square North/South/East/West.",
                         "- 1-5 keys or clicking on the skill bar will activate a skill. Most will require a target.",
                         "- Skill range is indicated by yellow highlighted squares.",
                         "- Press F1 at any time to bring up the global help.",
