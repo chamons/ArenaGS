@@ -44,7 +44,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             Some(6),
             true,
         )
-        .with_cooldown(300),
+        .with_cooldown(400),
     );
     m.add_skill(SkillInfo::init(
         "Explosive Eggs",

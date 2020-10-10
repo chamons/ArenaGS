@@ -230,7 +230,7 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(25.0)
+        .with_exhaustion(40.0)
         .with_alternate("Reload"),
     );
 
@@ -248,7 +248,7 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(25.0)
+        .with_exhaustion(40.0)
         .with_alternate("Reload"),
     );
 
@@ -266,7 +266,7 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             true,
         )
         .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(25.0)
+        .with_exhaustion(40.0)
         .with_alternate("Reload"),
     );
 }

@@ -64,7 +64,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "Lava Bolt",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
         Some(4),
         false,
     ));
@@ -95,7 +95,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Earthen Rage",
             None,
             TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
+            SkillEffect::ChargeAttack(Damage::init(2).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
             Some(5),
             false,
         )
