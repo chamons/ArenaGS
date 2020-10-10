@@ -183,7 +183,7 @@ mod tests {
     fn additional_armor() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(0, 0, 0, 10);
-        def.apply_damage_with_addditional_armor(Damage::init(4), 4, &mut rng);
+        def.apply_damage_with_additional_armor(Damage::init(4), 4, &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 4-8 armor
