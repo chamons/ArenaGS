@@ -5,6 +5,7 @@ use std::slice::from_ref;
 use enum_iterator::IntoEnumIterator;
 use lazy_static::lazy_static;
 use ordered_float::*;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -31,20 +32,31 @@ pub enum SkillEffect {
     ConeAttack(Damage, ConeKind, u32),
     ChargeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
+    ReloadSome(AmmoKind, u32),
+    ReloadSomeRandom(AmmoKind, u32),
     Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
-    BuffThen(StatusKind, i32, Box<SkillEffect>),
-    ThenBuff(Box<SkillEffect>, StatusKind, i32),
     Orb(Damage, OrbKind, u32, u32),
     Spawn(SpawnKind),
     SpawnReplace(SpawnKind),
+    Sequence(Box<SkillEffect>, Box<SkillEffect>),
+}
+
+#[macro_export]
+macro_rules! sequence {
+    ($x:expr, $y:expr) => {
+        SkillEffect::Sequence(Box::new($x), Box::new($y))
+    };
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
+    Eggs,
+    Feathers,
+    Charge,
     Adrenaline,
 }
 
@@ -60,6 +72,7 @@ impl SkillResourceComponent {
         SkillResourceComponent {
             ammo,
             max,
+            cooldown: HashMap::new(),
             exhaustion: 0.0,
             focus: 0.0,
             max_focus: 0.0,
@@ -74,6 +87,7 @@ impl SkillResourceComponent {
 }
 
 pub struct SkillInfo {
+    pub name: &'static str,
     pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
@@ -83,28 +97,27 @@ pub struct SkillInfo {
     pub alternate: Option<String>,
     pub exhaustion: Option<f64>,
     pub focus_use: Option<f64>,
+    pub cooldown: Option<u32>,
+    pub start_cooldown_spent: bool,
     pub no_time: bool,
 }
 
 #[allow(dead_code)]
 impl SkillInfo {
-    pub fn init(image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
-        SkillInfo {
-            image,
-            target,
-            effect,
-            range: None,
-            must_be_clear: false,
-            ammo_info: None,
-            alternate: None,
-            exhaustion: None,
-            focus_use: None,
-            no_time: false,
-        }
+    pub fn init(name: &'static str, image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
+        SkillInfo::init_with_distance(name, image, target, effect, None, false)
     }
 
-    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, range: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(
+        name: &'static str,
+        image: Option<&'static str>,
+        target: TargetType,
+        effect: SkillEffect,
+        range: Option<u32>,
+        must_be_clear: bool,
+    ) -> SkillInfo {
         SkillInfo {
+            name,
             image,
             target,
             effect,
@@ -114,7 +127,9 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            cooldown: None,
             no_time: false,
+            start_cooldown_spent: false,
         }
     }
 
@@ -140,6 +155,16 @@ impl SkillInfo {
 
     pub fn with_no_time(mut self) -> SkillInfo {
         self.no_time = true;
+        self
+    }
+
+    pub fn with_cooldown(mut self, cooldown: u32) -> SkillInfo {
+        self.cooldown = Some(cooldown);
+        self
+    }
+
+    pub fn with_cooldown_spent(mut self) -> SkillInfo {
+        self.start_cooldown_spent = true;
         self
     }
 
@@ -209,6 +234,18 @@ impl SkillInfo {
         }
         UsableResults::Usable
     }
+
+    pub fn get_cooldown(&self, ecs: &mut World, entity: &Entity) -> u32 {
+        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+        if let Some(skill_resource) = skill_resources.get_mut(*entity) {
+            *skill_resource
+                .cooldown
+                .entry(self.name.to_string())
+                .or_insert_with(|| if self.start_cooldown_spent { self.cooldown.unwrap() } else { 0 })
+        } else {
+            0
+        }
+    }
 }
 
 pub enum UsableResults {
@@ -216,6 +253,16 @@ pub enum UsableResults {
     LacksAmmo,
     Exhaustion,
     LacksFocus,
+}
+
+pub trait SkillMap {
+    fn add_skill(&mut self, info: SkillInfo);
+}
+
+impl SkillMap for HashMap<&'static str, SkillInfo> {
+    fn add_skill(&mut self, info: SkillInfo) {
+        self.insert(&info.name, info);
+    }
 }
 
 lazy_static! {
@@ -230,9 +277,8 @@ lazy_static! {
         super::content::elementalist::elementalist_skills(&mut m);
         super::content::tutorial::golem_skills(&mut m);
 
-        m.insert(
-            "Dash",
-            SkillInfo::init_with_distance(Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
+        m.add_skill(
+            SkillInfo::init_with_distance("Dash", Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
         );
 
         m
@@ -325,11 +371,27 @@ pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
     }
 }
 
-pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
+pub fn has_resources_for_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) -> bool {
     let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
-    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
+    let has_no_cooldown = skill.get_cooldown(ecs, invoker) == 0;
+    has_needed_ammo && has_no_cooldown
+}
 
-    has_needed_ammo && has_valid_target
+pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
+    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
+    has_resources_for_skill(ecs, invoker, skill) && has_valid_target
+}
+
+pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
+    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).focus -= cost;
+    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).focus >= 0.0);
+}
+
+pub fn spend_cooldown(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    ecs.write_storage::<SkillResourceComponent>()
+        .grab_mut(*invoker)
+        .cooldown
+        .insert(skill.name.to_string(), skill.cooldown.unwrap());
 }
 
 pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
@@ -338,7 +400,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
     if let Some(invoker_name) = ecs.get_name(&invoker) {
-        ecs.log(format!("{} used [[{}]].", invoker_name.as_str(), name));
+        ecs.log(format!("{} used [[{}]]", invoker_name.as_str(), name));
     }
 
     if !skill.no_time {
@@ -351,6 +413,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
     if let Some(focus_use) = skill.focus_use {
         spend_focus(ecs, invoker, focus_use);
+    }
+    if skill.cooldown.is_some() {
+        spend_cooldown(ecs, invoker, skill);
     }
 
     gain_adrenaline(ecs, invoker, skill);
@@ -380,25 +445,23 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::ConeAttack(damage, kind, size) => begin_cone(ecs, &invoker, target.unwrap(), *damage, *kind, *size),
         SkillEffect::ChargeAttack(damage, kind) => begin_charge(ecs, &invoker, target.unwrap(), *damage, *kind),
-        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
+        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind, None),
+        SkillEffect::ReloadSome(kind, amount) => reload(ecs, &invoker, *kind, Some(*amount)),
+        SkillEffect::ReloadSomeRandom(kind, amount) => reload_random(ecs, &invoker, *kind, *amount),
         SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(&find_valid_buff_target(ecs, invoker, target), *buff, *duration);
-        }
-        SkillEffect::BuffThen(buff, duration, next_skill) => {
-            ecs.add_status(invoker, *buff, *duration);
-            process_skill(ecs, invoker, next_skill, target);
-        }
-        SkillEffect::ThenBuff(next_skill, buff, duration) => {
-            process_skill(ecs, invoker, next_skill, target);
-            ecs.add_status(invoker, *buff, *duration);
         }
         SkillEffect::Orb(damage, kind, speed, duration) => {
             begin_orb(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind, *speed, *duration)
         }
         SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
+        SkillEffect::Sequence(first, second) => {
+            process_skill(ecs, invoker, first, target);
+            process_skill(ecs, invoker, second, target);
+        }
         SkillEffect::None => {}
     }
 }
@@ -425,15 +488,16 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::ConeAttack(_, _, _) => 3,
         SkillEffect::ChargeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
+        SkillEffect::ReloadSome(_, _) => 2,
+        SkillEffect::ReloadSomeRandom(_, _) => 2,
         SkillEffect::Field(_, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
-        SkillEffect::BuffThen(_, _, _) => 1,
-        SkillEffect::ThenBuff(_, _, _) => 1,
         SkillEffect::Orb(_, _, _, _) => 3,
         SkillEffect::Spawn(_) => 2,
         SkillEffect::SpawnReplace(_) => 0,
+        SkillEffect::Sequence(_, _) => 0,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
@@ -461,9 +525,26 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
-pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
-    let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
-    set_ammo(ecs, invoker, kind, max_ammo);
+pub fn reload_core(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
+    let (current, max) = {
+        let skill_resources = ecs.read_storage::<SkillResourceComponent>();
+        let resources = skill_resources.grab(*invoker);
+        (resources.ammo[&kind], resources.max[&kind])
+    };
+    let total = amount + current;
+    let amount = cmp::min(total, max);
+    set_ammo(ecs, invoker, kind, amount);
+}
+
+pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: Option<u32>) {
+    let amount = amount.unwrap_or_else(|| ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
+    reload_core(ecs, invoker, kind, amount);
+}
+
+pub fn reload_random(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
+    let amount = ecs.fetch_mut::<RandomComponent>().rand.gen_range(2, amount);
+    let amount = cmp::min(amount, ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
+    reload_core(ecs, invoker, kind, amount);
 }
 
 fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
@@ -473,6 +554,10 @@ fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
     // Ordering f64 is hard _tm_
     skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
     skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
+
+    for (_, cooldown) in skill.cooldown.iter_mut() {
+        *cooldown = cmp::max(*cooldown as i32 - ticks_to_add as i32, 0) as u32;
+    }
 }
 
 pub fn tick_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -535,24 +620,24 @@ mod tests {
 
     #[test]
     fn skill_info_range() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
-        let info = SkillInfo::init(None, TargetType::Tile, SkillEffect::None);
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 5)));
+        let info = SkillInfo::init("TestInfo", None, TargetType::Tile, SkillEffect::None);
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 5)));
     }
 
     #[test]
     fn skill_info_correct_target_kind() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
     }
 
     #[test]
@@ -560,33 +645,33 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::Tile, SkillEffect::None, Some(2), true);
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Tile, SkillEffect::None, Some(2), true);
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
     fn skill_info_any_target() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Any, SkillEffect::None, Some(2), false);
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 2)));
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
     fn skill_info_any_but_self_target() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 2)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
@@ -752,6 +837,42 @@ mod tests {
 
         invoke_skill(&mut ecs, &player, "TestReload", None);
         assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(0, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn reload_some_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 3);
+
+        for _ in 0..3 {
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestReloadOne", None);
+        add_ticks(&mut ecs, 100);
+        invoke_skill(&mut ecs, &player, "TestReloadOne", None);
+        assert_eq!(2, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(0, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn reload_some_random_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 3);
+
+        for _ in 0..3 {
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestReloadSomeRandom", None);
+        let remaining = get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap();
+        assert!(remaining > 0);
+        assert!(remaining <= 3);
         assert_eq!(0, get_ticks(&ecs, &player));
     }
 
@@ -1166,5 +1287,41 @@ mod tests {
         invoke_skill(&mut ecs, &player, "TestCharge", Some(Point::init(2, 5)));
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 5));
+    }
+
+    #[test]
+    fn skill_with_cooldown_starts_usable() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+        invoke_skill(&mut ecs, &player, "TestCooldown", None);
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+        add_ticks(&mut ecs, 100);
+        add_ticks(&mut ecs, 100);
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+    }
+
+    #[test]
+    fn skill_with_cooldown_starts_usable_unless_first_check() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+        add_ticks(&mut ecs, 100);
+        add_ticks(&mut ecs, 100);
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+        invoke_skill(&mut ecs, &player, "TestCooldownStartSpent", None);
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+    }
+
+    #[test]
+    fn skill_sequence() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "TestSequence", None);
+        assert!(ecs.has_status(&player, StatusKind::Armored));
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
     }
 }

@@ -8,7 +8,7 @@ use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::components::*;
-use crate::atlas::{get_exe_folder, BoxResult, Direction, EasyPath, Point, SizedPoint, ToSerialize};
+use crate::atlas::{get_exe_folder, Direction, EasyPath, Point, SizedPoint, ToSerialize};
 use crate::clash::*;
 
 use crate::clash::content::spawner;
@@ -57,24 +57,34 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
-pub fn random_new_world(difficulty: u32) -> BoxResult<World> {
-    // Since we are creating an entire new world, it is acceptable to use thread RNG
-    let mut random = rand::thread_rng();
-    let kind: BattleKind = random.gen();
-    new_world(kind, difficulty)
+pub fn random_new_world(phase: u32) -> World {
+    let (kind, difficulty) = match phase {
+        0 => (BattleKind::SimpleGolem, 0),
+        1 => (BattleKind::Bird, 0),
+        2 => (BattleKind::Elementalist, 0),
+        _ => {
+            // Since we are creating an entire new world, it is acceptable to use thread RNG
+            let mut random = rand::thread_rng();
+            (random.gen(), phase - 3)
+        }
+    };
+
+    create_battle(kind, difficulty, phase)
 }
 
-pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
+fn create_battle(kind: BattleKind, difficulty: u32, phase: u32) -> World {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
-    ecs.log("Welcome to ArenaGS!");
-    ecs.log("Press F1 for help.");
+    if phase == 0 {
+        ecs.log("Welcome to ArenaGS!");
+        ecs.log("Press F1 for help.");
+    }
 
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
-    ecs.insert(MapComponent::init(Map::init(map_data_path)?));
-    ecs.write_resource::<GameDifficultyComponent>().difficulty = difficulty;
+    ecs.insert(MapComponent::init(Map::init(map_data_path)));
+    ecs.write_resource::<GamePhaseComponent>().phase = phase;
 
     let player_position = find_placement(&ecs, 1, 1);
     spawner::player(&mut ecs, player_position);
@@ -93,7 +103,7 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
             // Since we are creating an entire new world, it is acceptable to use thread RNG
             let mut random = rand::thread_rng();
             let mut elements = vec![ElementalKind::Water, ElementalKind::Fire, ElementalKind::Wind, ElementalKind::Earth];
-            for _ in 0..cmp::min(difficulty + 1, 4) {
+            for _ in 0..cmp::min(difficulty, 3) {
                 elements.shuffle(&mut random);
 
                 let enemy_position = find_placement(&ecs, 1, 1);
@@ -111,7 +121,7 @@ pub fn new_world(kind: BattleKind, difficulty: u32) -> BoxResult<World> {
 
     map_background(&mut ecs);
 
-    Ok(ecs)
+    ecs
 }
 
 pub fn map_background(ecs: &mut World) {

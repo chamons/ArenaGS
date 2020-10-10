@@ -11,6 +11,10 @@ pub const TEMPERATURE_BURN_POINT: i32 = 100;
 pub const TEMPERATURE_FREEZE_POINT: i32 = -100;
 pub const BURN_DURATION: i32 = 100;
 pub const TEMPERATURE_DAMAGE_PER_TICK: u32 = 2;
+// 4 strength 10 shots half resisted should tip us over (20 dice)
+// Default range 100 / 20 = 5 temperature per dice
+pub const TEMPERATURE_PER_DICE_DAMAGE: i32 = 5;
+pub const LARGE_TEMPERATURE_MULTIPLIER: u32 = 4;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Temperature {
@@ -33,9 +37,6 @@ impl Temperature {
     }
 
     pub fn change_from_incoming_damage(&mut self, damage: u32, direction: TemperatureDirection) {
-        // 4 strength 10 shots half resisted should tip us over (20 dice)
-        // Default range 100 / 20 = 5 temperature per dice
-        const TEMPERATURE_PER_DICE_DAMAGE: i32 = 5;
         let dice: i32 = (damage / STRENGTH_DICE_SIDES) as i32;
 
         let delta = match direction {
@@ -125,7 +126,7 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damag
 
             let mut amount = rolled_damage.amount;
             if rolled_damage.options.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
-                amount *= 4;
+                amount *= LARGE_TEMPERATURE_MULTIPLIER;
             }
 
             if let Some(direction) = direction {

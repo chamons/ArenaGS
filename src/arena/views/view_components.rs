@@ -95,7 +95,7 @@ pub struct LifeBar {
 
 impl LifeBar {
     pub fn init(render_context: &RenderContext) -> BoxResult<LifeBar> {
-        let loader = IconLoader::init_ui()?;
+        let loader = IconLoader::init_ui();
         Ok(LifeBar {
             lifebar_frame: loader.get(render_context, "boss_life_frame.png")?,
             lifebar: loader.get(render_context, "boss_life_bar.png")?,

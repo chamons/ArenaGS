@@ -9,29 +9,29 @@ pub struct StateBuilder {
 }
 
 impl StateBuilder {
-    pub fn with_timed<'a>(&'a mut self, time: i32) -> &'a mut Self {
+    pub fn with_timed(&mut self, time: i32) -> &mut Self {
         self.ecs.create_entity().with(TimeComponent::init(time)).build();
         self
     }
 
-    pub fn with_character<'a>(&'a mut self, x: u32, y: u32, time: i32) -> &'a mut Self {
+    pub fn with_character(&mut self, x: u32, y: u32, time: i32) -> &mut Self {
         make_test_character(&mut self.ecs, SizedPoint::init(x, y), time);
         self
     }
 
-    pub fn with_sized_character<'a>(&'a mut self, position: SizedPoint, time: i32) -> &'a mut Self {
+    pub fn with_sized_character(&mut self, position: SizedPoint, time: i32) -> &mut Self {
         make_test_character(&mut self.ecs, position, time);
         self
     }
 
-    pub fn with_player<'a>(&'a mut self, x: u32, y: u32, time: i32) -> &'a mut Self {
+    pub fn with_player(&mut self, x: u32, y: u32, time: i32) -> &mut Self {
         make_test_character(&mut self.ecs, SizedPoint::init(x, y), time);
         let player = find_at(&self.ecs, x, y);
         self.ecs.shovel(player, PlayerComponent::init());
         self
     }
 
-    pub fn with_map<'a>(&'a mut self) -> &'a mut Self {
+    pub fn with_map(&mut self) -> &mut Self {
         self.ecs.insert(MapComponent::init(Map::init_empty()));
         self
     }
@@ -60,8 +60,7 @@ pub fn find_entity_at(ecs: &World, x: u32, y: u32) -> Entity {
 
 pub fn find_first_entity(ecs: &World) -> Entity {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let entity = (&entities).join().next().unwrap();
-    entity
+    (&entities).join().next().unwrap()
 }
 
 pub fn find_at_time(ecs: &World, desired_time: i32) -> Entity {
@@ -173,7 +172,7 @@ pub fn dump_all_position(ecs: &World) {
         }
         println!("{}", description);
     }
-    println!("");
+    println!();
 }
 
 pub fn assert_field_exists(ecs: &World, x: u32, y: u32) {

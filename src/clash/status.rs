@@ -24,7 +24,7 @@ pub enum StatusKind {
     Flying,
     Regen,
     RegenTick,
-
+    // When you add more here, consider if it should be shown in character_overlay.rs
     #[cfg(test)]
     TestStatus,
     #[cfg(test)]
@@ -39,6 +39,7 @@ impl StatusKind {
         }
     }
 
+    #[allow(clippy::match_like_matches_macro)]
     pub fn should_display(&self) -> bool {
         match self {
             StatusKind::Flying | StatusKind::RegenTick => false,
@@ -207,7 +208,7 @@ impl StatusStore {
 
     pub fn get_all(&self) -> Vec<StatusKind> {
         let mut names: Vec<u32> = self.store.keys().map(|x| (*x).into()).collect();
-        names.sort();
+        names.sort_unstable();
         names.iter().map(|x| StatusKind::from_u32(*x).unwrap()).collect()
     }
 
@@ -439,7 +440,7 @@ mod tests {
     #[test]
     fn events() {
         let mut ecs = create_test_state().with_character(2, 2, 0).build();
-        let player = find_at(&mut ecs, 2, 2);
+        let player = find_at(&ecs, 2, 2);
         ecs.subscribe(test_event);
         ecs.add_status(&player, StatusKind::Aimed, 200);
         assert_eq!(1, ecs.get_test_data("Added Aimed"));

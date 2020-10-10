@@ -7,49 +7,47 @@ use rand::prelude::*;
 use specs::prelude::*;
 
 use super::super::*;
-use crate::{try_behavior, try_behavior_and_if};
+use crate::sequence;
+use crate::try_behavior;
 
 const TIDAL_SURGE_SIZE: u32 = 2;
 const HEALING_MIST_RANGE: u32 = 5;
 const MAGMA_ERUPTION_RANGE: u32 = 7;
 
 pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.insert(
-        "Tidal Surge",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Tidal Surge",
             None,
             TargetType::AnyoneButSelf,
             SkillEffect::ConeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), ConeKind::Water, TIDAL_SURGE_SIZE),
             Some(1),
             false,
-        ),
+        )
+        .with_cooldown(200),
     );
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Ice Shard",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(2), BoltKind::Water),
-            Some(2),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Water),
+        Some(2),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Healing Mist",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Any,
-            SkillEffect::Buff(StatusKind::Regen, 400),
-            Some(HEALING_MIST_RANGE),
-            false,
-        ),
-    );
+        None,
+        TargetType::Any,
+        SkillEffect::Buff(StatusKind::Regen, 400),
+        Some(HEALING_MIST_RANGE),
+        false,
+    ));
 
-    m.insert(
-        "Magma Eruption",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Magma Eruption",
             None,
             TargetType::Any,
             SkillEffect::Field(
@@ -58,112 +56,127 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             ),
             Some(MAGMA_ERUPTION_RANGE),
             false,
-        ),
+        )
+        .with_cooldown(200),
     );
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Lava Bolt",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
-            Some(4),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
+        Some(4),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Lightning Surge",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
-            Some(4),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
+        Some(4),
+        false,
+    ));
 
-    m.insert(
-        "Hailstone",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Hailstone",
             None,
             TargetType::Player,
             SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Hail),
             Some(8),
             false,
-        ),
+        )
+        .with_cooldown(200),
     );
 
-    m.insert(
-        "Earthen Rage",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Earthen Rage",
             None,
             TargetType::Player,
             SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
             Some(5),
             false,
-        ),
+        )
+        .with_cooldown(400),
     );
 
-    m.insert(
-        "Rock Slide",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Rock Slide",
             None,
             TargetType::Player,
             SkillEffect::ChargeAttack(Damage::init(2), WeaponKind::Sword),
             Some(3),
             false,
-        ),
+        )
+        .with_cooldown(300),
     );
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Pummel",
-        SkillInfo::init_with_distance(
+        None,
+        TargetType::Player,
+        SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+        Some(1),
+        false,
+    ));
+    m.add_skill(
+        SkillInfo::init(
+            "Summon Elemental (Water)",
             None,
-            TargetType::Player,
-            SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
-            Some(1),
-            false,
-        ),
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::WaterElemental),
+        )
+        .with_ammo(AmmoKind::Charge, 50),
     );
-    m.insert(
-        "Summon Elemental (Water)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WaterElemental)),
+    m.add_skill(
+        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 50),
     );
-    m.insert(
-        "Summon Elemental (Fire)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)),
+    m.add_skill(
+        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 50),
     );
-    m.insert(
-        "Summon Elemental (Wind)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)),
-    );
-    m.insert(
-        "Summon Elemental (Earth)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::EarthElemental)),
+    m.add_skill(
+        SkillInfo::init(
+            "Summon Elemental (Earth)",
+            None,
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::EarthElemental),
+        )
+        .with_ammo(AmmoKind::Charge, 50),
     );
 
-    m.insert(
+    m.add_skill(SkillInfo::init(
         "Frost Armor",
-        SkillInfo::init(None, TargetType::Any, SkillEffect::Buff(StatusKind::Armored, 2000)),
-    );
+        None,
+        TargetType::None,
+        sequence!(SkillEffect::Buff(StatusKind::Armored, 2000), SkillEffect::ReloadSome(AmmoKind::Charge, 5)),
+    ));
 
-    // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
-    m.insert("Invoke the Elements", SkillInfo::init(None, TargetType::None, SkillEffect::None));
+    m.add_skill(SkillInfo::init(
+        "Invoke the Elements",
+        None,
+        TargetType::None,
+        SkillEffect::ReloadSome(AmmoKind::Charge, 10),
+    ));
 
-    m.insert(
-        "Call Lightning",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Call Lightning",
             None,
             TargetType::Player,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+            sequence!(
+                SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+                SkillEffect::ReloadSome(AmmoKind::Charge, 5)
+            ),
             Some(6),
             false,
-        ),
+        )
+        .with_cooldown(200),
     );
 }
 
-const CHARGE_TO_SUMMON: u32 = 50;
 const MAX_ELEMENTS_SUMMONED: u32 = 4;
 
 fn get_elemental_kind(ecs: &World, entity: Entity) -> Option<ElementalKind> {
@@ -226,33 +239,19 @@ pub fn get_elemental_summon_to_use(ecs: &World) -> &'static str {
 }
 
 pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
-    let current_charge = get_behavior_value(ecs, enemy, "Charge", 0);
-    if current_charge > CHARGE_TO_SUMMON {
-        if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
-            try_behavior_and_if!(
-                use_skill_with_random_target(ecs, enemy, get_elemental_summon_to_use(ecs), 6),
-                reduce_behavior_value(ecs, enemy, "Charge", CHARGE_TO_SUMMON)
-            );
-        }
+    if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
+        try_behavior!(use_skill_with_random_target(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
     }
 
     if !ecs.has_status(enemy, StatusKind::Armored) {
-        try_behavior_and_if!(
-            use_skill_with_random_target(ecs, enemy, "Frost Armor", 6),
-            increment_behavior_value(ecs, enemy, "Charge", 5)
-        );
+        try_behavior!(use_skill(ecs, enemy, "Frost Armor"));
     }
 
     let player_position = ecs.get_position(&find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        if check_behavior_cooldown(ecs, enemy, "Call Lightning", 2) {
-            try_behavior_and_if!(
-                use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"),
-                increment_behavior_value(ecs, enemy, "Charge", 5)
-            );
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"));
     }
-    try_behavior_and_if!(use_skill(ecs, enemy, "Invoke the Elements"), increment_behavior_value(ecs, enemy, "Charge", 10));
+    try_behavior!(use_skill(ecs, enemy, "Invoke the Elements"));
     wait(ecs, *enemy);
 }
 
@@ -261,9 +260,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     if distance <= 3 {
         if let Some(cone_target) = check_for_cone_striking_player(ecs, enemy, TIDAL_SURGE_SIZE) {
-            if check_behavior_cooldown(ecs, enemy, "Tidal Surge", 2) {
-                try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", &cone_target));
-            }
+            try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", cone_target));
         }
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ice Shard"));
     }
@@ -273,7 +270,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
             ecs,
             enemy,
             "Healing Mist",
-            &ecs.get_position(&target).nearest_point_to(current_position)
+            ecs.get_position(&target).nearest_point_to(current_position)
         ));
     }
 
@@ -287,9 +284,7 @@ pub fn fire_elemental_action(ecs: &mut World, enemy: &Entity) {
 
     let player_position = ecs.get_position(&find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        if check_behavior_cooldown(ecs, enemy, "Magma Eruption", 2) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Magma Eruption"));
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Magma Eruption"));
     }
 
     try_behavior!(move_towards_player(ecs, enemy));
@@ -302,9 +297,7 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
 
     let player_position = ecs.get_position(&find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        if check_behavior_cooldown(ecs, enemy, "Hailstone", 2) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Hailstone"));
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Hailstone"));
     }
 
     try_behavior!(move_towards_player(ecs, enemy));
@@ -314,14 +307,10 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
 pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     if distance < 6 {
-        if check_behavior_cooldown(ecs, enemy, "Earthen Rage", 4) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
     }
     if distance < 4 {
-        if check_behavior_cooldown(ecs, enemy, "Rock Slide", 3) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
     }
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     try_behavior!(move_towards_player(ecs, enemy));

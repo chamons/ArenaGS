@@ -46,8 +46,11 @@ impl HelpInfo {
 
     fn get_ammo_name(kind: AmmoKind) -> &'static str {
         match kind {
-            AmmoKind::Bullets => "Bullet(s)",
             AmmoKind::Adrenaline => "Adrenaline",
+            AmmoKind::Bullets => "Bullet(s)",
+            AmmoKind::Charge => "Elemental Charge",
+            AmmoKind::Eggs => "Eggs(s)",
+            AmmoKind::Feathers => "Feather(s)",
         }
     }
 
@@ -91,13 +94,15 @@ impl HelpInfo {
         let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
         if raises || lowers {
             details.push(format!(
-                "{} target's [[temperature]]{}",
+                "{} [[temperature]] by {}",
                 if raises { "Raises" } else { "Lowers" },
-                if opt.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
-                    " by a large amount."
-                } else {
-                    "."
-                }
+                TEMPERATURE_PER_DICE_DAMAGE as u32
+                    * damage.dice()
+                    * if opt.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
+                        LARGE_TEMPERATURE_MULTIPLIER
+                    } else {
+                        1
+                    }
             ));
         }
         if opt.contains(DamageOptions::KNOCKBACK) {
@@ -108,7 +113,7 @@ impl HelpInfo {
         }
         if opt.contains(DamageOptions::CONSUMES_CHARGE_DMG) {
             details.push(format!(
-                "Consumes [[static charge]] to do {} {{Sword}} additional [[piercing]] damage.",
+                "Consumes [[static charge]] to do {} [[strength]] additional [[piercing]] damage.",
                 STATIC_CHARGE_DAMAGE
             ));
         }
@@ -129,72 +134,61 @@ impl HelpInfo {
     fn report_skill_effect(details: &mut Vec<String>, effect: &SkillEffect) {
         match effect {
             SkillEffect::None => {}
-            SkillEffect::Move => details.push("Effect: Move to Location".to_string()),
+            SkillEffect::Move => details.push("Move to Location".to_string()),
             SkillEffect::RangedAttack(damage, _) => {
-                details.push("Effect: Ranged Attack".to_string());
+                details.push("Ranged Attack".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
             SkillEffect::MeleeAttack(damage, _) => {
-                details.push("Effect: Melee Attack".to_string());
+                details.push("Melee Attack".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
             SkillEffect::ConeAttack(damage, _, size) => {
-                details.push(format!("Effect: Cone of Width {}", size));
+                details.push(format!("Cone of Width {}", size));
                 HelpInfo::report_damage(details, &damage);
             }
             SkillEffect::ChargeAttack(damage, _) => {
-                details.push("Effect: Move towards location, attacking first character in path".to_string());
+                details.push("Move towards location, attacking first character in path".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::Reload(kind) => details.push(format!("Reload all {}", HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::ReloadSome(kind, amount) => details.push(format!("Reload {} {}", amount, HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::ReloadSomeRandom(kind, amount) => details.push(format!("Reload randomly between 2 and {} {}", amount, HelpInfo::get_ammo_name(*kind))),
             SkillEffect::Field(effect, _) => match effect {
                 FieldEffect::Damage(damage, _) => {
-                    details.push("Effect: Damage after 200 [[ticks]]".to_string());
+                    details.push("Damage after 200 [[ticks]]".to_string());
                     HelpInfo::report_damage(details, &damage);
                 }
-                FieldEffect::Spawn(kind) => details.push(format!("Effect: Summon a {} after 100 [[ticks]]", HelpInfo::get_spawn_name(*kind))),
+                FieldEffect::Spawn(kind) => details.push(format!("Summon a {} after 100 [[ticks]]", HelpInfo::get_spawn_name(*kind))),
                 FieldEffect::SustainedDamage(damage, duration) => {
-                    details.push(format!("Effect: Damage every 100 [[ticks]] with {} duration", duration));
+                    details.push(format!("Damage every 100 [[ticks]] with {} duration", duration));
                     HelpInfo::report_damage(details, &damage);
                 }
             },
             SkillEffect::MoveAndShoot(damage, shoot_range, _) => {
                 details.push(format!(
-                    "Effect: Move to targt location and shoot nearest enemy{}.",
+                    "Move to target and shoot nearest enemy{}.",
                     &shoot_range.map_or("".to_string(), |r| format!(" within range {}", r))
                 ));
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::ReloadAndRotateAmmo() => details.push("Effect: Reload Bullets and rotates to next ammo type.".to_string()),
+            SkillEffect::ReloadAndRotateAmmo() => details.push("Reload Bullets and rotates to next ammo type.".to_string()),
             SkillEffect::Buff(kind, duration) => details.push(format!(
-                "Effect: Applies {} effect for {} [[ticks]].",
+                "Applies {} effect for {} [[ticks]].",
                 HelpInfo::get_status_effect_name(*kind),
                 duration
             )),
-            SkillEffect::BuffThen(kind, duration, other_effect) => {
-                details.push(format!(
-                    "Effect: Applies {} effect for {} [[ticks]].",
-                    HelpInfo::get_status_effect_name(*kind),
-                    duration
-                ));
-                details.push("|tab|Then".to_string());
-                HelpInfo::report_skill_effect(details, other_effect);
-            }
-            SkillEffect::ThenBuff(other_effect, kind, duration) => {
-                HelpInfo::report_skill_effect(details, other_effect);
-                details.push("|tab|Then".to_string());
-                details.push(format!(
-                    "Effect: Applies {} effect for {} [[ticks]].",
-                    HelpInfo::get_status_effect_name(*kind),
-                    duration
-                ));
-            }
             SkillEffect::Orb(damage, _, _, _) => {
-                details.push("Effect: Fire a slow moving a orb along a path.".to_string());
+                details.push("Fire a slow moving a orb along a path.".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::Spawn(kind) => details.push(format!("Effect: Summon a {}.", HelpInfo::get_spawn_name(*kind))),
-            SkillEffect::SpawnReplace(kind) => details.push(format!("Effect: Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::Spawn(kind) => details.push(format!("Summon a {}.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::SpawnReplace(kind) => details.push(format!("Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::Sequence(first, second) => {
+                HelpInfo::report_skill_effect(details, first);
+                details.push("|tab|Then".to_string());
+                HelpInfo::report_skill_effect(details, second);
+            }
         }
     }
 
@@ -208,23 +202,10 @@ impl HelpInfo {
             }
         };
         let mut details = vec![];
-        match skill.target {
-            TargetType::None => {}
-            TargetType::Tile => details.push("Target: Any Tile".to_string()),
-            TargetType::Player => details.push("Target: Player Directly".to_string()),
-            TargetType::Enemy => details.push("Target: Enemy Directly".to_string()),
-            TargetType::Any => details.push("Target: Any".to_string()),
-            TargetType::AnyoneButSelf => details.push("Target: Any but Self".to_string()),
-        }
+        HelpInfo::report_skill_effect(&mut details, &skill.effect);
         if let Some(range) = skill.range {
             details.push(format!("Range: {}", range));
         }
-
-        if details.len() > 0 {
-            details.push("".to_string());
-        }
-
-        HelpInfo::report_skill_effect(&mut details, &skill.effect);
 
         details.push("".to_string());
 
@@ -258,8 +239,8 @@ impl HelpInfo {
             "ticks" => "Time",
             "Damage" | "Pierce" | "piercing" => "Damage & Defenses",
             "Strength" | "strength" => "Strength in Depth",
-            "Defenses" | "Armor" | "armor" | "Dodge" | "Health" | "Absorb" => "Defenses in Depth",
-            "Exhaustion" | "Focus" | "Adrenaline" => "Resources",
+            "Defenses" => "Defenses in Depth",
+            "armor" => "Armor",
             _ => word,
         };
 
@@ -272,12 +253,12 @@ impl HelpInfo {
                         "Welcome to Arena: Gunpowder And Sorcery!",
                         "Survive arena combat with all sorts of man, beast, and the arcane.",
                         "",
-                        "- Arrow keys move your character one square North/South/East/West.",
+                        "- Right click adjacent tile or use arrow keys to move your character one square North/South/East/West.",
                         "- 1-5 keys or clicking on the skill bar will activate a skill. Most will require a target.",
                         "- Skill range is indicated by yellow highlighted squares.",
                         "- Press F1 at any time to bring up the global help.",
-                        "- Middle clicking almost anywhere, specially on underlined text will bring up a context help.",
-                        "- Middle click again to promote the tooltip into a full help window.",
+                        "- Middle clicking (or Ctrl + Left click) almost anywhere, specially on underlined text will bring up a context help.",
+                        "- Middle click (or Ctrl + Left click) again to promote the tooltip into a full help window.",
                         "- Alt + Enter toggles full-screen mode.",
                         "",
                         "In the future, there will hopefully be a full featured tutorial.",
@@ -344,6 +325,14 @@ impl HelpInfo {
                     ],
                 );
             }
+            "Health" => return HelpInfo::no_header(vec_of_strings!["Once depleted by damage to zero or below the character dies."]),
+            "Absorb" => return HelpInfo::no_header (vec_of_strings!["A pool of health that are depleted first by damage before health."]),
+            "Dodge" => return HelpInfo::no_header(vec_of_strings!["A pool of dice which is consumed to reduce damage, and is replenished by movement."]),
+            "Armor" => return HelpInfo::no_header(vec_of_strings!["A pool of dice which applies every attack to reduce incoming damage."]),
+            "Exhaustion" => return HelpInfo::no_header(vec_of_strings!["How much intense activity a character cna do before being physically taxed."]),
+            "Focus" => return HelpInfo::no_header (vec_of_strings!["How much concentration and grit a character can spent in an effort."]),
+            "Adrenaline" => return HelpInfo::no_header(vec_of_strings!["The surge of excitement and will needed for some abilities."]),
+            "Bullets" => return HelpInfo::no_header(vec_of_strings!["Ammunition used by ranged flashpowder weapons. Will need to be reloaded was expended."]),
             "Defense Example" => {
                 return HelpInfo::text_header(
                     "Defense Example",
@@ -474,7 +463,7 @@ impl HelpInfo {
                         "",
                         format!("- Temperatures above {} will ignite a character in flames", TEMPERATURE_BURN_POINT),
                         format!(
-                            "|tab|- Burning does {} [[piercing]] strength of damage every {} [[ticks]].",
+                            "|tab|- Burning does {} [[piercing]] [[strength]] of damage every {} [[ticks]].",
                             TEMPERATURE_DAMAGE_PER_TICK, BURN_DURATION
                         ),
                         format!("|tab|- Once the temperatures is below {} they will quit burning.", TEMPERATURE_BURN_POINT),
@@ -501,13 +490,6 @@ impl HelpInfo {
                     ],
                 )
             }
-            // A 'fake' spell for gaining charge
-            "Invoke the Elements" => {
-                return HelpInfo::init(
-                    HelpHeader::Text("Invoke the Elements".to_string()),
-                    vec_of_strings!["Internally focus to more quickly summon additional elementals."],
-                )
-            },
             "Aimed" => return HelpInfo::find_status(StatusKind::Aimed),
             _ => {}
         }
@@ -558,7 +540,7 @@ impl HelpInfo {
             ),
             StatusKind::Regen => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
-                vec![format!("Rapidly healing injuries. A {} {{Sword}} heal every turn.", HEALTH_REGEN_PER_TICK)],
+                vec![format!("Rapidly healing injuries. A {} [[strength]] heal every turn.", HEALTH_REGEN_PER_TICK)],
             ),
             StatusKind::RegenTick => panic!("{:?} should not be visible to help", status),
             #[cfg(test)]

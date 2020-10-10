@@ -23,8 +23,8 @@ const MAX_ICON_COUNT: i32 = 10;
 impl SkillBarView {
     pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
         let mut views = Vec::with_capacity(10);
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons()?, &all_skill_image_filesnames())?);
-        let ui = IconLoader::init_ui()?;
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons(), &all_skill_image_filesnames())?);
+        let ui = IconLoader::init_ui();
 
         for i in 0..get_skill_count(ecs) {
             let position = SDLPoint::new(

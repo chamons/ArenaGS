@@ -7,7 +7,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::{Direction, EasyECS, Point, SizedPoint};
 
 #[macro_export]
 macro_rules! try_behavior {
@@ -99,12 +99,16 @@ impl Distribution<Direction> for Standard {
     }
 }
 
+pub fn is_tile_safe(ecs: &World, position: &SizedPoint) -> bool {
+    find_field_at_location(ecs, position).is_none()
+}
+
 fn get_random_direction_to_move(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
-    for _ in 0..5 {
+    for _ in 0..10 {
         let direction: Direction = random.gen();
         if let Some(point) = point_in_direction(&position, direction) {
-            if can_move_character(ecs, enemy, point) {
+            if can_move_character(ecs, enemy, point) && is_tile_safe(ecs, &point) {
                 return Some(direction);
             }
         }
@@ -150,18 +154,29 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
-    if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
-        invoke_skill(ecs, enemy, skill_name, None);
-        true
-    } else {
-        false
+pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    if let Some(path) = current_position.line_to(player_position.origin) {
+        let next = current_position.move_to(path[1]);
+        if is_tile_safe(ecs, &next) {
+            return move_character_action(ecs, *enemy, next);
+        }
     }
+    false
 }
 
-pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: &Point) -> bool {
-    if is_good_target(ecs, enemy, get_skill(skill_name), *target_point) {
-        invoke_skill(ecs, enemy, skill_name, Some(*target_point));
+pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
+    use_skill_core(ecs, enemy, skill_name, None)
+}
+
+pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: Point) -> bool {
+    use_skill_core(ecs, enemy, skill_name, Some(target_point))
+}
+
+fn use_skill_core(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: Option<Point>) -> bool {
+    if can_invoke_skill(ecs, enemy, get_skill(skill_name), target_point) {
+        invoke_skill(ecs, enemy, skill_name, target_point);
         return true;
     }
     false
@@ -173,7 +188,7 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_na
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
         let skill = get_skill(skill_name);
         if distance <= skill.range.unwrap() {
-            if is_good_target(ecs, enemy, skill, target_point) {
+            if can_invoke_skill(ecs, enemy, skill, Some(target_point)) {
                 invoke_skill(ecs, enemy, skill_name, Some(target_point));
                 return true;
             }
@@ -183,23 +198,37 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_na
 }
 
 pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str, range: u32) -> bool {
+    let skill = get_skill(skill_name);
+    // Early return for lack of resources before trying many target squares
+    if !has_resources_for_skill(ecs, enemy, &skill) {
+        return false;
+    }
+
     let mut target = ecs.get_position(&find_player(ecs));
 
-    let range = {
+    let mut range = {
         let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
         random.gen_range(0, range)
     };
 
-    for _ in 0..range {
-        let direction = get_random_direction_list(ecs)[0];
-        if let Some(t) = direction.sized_point_in_direction(&target) {
-            target = t;
+    // Try 20 times for a valid target
+    for attempt in 0..20 {
+        for _ in 0..range {
+            let direction = get_random_direction_list(ecs)[0];
+            if let Some(t) = direction.sized_point_in_direction(&target) {
+                target = t;
+            }
         }
-    }
 
-    if is_good_target(ecs, enemy, &get_skill(skill_name), target.origin) {
-        invoke_skill(ecs, enemy, skill_name, Some(target.origin));
-        return true;
+        if can_invoke_skill(ecs, enemy, &skill, Some(target.origin)) {
+            invoke_skill(ecs, enemy, skill_name, Some(target.origin));
+            return true;
+        }
+
+        // Every 8 reduce range by 1 to search closer (less in water)
+        if attempt % 8 == 7 {
+            range = cmp::max(range as i32 - 1, 1) as u32;
+        }
     }
     false
 }
@@ -208,137 +237,6 @@ pub fn distance_to_player(ecs: &mut World, enemy: &Entity) -> Option<u32> {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     current_position.distance_to_multi(player_position)
-}
-
-pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(&find_player(ecs));
-    if let Some(path) = current_position.line_to(player_position.origin) {
-        move_character_action(ecs, *enemy, current_position.move_to(path[1]))
-    } else {
-        false
-    }
-}
-
-pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill(ecs, enemy, skill_name) {
-            return true;
-        }
-    }
-    false
-}
-
-#[allow(dead_code)]
-pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32, range: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill_with_random_target(ecs, enemy, skill_name, range) {
-            return true;
-        }
-    }
-    false
-}
-
-#[allow(dead_code)]
-pub fn use_player_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill_at_player_if_in_range(ecs, enemy, skill_name) {
-            return true;
-        }
-    }
-    false
-}
-
-pub fn flip_value(ecs: &World, enemy: &Entity, key: &str, left: u32, right: u32) -> u32 {
-    if has_behavior_value(ecs, enemy, key) {
-        clear_behavior_value(ecs, enemy, key);
-        right
-    } else {
-        set_behavior_value(ecs, enemy, key, 1);
-        left
-    }
-}
-
-pub fn has_behavior_value(ecs: &World, enemy: &Entity, key: &str) -> bool {
-    ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.contains_key(key)
-}
-
-pub fn clear_behavior_value(ecs: &World, enemy: &Entity, key: &str) {
-    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.remove(key);
-}
-
-#[allow(dead_code)]
-pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
-    *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
-}
-
-pub fn get_behavior_value_calculate(ecs: &World, enemy: &Entity, key: &str, default: &impl Fn(&World) -> u32) -> u32 {
-    // Must copy value so we don't hold lock on read_storage when calling closure
-    // which will likely rewire write_storage to flip a bit
-    let value = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).copied() };
-    value.unwrap_or_else(|| default(ecs))
-}
-
-pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
-    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
-}
-
-pub fn reduce_behavior_value(ecs: &World, enemy: &Entity, key: &str, reduction_amount: u32) {
-    let value = get_behavior_value(ecs, enemy, key, 0);
-    set_behavior_value(ecs, enemy, key, cmp::max(value as i32 - reduction_amount as i32, 0) as u32);
-}
-
-pub fn increment_behavior_value(ecs: &World, enemy: &Entity, key: &str, increment_amount: u32) {
-    let value = get_behavior_value(ecs, enemy, key, 0);
-    set_behavior_value(ecs, enemy, key, value + increment_amount);
-}
-
-pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
-    check_behavior_cooldown_calculate(ecs, enemy, key, |_| length)
-}
-
-pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str, length: impl Fn(&World) -> u32) -> bool {
-    // First one is "free"
-    let value = {
-        if has_behavior_value(ecs, enemy, key) {
-            get_behavior_value_calculate(ecs, enemy, key, &length)
-        } else {
-            0
-        }
-    };
-    if value <= 1 {
-        set_behavior_value(ecs, enemy, key, length(ecs));
-        true
-    } else {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        false
-    }
-}
-
-#[allow(dead_code)]
-pub fn check_behavior_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
-    check_behavior_ammo_calculate(ecs, enemy, key, |_| ammo)
-}
-
-pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, ammo: impl Fn(&World) -> u32) -> bool {
-    let value = get_behavior_value_calculate(ecs, enemy, key, &ammo);
-    if value >= 1 {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        true
-    } else {
-        set_behavior_value(ecs, enemy, key, ammo(ecs));
-        false
-    }
-}
-
-pub fn check_behavior_single_use_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
-    let value = get_behavior_value(ecs, enemy, key, ammo);
-    if value >= 1 {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        true
-    } else {
-        false
-    }
 }
 
 pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) -> Option<Point> {
@@ -410,96 +308,6 @@ mod tests {
     }
 
     #[test]
-    fn behavior_value_checks() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        // First one is "free"
-        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-
-        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-
-        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
-    }
-
-    #[test]
-    fn behavior_value_flip() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
-    }
-
-    #[test]
-    fn behavior_value_set_clear() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
-        set_behavior_value(&ecs, &target, "TestKey", 1);
-        assert!(has_behavior_value(&ecs, &target, "TestKey"));
-        clear_behavior_value(&ecs, &target, "TestKey");
-        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
-    }
-
-    #[test]
-    fn behavior_ammo_value() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
-        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
-        assert!(check_behavior_ammo(&ecs, &target, "TestKey", 3));
-        assert!(!check_behavior_ammo(&ecs, &target, "TestKey", 3));
-
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(!check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-    }
-
-    #[test]
-    fn single_use_ammo() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-        assert!(check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-        assert!(!check_behavior_single_use_ammo(&ecs, &target, "TestKey", 3));
-    }
-
-    #[test]
-    fn raise_lower_behavior_values() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        set_behavior_value(&ecs, &target, "TestKey", 50);
-        increment_behavior_value(&ecs, &target, "TestKey", 5);
-        assert_eq!(55, get_behavior_value(&ecs, &target, "TestKey", 0));
-        reduce_behavior_value(&ecs, &target, "TestKey", 25);
-        assert_eq!(30, get_behavior_value(&ecs, &target, "TestKey", 0));
-        reduce_behavior_value(&ecs, &target, "TestKey", 45);
-        assert_eq!(0, get_behavior_value(&ecs, &target, "TestKey", 0));
-    }
-
-    #[test]
     fn move_towards_player_changes_location() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 0).with_map().build();
         let target = find_at(&ecs, 2, 4);
@@ -529,5 +337,36 @@ mod tests {
         }
 
         assert_eq!(1, find_all_entities(&ecs).len());
+    }
+
+    #[test]
+    fn move_random_avoids_field() {
+        let mut ecs = create_test_state().with_player(1, 1, 0).with_character(2, 4, 0).with_map().build();
+        let player = find_player(&ecs);
+
+        // Only 1,4 and 2,4 are safe points
+        for p in &[Point::init(2, 3), Point::init(3, 4), Point::init(2, 5)] {
+            invoke_skill(&mut ecs, &player, "TestField", Some(*p));
+            wait_for_animations(&mut ecs);
+        }
+
+        let target = find_at(&ecs, 2, 4);
+        move_randomly(&mut ecs, &target);
+        wait_for_animations(&mut ecs);
+
+        assert!(find_character_at_location(&ecs, Point::init(2, 4)).is_some() || find_character_at_location(&ecs, Point::init(1, 4)).is_some());
+    }
+
+    #[test]
+    fn move_towards_player_avoid_field() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 0).with_map().build();
+        let player = find_player(&ecs);
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        let target = find_at(&ecs, 2, 4);
+        move_towards_player(&mut ecs, &target);
+        wait_for_animations(&mut ecs);
+        assert_character_at(&ecs, 2, 4);
     }
 }

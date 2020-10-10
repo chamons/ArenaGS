@@ -104,13 +104,6 @@ impl AttackInfo {
             _ => panic!("Wrong type in orb_kind"),
         }
     }
-
-    pub fn explode_kind(&self) -> ExplosionKind {
-        match self.kind {
-            AttackKind::Explode(kind, _) => kind,
-            _ => panic!("Wrong type in explode_kind"),
-        }
-    }
 }
 
 impl AttackComponent {
@@ -675,7 +668,7 @@ mod tests {
                 return;
             }
         }
-        panic!("Unable to find orb at point {:?}");
+        panic!("Unable to find orb at point {:?}", expected);
     }
 
     #[test]
@@ -990,7 +983,7 @@ mod tests {
             .with_player(2, 2, 100)
             .with_sized_character(SizedPoint::init_multi(2, 3, 2, 2), 0)
             .build();
-        let player = find_at(&mut ecs, 2, 2);
+        let player = find_at(&ecs, 2, 2);
         ecs.subscribe(test_event);
 
         begin_cone(&mut ecs, &player, Point::init(2, 3), Damage::init(1), ConeKind::Fire, 2);

@@ -25,7 +25,7 @@ impl InfoBarView {
             frame: Frame::init(
                 SDLPoint::new(position.x() - 27, position.y() - 20),
                 render_context,
-                &IconLoader::init_ui()?,
+                &IconLoader::init_ui(),
                 FrameKind::InfoBar,
             )?,
             hit_tester: RefCell::new(TextHitTester::init()),

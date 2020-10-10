@@ -22,7 +22,7 @@ impl ImageTesterScene {
             ecs: World::new(),
             view: Box::new(super::view_components::Button::init(
                 SDLRect::new(20, 20, 60, 60),
-                IconLoader::init_icons()?.get(&render_context_holder.borrow(), "b_07_a.png")?,
+                IconLoader::init_icons().get(&render_context_holder.borrow(), "b_07_a.png")?,
                 || Some(super::HitTestResult::Tile(Point::init(0, 0))),
             )?),
         })

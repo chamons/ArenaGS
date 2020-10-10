@@ -144,6 +144,7 @@ impl MovementComponent {
 pub struct SkillResourceComponent {
     pub ammo: HashMap<AmmoKind, u32>,
     pub max: HashMap<AmmoKind, u32>,
+    pub cooldown: HashMap<String, u32>,
     pub exhaustion: f64,
     pub focus: f64,
     pub max_focus: f64,
@@ -157,15 +158,11 @@ pub struct AttackComponent {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct BehaviorComponent {
     pub behavior: BehaviorKind,
-    pub info: HashMap<String, u32>,
 }
 
 impl BehaviorComponent {
     pub fn init(behavior: BehaviorKind) -> BehaviorComponent {
-        BehaviorComponent {
-            behavior,
-            info: HashMap::new(),
-        }
+        BehaviorComponent { behavior }
     }
 }
 
@@ -260,13 +257,13 @@ impl FieldCastComponent {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
-pub struct GameDifficultyComponent {
-    pub difficulty: u32,
+pub struct GamePhaseComponent {
+    pub phase: u32,
 }
 
-impl GameDifficultyComponent {
-    pub fn init(difficulty: u32) -> GameDifficultyComponent {
-        GameDifficultyComponent { difficulty }
+impl GamePhaseComponent {
+    pub fn init(phase: u32) -> GamePhaseComponent {
+        GamePhaseComponent { phase }
     }
 }
 
@@ -324,7 +321,7 @@ pub fn create_world() -> World {
     ecs.register::<FlightComponent>();
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
-    ecs.register::<GameDifficultyComponent>();
+    ecs.register::<GamePhaseComponent>();
     ecs.register::<DurationComponent>();
     // If you add additional components remember to update saveload.rs
 
@@ -335,7 +332,7 @@ pub fn create_world() -> World {
     ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
-    ecs.insert(GameDifficultyComponent::init(0));
+    ecs.insert(GamePhaseComponent::init(0));
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
 
     ecs.subscribe(super::physics::move_event);

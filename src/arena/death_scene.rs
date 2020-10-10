@@ -29,7 +29,7 @@ impl DeathScene {
         let box_width = 500;
         let box_height = 300;
         let position = SDLRect::from_center(SDLPoint::new(mid_x, mid_y), box_width, box_height);
-        let ui = IconLoader::init_ui()?;
+        let ui = IconLoader::init_ui();
 
         // Default to interacted to skip dialog in self play
         let interacted = cfg!(feature = "self_play");

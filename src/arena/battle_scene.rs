@@ -23,8 +23,8 @@ pub struct BattleScene {
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, difficulty: u32) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(difficulty).unwrap();
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<BattleScene> {
+        let ecs = new_game::random_new_world(phase);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -83,7 +83,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(0).unwrap();
+                    self.ecs = new_game::random_new_world(0);
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {
@@ -130,6 +130,20 @@ impl BattleScene {
         if button == MouseButton::Left {
             if let Some(HitTestResult::Skill(name)) = &hit {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name.to_string()))
+            }
+        }
+        if button == MouseButton::Right {
+            match &hit {
+                Some(HitTestResult::Tile(target_position)) | Some(HitTestResult::Field(target_position)) => {
+                    let player_position = self.ecs.get_position(&find_player(&self.ecs));
+                    if player_position.distance_to(*target_position).unwrap_or(0) == 1 {
+                        battle_actions::request_action(
+                            &mut self.ecs,
+                            super::BattleActionRequest::Move(Direction::from_two_points(&player_position.origin, target_position)),
+                        );
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -277,7 +291,7 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
 
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
-        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GameDifficultyComponent>().difficulty + 1);
+        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GamePhaseComponent>().phase + 1);
     }
     StageDirection::Continue
 }

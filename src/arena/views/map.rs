@@ -65,7 +65,7 @@ impl MapView {
         Ok(MapView {
             sprites,
             overlay,
-            frame: Frame::init(SDLPoint::new(0, 0), render_context, &IconLoader::init_ui()?, FrameKind::Map)?,
+            frame: Frame::init(SDLPoint::new(0, 0), render_context, &IconLoader::init_ui(), FrameKind::Map)?,
         })
     }
 
@@ -304,10 +304,7 @@ fn should_draw_grid(ecs: &World) -> bool {
 
 fn should_draw_cursor(ecs: &World) -> bool {
     let state = battle_actions::read_action_state(ecs);
-    match state {
-        BattleSceneState::Targeting(_) => true,
-        _ => false,
-    }
+    matches!(state, BattleSceneState::Targeting(_))
 }
 
 fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
