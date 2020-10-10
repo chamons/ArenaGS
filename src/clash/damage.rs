@@ -58,16 +58,20 @@ impl Damage {
 
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct RolledDamage {
+    pub absorbed_by_dodge: u32,
+    pub absorbed_by_armor: u32,
     pub amount: u32,
     pub options: DamageOptions,
 }
 
 // A representation of a Damage after final roll, with a fixed value
 impl RolledDamage {
-    pub fn init(amount: u32, initial_damage: &Damage) -> RolledDamage {
+    pub fn init(absorbed_by_dodge: u32, absorbed_by_armor: u32, amount: u32, options: &DamageOptions) -> RolledDamage {
         RolledDamage {
+            absorbed_by_dodge,
+            absorbed_by_armor,
             amount,
-            options: initial_damage.options,
+            options: *options,
         }
     }
 }
@@ -78,9 +82,9 @@ pub fn apply_healing_to_character(ecs: &mut World, amount: Strength, target: &En
         let mut defenses = ecs.write_storage::<CharacterInfoComponent>();
         let mut defense = &mut defenses.grab_mut(*target).character.defenses;
 
-        let inital_health = defense.health;
+        let initial_health = defense.health;
         defense.health = cmp::min(defense.health + amount_to_heal, defense.max_health);
-        defense.health - inital_health
+        defense.health - initial_health
     };
     ecs.raise_event(EventKind::Healing(healing_total), Some(*target));
 }
@@ -116,7 +120,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: &Entity, source_po
         let defenses = &mut character_infos.grab_mut(*target).character.defenses;
 
         if ecs.has_status(target, StatusKind::Armored) {
-            defenses.apply_damage_with_addditional_armor(damage, ARMORED_ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
+            defenses.apply_damage_with_additional_armor(damage, ARMORED_ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
         } else {
             defenses.apply_damage(damage, &mut ecs.fetch_mut::<RandomComponent>().rand)
         }

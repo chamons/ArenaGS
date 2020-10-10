@@ -40,7 +40,7 @@ impl Defenses {
         }
     }
 
-    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> u32 {
+    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> (u32, u32, u32) {
         if !damage.options.contains(DamageOptions::PIERCE_DEFENSES) {
             // Apply dodge first, burning charges up to matching dice
             let dodge_to_apply = cmp::min(self.dodge, damage.dice());
@@ -51,20 +51,20 @@ impl Defenses {
             // Then soak with armor, all of it applies
             let armor_value = Strength::init(self.armor + additional_armor).roll(rng);
             let (_, damage_value) = apply_with_remain(damage_value, armor_value);
-            damage_value
+            (dodge_value, armor_value, damage_value)
         } else {
-            damage_value
+            (0, 0, damage_value)
         }
     }
 
     pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> RolledDamage {
-        self.apply_damage_with_addditional_armor(damage, 0, rng)
+        self.apply_damage_with_additional_armor(damage, 0, rng)
     }
 
-    pub fn apply_damage_with_addditional_armor<R: Rng + ?Sized>(&mut self, damage: Damage, additional_armor: u32, rng: &mut R) -> RolledDamage {
+    pub fn apply_damage_with_additional_armor<R: Rng + ?Sized>(&mut self, damage: Damage, additional_armor: u32, rng: &mut R) -> RolledDamage {
         let damage_value = damage.amount.roll(rng);
 
-        let damage_value = self.apply_defenses(damage_value, damage, additional_armor, rng);
+        let (absorbed_by_dodge, absorbed_by_armor, damage_value) = self.apply_defenses(damage_value, damage, additional_armor, rng);
 
         // Report damage after mitigation applied
         let total_applied_damage = damage_value;
@@ -77,7 +77,7 @@ impl Defenses {
         let (health_damage, _) = apply_with_remain(damage_value, self.health);
         self.health -= health_damage;
 
-        RolledDamage::init(total_applied_damage, &damage)
+        RolledDamage::init(absorbed_by_dodge, absorbed_by_armor, total_applied_damage, &damage.options)
     }
 
     pub fn regain_dodge(&mut self, regain: u32) {
