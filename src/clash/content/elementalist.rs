@@ -154,7 +154,6 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         sequence!(SkillEffect::Buff(StatusKind::Armored, 2000), SkillEffect::ReloadSome(AmmoKind::Charge, 5)),
     ));
 
-    // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
     m.add_skill(SkillInfo::init(
         "Invoke the Elements",
         None,
