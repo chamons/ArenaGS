@@ -349,7 +349,7 @@ impl View for HelpPopup {
                         frame.x() as u32 + HELP_OFFSET,
                         y + frame.y() as u32 + HELP_OFFSET,
                         frame.width() - (HELP_OFFSET * 2) - 10,
-                        2,
+                        4,
                     ),
                 )?;
 
