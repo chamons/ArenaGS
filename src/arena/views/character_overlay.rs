@@ -112,7 +112,7 @@ impl CharacterOverlay {
 
         let defenses = ecs.get_defenses(entity);
         let health = defenses.health as f64 / defenses.max_health as f64;
-        let absorb = defenses.absorb as f64 / defenses.max_health as f64;
+        let absorb = f64::min(defenses.absorb as f64 / defenses.max_health as f64, 1.0);
         self.lifebar.render(lifebar_rect, canvas, health, absorb)?;
 
         canvas.set_draw_color(Color::RGBA(0, 0, 0, 128));
