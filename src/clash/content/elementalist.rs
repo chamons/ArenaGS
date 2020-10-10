@@ -307,13 +307,13 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
 
 pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
-    if distance < 6 && distance > 1 {
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
+    if distance < 6 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
     }
-    if distance < 4 && distance > 1 {
+    if distance < 4 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
     }
-    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
