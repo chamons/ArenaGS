@@ -91,25 +91,31 @@ impl View for Button {
 pub struct LifeBar {
     lifebar_frame: Texture,
     lifebar: Texture,
+    absorb: Texture,
 }
 
 impl LifeBar {
     pub fn init(render_context: &RenderContext) -> BoxResult<LifeBar> {
         let loader = IconLoader::init_ui();
         Ok(LifeBar {
-            lifebar_frame: loader.get(render_context, "boss_life_frame.png")?,
-            lifebar: loader.get(render_context, "boss_life_bar.png")?,
+            lifebar_frame: loader.get(render_context, "life_frame.png")?,
+            lifebar: loader.get(render_context, "life_bar.png")?,
+            absorb: loader.get(render_context, "absorb_bar.png")?,
         })
     }
 
-    pub fn render(&self, frame: SDLRect, canvas: &mut RenderCanvas, percentage: f64) -> BoxResult<()> {
-        let mut lifebar_inner_frame = frame;
-        lifebar_inner_frame.offset(0, 1);
-        lifebar_inner_frame.resize(
-            (lifebar_inner_frame.width() as f64 * percentage).round() as u32,
-            lifebar_inner_frame.height() - 2,
-        );
-        canvas.copy(&self.lifebar, None, lifebar_inner_frame)?;
+    pub fn render(&self, frame: SDLRect, canvas: &mut RenderCanvas, life_percentage: f64, absorb_percentage: f64) -> BoxResult<()> {
+        let show_absorb = absorb_percentage > 0.0;
+        let percentage = if show_absorb { absorb_percentage } else { life_percentage };
+        let mut inner_frame = frame;
+        inner_frame.offset(0, 1);
+        inner_frame.resize((inner_frame.width() as f64 * percentage).round() as u32, inner_frame.height() - 2);
+
+        if show_absorb {
+            canvas.copy(&self.absorb, None, inner_frame)?;
+        } else {
+            canvas.copy(&self.lifebar, None, inner_frame)?;
+        }
 
         canvas.copy(&self.lifebar_frame, None, frame)?;
 

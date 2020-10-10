@@ -112,7 +112,8 @@ impl CharacterOverlay {
 
         let defenses = ecs.get_defenses(entity);
         let health = defenses.health as f64 / defenses.max_health as f64;
-        self.lifebar.render(lifebar_rect, canvas, health)?;
+        let absorb = defenses.absorb as f64 / defenses.max_health as f64;
+        self.lifebar.render(lifebar_rect, canvas, health, absorb)?;
 
         canvas.set_draw_color(Color::RGBA(0, 0, 0, 128));
         for (i, status) in self.get_overlay_statuses(ecs, entity).iter().enumerate().take(if size == 1 { 2 } else { 4 }) {
