@@ -124,7 +124,8 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damag
                 }
             };
 
-            let mut amount = rolled_damage.amount;
+            // Armor absorbed damage does not defend against temperature changes
+            let mut amount = rolled_damage.amount + rolled_damage.absorbed_by_armor;
             if rolled_damage.options.contains(DamageOptions::LARGE_TEMPERATURE_DELTA) {
                 amount *= LARGE_TEMPERATURE_MULTIPLIER;
             }

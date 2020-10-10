@@ -64,7 +64,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "Lava Bolt",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
         Some(4),
         false,
     ));
@@ -95,7 +95,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Earthen Rage",
             None,
             TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
+            SkillEffect::ChargeAttack(Damage::init(2).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
             Some(5),
             false,
         )
@@ -129,13 +129,13 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             TargetType::Tile,
             SkillEffect::Spawn(SpawnKind::WaterElemental),
         )
-        .with_ammo(AmmoKind::Charge, 50),
+        .with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
-        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 50),
+        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
-        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 50),
+        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
         SkillInfo::init(
@@ -144,7 +144,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             TargetType::Tile,
             SkillEffect::Spawn(SpawnKind::EarthElemental),
         )
-        .with_ammo(AmmoKind::Charge, 50),
+        .with_ammo(AmmoKind::Charge, 60),
     );
 
     m.add_skill(SkillInfo::init(
@@ -304,15 +304,16 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
+
 pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     if distance < 6 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
     }
     if distance < 4 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
     }
-    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
