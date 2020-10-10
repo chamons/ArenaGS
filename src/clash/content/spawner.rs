@@ -58,7 +58,6 @@ fn create_monster(
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
 }
 
-#[allow(dead_code)]
 pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
     create_monster(
         ecs,

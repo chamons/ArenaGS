@@ -291,7 +291,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillInfo::init_with_distance(
             "Showdown",
             Some("SpellBook03_54.png"),
-            TargetType::None,
+            TargetType::Enemy,
             sequence!(
                 SkillEffect::Buff(StatusKind::Aimed, 300),
                 sequence!(
