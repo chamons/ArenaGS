@@ -48,7 +48,9 @@ impl HelpInfo {
         match kind {
             AmmoKind::Adrenaline => "Adrenaline",
             AmmoKind::Bullets => "Bullet(s)",
-            AmmoKind::Eggs => "Eggs",
+            AmmoKind::Charge => "Elemental Charge",
+            AmmoKind::Eggs => "Eggs(s)",
+            AmmoKind::Feathers => "Feather(s)",
         }
     }
 
@@ -148,6 +150,8 @@ impl HelpInfo {
                 HelpInfo::report_damage(details, &damage);
             }
             SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::ReloadSome(kind, amount) => details.push(format!("Effect: Reload {} {}", amount, HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::ReloadSomeRandom(kind, amount) => details.push(format!("Effect: Reload randomly between 1 and {} {}", amount, HelpInfo::get_ammo_name(*kind))),
             SkillEffect::Field(effect, _) => match effect {
                 FieldEffect::Damage(damage, _) => {
                     details.push("Effect: Damage after 200 [[ticks]]".to_string());
@@ -161,7 +165,7 @@ impl HelpInfo {
             },
             SkillEffect::MoveAndShoot(damage, shoot_range, _) => {
                 details.push(format!(
-                    "Effect: Move to targt location and shoot nearest enemy{}.",
+                    "Effect: Move to target location and shoot nearest enemy{}.",
                     &shoot_range.map_or("".to_string(), |r| format!(" within range {}", r))
                 ));
                 HelpInfo::report_damage(details, &damage);
@@ -172,30 +176,17 @@ impl HelpInfo {
                 HelpInfo::get_status_effect_name(*kind),
                 duration
             )),
-            SkillEffect::BuffThen(kind, duration, other_effect) => {
-                details.push(format!(
-                    "Effect: Applies {} effect for {} [[ticks]].",
-                    HelpInfo::get_status_effect_name(*kind),
-                    duration
-                ));
-                details.push("|tab|Then".to_string());
-                HelpInfo::report_skill_effect(details, other_effect);
-            }
-            SkillEffect::ThenBuff(other_effect, kind, duration) => {
-                HelpInfo::report_skill_effect(details, other_effect);
-                details.push("|tab|Then".to_string());
-                details.push(format!(
-                    "Effect: Applies {} effect for {} [[ticks]].",
-                    HelpInfo::get_status_effect_name(*kind),
-                    duration
-                ));
-            }
             SkillEffect::Orb(damage, _, _, _) => {
                 details.push("Effect: Fire a slow moving a orb along a path.".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
             SkillEffect::Spawn(kind) => details.push(format!("Effect: Summon a {}.", HelpInfo::get_spawn_name(*kind))),
             SkillEffect::SpawnReplace(kind) => details.push(format!("Effect: Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::Sequence(first, second) => {
+                HelpInfo::report_skill_effect(details, first);
+                details.push("|tab|Then".to_string());
+                HelpInfo::report_skill_effect(details, second);
+            }
         }
     }
 
@@ -502,13 +493,6 @@ impl HelpInfo {
                     ],
                 )
             }
-            // A 'fake' spell for gaining charge
-            "Invoke the Elements" => {
-                return HelpInfo::init(
-                    HelpHeader::Text("Invoke the Elements".to_string()),
-                    vec_of_strings!["Internally focus to more quickly summon additional elementals."],
-                )
-            },
             "Aimed" => return HelpInfo::find_status(StatusKind::Aimed),
             _ => {}
         }

@@ -1,12 +1,13 @@
 {
     "cSpell.ignoreWords": [
+        "cooldown",
+        "elementalist",
         "fullscreen",
         "fullscreen type",
         "keymod",
         "lifebar",
         "rustc",
         "sdl",
-        "type",
-        "cooldown",
+        "type"
     ]
 }

@@ -10,14 +10,17 @@ use crate::{do_behavior, try_behavior};
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     // All skills will be boosted by default +1 skill_power on main bird
-    m.add_skill(SkillInfo::init_with_distance(
-        "Wing Blast",
-        None,
-        TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
-        Some(2),
-        true,
-    ));
+    m.add_skill(
+        SkillInfo::init_with_distance(
+            "Wing Blast",
+            None,
+            TargetType::Player,
+            SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
+            Some(2),
+            true,
+        )
+        .with_ammo(AmmoKind::Feathers, 1),
+    );
     m.add_skill(SkillInfo::init_with_distance(
         "Feather Orb",
         None,

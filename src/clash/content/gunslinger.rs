@@ -74,7 +74,7 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
     add_skills_to_front(ecs, invoker, &get_weapon_skills(next_ammo));
     set_weapon_trait(ecs, invoker, next_ammo);
 
-    reload(ecs, &invoker, AmmoKind::Bullets);
+    reload(ecs, &invoker, AmmoKind::Bullets, None);
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
@@ -276,7 +276,10 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Blink Shot",
             Some("SpellBook06_118.png"),
             TargetType::Enemy,
-            SkillEffect::ThenBuff(Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)), StatusKind::Aimed, 300),
+            SkillEffect::Sequence(
+                Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)),
+                Box::from(SkillEffect::Buff(StatusKind::Aimed, 300)),
+            ),
             Some(7),
             true,
         )
@@ -288,13 +291,11 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Showdown",
             Some("SpellBook03_54.png"),
             TargetType::None,
-            SkillEffect::BuffThen(
-                StatusKind::Aimed,
-                300,
-                Box::from(SkillEffect::BuffThen(
-                    StatusKind::Armored,
-                    300,
-                    Box::from(SkillEffect::Reload(AmmoKind::Bullets)),
+            SkillEffect::Sequence(
+                Box::from(SkillEffect::Buff(StatusKind::Aimed, 300)),
+                Box::from(SkillEffect::Sequence(
+                    Box::from(SkillEffect::Buff(StatusKind::Armored, 300)),
+                    Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)),
                 )),
             ),
             Some(3),
@@ -307,7 +308,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Dive",
             Some("SpellBook08_121.png"),
             TargetType::Tile,
-            SkillEffect::BuffThen(StatusKind::Armored, 300, Box::from(SkillEffect::Move)),
+            SkillEffect::Sequence(Box::from(SkillEffect::Buff(StatusKind::Armored, 300)), Box::from(SkillEffect::Move)),
             Some(3),
             true,
         )

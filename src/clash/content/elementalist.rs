@@ -134,12 +134,17 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.add_skill(SkillInfo::init(
         "Frost Armor",
         None,
-        TargetType::Any,
+        TargetType::None,
         SkillEffect::Buff(StatusKind::Armored, 2000),
     ));
 
     // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
-    m.add_skill(SkillInfo::init("Invoke the Elements", None, TargetType::None, SkillEffect::None));
+    m.add_skill(SkillInfo::init(
+        "Invoke the Elements",
+        None,
+        TargetType::None,
+        SkillEffect::Reload(AmmoKind::Charge),
+    ));
 
     m.add_skill(SkillInfo::init_with_distance(
         "Call Lightning",
@@ -225,20 +230,15 @@ pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
     }
 
     if !ecs.has_status(enemy, StatusKind::Armored) {
-        try_behavior_and_if!(
-            use_skill_with_random_target(ecs, enemy, "Frost Armor", 6),
-            increment_behavior_value(ecs, enemy, "Charge", 5)
-        );
+        try_behavior_and_if!(use_skill(ecs, enemy, "Frost Armor"), increment_behavior_value(ecs, enemy, "Charge", 5));
     }
 
     let player_position = ecs.get_position(&find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        if check_behavior_cooldown(ecs, enemy, "Call Lightning", 2) {
-            try_behavior_and_if!(
-                use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"),
-                increment_behavior_value(ecs, enemy, "Charge", 5)
-            );
-        }
+        try_behavior_and_if!(
+            use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"),
+            increment_behavior_value(ecs, enemy, "Charge", 5)
+        );
     }
     try_behavior_and_if!(use_skill(ecs, enemy, "Invoke the Elements"), increment_behavior_value(ecs, enemy, "Charge", 10));
     wait(ecs, *enemy);

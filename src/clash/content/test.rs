@@ -41,6 +41,19 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.add_skill(SkillInfo::init("TestAmmo", None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1));
     m.add_skill(SkillInfo::init("TestMultiAmmo", None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 3));
     m.add_skill(SkillInfo::init("TestReload", None, TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
+    m.add_skill(SkillInfo::init(
+        "TestReloadSome",
+        None,
+        TargetType::None,
+        SkillEffect::ReloadSome(AmmoKind::Bullets, 2),
+    ));
+    m.add_skill(SkillInfo::init(
+        "TestReloadSomeRandom",
+        None,
+        TargetType::None,
+        SkillEffect::ReloadSomeRandom(AmmoKind::Bullets, 3),
+    ));
+
     m.add_skill(SkillInfo::init("TestExhaustion", None, TargetType::None, SkillEffect::None).with_exhaustion(50.0));
     m.add_skill(SkillInfo::init("TestFocus", None, TargetType::None, SkillEffect::None).with_focus_use(0.5));
     m.add_skill(
@@ -74,9 +87,8 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "BuffAndSwing",
         None,
         TargetType::Enemy,
-        SkillEffect::BuffThen(
-            StatusKind::Armored,
-            300,
+        SkillEffect::Sequence(
+            Box::from(SkillEffect::Buff(StatusKind::Armored, 300)),
             Box::from(SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword)),
         ),
     ));
@@ -84,7 +96,7 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "BuffAndMove",
         None,
         TargetType::Tile,
-        SkillEffect::BuffThen(StatusKind::Aimed, 200, Box::from(SkillEffect::Move)),
+        SkillEffect::Sequence(Box::from(SkillEffect::Buff(StatusKind::Aimed, 200)), Box::from(SkillEffect::Move)),
         Some(1),
         true,
     ));
@@ -92,7 +104,10 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "ShootThenBuff",
         None,
         TargetType::Enemy,
-        SkillEffect::ThenBuff(Box::from(SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire)), StatusKind::Aimed, 200),
+        SkillEffect::Sequence(
+            Box::from(SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire)),
+            Box::from(SkillEffect::Buff(StatusKind::Aimed, 200)),
+        ),
         Some(1),
         true,
     ));
@@ -132,4 +147,14 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             .with_cooldown(200)
             .with_cooldown_spent(),
     );
+
+    m.add_skill(SkillInfo::init(
+        "TestSequence",
+        None,
+        TargetType::None,
+        SkillEffect::Sequence(
+            Box::new(SkillEffect::Buff(StatusKind::Aimed, 100)),
+            Box::new(SkillEffect::Buff(StatusKind::Armored, 100)),
+        ),
+    ));
 }

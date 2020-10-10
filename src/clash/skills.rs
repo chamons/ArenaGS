@@ -5,6 +5,7 @@ use std::slice::from_ref;
 use enum_iterator::IntoEnumIterator;
 use lazy_static::lazy_static;
 use ordered_float::*;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -31,21 +32,24 @@ pub enum SkillEffect {
     ConeAttack(Damage, ConeKind, u32),
     ChargeAttack(Damage, WeaponKind),
     Reload(AmmoKind),
+    ReloadSome(AmmoKind, u32),
+    ReloadSomeRandom(AmmoKind, u32),
     Field(FieldEffect, FieldKind),
     MoveAndShoot(Damage, Option<u32>, BoltKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
-    BuffThen(StatusKind, i32, Box<SkillEffect>),
-    ThenBuff(Box<SkillEffect>, StatusKind, i32),
     Orb(Damage, OrbKind, u32, u32),
     Spawn(SpawnKind),
     SpawnReplace(SpawnKind),
+    Sequence(Box<SkillEffect>, Box<SkillEffect>),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
     Eggs,
+    Feathers,
+    Charge,
     Adrenaline,
 }
 
@@ -434,25 +438,23 @@ fn process_skill(ecs: &mut World, invoker: &Entity, effect: &SkillEffect, target
         SkillEffect::MeleeAttack(damage, kind) => begin_melee(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind),
         SkillEffect::ConeAttack(damage, kind, size) => begin_cone(ecs, &invoker, target.unwrap(), *damage, *kind, *size),
         SkillEffect::ChargeAttack(damage, kind) => begin_charge(ecs, &invoker, target.unwrap(), *damage, *kind),
-        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind),
+        SkillEffect::Reload(kind) => reload(ecs, &invoker, *kind, None),
+        SkillEffect::ReloadSome(kind, amount) => reload(ecs, &invoker, *kind, Some(*amount)),
+        SkillEffect::ReloadSomeRandom(kind, amount) => reload_random(ecs, &invoker, *kind, *amount),
         SkillEffect::Field(effect, kind) => begin_field(ecs, &invoker, target.unwrap(), *effect, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, &invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(&find_valid_buff_target(ecs, invoker, target), *buff, *duration);
-        }
-        SkillEffect::BuffThen(buff, duration, next_skill) => {
-            ecs.add_status(invoker, *buff, *duration);
-            process_skill(ecs, invoker, next_skill, target);
-        }
-        SkillEffect::ThenBuff(next_skill, buff, duration) => {
-            process_skill(ecs, invoker, next_skill, target);
-            ecs.add_status(invoker, *buff, *duration);
         }
         SkillEffect::Orb(damage, kind, speed, duration) => {
             begin_orb(ecs, &invoker, target.unwrap(), damage.more_strength(skill_power), *kind, *speed, *duration)
         }
         SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, &invoker, *kind),
+        SkillEffect::Sequence(first, second) => {
+            process_skill(ecs, invoker, first, target);
+            process_skill(ecs, invoker, second, target);
+        }
         SkillEffect::None => {}
     }
 }
@@ -479,15 +481,16 @@ fn gain_adrenaline(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
         SkillEffect::ConeAttack(_, _, _) => 3,
         SkillEffect::ChargeAttack(_, _) => 3,
         SkillEffect::Reload(_) => 2,
+        SkillEffect::ReloadSome(_, _) => 2,
+        SkillEffect::ReloadSomeRandom(_, _) => 2,
         SkillEffect::Field(_, _) => 2,
         SkillEffect::ReloadAndRotateAmmo() => 1,
         SkillEffect::None => 0,
         SkillEffect::Buff(_, _) => 1,
-        SkillEffect::BuffThen(_, _, _) => 1,
-        SkillEffect::ThenBuff(_, _, _) => 1,
         SkillEffect::Orb(_, _, _, _) => 3,
         SkillEffect::Spawn(_) => 2,
         SkillEffect::SpawnReplace(_) => 0,
+        SkillEffect::Sequence(_, _) => 0,
     };
 
     let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
@@ -515,9 +518,15 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
-pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind) {
-    let max_ammo = { ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind] };
-    set_ammo(ecs, invoker, kind, max_ammo);
+pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: Option<u32>) {
+    let amount = amount.unwrap_or_else(|| ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
+    set_ammo(ecs, invoker, kind, amount);
+}
+
+pub fn reload_random(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
+    let amount = ecs.fetch_mut::<RandomComponent>().rand.gen_range(1, amount);
+    let amount = cmp::min(amount, ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
+    reload(ecs, invoker, kind, Some(amount));
 }
 
 fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
@@ -810,6 +819,40 @@ mod tests {
 
         invoke_skill(&mut ecs, &player, "TestReload", None);
         assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(0, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn reload_some_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 3);
+
+        for _ in 0..3 {
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestReloadSome", None);
+        assert_eq!(2, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
+        assert_eq!(0, get_ticks(&ecs, &player));
+    }
+
+    #[test]
+    fn reload_some_random_ammo() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+        add_bullets(&mut ecs, &player, 3);
+
+        for _ in 0..3 {
+            invoke_skill(&mut ecs, &player, "TestAmmo", None);
+            add_ticks(&mut ecs, 100);
+        }
+
+        invoke_skill(&mut ecs, &player, "TestReloadSomeRandom", None);
+        let remaining = get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap();
+        assert!(remaining > 0);
+        assert!(remaining <= 3);
         assert_eq!(0, get_ticks(&ecs, &player));
     }
 
@@ -1250,5 +1293,15 @@ mod tests {
         assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
         invoke_skill(&mut ecs, &player, "TestCooldownStartSpent", None);
         assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+    }
+
+    #[test]
+    fn skill_sequence() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, &player, "TestSequence", None);
+        assert!(ecs.has_status(&player, StatusKind::Armored));
+        assert!(ecs.has_status(&player, StatusKind::Aimed));
     }
 }
