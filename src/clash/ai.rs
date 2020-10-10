@@ -1,5 +1,3 @@
-use std::cmp;
-
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -7,7 +5,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::{Direction, EasyECS, Point, SizedPoint};
 
 #[macro_export]
 macro_rules! try_behavior {
@@ -228,83 +226,6 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     }
 }
 
-pub fn flip_value(ecs: &World, enemy: &Entity, key: &str, left: u32, right: u32) -> u32 {
-    if has_behavior_value(ecs, enemy, key) {
-        clear_behavior_value(ecs, enemy, key);
-        right
-    } else {
-        set_behavior_value(ecs, enemy, key, 1);
-        left
-    }
-}
-
-pub fn has_behavior_value(ecs: &World, enemy: &Entity, key: &str) -> bool {
-    ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.contains_key(key)
-}
-
-pub fn clear_behavior_value(ecs: &World, enemy: &Entity, key: &str) {
-    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.remove(key);
-}
-
-#[allow(dead_code)]
-pub fn get_behavior_value(ecs: &World, enemy: &Entity, key: &str, default: u32) -> u32 {
-    *ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).unwrap_or(&default)
-}
-
-pub fn get_behavior_value_calculate(ecs: &World, enemy: &Entity, key: &str, default: &impl Fn(&World) -> u32) -> u32 {
-    // Must copy value so we don't hold lock on read_storage when calling closure
-    // which will likely rewire write_storage to flip a bit
-    let value = { ecs.read_storage::<BehaviorComponent>().grab(*enemy).info.get(key).copied() };
-    value.unwrap_or_else(|| default(ecs))
-}
-
-pub fn set_behavior_value(ecs: &World, enemy: &Entity, key: &str, value: u32) {
-    ecs.write_storage::<BehaviorComponent>().grab_mut(*enemy).info.insert(key.to_string(), value);
-}
-
-pub fn reduce_behavior_value(ecs: &World, enemy: &Entity, key: &str, reduction_amount: u32) {
-    let value = get_behavior_value(ecs, enemy, key, 0);
-    set_behavior_value(ecs, enemy, key, cmp::max(value as i32 - reduction_amount as i32, 0) as u32);
-}
-
-pub fn increment_behavior_value(ecs: &World, enemy: &Entity, key: &str, increment_amount: u32) {
-    let value = get_behavior_value(ecs, enemy, key, 0);
-    set_behavior_value(ecs, enemy, key, value + increment_amount);
-}
-
-pub fn check_behavior_cooldown(ecs: &World, enemy: &Entity, key: &str, length: u32) -> bool {
-    check_behavior_cooldown_calculate(ecs, enemy, key, |_| length)
-}
-
-pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str, length: impl Fn(&World) -> u32) -> bool {
-    // First one is "free"
-    let value = {
-        if has_behavior_value(ecs, enemy, key) {
-            get_behavior_value_calculate(ecs, enemy, key, &length)
-        } else {
-            0
-        }
-    };
-    if value <= 1 {
-        set_behavior_value(ecs, enemy, key, length(ecs));
-        true
-    } else {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        false
-    }
-}
-
-pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, ammo: impl Fn(&World) -> u32) -> bool {
-    let value = get_behavior_value_calculate(ecs, enemy, key, &ammo);
-    if value >= 1 {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        true
-    } else {
-        set_behavior_value(ecs, enemy, key, ammo(ecs));
-        false
-    }
-}
-
 pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) -> Option<Point> {
     let position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(&ecs));
@@ -371,77 +292,6 @@ mod tests {
 
         assert_eq!(0, ecs.read_storage::<BehaviorComponent>().count());
         assert!(ecs.get_defenses(&target).health < starting_health);
-    }
-
-    #[test]
-    fn behavior_value_checks() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        // First one is "free"
-        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-
-        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(!check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-        assert!(check_behavior_cooldown(&ecs, &target, "TestKey", 5));
-
-        assert_eq!(5, get_behavior_value(&ecs, &target, "TestKey", 5));
-    }
-
-    #[test]
-    fn behavior_value_flip() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(2, flip_value(&ecs, &target, "TestKey", 2, 3));
-        assert_eq!(3, flip_value(&ecs, &target, "TestKey", 2, 3));
-    }
-
-    #[test]
-    fn behavior_value_set_clear() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
-        set_behavior_value(&ecs, &target, "TestKey", 1);
-        assert!(has_behavior_value(&ecs, &target, "TestKey"));
-        clear_behavior_value(&ecs, &target, "TestKey");
-        assert!(!has_behavior_value(&ecs, &target, "TestKey"));
-    }
-
-    #[test]
-    fn behavior_ammo_value() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-        assert!(!check_behavior_ammo_calculate(&ecs, &target, "TestKey", |_| 3));
-    }
-
-    #[test]
-    fn raise_lower_behavior_values() {
-        let mut ecs = create_test_state().with_character(2, 2, 0).with_map().build();
-        let target = find_at(&ecs, 2, 2);
-        ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
-
-        set_behavior_value(&ecs, &target, "TestKey", 50);
-        increment_behavior_value(&ecs, &target, "TestKey", 5);
-        assert_eq!(55, get_behavior_value(&ecs, &target, "TestKey", 0));
-        reduce_behavior_value(&ecs, &target, "TestKey", 25);
-        assert_eq!(30, get_behavior_value(&ecs, &target, "TestKey", 0));
-        reduce_behavior_value(&ecs, &target, "TestKey", 45);
-        assert_eq!(0, get_behavior_value(&ecs, &target, "TestKey", 0));
     }
 
     #[test]

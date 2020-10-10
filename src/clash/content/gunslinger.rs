@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use super::super::*;
 use crate::atlas::{EasyMutECS, EasyMutWorld};
+use crate::sequence;
 
 pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
     ecs.shovel(
@@ -276,9 +277,9 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Blink Shot",
             Some("SpellBook06_118.png"),
             TargetType::Enemy,
-            SkillEffect::Sequence(
-                Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)),
-                Box::from(SkillEffect::Buff(StatusKind::Aimed, 300)),
+            sequence!(
+                SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
+                SkillEffect::Buff(StatusKind::Aimed, 300)
             ),
             Some(7),
             true,
@@ -291,12 +292,12 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Showdown",
             Some("SpellBook03_54.png"),
             TargetType::None,
-            SkillEffect::Sequence(
-                Box::from(SkillEffect::Buff(StatusKind::Aimed, 300)),
-                Box::from(SkillEffect::Sequence(
-                    Box::from(SkillEffect::Buff(StatusKind::Armored, 300)),
-                    Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)),
-                )),
+            sequence!(
+                SkillEffect::Buff(StatusKind::Aimed, 300),
+                sequence!(
+                    SkillEffect::Buff(StatusKind::Armored, 300),
+                    SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)
+                )
             ),
             Some(3),
             true,
@@ -308,7 +309,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             "Dive",
             Some("SpellBook08_121.png"),
             TargetType::Tile,
-            SkillEffect::Sequence(Box::from(SkillEffect::Buff(StatusKind::Armored, 300)), Box::from(SkillEffect::Move)),
+            sequence!(SkillEffect::Buff(StatusKind::Armored, 300), SkillEffect::Move),
             Some(3),
             true,
         )

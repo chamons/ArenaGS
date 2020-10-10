@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use super::super::*;
+use crate::sequence;
 
 pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     m.add_skill(SkillInfo::init("TestNone", None, TargetType::None, SkillEffect::None));
@@ -87,16 +88,16 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "BuffAndSwing",
         None,
         TargetType::Enemy,
-        SkillEffect::Sequence(
-            Box::from(SkillEffect::Buff(StatusKind::Armored, 300)),
-            Box::from(SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword)),
+        sequence!(
+            SkillEffect::Buff(StatusKind::Armored, 300),
+            SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword)
         ),
     ));
     m.add_skill(SkillInfo::init_with_distance(
         "BuffAndMove",
         None,
         TargetType::Tile,
-        SkillEffect::Sequence(Box::from(SkillEffect::Buff(StatusKind::Aimed, 200)), Box::from(SkillEffect::Move)),
+        sequence!(SkillEffect::Buff(StatusKind::Aimed, 200), SkillEffect::Move),
         Some(1),
         true,
     ));
@@ -104,9 +105,9 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "ShootThenBuff",
         None,
         TargetType::Enemy,
-        SkillEffect::Sequence(
-            Box::from(SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire)),
-            Box::from(SkillEffect::Buff(StatusKind::Aimed, 200)),
+        sequence!(
+            SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
+            SkillEffect::Buff(StatusKind::Aimed, 200)
         ),
         Some(1),
         true,
@@ -152,9 +153,6 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "TestSequence",
         None,
         TargetType::None,
-        SkillEffect::Sequence(
-            Box::new(SkillEffect::Buff(StatusKind::Aimed, 100)),
-            Box::new(SkillEffect::Buff(StatusKind::Armored, 100)),
-        ),
+        sequence!(SkillEffect::Buff(StatusKind::Aimed, 100), SkillEffect::Buff(StatusKind::Armored, 100)),
     ));
 }

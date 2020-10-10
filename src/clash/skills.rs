@@ -44,6 +44,13 @@ pub enum SkillEffect {
     Sequence(Box<SkillEffect>, Box<SkillEffect>),
 }
 
+#[macro_export]
+macro_rules! sequence {
+    ($x:expr, $y:expr) => {
+        SkillEffect::Sequence(Box::new($x), Box::new($y))
+    };
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,

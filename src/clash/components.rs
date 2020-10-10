@@ -158,15 +158,11 @@ pub struct AttackComponent {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct BehaviorComponent {
     pub behavior: BehaviorKind,
-    pub info: HashMap<String, u32>,
 }
 
 impl BehaviorComponent {
     pub fn init(behavior: BehaviorKind) -> BehaviorComponent {
-        BehaviorComponent {
-            behavior,
-            info: HashMap::new(),
-        }
+        BehaviorComponent { behavior }
     }
 }
 
