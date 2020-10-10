@@ -201,11 +201,6 @@ pub fn spend_exhaustion(ecs: &mut World, invoker: &Entity, cost: f64) {
     assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).exhaustion <= MAX_EXHAUSTION);
 }
 
-pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
-    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).focus -= cost;
-    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).focus >= 0.0);
-}
-
 #[cfg(test)]
 pub fn wait_for_animations(ecs: &mut World) {
     crate::arena::force_complete_animations(ecs);

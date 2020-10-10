@@ -86,6 +86,7 @@ pub struct SkillInfo {
     pub exhaustion: Option<f64>,
     pub focus_use: Option<f64>,
     pub cooldown: Option<u32>,
+    pub start_cooldown_spent: bool,
     pub no_time: bool,
 }
 
@@ -116,6 +117,7 @@ impl SkillInfo {
             focus_use: None,
             cooldown: None,
             no_time: false,
+            start_cooldown_spent: false,
         }
     }
 
@@ -146,6 +148,11 @@ impl SkillInfo {
 
     pub fn with_cooldown(mut self, cooldown: u32) -> SkillInfo {
         self.cooldown = Some(cooldown);
+        self
+    }
+
+    pub fn with_cooldown_spent(mut self) -> SkillInfo {
+        self.start_cooldown_spent = true;
         self
     }
 
@@ -214,6 +221,18 @@ impl SkillInfo {
             return UsableResults::LacksAmmo;
         }
         UsableResults::Usable
+    }
+
+    pub fn get_cooldown(&self, ecs: &mut World, entity: &Entity) -> u32 {
+        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
+        if let Some(skill_resource) = skill_resources.get_mut(*entity) {
+            *skill_resource
+                .cooldown
+                .entry(self.name.to_string())
+                .or_insert_with(|| if self.start_cooldown_spent { self.cooldown.unwrap() } else { 0 })
+        } else {
+            0
+        }
     }
 }
 
@@ -343,8 +362,20 @@ pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
 pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
     let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
     let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
+    let has_no_cooldown = skill.get_cooldown(ecs, invoker) == 0;
+    has_needed_ammo && has_valid_target && has_no_cooldown
+}
 
-    has_needed_ammo && has_valid_target
+pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
+    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).focus -= cost;
+    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).focus >= 0.0);
+}
+
+pub fn spend_cooldown(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
+    ecs.write_storage::<SkillResourceComponent>()
+        .grab_mut(*invoker)
+        .cooldown
+        .insert(skill.name.to_string(), skill.cooldown.unwrap());
 }
 
 pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Option<Point>) {
@@ -366,6 +397,9 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     }
     if let Some(focus_use) = skill.focus_use {
         spend_focus(ecs, invoker, focus_use);
+    }
+    if skill.cooldown.is_some() {
+        spend_cooldown(ecs, invoker, skill);
     }
 
     gain_adrenaline(ecs, invoker, skill);
@@ -488,6 +522,10 @@ fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
     // Ordering f64 is hard _tm_
     skill.exhaustion = *cmp::max(NotNan::new(0.0).unwrap(), NotNan::new(skill.exhaustion - exhaustion_to_remove).unwrap());
     skill.focus = *cmp::min(NotNan::new(skill.max_focus).unwrap(), NotNan::new(skill.focus + focus_to_add).unwrap());
+
+    for (_, cooldown) in skill.cooldown.iter_mut() {
+        *cooldown = cmp::max(*cooldown as i32 - ticks_to_add as i32, 0) as u32;
+    }
 }
 
 pub fn tick_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -1181,5 +1219,31 @@ mod tests {
         invoke_skill(&mut ecs, &player, "TestCharge", Some(Point::init(2, 5)));
         wait_for_animations(&mut ecs);
         assert_position(&ecs, &player, Point::init(2, 5));
+    }
+
+    #[test]
+    fn skill_with_cooldown_starts_usable() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+        invoke_skill(&mut ecs, &player, "TestCooldown", None);
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+        add_ticks(&mut ecs, 100);
+        add_ticks(&mut ecs, 100);
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldown"), None));
+    }
+
+    #[test]
+    fn skill_with_cooldown_starts_usable_unless_first_check() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+        add_ticks(&mut ecs, 100);
+        add_ticks(&mut ecs, 100);
+        assert!(can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
+        invoke_skill(&mut ecs, &player, "TestCooldownStartSpent", None);
+        assert!(!can_invoke_skill(&mut ecs, &player, get_skill("TestCooldownStartSpent"), None));
     }
 }

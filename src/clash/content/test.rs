@@ -126,4 +126,10 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         Some(3),
         false,
     ));
+    m.add_skill(SkillInfo::init("TestCooldown", None, TargetType::None, SkillEffect::None).with_cooldown(200));
+    m.add_skill(
+        SkillInfo::init("TestCooldownStartSpent", None, TargetType::None, SkillEffect::None)
+            .with_cooldown(200)
+            .with_cooldown_spent(),
+    );
 }
