@@ -239,8 +239,8 @@ impl HelpInfo {
             "ticks" => "Time",
             "Damage" | "Pierce" | "piercing" => "Damage & Defenses",
             "Strength" | "strength" => "Strength in Depth",
-            "Defenses" | "Armor" | "armor" | "Dodge" | "Health" | "Absorb" => "Defenses in Depth",
-            "Exhaustion" | "Focus" | "Adrenaline" => "Resources",
+            "Defenses" => "Defenses in Depth",
+            "armor" => "Armor",
             _ => word,
         };
 
@@ -325,6 +325,14 @@ impl HelpInfo {
                     ],
                 );
             }
+            "Health" => return HelpInfo::no_header(vec_of_strings!["Once depleted by damage to zero or below the character dies."]),
+            "Absorb" => return HelpInfo::no_header (vec_of_strings!["A pool of health that are depleted first by damage before health."]),
+            "Dodge" => return HelpInfo::no_header(vec_of_strings!["A pool of dice which is consumed to reduce damage, and is replenished by movement."]),
+            "Armor" => return HelpInfo::no_header(vec_of_strings!["A pool of dice which applies every attack to reduce incoming damage."]),
+            "Exhaustion" => return HelpInfo::no_header(vec_of_strings!["How much intense activity a character cna do before being physically taxed."]),
+            "Focus" => return HelpInfo::no_header (vec_of_strings!["How much concentration and grit a character can spent in an effort."]),
+            "Adrenaline" => return HelpInfo::no_header(vec_of_strings!["The surge of excitement and will needed for some abilities."]),
+            "Bullets" => return HelpInfo::no_header(vec_of_strings!["Ammunition used by ranged flashpowder weapons. Will need to be reloaded was expended."]),
             "Defense Example" => {
                 return HelpInfo::text_header(
                     "Defense Example",
