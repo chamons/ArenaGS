@@ -1,3 +1,5 @@
+use std::cmp;
+
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -204,13 +206,13 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name:
 
     let mut target = ecs.get_position(&find_player(ecs));
 
-    let range = {
+    let mut range = {
         let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
         random.gen_range(0, range)
     };
 
     // Try 20 times for a valid target
-    for _ in 0..20 {
+    for attempt in 0..20 {
         for _ in 0..range {
             let direction = get_random_direction_list(ecs)[0];
             if let Some(t) = direction.sized_point_in_direction(&target) {
@@ -221,6 +223,11 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name:
         if can_invoke_skill(ecs, enemy, &skill, Some(target.origin)) {
             invoke_skill(ecs, enemy, skill_name, Some(target.origin));
             return true;
+        }
+
+        // Every 8 reduce range by 1 to search closer (less in water)
+        if attempt % 8 == 7 {
+            range = cmp::max(range as i32 - 1, 1) as u32;
         }
     }
     false
