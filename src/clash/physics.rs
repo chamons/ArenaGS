@@ -161,8 +161,8 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
 
     // A 2x2 character can't move their origin to the 0'th row, as their 'head' would poke off the map
     // Same goes for one of the 13th column
-    let top_x = new.origin.x + new.width;
-    let top_y = new.origin.y as i32 - new.height as i32;
+    let top_x = new.origin.x + (new.width - 1);
+    let top_y = new.origin.y as i32 - (new.height as i32 - 1);
     if top_x >= MAX_MAP_TILES || top_y < 0 {
         return false;
     }
