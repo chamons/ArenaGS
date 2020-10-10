@@ -145,7 +145,7 @@ pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
         BehaviorKind::Bird,
         Defenses::just_health(150 + 20 * difficulty),
         SizedPoint::init_multi(position.x, position.y, 2, 2),
-        SkillResourceComponent::init(&[(AmmoKind::Eggs, 3, 3)]),
+        SkillResourceComponent::init(&[(AmmoKind::Feathers, 4, 4), (AmmoKind::Eggs, 3, 3)]),
         1 + difficulty,
     );
 }

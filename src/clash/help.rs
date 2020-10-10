@@ -151,7 +151,9 @@ impl HelpInfo {
             }
             SkillEffect::Reload(kind) => details.push(format!("Effect: Reload all {}", HelpInfo::get_ammo_name(*kind))),
             SkillEffect::ReloadSome(kind, amount) => details.push(format!("Effect: Reload {} {}", amount, HelpInfo::get_ammo_name(*kind))),
-            SkillEffect::ReloadSomeRandom(kind, amount) => details.push(format!("Effect: Reload randomly between 1 and {} {}", amount, HelpInfo::get_ammo_name(*kind))),
+            SkillEffect::ReloadSomeRandom(kind, amount) => {
+                details.push(format!("Effect: Reload randomly between 2 and {} {}", amount, HelpInfo::get_ammo_name(*kind)))
+            }
             SkillEffect::Field(effect, _) => match effect {
                 FieldEffect::Damage(damage, _) => {
                     details.push("Effect: Damage after 200 [[ticks]]".to_string());

@@ -524,7 +524,7 @@ pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: Option<
 }
 
 pub fn reload_random(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
-    let amount = ecs.fetch_mut::<RandomComponent>().rand.gen_range(1, amount);
+    let amount = ecs.fetch_mut::<RandomComponent>().rand.gen_range(2, amount);
     let amount = cmp::min(amount, ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
     reload(ecs, invoker, kind, Some(amount));
 }

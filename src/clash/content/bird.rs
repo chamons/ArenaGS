@@ -10,35 +10,41 @@ use crate::{do_behavior, try_behavior};
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     // All skills will be boosted by default +1 skill_power on main bird
+    m.add_skill(SkillInfo::init_with_distance(
+        "Wing Blast",
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
+        Some(2),
+        true,
+    ));
     m.add_skill(
         SkillInfo::init_with_distance(
-            "Wing Blast",
+            "Feather Orb",
             None,
             TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
-            Some(2),
+            SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
+            Some(12),
             true,
         )
         .with_ammo(AmmoKind::Feathers, 1),
     );
-    m.add_skill(SkillInfo::init_with_distance(
-        "Feather Orb",
-        None,
-        TargetType::Player,
-        SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
-        Some(12),
-        true,
-    ));
     m.add_skill(
         SkillInfo::init_with_distance(
             "Tailwind",
             None,
             TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
+            SkillEffect::Sequence(
+                Box::new(SkillEffect::RangedAttack(
+                    Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+                    BoltKind::AirBullet,
+                )),
+                Box::new(SkillEffect::ReloadSomeRandom(AmmoKind::Feathers, 3)),
+            ),
             Some(6),
             true,
         )
-        .with_cooldown(400),
+        .with_cooldown(300),
     );
     m.add_skill(SkillInfo::init(
         "Explosive Eggs",
@@ -65,10 +71,7 @@ pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
         try_behavior!(move_towards_player(ecs, enemy));
     } else {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
-        // Flip between 2 and 3 shots before pausing a round
-        if check_behavior_ammo_calculate(ecs, enemy, "Feather-Ammo", |ecs| flip_value(ecs, enemy, "Feather-Ammo-Amount", 3, 2)) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
-        }
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));

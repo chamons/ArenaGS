@@ -182,6 +182,12 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_na
 }
 
 pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name: &str, range: u32) -> bool {
+    let skill = get_skill(skill_name);
+    // Early return for lack of resources before trying many target squares
+    if !has_resources_for_skill(ecs, enemy, &skill) {
+        return false;
+    }
+
     let mut target = ecs.get_position(&find_player(ecs));
 
     let range = {
@@ -189,8 +195,8 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name:
         random.gen_range(0, range)
     };
 
-    // Try 4 times for a valid target
-    for _ in 0..4 {
+    // Try 20 times for a valid target
+    for _ in 0..20 {
         for _ in 0..range {
             let direction = get_random_direction_list(ecs)[0];
             if let Some(t) = direction.sized_point_in_direction(&target) {
@@ -198,7 +204,7 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name:
             }
         }
 
-        if can_invoke_skill(ecs, enemy, &get_skill(skill_name), Some(target.origin)) {
+        if can_invoke_skill(ecs, enemy, &skill, Some(target.origin)) {
             invoke_skill(ecs, enemy, skill_name, Some(target.origin));
             return true;
         }
