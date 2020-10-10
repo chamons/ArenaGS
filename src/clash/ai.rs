@@ -163,7 +163,7 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
             return move_character_action(ecs, *enemy, next);
         }
     }
-    return false;
+    false
 }
 
 pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
