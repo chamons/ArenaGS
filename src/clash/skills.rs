@@ -389,7 +389,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: &Entity, name: &str, target: Optio
     assert!(can_invoke_skill(ecs, invoker, skill, target));
 
     if let Some(invoker_name) = ecs.get_name(&invoker) {
-        ecs.log(format!("{} used [[{}]].", invoker_name.as_str(), name));
+        ecs.log(format!("{} used [[{}]]", invoker_name.as_str(), name));
     }
 
     if !skill.no_time {

@@ -18,24 +18,22 @@ pub fn golem_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(SkillInfo::init_with_distance(
-        "Ground Slam",
-        None,
-        TargetType::Player,
-        SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Earth),
-        Some(5),
-        false,
-    ));
+    m.add_skill(
+        SkillInfo::init_with_distance(
+            "Ground Slam",
+            None,
+            TargetType::Player,
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Earth),
+            Some(5),
+            false,
+        )
+        .with_cooldown(300),
+    );
 }
 
 pub fn golem_action(ecs: &mut World, enemy: &Entity) {
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
-    if distance <= 5 {
-        if check_behavior_cooldown(ecs, enemy, "Ground Slam", 4) {
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ground Slam"));
-        }
-    }
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Golem Punch"));
+    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ground Slam"));
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
