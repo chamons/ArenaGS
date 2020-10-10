@@ -49,6 +49,12 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         SkillEffect::ReloadSome(AmmoKind::Bullets, 2),
     ));
     m.add_skill(SkillInfo::init(
+        "TestReloadOne",
+        None,
+        TargetType::None,
+        SkillEffect::ReloadSome(AmmoKind::Bullets, 1),
+    ));
+    m.add_skill(SkillInfo::init(
         "TestReloadSomeRandom",
         None,
         TargetType::None,

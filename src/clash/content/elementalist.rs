@@ -7,6 +7,7 @@ use rand::prelude::*;
 use specs::prelude::*;
 
 use super::super::*;
+use crate::sequence;
 use crate::try_behavior;
 
 const TIDAL_SURGE_SIZE: u32 = 2;
@@ -150,7 +151,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "Frost Armor",
         None,
         TargetType::None,
-        SkillEffect::Buff(StatusKind::Armored, 2000),
+        sequence!(SkillEffect::Buff(StatusKind::Armored, 2000), SkillEffect::ReloadSome(AmmoKind::Charge, 5)),
     ));
 
     // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
@@ -158,17 +159,23 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         "Invoke the Elements",
         None,
         TargetType::None,
-        SkillEffect::Reload(AmmoKind::Charge),
+        SkillEffect::ReloadSome(AmmoKind::Charge, 10),
     ));
 
-    m.add_skill(SkillInfo::init_with_distance(
-        "Call Lightning",
-        None,
-        TargetType::Player,
-        SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
-        Some(6),
-        false,
-    ));
+    m.add_skill(
+        SkillInfo::init_with_distance(
+            "Call Lightning",
+            None,
+            TargetType::Player,
+            sequence!(
+                SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+                SkillEffect::ReloadSome(AmmoKind::Charge, 5)
+            ),
+            Some(6),
+            false,
+        )
+        .with_cooldown(200),
+    );
 }
 
 const MAX_ELEMENTS_SUMMONED: u32 = 4;

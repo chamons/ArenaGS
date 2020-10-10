@@ -525,15 +525,26 @@ fn spend_ammo(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) {
     }
 }
 
+pub fn reload_core(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
+    let (current, max) = {
+        let skill_resources = ecs.read_storage::<SkillResourceComponent>();
+        let resources = skill_resources.grab(*invoker);
+        (resources.ammo[&kind], resources.max[&kind])
+    };
+    let total = amount + current;
+    let amount = cmp::min(total, max);
+    set_ammo(ecs, invoker, kind, amount);
+}
+
 pub fn reload(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: Option<u32>) {
     let amount = amount.unwrap_or_else(|| ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
-    set_ammo(ecs, invoker, kind, amount);
+    reload_core(ecs, invoker, kind, amount);
 }
 
 pub fn reload_random(ecs: &mut World, invoker: &Entity, kind: AmmoKind, amount: u32) {
     let amount = ecs.fetch_mut::<RandomComponent>().rand.gen_range(2, amount);
     let amount = cmp::min(amount, ecs.read_storage::<SkillResourceComponent>().grab(*invoker).max[&kind]);
-    reload(ecs, invoker, kind, Some(amount));
+    reload_core(ecs, invoker, kind, amount);
 }
 
 fn add_ticks_for_skill(skill: &mut SkillResourceComponent, ticks_to_add: i32) {
@@ -840,7 +851,9 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
 
-        invoke_skill(&mut ecs, &player, "TestReloadSome", None);
+        invoke_skill(&mut ecs, &player, "TestReloadOne", None);
+        add_ticks(&mut ecs, 100);
+        invoke_skill(&mut ecs, &player, "TestReloadOne", None);
         assert_eq!(2, get_skill("TestAmmo").get_remaining_usages(&ecs, &player).unwrap());
         assert_eq!(0, get_ticks(&ecs, &player));
     }
