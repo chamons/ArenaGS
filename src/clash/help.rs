@@ -463,7 +463,7 @@ impl HelpInfo {
                         "",
                         format!("- Temperatures above {} will ignite a character in flames", TEMPERATURE_BURN_POINT),
                         format!(
-                            "|tab|- Burning does {} [[piercing]] strength of damage every {} [[ticks]].",
+                            "|tab|- Burning does {} [[piercing]] [[strength]] of damage every {} [[ticks]].",
                             TEMPERATURE_DAMAGE_PER_TICK, BURN_DURATION
                         ),
                         format!("|tab|- Once the temperatures is below {} they will quit burning.", TEMPERATURE_BURN_POINT),
@@ -540,7 +540,7 @@ impl HelpInfo {
             ),
             StatusKind::Regen => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
-                vec![format!("Rapidly healing injuries. A {} strength heal every turn.", HEALTH_REGEN_PER_TICK)],
+                vec![format!("Rapidly healing injuries. A {} [[strength]] heal every turn.", HEALTH_REGEN_PER_TICK)],
             ),
             StatusKind::RegenTick => panic!("{:?} should not be visible to help", status),
             #[cfg(test)]
