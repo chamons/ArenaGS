@@ -83,23 +83,27 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     add_move_and_shoot_skills(m);
     add_utility_skills(m);
 
-    m.insert(
+    m.add_skill(SkillInfo::init(
         "Reload",
-        SkillInfo::init(Some("b_45.png"), TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)),
-    );
-    m.insert(
+        Some("b_45.png"),
+        TargetType::None,
+        SkillEffect::Reload(AmmoKind::Bullets),
+    ));
+    m.add_skill(SkillInfo::init(
         "Swap Ammo",
-        SkillInfo::init(Some("b_28.png"), TargetType::None, SkillEffect::ReloadAndRotateAmmo()),
-    );
+        Some("b_28.png"),
+        TargetType::None,
+        SkillEffect::ReloadAndRotateAmmo(),
+    ));
 }
 
 fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const AIMED_SHOT_BASE_RANGE: u32 = 7;
     const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
 
-    m.insert(
-        "Aimed Shot",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Aimed Shot",
             Some("gun_06_b.PNG"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -114,9 +118,9 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Explosive Blast",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Explosive Blast",
             Some("SpellBook01_37.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -133,9 +137,9 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Air Lance",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Air Lance",
             Some("SpellBook06_46.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -155,9 +159,9 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const TRIPLE_SHOT_BASE_RANGE: u32 = 5;
     const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
 
-    m.insert(
-        "Triple Shot",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Triple Shot",
             Some("SpellBook06_22.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -171,9 +175,9 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Dragon's Breath",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Dragon's Breath",
             Some("r_16.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -189,9 +193,9 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Tornado Shot",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Tornado Shot",
             Some("SpellBookPage09_66.png"),
             TargetType::Enemy,
             SkillEffect::RangedAttack(
@@ -211,9 +215,9 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     const MOVE_AND_SHOOT_BASE_RANGE: u32 = 5;
     const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
-    m.insert(
-        "Quick Shot",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Quick Shot",
             Some("SpellBook03_10.png"),
             TargetType::Tile,
             SkillEffect::MoveAndShoot(
@@ -229,9 +233,9 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Hot Hands",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Hot Hands",
             Some("SpellBook01_15.png"),
             TargetType::Tile,
             SkillEffect::MoveAndShoot(
@@ -247,9 +251,9 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.insert(
-        "Lightning Speed",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Lightning Speed",
             Some("SpellBookPage09_39.png"),
             TargetType::Tile,
             SkillEffect::MoveAndShoot(
@@ -267,9 +271,9 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 }
 
 fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.insert(
-        "Blink Shot",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Blink Shot",
             Some("SpellBook06_118.png"),
             TargetType::Enemy,
             SkillEffect::ThenBuff(Box::from(SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)), StatusKind::Aimed, 300),
@@ -279,9 +283,9 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_no_time()
         .with_ammo(AmmoKind::Adrenaline, 50),
     );
-    m.insert(
-        "Showdown",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Showdown",
             Some("SpellBook03_54.png"),
             TargetType::None,
             SkillEffect::BuffThen(
@@ -298,9 +302,9 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         )
         .with_ammo(AmmoKind::Adrenaline, 50),
     );
-    m.insert(
-        "Dive",
+    m.add_skill(
         SkillInfo::init_with_distance(
+            "Dive",
             Some("SpellBook08_121.png"),
             TargetType::Tile,
             SkillEffect::BuffThen(StatusKind::Armored, 300, Box::from(SkillEffect::Move)),

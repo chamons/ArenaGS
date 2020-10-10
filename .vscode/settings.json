@@ -6,6 +6,7 @@
         "lifebar",
         "rustc",
         "sdl",
-        "type"
+        "type",
+        "cooldown",
     ]
 }

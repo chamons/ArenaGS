@@ -60,6 +60,7 @@ impl SkillResourceComponent {
         SkillResourceComponent {
             ammo,
             max,
+            cooldown: HashMap::new(),
             exhaustion: 0.0,
             focus: 0.0,
             max_focus: 0.0,
@@ -74,6 +75,7 @@ impl SkillResourceComponent {
 }
 
 pub struct SkillInfo {
+    pub name: &'static str,
     pub image: Option<&'static str>,
     pub target: TargetType,
     pub effect: SkillEffect,
@@ -83,28 +85,26 @@ pub struct SkillInfo {
     pub alternate: Option<String>,
     pub exhaustion: Option<f64>,
     pub focus_use: Option<f64>,
+    pub cooldown: Option<u32>,
     pub no_time: bool,
 }
 
 #[allow(dead_code)]
 impl SkillInfo {
-    pub fn init(image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
-        SkillInfo {
-            image,
-            target,
-            effect,
-            range: None,
-            must_be_clear: false,
-            ammo_info: None,
-            alternate: None,
-            exhaustion: None,
-            focus_use: None,
-            no_time: false,
-        }
+    pub fn init(name: &'static str, image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
+        SkillInfo::init_with_distance(name, image, target, effect, None, false)
     }
 
-    pub fn init_with_distance(image: Option<&'static str>, target: TargetType, effect: SkillEffect, range: Option<u32>, must_be_clear: bool) -> SkillInfo {
+    pub fn init_with_distance(
+        name: &'static str,
+        image: Option<&'static str>,
+        target: TargetType,
+        effect: SkillEffect,
+        range: Option<u32>,
+        must_be_clear: bool,
+    ) -> SkillInfo {
         SkillInfo {
+            name,
             image,
             target,
             effect,
@@ -114,6 +114,7 @@ impl SkillInfo {
             alternate: None,
             exhaustion: None,
             focus_use: None,
+            cooldown: None,
             no_time: false,
         }
     }
@@ -140,6 +141,11 @@ impl SkillInfo {
 
     pub fn with_no_time(mut self) -> SkillInfo {
         self.no_time = true;
+        self
+    }
+
+    pub fn with_cooldown(mut self, cooldown: u32) -> SkillInfo {
+        self.cooldown = Some(cooldown);
         self
     }
 
@@ -218,6 +224,16 @@ pub enum UsableResults {
     LacksFocus,
 }
 
+pub trait SkillMap {
+    fn add_skill(&mut self, info: SkillInfo);
+}
+
+impl SkillMap for HashMap<&'static str, SkillInfo> {
+    fn add_skill(&mut self, info: SkillInfo) {
+        self.insert(&info.name, info);
+    }
+}
+
 lazy_static! {
     static ref SKILLS: HashMap<&'static str, SkillInfo> = {
         let mut m = HashMap::new();
@@ -230,9 +246,8 @@ lazy_static! {
         super::content::elementalist::elementalist_skills(&mut m);
         super::content::tutorial::golem_skills(&mut m);
 
-        m.insert(
-            "Dash",
-            SkillInfo::init_with_distance(Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
+        m.add_skill(
+            SkillInfo::init_with_distance("Dash", Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
         );
 
         m
@@ -541,7 +556,7 @@ mod tests {
         let info = get_skill("TestWithRange");
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
-        let info = SkillInfo::init(None, TargetType::Tile, SkillEffect::None);
+        let info = SkillInfo::init("TestInfo", None, TargetType::Tile, SkillEffect::None);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
     }
 
@@ -560,7 +575,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::Tile, SkillEffect::None, Some(2), true);
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Tile, SkillEffect::None, Some(2), true);
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
@@ -572,7 +587,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::Any, SkillEffect::None, Some(2), false);
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Any, SkillEffect::None, Some(2), false);
         assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
@@ -583,7 +598,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = SkillInfo::init_with_distance(None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
+        let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
         assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
         assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));

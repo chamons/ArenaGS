@@ -10,50 +10,44 @@ use crate::{do_behavior, try_behavior, try_behavior_and_if};
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     // All skills will be boosted by default +1 skill_power on main bird
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Wing Blast",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
-            Some(2),
-            true,
-        ),
-    );
-    m.insert(
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
+        Some(2),
+        true,
+    ));
+    m.add_skill(SkillInfo::init_with_distance(
         "Feather Orb",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
-            Some(12),
-            true,
-        ),
-    );
-    m.insert(
+        None,
+        TargetType::Player,
+        SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
+        Some(12),
+        true,
+    ));
+    m.add_skill(SkillInfo::init_with_distance(
         "Tailwind",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
-            Some(6),
-            true,
-        ),
-    );
-    m.insert(
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
+        Some(6),
+        true,
+    ));
+    m.add_skill(SkillInfo::init(
         "Explosive Eggs",
-        SkillInfo::init(
-            None,
-            TargetType::Tile,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 1), FieldKind::Fire),
-        ),
-    );
-    m.insert("Take Off", SkillInfo::init(None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
-    m.insert(
+        None,
+        TargetType::Tile,
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 1), FieldKind::Fire),
+    ));
+    m.add_skill(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
+    m.add_skill(SkillInfo::init(
         "Hatch",
-        SkillInfo::init(None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn)),
-    );
-    m.insert("Throw Eggs", SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg)));
+        None,
+        TargetType::None,
+        SkillEffect::SpawnReplace(SpawnKind::BirdSpawn),
+    ));
+    m.add_skill(SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg)));
 }
 
 pub fn default_behavior(ecs: &mut World, enemy: &Entity) {

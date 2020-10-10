@@ -14,153 +14,141 @@ const HEALING_MIST_RANGE: u32 = 5;
 const MAGMA_ERUPTION_RANGE: u32 = 7;
 
 pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Tidal Surge",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::AnyoneButSelf,
-            SkillEffect::ConeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), ConeKind::Water, TIDAL_SURGE_SIZE),
-            Some(1),
-            false,
-        ),
-    );
+        None,
+        TargetType::AnyoneButSelf,
+        SkillEffect::ConeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), ConeKind::Water, TIDAL_SURGE_SIZE),
+        Some(1),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Ice Shard",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(2), BoltKind::Water),
-            Some(2),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Water),
+        Some(2),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Healing Mist",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Any,
-            SkillEffect::Buff(StatusKind::Regen, 400),
-            Some(HEALING_MIST_RANGE),
-            false,
-        ),
-    );
+        None,
+        TargetType::Any,
+        SkillEffect::Buff(StatusKind::Regen, 400),
+        Some(HEALING_MIST_RANGE),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Magma Eruption",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Any,
-            SkillEffect::Field(
-                FieldEffect::SustainedDamage(Damage::init(1).with_option(DamageOptions::PIERCE_DEFENSES), 6),
-                FieldKind::Fire,
-            ),
-            Some(MAGMA_ERUPTION_RANGE),
-            false,
+        None,
+        TargetType::Any,
+        SkillEffect::Field(
+            FieldEffect::SustainedDamage(Damage::init(1).with_option(DamageOptions::PIERCE_DEFENSES), 6),
+            FieldKind::Fire,
         ),
-    );
+        Some(MAGMA_ERUPTION_RANGE),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Lava Bolt",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
-            Some(4),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Fire),
+        Some(4),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Lightning Surge",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
-            Some(4),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
+        Some(4),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Hailstone",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Hail),
-            Some(8),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Hail),
+        Some(8),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Earthen Rage",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
-            Some(5),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::ChargeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
+        Some(5),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Rock Slide",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(2), WeaponKind::Sword),
-            Some(3),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::ChargeAttack(Damage::init(2), WeaponKind::Sword),
+        Some(3),
+        false,
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Pummel",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
-            Some(1),
-            false,
-        ),
-    );
-    m.insert(
+        None,
+        TargetType::Player,
+        SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+        Some(1),
+        false,
+    ));
+    m.add_skill(SkillInfo::init(
         "Summon Elemental (Water)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WaterElemental)),
-    );
-    m.insert(
+        None,
+        TargetType::Tile,
+        SkillEffect::Spawn(SpawnKind::WaterElemental),
+    ));
+    m.add_skill(SkillInfo::init(
         "Summon Elemental (Fire)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)),
-    );
-    m.insert(
+        None,
+        TargetType::Tile,
+        SkillEffect::Spawn(SpawnKind::FireElemental),
+    ));
+    m.add_skill(SkillInfo::init(
         "Summon Elemental (Wind)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)),
-    );
-    m.insert(
+        None,
+        TargetType::Tile,
+        SkillEffect::Spawn(SpawnKind::WindElemental),
+    ));
+    m.add_skill(SkillInfo::init(
         "Summon Elemental (Earth)",
-        SkillInfo::init(None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::EarthElemental)),
-    );
+        None,
+        TargetType::Tile,
+        SkillEffect::Spawn(SpawnKind::EarthElemental),
+    ));
 
-    m.insert(
+    m.add_skill(SkillInfo::init(
         "Frost Armor",
-        SkillInfo::init(None, TargetType::Any, SkillEffect::Buff(StatusKind::Armored, 2000)),
-    );
+        None,
+        TargetType::Any,
+        SkillEffect::Buff(StatusKind::Armored, 2000),
+    ));
 
     // Yes, this does nothing but print skill used in log. It increases the AI's "charge" stash for summoning
-    m.insert("Invoke the Elements", SkillInfo::init(None, TargetType::None, SkillEffect::None));
+    m.add_skill(SkillInfo::init("Invoke the Elements", None, TargetType::None, SkillEffect::None));
 
-    m.insert(
+    m.add_skill(SkillInfo::init_with_distance(
         "Call Lightning",
-        SkillInfo::init_with_distance(
-            None,
-            TargetType::Player,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
-            Some(6),
-            false,
-        ),
-    );
+        None,
+        TargetType::Player,
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+        Some(6),
+        false,
+    ));
 }
 
 const CHARGE_TO_SUMMON: u32 = 50;

@@ -144,6 +144,7 @@ impl MovementComponent {
 pub struct SkillResourceComponent {
     pub ammo: HashMap<AmmoKind, u32>,
     pub max: HashMap<AmmoKind, u32>,
+    pub cooldown: HashMap<String, u32>,
     pub exhaustion: f64,
     pub focus: f64,
     pub max_focus: f64,
