@@ -13,7 +13,7 @@ pub fn player(ecs: &mut World, position: Point) {
         .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
         .with(CharacterInfoComponent::init(CharacterInfo::init(
             "Player",
-            Defenses::init(2, 0, 0, 10),
+            Defenses::init(2, 0, 0, 20),
             Temperature::init(),
             0,
         )))
@@ -67,7 +67,7 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
         BehaviorKind::Elementalist,
         Defenses::init(0, 0, 40 + 10 * difficulty, 40),
         SizedPoint::init(position.x, position.y),
-        SkillResourceComponent::init(&[(AmmoKind::Charge, 50, 100)]),
+        SkillResourceComponent::init(&[(AmmoKind::Charge, 60, 100)]),
         difficulty,
     );
 }
@@ -91,7 +91,7 @@ pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Fire Elemental",
         SpawnKind::FireElemental,
         BehaviorKind::FireElemental,
-        Defenses::init(0, 0, 40 + 10 * difficulty, 5),
+        Defenses::init(0, 0, 30 + 10 * difficulty, 10),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         difficulty,
@@ -104,7 +104,7 @@ pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Wind Elemental",
         SpawnKind::WindElemental,
         BehaviorKind::WindElemental,
-        Defenses::init(1, 0, 0, 40 + 10 * difficulty),
+        Defenses::init(1, 0, 0, 30 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         difficulty,
@@ -117,7 +117,7 @@ pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         "Earth Elemental",
         SpawnKind::EarthElemental,
         BehaviorKind::EarthElemental,
-        Defenses::init(0, 1, 0, 40 + 10 * difficulty),
+        Defenses::init(0, 1, 0, 30 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         difficulty,

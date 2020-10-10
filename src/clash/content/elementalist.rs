@@ -129,13 +129,13 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             TargetType::Tile,
             SkillEffect::Spawn(SpawnKind::WaterElemental),
         )
-        .with_ammo(AmmoKind::Charge, 50),
+        .with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
-        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 50),
+        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
-        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 50),
+        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60),
     );
     m.add_skill(
         SkillInfo::init(
@@ -144,7 +144,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
             TargetType::Tile,
             SkillEffect::Spawn(SpawnKind::EarthElemental),
         )
-        .with_ammo(AmmoKind::Charge, 50),
+        .with_ammo(AmmoKind::Charge, 60),
     );
 
     m.add_skill(SkillInfo::init(
