@@ -46,8 +46,9 @@ impl HelpInfo {
 
     fn get_ammo_name(kind: AmmoKind) -> &'static str {
         match kind {
-            AmmoKind::Bullets => "Bullet(s)",
             AmmoKind::Adrenaline => "Adrenaline",
+            AmmoKind::Bullets => "Bullet(s)",
+            AmmoKind::Eggs => "Eggs",
         }
     }
 

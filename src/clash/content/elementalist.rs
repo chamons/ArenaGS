@@ -250,7 +250,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
     if distance <= 3 {
         if let Some(cone_target) = check_for_cone_striking_player(ecs, enemy, TIDAL_SURGE_SIZE) {
             if check_behavior_cooldown(ecs, enemy, "Tidal Surge", 2) {
-                try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", &cone_target));
+                try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", cone_target));
             }
         }
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ice Shard"));
@@ -261,7 +261,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
             ecs,
             enemy,
             "Healing Mist",
-            &ecs.get_position(&target).nearest_point_to(current_position)
+            ecs.get_position(&target).nearest_point_to(current_position)
         ));
     }
 

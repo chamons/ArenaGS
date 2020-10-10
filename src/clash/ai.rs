@@ -151,17 +151,16 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
 }
 
 pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
-    if can_invoke_skill(ecs, enemy, get_skill(skill_name), None) {
-        invoke_skill(ecs, enemy, skill_name, None);
-        true
-    } else {
-        false
-    }
+    use_skill_core(ecs, enemy, skill_name, None)
 }
 
-pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: &Point) -> bool {
-    if is_good_target(ecs, enemy, get_skill(skill_name), *target_point) {
-        invoke_skill(ecs, enemy, skill_name, Some(*target_point));
+pub fn use_skill_at_position(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: Point) -> bool {
+    use_skill_core(ecs, enemy, skill_name, Some(target_point))
+}
+
+fn use_skill_core(ecs: &mut World, enemy: &Entity, skill_name: &str, target_point: Option<Point>) -> bool {
+    if can_invoke_skill(ecs, enemy, get_skill(skill_name), target_point) {
+        invoke_skill(ecs, enemy, skill_name, target_point);
         return true;
     }
     false
@@ -173,7 +172,7 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: &Entity, skill_na
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
         let skill = get_skill(skill_name);
         if distance <= skill.range.unwrap() {
-            if is_good_target(ecs, enemy, skill, target_point) {
+            if can_invoke_skill(ecs, enemy, skill, Some(target_point)) {
                 invoke_skill(ecs, enemy, skill_name, Some(target_point));
                 return true;
             }
@@ -190,16 +189,19 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: &Entity, skill_name:
         random.gen_range(0, range)
     };
 
-    for _ in 0..range {
-        let direction = get_random_direction_list(ecs)[0];
-        if let Some(t) = direction.sized_point_in_direction(&target) {
-            target = t;
+    // Try 4 times for a valid target
+    for _ in 0..4 {
+        for _ in 0..range {
+            let direction = get_random_direction_list(ecs)[0];
+            if let Some(t) = direction.sized_point_in_direction(&target) {
+                target = t;
+            }
         }
-    }
 
-    if is_good_target(ecs, enemy, &get_skill(skill_name), target.origin) {
-        invoke_skill(ecs, enemy, skill_name, Some(target.origin));
-        return true;
+        if can_invoke_skill(ecs, enemy, &get_skill(skill_name), Some(target.origin)) {
+            invoke_skill(ecs, enemy, skill_name, Some(target.origin));
+            return true;
+        }
     }
     false
 }
@@ -218,35 +220,6 @@ pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
     } else {
         false
     }
-}
-
-pub fn use_no_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill(ecs, enemy, skill_name) {
-            return true;
-        }
-    }
-    false
-}
-
-#[allow(dead_code)]
-pub fn use_random_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32, range: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill_with_random_target(ecs, enemy, skill_name, range) {
-            return true;
-        }
-    }
-    false
-}
-
-#[allow(dead_code)]
-pub fn use_player_target_skill_with_cooldown(ecs: &mut World, enemy: &Entity, skill_name: &str, cooldown: u32) -> bool {
-    if check_behavior_cooldown(ecs, enemy, skill_name, cooldown) {
-        if use_skill_at_player_if_in_range(ecs, enemy, skill_name) {
-            return true;
-        }
-    }
-    false
 }
 
 pub fn flip_value(ecs: &World, enemy: &Entity, key: &str, left: u32, right: u32) -> u32 {
@@ -315,11 +288,6 @@ pub fn check_behavior_cooldown_calculate(ecs: &World, enemy: &Entity, key: &str,
     }
 }
 
-#[allow(dead_code)]
-pub fn check_behavior_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
-    check_behavior_ammo_calculate(ecs, enemy, key, |_| ammo)
-}
-
 pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, ammo: impl Fn(&World) -> u32) -> bool {
     let value = get_behavior_value_calculate(ecs, enemy, key, &ammo);
     if value >= 1 {
@@ -327,16 +295,6 @@ pub fn check_behavior_ammo_calculate(ecs: &World, enemy: &Entity, key: &str, amm
         true
     } else {
         set_behavior_value(ecs, enemy, key, ammo(ecs));
-        false
-    }
-}
-
-pub fn check_behavior_single_use_ammo(ecs: &World, enemy: &Entity, key: &str, ammo: u32) -> bool {
-    let value = get_behavior_value(ecs, enemy, key, ammo);
-    if value >= 1 {
-        set_behavior_value(ecs, enemy, key, value - 1);
-        true
-    } else {
         false
     }
 }

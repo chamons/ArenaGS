@@ -1,4 +1,4 @@
-// The ai macros can add "unnecessary" returns occationally
+// The ai macros can add "unnecessary" returns occasionally
 #![allow(clippy::needless_return)]
 
 use std::collections::HashMap;
@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use specs::prelude::*;
 
 use super::super::*;
-use crate::{do_behavior, try_behavior, try_behavior_and_if};
+use crate::{do_behavior, try_behavior};
 
 pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     // All skills will be boosted by default +1 skill_power on main bird
@@ -26,28 +26,34 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         Some(12),
         true,
     ));
-    m.add_skill(SkillInfo::init_with_distance(
-        "Tailwind",
-        None,
-        TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
-        Some(6),
-        true,
-    ));
+    m.add_skill(
+        SkillInfo::init_with_distance(
+            "Tailwind",
+            None,
+            TargetType::Player,
+            SkillEffect::RangedAttack(Damage::init(0).with_option(DamageOptions::KNOCKBACK), BoltKind::AirBullet),
+            Some(6),
+            true,
+        )
+        .with_cooldown(400),
+    );
     m.add_skill(SkillInfo::init(
         "Explosive Eggs",
         None,
         TargetType::Tile,
         SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 1), FieldKind::Fire),
     ));
-    m.add_skill(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)));
-    m.add_skill(SkillInfo::init(
-        "Hatch",
-        None,
-        TargetType::None,
-        SkillEffect::SpawnReplace(SpawnKind::BirdSpawn),
-    ));
-    m.add_skill(SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg)));
+    m.add_skill(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)).with_cooldown(1000));
+    m.add_skill(
+        SkillInfo::init("Hatch", None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn))
+            .with_cooldown(400)
+            .with_cooldown_spent(),
+    );
+    m.add_skill(
+        SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg))
+            .with_ammo(AmmoKind::Eggs, 1)
+            .with_cooldown(700),
+    );
 }
 
 pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
@@ -76,46 +82,27 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
     };
 
     if phase == 1 {
-        try_behavior!(use_player_target_skill_with_cooldown(ecs, enemy, "Tailwind", 4));
+        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Tailwind"));
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 2 {
         if ecs.has_status(enemy, StatusKind::Flying) {
-            if check_behavior_cooldown(ecs, enemy, "Bombing Run", 0) {
-                try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
-            }
+            try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
         } else {
-            try_behavior_and_if!(
-                use_no_target_skill_with_cooldown(ecs, enemy, "Take Off", 4),
-                set_behavior_value(ecs, enemy, "Bombing Run", 1)
-            );
-            try_behavior!(use_player_target_skill_with_cooldown(ecs, enemy, "Tailwind", 4));
+            try_behavior!(use_skill(ecs, enemy, "Take Off"));
+            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Tailwind"));
             do_behavior!(default_behavior(ecs, enemy));
         }
     } else if phase == 3 {
-        if check_behavior_cooldown(ecs, enemy, "Throw Eggs", 3) {
-            if check_behavior_single_use_ammo(ecs, enemy, "TotalEggs", 3) {
-                try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
-            }
-        }
+        try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 4 {
         if ecs.has_status(enemy, StatusKind::Flying) {
-            if check_behavior_cooldown(ecs, enemy, "Bombing Run", 0) {
-                if coin_flip(ecs) {
-                    try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
-                } else {
-                    if check_behavior_single_use_ammo(ecs, enemy, "TotalEggs", 3) {
-                        try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
-                    } else {
-                        try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
-                    }
-                }
+            if coin_flip(ecs) {
+                try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
             }
+            try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
         } else {
-            try_behavior_and_if!(
-                use_no_target_skill_with_cooldown(ecs, enemy, "Take Off", 4),
-                set_behavior_value(ecs, enemy, "Bombing Run", 1)
-            );
+            try_behavior!(use_skill(ecs, enemy, "Take Off"));
             do_behavior!(default_behavior(ecs, enemy));
         }
     }
@@ -127,6 +114,6 @@ pub fn bird_add_action(ecs: &mut World, enemy: &Entity) {
 }
 
 pub fn egg_action(ecs: &mut World, enemy: &Entity) {
-    try_behavior!(use_no_target_skill_with_cooldown(ecs, enemy, "Hatch", 4));
+    try_behavior!(use_skill(ecs, enemy, "Hatch"));
     wait(ecs, *enemy);
 }

@@ -45,6 +45,7 @@ pub enum SkillEffect {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, IntoEnumIterator, Debug, Deserialize, Serialize)]
 pub enum AmmoKind {
     Bullets,
+    Eggs,
     Adrenaline,
 }
 
@@ -359,11 +360,15 @@ pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
     }
 }
 
-pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
+pub fn has_resources_for_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo) -> bool {
     let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
-    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
     let has_no_cooldown = skill.get_cooldown(ecs, invoker) == 0;
-    has_needed_ammo && has_valid_target && has_no_cooldown
+    has_needed_ammo && has_no_cooldown
+}
+
+pub fn can_invoke_skill(ecs: &mut World, invoker: &Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
+    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
+    has_resources_for_skill(ecs, invoker, skill) && has_valid_target
 }
 
 pub fn spend_focus(ecs: &mut World, invoker: &Entity, cost: f64) {
