@@ -97,12 +97,16 @@ impl Distribution<Direction> for Standard {
     }
 }
 
+pub fn is_tile_safe(ecs: &World, position: &SizedPoint) -> bool {
+    find_field_at_location(ecs, position).is_none()
+}
+
 fn get_random_direction_to_move(ecs: &mut World, position: SizedPoint, enemy: &Entity) -> Option<Direction> {
     let random = &mut ecs.fetch_mut::<RandomComponent>().rand;
-    for _ in 0..5 {
+    for _ in 0..10 {
         let direction: Direction = random.gen();
         if let Some(point) = point_in_direction(&position, direction) {
-            if can_move_character(ecs, enemy, point) {
+            if can_move_character(ecs, enemy, point) && is_tile_safe(ecs, &point) {
                 return Some(direction);
             }
         }
@@ -146,6 +150,18 @@ pub fn move_randomly(ecs: &mut World, enemy: &Entity) -> bool {
     } else {
         false
     }
+}
+
+pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
+    let current_position = ecs.get_position(enemy);
+    let player_position = ecs.get_position(&find_player(ecs));
+    if let Some(path) = current_position.line_to(player_position.origin) {
+        let next = current_position.move_to(path[1]);
+        if is_tile_safe(ecs, &next) {
+            return move_character_action(ecs, *enemy, next);
+        }
+    }
+    return false;
 }
 
 pub fn use_skill(ecs: &mut World, enemy: &Entity, skill_name: &str) -> bool {
@@ -214,16 +230,6 @@ pub fn distance_to_player(ecs: &mut World, enemy: &Entity) -> Option<u32> {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(&find_player(ecs));
     current_position.distance_to_multi(player_position)
-}
-
-pub fn move_towards_player(ecs: &mut World, enemy: &Entity) -> bool {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(&find_player(ecs));
-    if let Some(path) = current_position.line_to(player_position.origin) {
-        move_character_action(ecs, *enemy, current_position.move_to(path[1]))
-    } else {
-        false
-    }
 }
 
 pub fn check_for_cone_striking_player(ecs: &World, enemy: &Entity, size: u32) -> Option<Point> {
@@ -324,5 +330,36 @@ mod tests {
         }
 
         assert_eq!(1, find_all_entities(&ecs).len());
+    }
+
+    #[test]
+    fn move_random_avoids_field() {
+        let mut ecs = create_test_state().with_player(1, 1, 0).with_character(2, 4, 0).with_map().build();
+        let player = find_player(&ecs);
+
+        // Only 1,4 and 2,4 are safe points
+        for p in &[Point::init(2, 3), Point::init(3, 4), Point::init(2, 5)] {
+            invoke_skill(&mut ecs, &player, "TestField", Some(*p));
+            wait_for_animations(&mut ecs);
+        }
+
+        let target = find_at(&ecs, 2, 4);
+        move_randomly(&mut ecs, &target);
+        wait_for_animations(&mut ecs);
+
+        assert!(find_character_at_location(&ecs, Point::init(2, 4)).is_some() || find_character_at_location(&ecs, Point::init(1, 4)).is_some());
+    }
+
+    #[test]
+    fn move_towards_player_avoid_field() {
+        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 4, 0).with_map().build();
+        let player = find_player(&ecs);
+        invoke_skill(&mut ecs, &player, "TestField", Some(Point::init(2, 3)));
+        wait_for_animations(&mut ecs);
+
+        let target = find_at(&ecs, 2, 4);
+        move_towards_player(&mut ecs, &target);
+        wait_for_animations(&mut ecs);
+        assert_character_at(&ecs, 2, 4);
     }
 }

@@ -35,6 +35,5 @@ pub fn golem_action(ecs: &mut World, enemy: &Entity) {
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Golem Punch"));
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ground Slam"));
     try_behavior!(move_towards_player(ecs, enemy));
-    try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, *enemy);
 }
