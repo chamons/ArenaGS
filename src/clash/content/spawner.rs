@@ -29,6 +29,7 @@ pub fn player(ecs: &mut World, position: Point) {
     ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_monster(
     ecs: &mut World,
     name: &str,

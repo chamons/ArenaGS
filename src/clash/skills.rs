@@ -620,24 +620,24 @@ mod tests {
 
     #[test]
     fn skill_info_range() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 5)));
         let info = SkillInfo::init("TestInfo", None, TargetType::Tile, SkillEffect::None);
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 5)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 5)));
     }
 
     #[test]
     fn skill_info_correct_target_kind() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
     }
 
     #[test]
@@ -646,32 +646,32 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Tile, SkillEffect::None, Some(2), true);
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
     fn skill_info_any_target() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Any, SkillEffect::None, Some(2), false);
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
-        assert!(is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 2)));
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
     fn skill_info_any_but_self_target() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
+        let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
-        assert_eq!(false, is_good_target(&mut ecs, &entity, &info, Point::init(2, 2)));
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 3)));
-        assert_eq!(true, is_good_target(&mut ecs, &entity, &info, Point::init(2, 4)));
+        assert_eq!(false, is_good_target(&ecs, &entity, &info, Point::init(2, 2)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 3)));
+        assert_eq!(true, is_good_target(&ecs, &entity, &info, Point::init(2, 4)));
     }
 
     #[test]
