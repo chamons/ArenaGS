@@ -113,7 +113,7 @@ impl HelpInfo {
         }
         if opt.contains(DamageOptions::CONSUMES_CHARGE_DMG) {
             details.push(format!(
-                "Consumes [[static charge]] to do {} strength additional [[piercing]] damage.",
+                "Consumes [[static charge]] to do {} [[strength]] additional [[piercing]] damage.",
                 STATIC_CHARGE_DAMAGE
             ));
         }
