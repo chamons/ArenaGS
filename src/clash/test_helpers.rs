@@ -4,7 +4,6 @@ use specs::saveload::{MarkedBuilder, SimpleMarker};
 use super::*;
 use crate::atlas::prelude::*;
 
-
 pub struct StateBuilder {
     ecs: World,
 }
