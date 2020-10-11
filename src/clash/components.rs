@@ -360,24 +360,24 @@ pub fn create_world() -> World {
 }
 
 pub trait ShortInfo {
-    fn get_position(&self, entity: &Entity) -> SizedPoint;
-    fn get_defenses(&self, entity: &Entity) -> Defenses;
-    fn get_temperature(&self, entity: &Entity) -> Temperature;
-    fn get_name(&self, entity: &Entity) -> Option<String>;
+    fn get_position(&self, entity: Entity) -> SizedPoint;
+    fn get_defenses(&self, entity: Entity) -> Defenses;
+    fn get_temperature(&self, entity: Entity) -> Temperature;
+    fn get_name(&self, entity: Entity) -> Option<String>;
 }
 
 impl ShortInfo for World {
-    fn get_position(&self, entity: &Entity) -> SizedPoint {
-        self.read_storage::<PositionComponent>().grab(*entity).position
+    fn get_position(&self, entity: Entity) -> SizedPoint {
+        self.read_storage::<PositionComponent>().grab(entity).position
     }
-    fn get_defenses(&self, entity: &Entity) -> Defenses {
-        self.read_storage::<CharacterInfoComponent>().grab(*entity).character.defenses.clone()
+    fn get_defenses(&self, entity: Entity) -> Defenses {
+        self.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.clone()
     }
-    fn get_temperature(&self, entity: &Entity) -> Temperature {
-        self.read_storage::<CharacterInfoComponent>().grab(*entity).character.temperature.clone()
+    fn get_temperature(&self, entity: Entity) -> Temperature {
+        self.read_storage::<CharacterInfoComponent>().grab(entity).character.temperature.clone()
     }
-    fn get_name(&self, entity: &Entity) -> Option<String> {
-        if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(*entity) {
+    fn get_name(&self, entity: Entity) -> Option<String> {
+        if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(entity) {
             Some(character_info.character.name.to_string())
         } else {
             None
@@ -386,12 +386,12 @@ impl ShortInfo for World {
 }
 
 pub trait StatusInfo {
-    fn has_status(&self, entity: &Entity, kind: StatusKind) -> bool;
+    fn has_status(&self, entity: Entity, kind: StatusKind) -> bool;
 }
 
 impl StatusInfo for World {
-    fn has_status(&self, entity: &Entity, kind: StatusKind) -> bool {
-        self.read_storage::<StatusComponent>().grab(*entity).status.has(kind)
+    fn has_status(&self, entity: Entity, kind: StatusKind) -> bool {
+        self.read_storage::<StatusComponent>().grab(entity).status.has(kind)
     }
 }
 
@@ -406,18 +406,18 @@ impl Framer for World {
 }
 
 pub trait StatusApplier {
-    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32);
-    fn remove_status(&mut self, entity: &Entity, kind: StatusKind);
-    fn add_trait(&mut self, entity: &Entity, kind: StatusKind);
+    fn add_status(&mut self, entity: Entity, kind: StatusKind, length: i32);
+    fn remove_status(&mut self, entity: Entity, kind: StatusKind);
+    fn add_trait(&mut self, entity: Entity, kind: StatusKind);
 }
 impl StatusApplier for World {
-    fn add_status(&mut self, entity: &Entity, kind: StatusKind, length: i32) {
+    fn add_status(&mut self, entity: Entity, kind: StatusKind, length: i32) {
         StatusStore::add_status_to(self, entity, kind, length);
     }
-    fn remove_status(&mut self, entity: &Entity, kind: StatusKind) {
+    fn remove_status(&mut self, entity: Entity, kind: StatusKind) {
         StatusStore::remove_status_from(self, entity, kind);
     }
-    fn add_trait(&mut self, entity: &Entity, kind: StatusKind) {
+    fn add_trait(&mut self, entity: Entity, kind: StatusKind) {
         StatusStore::add_trait_to(self, entity, kind);
     }
 }

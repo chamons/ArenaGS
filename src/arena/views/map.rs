@@ -113,7 +113,7 @@ impl MapView {
                         let state = get_render_sprite_state(&render, animation);
                         sprite.draw(canvas, offset, state, render_frame)?;
                         if character_info.is_some() {
-                            self.overlay.draw_character_overlay(canvas, ecs, &entity, offset)?;
+                            self.overlay.draw_character_overlay(canvas, ecs, entity, offset)?;
                         }
                     } else {
                         sprite.draw(canvas, SDLPoint::new(0, 0), render.sprite_state, render_frame)?;
@@ -149,9 +149,9 @@ impl MapView {
         if let Some(map_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
             if let Some(skill) = get_target_skill(ecs) {
                 let player = find_player(&ecs);
-                let player_position = ecs.get_position(&player);
+                let player_position = ecs.get_position(player);
 
-                let color = if is_good_target(ecs, &player, skill, map_position) {
+                let color = if is_good_target(ecs, player, skill, map_position) {
                     Color::from((196, 196, 0, 140))
                 } else {
                     Color::from((196, 0, 0, 140))
@@ -187,7 +187,7 @@ impl MapView {
         let mouse = ecs.get_mouse_position();
         if let Some(mouse_position) = screen_to_map_position(mouse.x as i32, mouse.y as i32) {
             let player = find_player(&ecs);
-            if is_good_target(ecs, &player, skill, mouse_position) {
+            if is_good_target(ecs, player, skill, mouse_position) {
                 for x in 0..MAX_MAP_TILES {
                     for y in 0..MAX_MAP_TILES {
                         let map_position = Point::init(x, y);
@@ -208,7 +208,7 @@ impl MapView {
         for x in 0..MAX_MAP_TILES {
             for y in 0..MAX_MAP_TILES {
                 let map_position = Point::init(x, y);
-                if in_possible_skill_range(ecs, &player, skill, map_position) {
+                if in_possible_skill_range(ecs, player, skill, map_position) {
                     self.draw_overlay_tile(canvas, &map_position, Color::from((196, 196, 0, 60)))?;
                 }
             }

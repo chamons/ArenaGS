@@ -5,9 +5,9 @@ use super::super::*;
 use crate::atlas::{EasyMutECS, EasyMutWorld};
 use crate::sequence;
 
-pub fn setup_gunslinger(ecs: &mut World, invoker: &Entity) {
+pub fn setup_gunslinger(ecs: &mut World, invoker: Entity) {
     ecs.shovel(
-        *invoker,
+        invoker,
         SkillResourceComponent::init(&[(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]).with_focus(1.0),
     );
 
@@ -30,9 +30,9 @@ pub enum TargetAmmo {
     Cyclone,
 }
 
-fn add_skills_to_front(ecs: &mut World, invoker: &Entity, skills_to_add: &[&str]) {
+fn add_skills_to_front(ecs: &mut World, invoker: Entity, skills_to_add: &[&str]) {
     let mut skills = ecs.write_storage::<SkillsComponent>();
-    let skill_list = &mut skills.grab_mut(*invoker).skills;
+    let skill_list = &mut skills.grab_mut(invoker).skills;
 
     // Backwards since we insert one at a time in front
     for s in skills_to_add.iter().rev() {
@@ -40,16 +40,16 @@ fn add_skills_to_front(ecs: &mut World, invoker: &Entity, skills_to_add: &[&str]
     }
 }
 
-fn remove_skills(ecs: &mut World, invoker: &Entity, skills_to_remove: &[&str]) {
+fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: &[&str]) {
     let mut skills = ecs.write_storage::<SkillsComponent>();
-    let skill_list = &mut skills.grab_mut(*invoker).skills;
+    let skill_list = &mut skills.grab_mut(invoker).skills;
 
     for s in skills_to_remove.iter() {
         skill_list.remove(skill_list.iter().position(|x| *x == *s).unwrap());
     }
 }
 
-fn set_weapon_trait(ecs: &mut World, invoker: &Entity, ammo: TargetAmmo) {
+fn set_weapon_trait(ecs: &mut World, invoker: Entity, ammo: TargetAmmo) {
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Magnum);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Ignite);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Cyclone);
@@ -60,7 +60,7 @@ fn set_weapon_trait(ecs: &mut World, invoker: &Entity, ammo: TargetAmmo) {
     }
 }
 
-pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
+pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
     let (current_ammo, next_ammo) = {
         if ecs.has_status(invoker, StatusKind::Magnum) {
             (TargetAmmo::Magnum, TargetAmmo::Ignite)
@@ -75,7 +75,7 @@ pub fn rotate_ammo(ecs: &mut World, invoker: &Entity) {
     add_skills_to_front(ecs, invoker, &get_weapon_skills(next_ammo));
     set_weapon_trait(ecs, invoker, next_ammo);
 
-    reload(ecs, &invoker, AmmoKind::Bullets, None);
+    reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
 pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
@@ -326,9 +326,9 @@ mod tests {
     fn gunslinger_starts_correctly() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, &player);
+        setup_gunslinger(&mut ecs, player);
 
-        assert!(ecs.has_status(&player, StatusKind::Magnum));
+        assert!(ecs.has_status(player, StatusKind::Magnum));
         assert_eq!(5, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
     }
 
@@ -336,7 +336,7 @@ mod tests {
     fn rotate_ammo_reloads_as_well() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, &player);
+        setup_gunslinger(&mut ecs, player);
 
         *ecs.write_storage::<SkillResourceComponent>()
             .grab_mut(player)
@@ -345,7 +345,7 @@ mod tests {
             .unwrap() = 5;
 
         assert_eq!(5, ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Bullets]);
-        rotate_ammo(&mut ecs, &player);
+        rotate_ammo(&mut ecs, player);
         assert_eq!(6, ecs.read_storage::<SkillResourceComponent>().grab(player).ammo[&AmmoKind::Bullets]);
     }
 
@@ -353,27 +353,27 @@ mod tests {
     fn rotate_ammo_has_correct_buff() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, &player);
-        assert!(ecs.has_status(&player, StatusKind::Magnum));
+        setup_gunslinger(&mut ecs, player);
+        assert!(ecs.has_status(player, StatusKind::Magnum));
 
-        rotate_ammo(&mut ecs, &player);
-        assert!(ecs.has_status(&player, StatusKind::Ignite));
+        rotate_ammo(&mut ecs, player);
+        assert!(ecs.has_status(player, StatusKind::Ignite));
 
-        rotate_ammo(&mut ecs, &player);
-        assert!(ecs.has_status(&player, StatusKind::Cyclone));
+        rotate_ammo(&mut ecs, player);
+        assert!(ecs.has_status(player, StatusKind::Cyclone));
     }
 
     #[test]
     fn rotate_ammo_has_sets_correct_skills() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, &player);
+        setup_gunslinger(&mut ecs, player);
         assert_eq!("Aimed Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
-        rotate_ammo(&mut ecs, &player);
+        rotate_ammo(&mut ecs, player);
         assert_eq!("Explosive Blast", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
-        rotate_ammo(&mut ecs, &player);
+        rotate_ammo(&mut ecs, player);
         assert_eq!("Air Lance", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
     }
 }

@@ -65,7 +65,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
-pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
+pub fn default_behavior(ecs: &mut World, enemy: Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     if distance > 7 {
         try_behavior!(move_towards_player(ecs, enemy));
@@ -75,10 +75,10 @@ pub fn default_behavior(ecs: &mut World, enemy: &Entity) {
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn bird_action(ecs: &mut World, enemy: &Entity) {
+pub fn bird_action(ecs: &mut World, enemy: Entity) {
     let defenses = ecs.get_defenses(enemy);
     let phase = match defenses.health as f64 / defenses.max_health as f64 {
         x if x < 0.25 => 4,
@@ -112,14 +112,14 @@ pub fn bird_action(ecs: &mut World, enemy: &Entity) {
             do_behavior!(default_behavior(ecs, enemy));
         }
     }
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn bird_add_action(ecs: &mut World, enemy: &Entity) {
+pub fn bird_add_action(ecs: &mut World, enemy: Entity) {
     do_behavior!(default_behavior(ecs, enemy));
 }
 
-pub fn egg_action(ecs: &mut World, enemy: &Entity) {
+pub fn egg_action(ecs: &mut World, enemy: Entity) {
     try_behavior!(use_skill(ecs, enemy, "Hatch"));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }

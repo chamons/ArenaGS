@@ -58,7 +58,7 @@ impl CharacterOverlay {
         })
     }
 
-    fn get_overlay_statuses(&self, ecs: &World, entity: &Entity) -> Vec<OverlayStatus> {
+    fn get_overlay_statuses(&self, ecs: &World, entity: Entity) -> Vec<OverlayStatus> {
         let mut status = vec![];
         let temperature = ecs.get_temperature(entity);
 
@@ -84,7 +84,7 @@ impl CharacterOverlay {
         status
     }
 
-    pub fn draw_character_overlay(&self, canvas: &mut RenderCanvas, ecs: &World, entity: &Entity, screen_position: SDLPoint) -> BoxResult<()> {
+    pub fn draw_character_overlay(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, screen_position: SDLPoint) -> BoxResult<()> {
         let size = {
             let position = ecs.get_position(entity);
             if position.width == 1 && position.height == 1 {

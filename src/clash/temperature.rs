@@ -80,7 +80,7 @@ impl Temperature {
     }
 }
 
-fn check_temperature_state(ecs: &mut World, target: &Entity) {
+fn check_temperature_state(ecs: &mut World, target: Entity) {
     let did_freeze = StatusStore::toggle_trait_from(ecs, target, StatusKind::Frozen, ecs.get_temperature(target).is_freezing());
 
     if did_freeze {
@@ -93,11 +93,11 @@ fn check_temperature_state(ecs: &mut World, target: &Entity) {
     }
 }
 
-fn reduce_temperature(ecs: &mut World, target: &Entity, ticks: i32) {
-    if ecs.read_storage::<CharacterInfoComponent>().has(*target) {
+fn reduce_temperature(ecs: &mut World, target: Entity, ticks: i32) {
+    if ecs.read_storage::<CharacterInfoComponent>().has(target) {
         {
             let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            let character_info = character_infos.grab_mut(*target);
+            let character_info = character_infos.grab_mut(target);
             let temperature = &mut character_info.character.temperature;
             if temperature.is_ready(ticks) {
                 temperature.reduce_temperature();
@@ -109,11 +109,11 @@ fn reduce_temperature(ecs: &mut World, target: &Entity, ticks: i32) {
     }
 }
 
-fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damage: RolledDamage) {
-    if ecs.read_storage::<CharacterInfoComponent>().has(*target) {
+fn apply_temperature_damage_delta(ecs: &mut World, target: Entity, rolled_damage: RolledDamage) {
+    if ecs.read_storage::<CharacterInfoComponent>().has(target) {
         {
             let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            let character_info = character_infos.grab_mut(*target);
+            let character_info = character_infos.grab_mut(target);
             let direction = {
                 if rolled_damage.options.contains(DamageOptions::RAISE_TEMPERATURE) {
                     Some(TemperatureDirection::Heat)
@@ -141,22 +141,22 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: &Entity, rolled_damag
 
 pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
     match kind {
-        EventKind::Tick(ticks) => reduce_temperature(ecs, &target.unwrap(), ticks),
-        EventKind::Damage(rolled_damage) => apply_temperature_damage_delta(ecs, &target.unwrap(), rolled_damage),
+        EventKind::Tick(ticks) => reduce_temperature(ecs, target.unwrap(), ticks),
+        EventKind::Damage(rolled_damage) => apply_temperature_damage_delta(ecs, target.unwrap(), rolled_damage),
         EventKind::StatusExpired(kind) => {
             if matches!(kind, StatusKind::Burning) {
                 // Order matter here - must re-apply burning status before apply damage,
                 // else we'll repeat "began burning" log
-                if ecs.get_temperature(&target.unwrap()).is_burning() {
-                    ecs.add_status(&target.unwrap(), StatusKind::Burning, BURN_DURATION);
+                if ecs.get_temperature(target.unwrap()).is_burning() {
+                    ecs.add_status(target.unwrap(), StatusKind::Burning, BURN_DURATION);
                 } else {
-                    ecs.log(format!("{} stops burning.", ecs.get_name(&target.unwrap()).unwrap()));
+                    ecs.log(format!("{} stops burning.", ecs.get_name(target.unwrap()).unwrap()));
                 }
 
                 apply_damage_to_character(
                     ecs,
                     Damage::init(TEMPERATURE_DAMAGE_PER_TICK).with_option(DamageOptions::PIERCE_DEFENSES),
-                    &target.unwrap(),
+                    target.unwrap(),
                     None,
                 );
             }
@@ -214,11 +214,11 @@ mod tests {
         // Set armor so high burning must pierce to do actual damage
         ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.armor = 100;
 
-        let starting_health = ecs.get_defenses(&player).health;
+        let starting_health = ecs.get_defenses(player).health;
         add_ticks(&mut ecs, 100);
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
-        assert!(ecs.has_status(&player, StatusKind::Burning));
-        assert!(ecs.get_defenses(&player).health < starting_health);
+        assert!(ecs.has_status(player, StatusKind::Burning));
+        assert!(ecs.get_defenses(player).health < starting_health);
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
-        assert!(!ecs.has_status(&player, StatusKind::Burning));
+        assert!(!ecs.has_status(player, StatusKind::Burning));
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("stops burning"));
     }
@@ -242,7 +242,7 @@ mod tests {
         set_temperature(&mut ecs, player, TEMPERATURE_FREEZE_POINT - 20);
 
         add_ticks(&mut ecs, 100);
-        assert!(ecs.has_status(&player, StatusKind::Frozen));
+        assert!(ecs.has_status(player, StatusKind::Frozen));
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("freezes over"));
     }
 
@@ -252,9 +252,9 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         set_temperature(&mut ecs, player, TEMPERATURE_BURN_POINT + 10);
 
-        let starting_temp = ecs.get_temperature(&player).current_temperature;
+        let starting_temp = ecs.get_temperature(player).current_temperature;
         add_ticks(&mut ecs, 100);
-        assert!(ecs.get_temperature(&player).current_temperature < starting_temp);
+        assert!(ecs.get_temperature(player).current_temperature < starting_temp);
     }
 
     #[test]
@@ -268,14 +268,14 @@ mod tests {
         for _ in 0..4 {
             begin_bolt(
                 &mut ecs,
-                &player,
+                player,
                 Point::init(3, 2),
                 Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
                 BoltKind::Fire,
             );
             wait_for_animations(&mut ecs);
         }
-        assert!(ecs.get_temperature(&target).current_temperature > TEMPERATURE_BURN_POINT);
+        assert!(ecs.get_temperature(target).current_temperature > TEMPERATURE_BURN_POINT);
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("begins to burn"));
     }
 
@@ -289,14 +289,14 @@ mod tests {
 
         begin_bolt(
             &mut ecs,
-            &player,
+            player,
             Point::init(3, 2),
             Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
 
-        let basic_delta = ecs.get_temperature(&target).current_temperature;
+        let basic_delta = ecs.get_temperature(target).current_temperature;
         ecs.write_storage::<CharacterInfoComponent>()
             .grab_mut(target)
             .character
@@ -305,7 +305,7 @@ mod tests {
 
         begin_bolt(
             &mut ecs,
-            &player,
+            player,
             Point::init(3, 2),
             Damage::init(10)
                 .with_option(DamageOptions::RAISE_TEMPERATURE)
@@ -313,7 +313,7 @@ mod tests {
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
-        let large_delta = ecs.get_temperature(&target).current_temperature;
+        let large_delta = ecs.get_temperature(target).current_temperature;
         assert!(large_delta > basic_delta * 2);
     }
 }

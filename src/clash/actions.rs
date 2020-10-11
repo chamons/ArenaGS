@@ -27,7 +27,7 @@ pub fn find_enemies(ecs: &World) -> Vec<Entity> {
 pub fn can_act(ecs: &World) -> bool {
     let player = find_player(ecs);
     let is_player = if let Some(actor) = get_next_actor(ecs) { actor == player } else { false };
-    let is_ready = get_ticks(ecs, &player) == BASE_ACTION_COST;
+    let is_ready = get_ticks(ecs, player) == BASE_ACTION_COST;
     is_player && is_ready
 }
 
@@ -38,7 +38,7 @@ pub fn player_move(ecs: &mut World, direction: Direction) -> bool {
 
     let player = find_player(ecs);
     let new_position = {
-        let position = ecs.get_position(&player);
+        let position = ecs.get_position(player);
         point_in_direction(&position, direction)
     };
     if let Some(new_position) = new_position {
@@ -55,7 +55,7 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
     }
 
     let player = find_player(ecs);
-    invoke_skill(ecs, &player, name, target);
+    invoke_skill(ecs, player, name, target);
     true
 }
 
@@ -63,7 +63,7 @@ pub fn player_use_skill(ecs: &mut World, name: &str, target: Option<Point>) -> b
 pub fn tick_next_action(ecs: &mut World) -> bool {
     if let Some(next) = wait_for_next(ecs) {
         if find_player(ecs) != next {
-            take_enemy_action(ecs, &next);
+            take_enemy_action(ecs, next);
             false
         } else {
             true
@@ -91,7 +91,7 @@ mod tests {
 
         assert_eq!(true, player_move(&mut ecs, Direction::North));
 
-        assert_eq!(0, get_ticks(&ecs, &player));
+        assert_eq!(0, get_ticks(&ecs, player));
     }
 
     #[test]
@@ -108,6 +108,6 @@ mod tests {
         let player = find_player(&ecs);
 
         assert_eq!(true, player_use_skill(&mut ecs, "TestNone", None));
-        assert_eq!(0, get_ticks(&ecs, &player));
+        assert_eq!(0, get_ticks(&ecs, player));
     }
 }

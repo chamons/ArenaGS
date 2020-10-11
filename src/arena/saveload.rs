@@ -195,7 +195,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 6), FieldEffect::Damage(Damage::init(1), 1), FieldKind::Fire);
+        begin_field(&mut ecs, player, Point::init(2, 6), FieldEffect::Damage(Damage::init(1), 1), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_field_exists(&ecs, 2, 6);
@@ -211,7 +211,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         assert_field_exists(&ecs, 2, 4);

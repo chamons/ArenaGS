@@ -557,7 +557,7 @@ impl HelpInfo {
 
         summarize_character(ecs, entity, true, false, |t| details.push(t.to_string()));
 
-        HelpInfo::text_header(ecs.get_name(&entity).unwrap_or_else(|| "Unknown Entity".to_string()).as_str(), details)
+        HelpInfo::text_header(ecs.get_name(entity).unwrap_or_else(|| "Unknown Entity".to_string()).as_str(), details)
     }
 
     pub fn find_field(ecs: &World, entity: Entity) -> HelpInfo {

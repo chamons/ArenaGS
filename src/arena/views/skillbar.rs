@@ -120,7 +120,7 @@ impl SkillBarItemView {
         if let Some(skill_name) = get_skill_name_on_skillbar(ecs, self.index) {
             let skill = get_skill(&skill_name);
 
-            match skill.is_usable(ecs, &find_player(&ecs)) {
+            match skill.is_usable(ecs, find_player(&ecs)) {
                 UsableResults::LacksAmmo if skill.alternate.is_some() => {
                     let alternate_skill = get_skill(skill.alternate.as_ref().unwrap());
                     Some((&self.hotkey, self.icons.get(&alternate_skill.image.unwrap()), false))
@@ -189,7 +189,7 @@ pub fn get_skill_name_on_skillbar(ecs: &World, index: usize) -> Option<String> {
 pub fn get_current_skill_on_skillbar(ecs: &World, skill_name: &str) -> String {
     let skill = get_skill(skill_name);
 
-    match skill.is_usable(ecs, &find_player(&ecs)) {
+    match skill.is_usable(ecs, find_player(&ecs)) {
         UsableResults::LacksAmmo if skill.alternate.is_some() => skill.alternate.as_ref().unwrap().to_string(),
         _ => skill_name.to_string(),
     }

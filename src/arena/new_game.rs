@@ -22,7 +22,10 @@ fn find_placement(ecs: &World, width: u32, height: u32) -> Point {
         if !is_area_clear(ecs, &SizedPoint::init_multi(x, y, width, height).all_positions(), None) {
             continue;
         }
-        if find_all_characters(ecs).iter().any(|c| ecs.get_position(c).distance_to(point).unwrap_or(0) < 4) {
+        if find_all_characters(ecs)
+            .iter()
+            .any(|&c| ecs.get_position(c).distance_to(point).unwrap_or(0) < 4)
+        {
             continue;
         }
 

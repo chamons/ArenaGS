@@ -33,8 +33,8 @@ pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
     }
 }
 
-pub fn spawn_replace(ecs: &mut World, invoker: &Entity, kind: SpawnKind) {
+pub fn spawn_replace(ecs: &mut World, invoker: Entity, kind: SpawnKind) {
     let position = ecs.get_position(invoker);
-    ecs.delete_entity(*invoker).unwrap();
+    ecs.delete_entity(invoker).unwrap();
     spawn(ecs, position, kind);
 }

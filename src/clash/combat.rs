@@ -114,9 +114,9 @@ impl AttackComponent {
     }
 }
 
-pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Option<u32>, strength: Damage, kind: BoltKind) {
+pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: Entity, range: Option<u32>, strength: Damage, kind: BoltKind) {
     let targets = {
-        if find_player(ecs) == *source {
+        if find_player(ecs) == source {
             find_enemies(&ecs)
         } else {
             // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
@@ -124,13 +124,13 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
         }
     };
     let source_position = ecs.get_position(source);
-    let target = targets.iter().filter(|t| !ecs.has_status(t, StatusKind::Flying)).min_by(|first, second| {
-        let first = source_position.distance_to_multi(ecs.get_position(first));
-        let second = source_position.distance_to_multi(ecs.get_position(second));
+    let target = targets.iter().filter(|&&t| !ecs.has_status(t, StatusKind::Flying)).min_by(|first, second| {
+        let first = source_position.distance_to_multi(ecs.get_position(**first));
+        let second = source_position.distance_to_multi(ecs.get_position(**second));
         first.cmp(&second)
     });
     if let Some(target) = target {
-        if let Some((_, target_position, distance)) = source_position.distance_to_multi_with_endpoints(ecs.get_position(target)) {
+        if let Some((_, target_position, distance)) = source_position.distance_to_multi_with_endpoints(ecs.get_position(*target)) {
             if range.is_none() || range.unwrap() >= distance {
                 begin_bolt(ecs, source, target_position, strength, kind);
             }
@@ -139,7 +139,7 @@ pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: &Entity, range: Opti
 }
 
 pub const AIMED_SHOT_ADDITIONAL_STRENGTH: u32 = 2;
-pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, mut strength: Damage, kind: BoltKind) {
+pub fn begin_bolt(ecs: &mut World, source: Entity, target_position: Point, mut strength: Damage, kind: BoltKind) {
     if ecs.has_status(source, StatusKind::Aimed) {
         ecs.remove_status(source, StatusKind::Aimed);
         strength = strength.more_strength(AIMED_SHOT_ADDITIONAL_STRENGTH);
@@ -147,10 +147,10 @@ pub fn begin_bolt(ecs: &mut World, source: &Entity, target_position: Point, mut 
 
     let source_position = Some(ecs.get_position(source).origin);
     ecs.shovel(
-        *source,
+        source,
         AttackComponent::init(target_position, strength, AttackKind::Ranged(kind), source_position),
     );
-    ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(*source));
+    ecs.raise_event(EventKind::Bolt(BoltState::BeginCastAnimation), Some(source));
 }
 
 pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -167,7 +167,7 @@ pub fn bolt_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 pub fn start_bolt(ecs: &mut World, source: Entity) {
     // We must re-create a position using the origin so multi-sized
     // monsters don't create bolts with large widths
-    let caster_origin = ecs.get_position(&source).origin;
+    let caster_origin = ecs.get_position(source).origin;
     let source_position = SizedPoint::from(caster_origin);
 
     let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
@@ -192,10 +192,10 @@ pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
     ecs.delete_entity(bolt).unwrap();
 }
 
-pub fn begin_melee(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: WeaponKind) {
+pub fn begin_melee(ecs: &mut World, source: Entity, target: Point, strength: Damage, kind: WeaponKind) {
     let source_position = Some(ecs.get_position(source).origin);
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Melee(kind), source_position));
-    ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(*source));
+    ecs.shovel(source, AttackComponent::init(target, strength, AttackKind::Melee(kind), source_position));
+    ecs.raise_event(EventKind::Melee(MeleeState::BeginAnimation), Some(source));
 }
 
 pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -214,9 +214,9 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: &Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
-    ecs.shovel(*source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
-    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(*source));
+pub fn begin_field(ecs: &mut World, source: Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
+    ecs.shovel(source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
+    ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(source));
 }
 
 pub fn field_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -240,7 +240,7 @@ pub fn start_field(ecs: &mut World, source: Entity) {
         let field_projectile = ecs.create_entity().with(cast).build();
         apply_field(ecs, field_projectile);
     } else {
-        let source_position = ecs.get_position(&source);
+        let source_position = ecs.get_position(source);
         let field_projectile = ecs.create_entity().with(PositionComponent::init(source_position)).with(cast).build();
         ecs.raise_event(EventKind::Field(FieldState::BeginFlyingAnimation), Some(field_projectile));
     }
@@ -281,13 +281,13 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));
             let fields = FieldComponent::init_single(r, g, b);
             let field = spawner::create_sustained_damage_field(ecs, cast.target, attack, fields, duration);
-            tick_damage(ecs, &field);
+            tick_damage(ecs, field);
         }
     }
 }
 
-pub fn begin_explode(ecs: &mut World, source: &Entity) {
-    ecs.raise_event(EventKind::Explode(ExplodeState::BeginAnimation), Some(*source));
+pub fn begin_explode(ecs: &mut World, source: Entity) {
+    ecs.raise_event(EventKind::Explode(ExplodeState::BeginAnimation), Some(source));
 }
 
 pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -305,7 +305,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
         }
     };
 
-    for in_blast in ecs.get_position(&source).origin.get_burst(range) {
+    for in_blast in ecs.get_position(source).origin.get_burst(range) {
         if let Some(target) = find_character_at_location(ecs, in_blast) {
             if target != source {
                 apply_damage_to_location(ecs, in_blast, source_position, damage);
@@ -316,7 +316,7 @@ pub fn apply_explode(ecs: &mut World, source: Entity) {
     ecs.delete_entity(source).unwrap();
 }
 
-pub fn begin_shoot_and_move(ecs: &mut World, source: &Entity, new_position: SizedPoint, range: Option<u32>, strength: Damage, kind: BoltKind) {
+pub fn begin_shoot_and_move(ecs: &mut World, source: Entity, new_position: SizedPoint, range: Option<u32>, strength: Damage, kind: BoltKind) {
     begin_move(ecs, source, new_position, PostMoveAction::Shoot(strength, range, kind));
 }
 
@@ -348,16 +348,16 @@ pub fn reap_killed(ecs: &mut World) {
     }
 }
 
-pub fn begin_orb(ecs: &mut World, source: &Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32) {
+pub fn begin_orb(ecs: &mut World, source: Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32) {
     let source_position = ecs.get_position(source);
     let path = source_position.line_to(target_position).unwrap();
     let path = extend_line_along_path(&path, duration);
-    ecs.shovel(*source, OrbComponent::init(path, speed, duration));
+    ecs.shovel(source, OrbComponent::init(path, speed, duration));
     ecs.shovel(
-        *source,
+        source,
         AttackComponent::init(target_position, strength, AttackKind::Orb(kind), Some(source_position.origin)),
     );
-    ecs.raise_event(EventKind::Orb(OrbState::BeginCastAnimation), Some(*source));
+    ecs.raise_event(EventKind::Orb(OrbState::BeginCastAnimation), Some(source));
 }
 
 pub fn orb_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -371,7 +371,7 @@ pub fn orb_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn start_orb(ecs: &mut World, source: Entity) {
-    let orb = create_orb(ecs, &source);
+    let orb = create_orb(ecs, source);
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.write_storage::<OrbComponent>().remove(source);
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
@@ -389,10 +389,10 @@ pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
 }
 
 pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
-    if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(&entity)) {
-        apply_orb(ecs, orb, ecs.get_position(&orb).single_position());
+    if let Some(orb) = find_orb_at_location(ecs, &ecs.get_position(entity)) {
+        apply_orb(ecs, orb, ecs.get_position(orb).single_position());
     }
-    if let Some(field) = find_field_at_location(ecs, &ecs.get_position(&entity)) {
+    if let Some(field) = find_field_at_location(ecs, &ecs.get_position(entity)) {
         let should_tick = {
             if let Some(b) = ecs.read_storage::<BehaviorComponent>().get(field) {
                 b.behavior.is_tick_damage()
@@ -401,24 +401,24 @@ pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
             }
         };
         if should_tick {
-            tick_damage(ecs, &field);
+            tick_damage(ecs, field);
         }
     }
 }
 
-pub fn tick_damage(ecs: &mut World, entity: &Entity) {
-    let attack = ecs.read_storage::<AttackComponent>().grab(*entity).attack;
+pub fn tick_damage(ecs: &mut World, entity: Entity) {
+    let attack = ecs.read_storage::<AttackComponent>().grab(entity).attack;
     for p in ecs.get_position(entity).all_positions() {
         if let Some(target) = find_character_at_location(ecs, p) {
-            apply_damage_to_character(ecs, attack.damage, &target, Some(p));
+            apply_damage_to_character(ecs, attack.damage, target, Some(p));
         }
     }
 }
 
-pub fn begin_cone(ecs: &mut World, source: &Entity, target: Point, strength: Damage, kind: ConeKind, size: u32) {
+pub fn begin_cone(ecs: &mut World, source: Entity, target: Point, strength: Damage, kind: ConeKind, size: u32) {
     let source_position = Some(ecs.get_position(source).origin);
-    ecs.shovel(*source, AttackComponent::init(target, strength, AttackKind::Cone(kind, size), source_position));
-    ecs.raise_event(EventKind::Cone(ConeState::BeginSwingAnimation), Some(*source));
+    ecs.shovel(source, AttackComponent::init(target, strength, AttackKind::Cone(kind, size), source_position));
+    ecs.raise_event(EventKind::Cone(ConeState::BeginSwingAnimation), Some(source));
 }
 
 pub fn cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -457,12 +457,12 @@ pub fn cone_hits(ecs: &mut World, entity: Entity) {
         let attacks = ecs.read_storage::<AttackComponent>();
         attacks.grab(entity).attack
     };
-    let position = ecs.get_position(&entity);
+    let position = ecs.get_position(entity);
     apply_damage_to_location(ecs, position.single_position(), attack.source, attack.damage);
     ecs.delete_entity(entity).unwrap();
 }
 
-pub fn begin_charge(ecs: &mut World, entity: &Entity, target: Point, damage: Damage, kind: WeaponKind) {
+pub fn begin_charge(ecs: &mut World, entity: Entity, target: Point, damage: Damage, kind: WeaponKind) {
     let initial_position = ecs.get_position(entity);
     // This code does not correctly handle wide charges, that will take some thinking
     assert!(initial_position.width == 1 && initial_position.height == 1);
@@ -472,12 +472,12 @@ pub fn begin_charge(ecs: &mut World, entity: &Entity, target: Point, damage: Dam
         if let Some((index, _)) = path.iter().skip(1).enumerate().find(|(_, &p)| find_character_at_location(ecs, p).is_some()) {
             // Index is target's position -1 (from the skip), but this matches the last free square
             ecs.shovel(
-                *entity,
+                entity,
                 AttackComponent::init(path[index + 1], damage, AttackKind::Melee(kind), Some(path[index])),
             );
-            begin_move(ecs, &entity, initial_position.move_to(path[index]), PostMoveAction::Attack);
+            begin_move(ecs, entity, initial_position.move_to(path[index]), PostMoveAction::Attack);
         } else {
-            begin_move(ecs, &entity, initial_position.move_to(*path.last().unwrap()), PostMoveAction::None);
+            begin_move(ecs, entity, initial_position.move_to(*path.last().unwrap()), PostMoveAction::None);
         }
     }
 }
@@ -491,12 +491,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(3, 2, 10).build();
         let player = find_player(&ecs);
         let target = find_at(&ecs, 3, 2);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_melee(&mut ecs, &player, Point::init(3, 2), Damage::init(1), WeaponKind::Sword);
+        begin_melee(&mut ecs, player, Point::init(3, 2), Damage::init(1), WeaponKind::Sword);
         wait_for_animations(&mut ecs);
 
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
     }
 
     #[test]
@@ -504,12 +504,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(4, 2, 10).build();
         let player = find_player(&ecs);
         let target = find_at(&ecs, 4, 2);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_bolt(&mut ecs, &player, Point::init(4, 2), Damage::init(1), BoltKind::Fire);
+        begin_bolt(&mut ecs, player, Point::init(4, 2), Damage::init(1), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
     }
 
     #[test]
@@ -517,7 +517,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let target = find_at(&ecs, 2, 2);
         let exploder = find_at(&ecs, 2, 3);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
         ecs.shovel(
             exploder,
             AttackComponent::init(
@@ -527,10 +527,10 @@ mod tests {
                 Some(Point::init(2, 3)),
             ),
         );
-        begin_explode(&mut ecs, &exploder);
+        begin_explode(&mut ecs, exploder);
         wait_for_animations(&mut ecs);
 
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
     }
 
     fn get_field_at(ecs: &World, target: &Point) -> Option<Entity> {
@@ -551,7 +551,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
+        begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -565,7 +565,7 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, &player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
+        begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -575,7 +575,7 @@ mod tests {
     fn killed_enemies_removed() {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        begin_bolt(&mut ecs, &player, Point::init(2, 3), Damage::init(10), BoltKind::Fire);
+        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, find_all_entities(&ecs).len());
@@ -585,7 +585,7 @@ mod tests {
     fn killed_player() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let enemy = find_at(&ecs, 2, 3);
-        begin_bolt(&mut ecs, &enemy, Point::init(2, 2), Damage::init(10), BoltKind::Fire);
+        begin_bolt(&mut ecs, enemy, Point::init(2, 2), Damage::init(10), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
@@ -598,12 +598,12 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 3);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, player, SizedPoint::init(2, 1), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
-        assert_position(&ecs, &player, Point::init(2, 1));
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert_position(&ecs, player, Point::init(2, 1));
+        assert!(ecs.get_defenses(target).health < starting_health);
     }
 
     #[test]
@@ -611,11 +611,11 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_character(2, 8, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 8);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
     }
 
     #[test]
@@ -629,13 +629,13 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 3);
         let other = find_at(&ecs, 2, 4);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), None, Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, player, SizedPoint::init(2, 1), None, Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
-        assert_position(&ecs, &player, Point::init(2, 1));
-        assert!(ecs.get_defenses(&target).health < starting_health);
-        assert_eq!(ecs.get_defenses(&other).health, starting_health);
+        assert_position(&ecs, player, Point::init(2, 1));
+        assert!(ecs.get_defenses(target).health < starting_health);
+        assert_eq!(ecs.get_defenses(other).health, starting_health);
     }
 
     #[test]
@@ -649,13 +649,13 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 6);
         let other = find_at(&ecs, 2, 7);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 1), Some(4), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, player, SizedPoint::init(2, 1), Some(4), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
-        assert_position(&ecs, &player, Point::init(2, 1));
-        assert_eq!(ecs.get_defenses(&target).health, starting_health);
-        assert_eq!(ecs.get_defenses(&other).health, starting_health);
+        assert_position(&ecs, player, Point::init(2, 1));
+        assert_eq!(ecs.get_defenses(target).health, starting_health);
+        assert_eq!(ecs.get_defenses(other).health, starting_health);
     }
 
     pub fn assert_orb_at_position(ecs: &World, expected: Point) {
@@ -676,16 +676,16 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 6);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
         assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
@@ -694,14 +694,14 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 6);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12);
         wait_for_animations(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 3));
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&target).health < starting_health);
+        assert!(ecs.get_defenses(target).health < starting_health);
         assert_eq!(0, ecs.read_storage::<OrbComponent>().count());
     }
 
@@ -710,19 +710,19 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 6);
-        let starting_health = ecs.get_defenses(&target).health;
+        let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 5));
 
-        begin_move(&mut ecs, &target, SizedPoint::init(3, 6), PostMoveAction::None);
+        begin_move(&mut ecs, target, SizedPoint::init(3, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
-        assert_eq!(ecs.get_defenses(&target).health, starting_health);
+        assert_eq!(ecs.get_defenses(target).health, starting_health);
     }
 
     #[test]
@@ -736,22 +736,22 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let bystander = find_at(&ecs, 3, 6);
         let target = find_at(&ecs, 2, 6);
-        let target_starting_health = ecs.get_defenses(&target).health;
-        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+        let target_starting_health = ecs.get_defenses(target).health;
+        let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 5));
 
-        begin_move(&mut ecs, &target, SizedPoint::init(1, 6), PostMoveAction::None);
-        begin_move(&mut ecs, &bystander, SizedPoint::init(2, 6), PostMoveAction::None);
+        begin_move(&mut ecs, target, SizedPoint::init(1, 6), PostMoveAction::None);
+        begin_move(&mut ecs, bystander, SizedPoint::init(2, 6), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
-        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+        assert!(ecs.get_defenses(bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -765,18 +765,18 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let bystander = find_at(&ecs, 2, 6);
         let target = find_at(&ecs, 2, 7);
-        let target_starting_health = ecs.get_defenses(&target).health;
-        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+        let target_starting_health = ecs.get_defenses(target).health;
+        let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 5));
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
-        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+        assert!(ecs.get_defenses(bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -790,20 +790,20 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 6);
         let bystander = find_at(&ecs, 1, 5);
-        let target_starting_health = ecs.get_defenses(&target).health;
-        let bystander_starting_health = ecs.get_defenses(&bystander).health;
+        let target_starting_health = ecs.get_defenses(target).health;
+        let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, &player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 5));
-        begin_move(&mut ecs, &bystander, SizedPoint::init(2, 5), PostMoveAction::None);
+        begin_move(&mut ecs, bystander, SizedPoint::init(2, 5), PostMoveAction::None);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&bystander).health < bystander_starting_health);
-        assert_eq!(ecs.get_defenses(&target).health, target_starting_health);
+        assert!(ecs.get_defenses(bystander).health < bystander_starting_health);
+        assert_eq!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -815,13 +815,13 @@ mod tests {
             .build();
         let player = find_at(&ecs, 2, 2);
         let enemy = find_at(&ecs, 2, 6);
-        let player_starting_health = ecs.get_defenses(&player).health;
+        let player_starting_health = ecs.get_defenses(player).health;
 
-        begin_orb(&mut ecs, &enemy, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, enemy, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
-        assert!(ecs.get_defenses(&player).health < player_starting_health);
+        assert!(ecs.get_defenses(player).health < player_starting_health);
     }
 
     // Being knocked back into an active orb should explode it, even if you go first
@@ -846,14 +846,14 @@ mod tests {
         let target = find_at(&ecs, 2, 6);
         let orb_caster = find_at(&ecs, 3, 7);
 
-        let target_starting_health = ecs.get_defenses(&target).health;
+        let target_starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, &orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12);
         wait_for_animations(&mut ecs);
 
         begin_bolt(
             &mut ecs,
-            &player,
+            player,
             Point::init(2, 6),
             Damage::init(0).with_option(DamageOptions::KNOCKBACK),
             BoltKind::Fire,
@@ -861,7 +861,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_character_at(&ecs, 2, 7);
-        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+        assert_ne!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -875,11 +875,11 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let flyer = find_at(&ecs, 2, 8);
 
-        ecs.add_status(&flyer, StatusKind::Flying, 300);
+        ecs.add_status(flyer, StatusKind::Flying, 300);
 
-        begin_shoot_and_move(&mut ecs, &player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
+        begin_shoot_and_move(&mut ecs, player, SizedPoint::init(2, 3), Some(5), Damage::init(1), BoltKind::Bullet);
         wait_for_animations(&mut ecs);
-        assert_position(&ecs, &player, Point::init(2, 3));
+        assert_position(&ecs, player, Point::init(2, 3));
     }
 
     #[test]
@@ -891,11 +891,11 @@ mod tests {
         ecs.shovel(player, BehaviorComponent::init(BehaviorKind::None));
         ecs.shovel(target, BehaviorComponent::init(BehaviorKind::None));
 
-        let target_starting_health = ecs.get_defenses(&target).health;
+        let target_starting_health = ecs.get_defenses(target).health;
 
         begin_field(
             &mut ecs,
-            &player,
+            player,
             Point::init(2, 6),
             FieldEffect::SustainedDamage(Damage::init(1), 3),
             FieldKind::Fire,
@@ -903,12 +903,12 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         // Triggering does a tick of damage
-        let first_tick_health = ecs.get_defenses(&target).health;
+        let first_tick_health = ecs.get_defenses(target).health;
         assert_ne!(first_tick_health, target_starting_health);
 
         new_turn_wait_characters(&mut ecs);
         // Second tick as well
-        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+        assert_ne!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -918,11 +918,11 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 4);
 
-        let target_starting_health = ecs.get_defenses(&target).health;
+        let target_starting_health = ecs.get_defenses(target).health;
 
         begin_field(
             &mut ecs,
-            &player,
+            player,
             Point::init(2, 5),
             FieldEffect::SustainedDamage(Damage::init(1), 3),
             FieldKind::Fire,
@@ -930,7 +930,7 @@ mod tests {
         wait_for_animations(&mut ecs);
         begin_bolt(
             &mut ecs,
-            &player,
+            player,
             Point::init(2, 4),
             Damage::init(0).with_option(DamageOptions::KNOCKBACK),
             BoltKind::Fire,
@@ -938,7 +938,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_character_at(&ecs, 2, 5);
-        assert_ne!(ecs.get_defenses(&target).health, target_starting_health);
+        assert_ne!(ecs.get_defenses(target).health, target_starting_health);
     }
 
     #[test]
@@ -953,21 +953,21 @@ mod tests {
             .with_character(1, 5, 10)
             .build();
         let player = find_player(&ecs);
-        let player_health = ecs.get_defenses(&player).health;
+        let player_health = ecs.get_defenses(player).health;
         let target_one = find_at(&ecs, 2, 3);
-        let target_one_health = ecs.get_defenses(&target_one).health;
+        let target_one_health = ecs.get_defenses(target_one).health;
         let target_two = find_at(&ecs, 0, 4);
-        let target_two_health = ecs.get_defenses(&target_two).health;
+        let target_two_health = ecs.get_defenses(target_two).health;
         let bystander = find_at(&ecs, 1, 5);
-        let bystander_health = ecs.get_defenses(&bystander).health;
+        let bystander_health = ecs.get_defenses(bystander).health;
 
-        begin_cone(&mut ecs, &player, Point::init(1, 3), Damage::init(1), ConeKind::Fire, 2);
+        begin_cone(&mut ecs, player, Point::init(1, 3), Damage::init(1), ConeKind::Fire, 2);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(ecs.get_defenses(&player).health, player_health);
-        assert!(ecs.get_defenses(&target_one).health < target_one_health);
-        assert!(ecs.get_defenses(&target_two).health < target_two_health);
-        assert_eq!(ecs.get_defenses(&bystander).health, bystander_health);
+        assert_eq!(ecs.get_defenses(player).health, player_health);
+        assert!(ecs.get_defenses(target_one).health < target_one_health);
+        assert!(ecs.get_defenses(target_two).health < target_two_health);
+        assert_eq!(ecs.get_defenses(bystander).health, bystander_health);
     }
 
     fn test_event(ecs: &mut World, kind: EventKind, _target: Option<Entity>) {
@@ -986,7 +986,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         ecs.subscribe(test_event);
 
-        begin_cone(&mut ecs, &player, Point::init(2, 3), Damage::init(1), ConeKind::Fire, 2);
+        begin_cone(&mut ecs, player, Point::init(2, 3), Damage::init(1), ConeKind::Fire, 2);
         wait_for_animations(&mut ecs);
         assert_eq!(2, ecs.get_test_data("Damage"));
     }

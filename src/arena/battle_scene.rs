@@ -135,7 +135,7 @@ impl BattleScene {
         if button == MouseButton::Right {
             match &hit {
                 Some(HitTestResult::Tile(target_position)) | Some(HitTestResult::Field(target_position)) => {
-                    let player_position = self.ecs.get_position(&find_player(&self.ecs));
+                    let player_position = self.ecs.get_position(find_player(&self.ecs));
                     if player_position.distance_to(*target_position).unwrap_or(0) == 1 {
                         battle_actions::request_action(
                             &mut self.ecs,

@@ -238,7 +238,7 @@ pub fn get_elemental_summon_to_use(ecs: &World) -> &'static str {
     }
 }
 
-pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
+pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
     if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
         try_behavior!(use_skill_with_random_target(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
     }
@@ -247,15 +247,15 @@ pub fn elementalist_action(ecs: &mut World, enemy: &Entity) {
         try_behavior!(use_skill(ecs, enemy, "Frost Armor"));
     }
 
-    let player_position = ecs.get_position(&find_player(ecs));
+    let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"));
     }
     try_behavior!(use_skill(ecs, enemy, "Invoke the Elements"));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
+pub fn water_elemental_action(ecs: &mut World, enemy: Entity) {
     let current_position = ecs.get_position(enemy);
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     if distance <= 3 {
@@ -270,42 +270,42 @@ pub fn water_elemental_action(ecs: &mut World, enemy: &Entity) {
             ecs,
             enemy,
             "Healing Mist",
-            ecs.get_position(&target).nearest_point_to(current_position)
+            ecs.get_position(target).nearest_point_to(current_position)
         ));
     }
 
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn fire_elemental_action(ecs: &mut World, enemy: &Entity) {
+pub fn fire_elemental_action(ecs: &mut World, enemy: Entity) {
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lava Bolt"));
 
-    let player_position = ecs.get_position(&find_player(ecs));
+    let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Magma Eruption"));
     }
 
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn wind_elemental_action(ecs: &mut World, enemy: &Entity) {
+pub fn wind_elemental_action(ecs: &mut World, enemy: Entity) {
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lightning Surge"));
 
-    let player_position = ecs.get_position(&find_player(ecs));
+    let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Hailstone"));
     }
 
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }
 
-pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
+pub fn earth_elemental_action(ecs: &mut World, enemy: Entity) {
     let distance = distance_to_player(ecs, enemy).unwrap_or(0);
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     if distance < 6 {
@@ -316,5 +316,5 @@ pub fn earth_elemental_action(ecs: &mut World, enemy: &Entity) {
     }
     try_behavior!(move_towards_player(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
-    wait(ecs, *enemy);
+    wait(ecs, enemy);
 }

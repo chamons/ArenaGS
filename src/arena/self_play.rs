@@ -6,8 +6,8 @@ use crate::clash::*;
 pub fn take_player_action(ecs: &mut World) {
     let player = find_player(ecs);
     for d in get_random_direction_list(ecs) {
-        if let Some(potential) = d.point_in_direction(&ecs.get_position(&player).origin) {
-            if can_move_character(ecs, &player, SizedPoint::from(potential)) {
+        if let Some(potential) = d.point_in_direction(&ecs.get_position(player).origin) {
+            if can_move_character(ecs, player, SizedPoint::from(potential)) {
                 move_character_action(ecs, player, SizedPoint::from(potential));
                 return;
             }

@@ -116,12 +116,12 @@ pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
 
 // This can be dangerous, if something invalidates the entity reference
 // then you can crash here
-pub fn assert_position(ecs: &World, entity: &Entity, expected: Point) {
+pub fn assert_position(ecs: &World, entity: Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_equal(position.single_position(), expected);
 }
 
-pub fn assert_not_at_position(ecs: &World, entity: &Entity, expected: Point) {
+pub fn assert_not_at_position(ecs: &World, entity: Entity, expected: Point) {
     let position = ecs.get_position(entity);
     assert_points_not_equal(position.single_position(), expected);
 }

@@ -35,7 +35,7 @@ pub fn projectile_animation(ecs: &mut World, projectile: Entity, target_position
     let frame = ecs.get_current_frame();
     ecs.shovel(projectile, RenderComponent::init(RenderInfo::init(sprite)));
 
-    let source_position = ecs.get_position(&projectile);
+    let source_position = ecs.get_position(projectile);
 
     let path_length = source_position.distance_to(target_position).unwrap() as u64;
     let animation_length = if frame < 4 { 6 * path_length } else { 3 * path_length };
@@ -164,7 +164,7 @@ fn begin_cone_hit_animation(ecs: &mut World, entity: Entity) {
             ConeKind::Water => SpriteKinds::WaterBolt,
         }
     };
-    let target = ecs.get_position(&entity).single_position();
+    let target = ecs.get_position(entity).single_position();
     ecs.shovel(entity, RenderComponent::init(RenderInfo::init(sprite)));
 
     let animation = Animation::movement(target, target, frame, 18).with_post_event(EventKind::Cone(ConeState::CompleteHitAnimation), Some(entity));
@@ -190,7 +190,7 @@ fn animate_move(ecs: &mut World, target: Entity, action: PostMoveAction) {
 
     const MOVE_LENGTH: u64 = 8;
     let frame = ecs.get_current_frame();
-    let position = ecs.get_position(&target);
+    let position = ecs.get_position(target);
 
     let animation = Animation::movement(position.origin, new_position.origin, frame, MOVE_LENGTH)
         .with_post_event(EventKind::Move(MoveState::CompleteAnimation, action), Some(target));
@@ -250,7 +250,7 @@ fn begin_secondary_explode_animation(ecs: &mut World, target: Entity) {
         _ => panic!("begin_secondary_explode_animation with non-explosion attack?"),
     };
 
-    let explosion_origin = ecs.get_position(&target).origin;
+    let explosion_origin = ecs.get_position(target).origin;
     for p in explosion_origin.get_burst(range).iter().filter(|&&p| p != explosion_origin) {
         // These are the secondary animations, removed in SecondaryExplodeComplete processing
         let second_explode = ecs

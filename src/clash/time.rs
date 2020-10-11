@@ -45,7 +45,7 @@ pub fn add_ticks(ecs: &mut World, ticks_to_add: i32) {
 
 pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
     if let Some(next) = get_next_actor(ecs) {
-        let time = get_ticks(ecs, &next);
+        let time = get_ticks(ecs, next);
         if time < BASE_ACTION_COST {
             let missing = BASE_ACTION_COST - time;
             add_ticks(ecs, missing);
@@ -55,13 +55,13 @@ pub fn wait_for_next(ecs: &mut World) -> Option<Entity> {
     None
 }
 
-pub fn get_ticks(ecs: &World, entity: &Entity) -> i32 {
-    ecs.read_storage::<TimeComponent>().grab(*entity).ticks
+pub fn get_ticks(ecs: &World, entity: Entity) -> i32 {
+    ecs.read_storage::<TimeComponent>().grab(entity).ticks
 }
 
-pub fn spend_time(ecs: &mut World, element: &Entity, ticks_to_spend: i32) {
+pub fn spend_time(ecs: &mut World, element: Entity, ticks_to_spend: i32) {
     let mut times = ecs.write_storage::<TimeComponent>();
-    times.grab_mut(*element).ticks -= ticks_to_spend;
+    times.grab_mut(element).ticks -= ticks_to_spend;
 }
 
 #[cfg(test)]
@@ -79,7 +79,7 @@ mod tests {
     fn get_next_two_disjoint() {
         let ecs = create_test_state().with_timed(0).with_timed(10).build();
         let next = get_next_actor(&ecs).unwrap();
-        assert_eq!(10, get_ticks(&ecs, &next));
+        assert_eq!(10, get_ticks(&ecs, next));
     }
 
     #[test]
@@ -103,7 +103,7 @@ mod tests {
         let mut ecs = create_test_state().with_timed(10).build();
         let first = find_first_entity(&ecs);
         add_ticks(&mut ecs, 50);
-        assert_eq!(60, get_ticks(&ecs, &first));
+        assert_eq!(60, get_ticks(&ecs, first));
     }
 
     #[test]
@@ -114,8 +114,8 @@ mod tests {
 
         let next = wait_for_next(&mut ecs).unwrap();
         assert_eq!(next, second);
-        assert_eq!(90, get_ticks(&ecs, &first));
-        assert_eq!(100, get_ticks(&ecs, &second));
+        assert_eq!(90, get_ticks(&ecs, first));
+        assert_eq!(100, get_ticks(&ecs, second));
     }
 
     #[test]
@@ -130,7 +130,7 @@ mod tests {
     fn spent() {
         let mut ecs = create_test_state().with_timed(110).build();
         let first = find_first_entity(&ecs);
-        spend_time(&mut ecs, &first, BASE_ACTION_COST);
-        assert_eq!(10, get_ticks(&ecs, &first));
+        spend_time(&mut ecs, first, BASE_ACTION_COST);
+        assert_eq!(10, get_ticks(&ecs, first));
     }
 }

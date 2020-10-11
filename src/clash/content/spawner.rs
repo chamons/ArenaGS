@@ -24,7 +24,7 @@ pub fn player(ecs: &mut World, position: Point) {
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
 
-    content::gunslinger::setup_gunslinger(ecs, &player);
+    content::gunslinger::setup_gunslinger(ecs, player);
 
     ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
 }

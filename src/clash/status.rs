@@ -65,41 +65,41 @@ impl StatusStore {
         StatusStore { store: HashMap::new() }
     }
 
-    pub fn add_status_to(ecs: &mut World, entity: &Entity, kind: StatusKind, length: i32) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_status(kind, length);
-        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+    pub fn add_status_to(ecs: &mut World, entity: Entity, kind: StatusKind, length: i32) {
+        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.add_status(kind, length);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(entity));
     }
 
-    pub fn add_trait_to(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.add_trait(kind);
-        ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+    pub fn add_trait_to(ecs: &mut World, entity: Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.add_trait(kind);
+        ecs.raise_event(EventKind::StatusAdded(kind), Some(entity));
     }
 
-    pub fn remove_status_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_status(kind);
-        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+    pub fn remove_status_from(ecs: &mut World, entity: Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.remove_status(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(entity));
     }
 
-    pub fn remove_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait(kind);
-        ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+    pub fn remove_trait_from(ecs: &mut World, entity: Entity, kind: StatusKind) {
+        ecs.write_storage::<StatusComponent>().grab_mut(entity).status.remove_trait(kind);
+        ecs.raise_event(EventKind::StatusRemoved(kind), Some(entity));
     }
 
-    pub fn remove_trait_if_found_from(ecs: &mut World, entity: &Entity, kind: StatusKind) {
-        if ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.remove_trait_if_found(kind) {
-            ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+    pub fn remove_trait_if_found_from(ecs: &mut World, entity: Entity, kind: StatusKind) {
+        if ecs.write_storage::<StatusComponent>().grab_mut(entity).status.remove_trait_if_found(kind) {
+            ecs.raise_event(EventKind::StatusRemoved(kind), Some(entity));
         }
     }
 
     // Returns true when swapping from false -> true
-    pub fn toggle_trait_from(ecs: &mut World, entity: &Entity, kind: StatusKind, state: bool) -> bool {
-        let delta = ecs.write_storage::<StatusComponent>().grab_mut(*entity).status.toggle_trait(kind, state);
+    pub fn toggle_trait_from(ecs: &mut World, entity: Entity, kind: StatusKind, state: bool) -> bool {
+        let delta = ecs.write_storage::<StatusComponent>().grab_mut(entity).status.toggle_trait(kind, state);
         if let Some(delta) = delta {
             if delta {
-                ecs.raise_event(EventKind::StatusAdded(kind), Some(*entity));
+                ecs.raise_event(EventKind::StatusAdded(kind), Some(entity));
                 true
             } else {
-                ecs.raise_event(EventKind::StatusRemoved(kind), Some(*entity));
+                ecs.raise_event(EventKind::StatusRemoved(kind), Some(entity));
                 false
             }
         } else {
@@ -346,10 +346,10 @@ mod tests {
     fn status_integration_with_ecs() {
         let mut ecs = create_test_state().with_character(2, 2, 100).build();
         let entity = find_at(&ecs, 2, 2);
-        ecs.add_status(&entity, StatusKind::TestStatus, 100);
-        assert!(ecs.has_status(&entity, StatusKind::TestStatus));
+        ecs.add_status(entity, StatusKind::TestStatus, 100);
+        assert!(ecs.has_status(entity, StatusKind::TestStatus));
         add_ticks(&mut ecs, 100);
-        assert!(!ecs.has_status(&entity, StatusKind::TestStatus));
+        assert!(!ecs.has_status(entity, StatusKind::TestStatus));
     }
 
     #[test]
@@ -442,21 +442,21 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_at(&ecs, 2, 2);
         ecs.subscribe(test_event);
-        ecs.add_status(&player, StatusKind::Aimed, 200);
+        ecs.add_status(player, StatusKind::Aimed, 200);
         assert_eq!(1, ecs.get_test_data("Added Aimed"));
-        ecs.add_trait(&player, StatusKind::Armored);
+        ecs.add_trait(player, StatusKind::Armored);
         assert_eq!(1, ecs.get_test_data("Added Armored"));
-        ecs.remove_status(&player, StatusKind::Aimed);
+        ecs.remove_status(player, StatusKind::Aimed);
         assert_eq!(1, ecs.get_test_data("Removed Aimed"));
-        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
-        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, true);
+        StatusStore::toggle_trait_from(&mut ecs, player, StatusKind::Frozen, true);
+        StatusStore::toggle_trait_from(&mut ecs, player, StatusKind::Frozen, true);
         assert_eq!(1, ecs.get_test_data("Added Frozen"));
-        StatusStore::toggle_trait_from(&mut ecs, &player, StatusKind::Frozen, false);
+        StatusStore::toggle_trait_from(&mut ecs, player, StatusKind::Frozen, false);
         assert_eq!(1, ecs.get_test_data("Removed Frozen"));
-        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Armored);
+        StatusStore::remove_trait_if_found_from(&mut ecs, player, StatusKind::Armored);
         assert_eq!(1, ecs.get_test_data("Removed Armored"));
-        ecs.add_trait(&player, StatusKind::Magnum);
-        StatusStore::remove_trait_if_found_from(&mut ecs, &player, StatusKind::Magnum);
+        ecs.add_trait(player, StatusKind::Magnum);
+        StatusStore::remove_trait_if_found_from(&mut ecs, player, StatusKind::Magnum);
         assert_eq!(1, ecs.get_test_data("Removed Magnum"));
     }
 }

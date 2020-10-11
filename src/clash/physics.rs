@@ -4,9 +4,9 @@ use super::*;
 use crate::atlas::{Direction, EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
 
 // Begin the move itself, does not spend time
-pub fn begin_move(ecs: &mut World, entity: &Entity, new_position: SizedPoint, action: PostMoveAction) {
-    ecs.shovel(*entity, MovementComponent::init(new_position));
-    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation, action), Some(*entity));
+pub fn begin_move(ecs: &mut World, entity: Entity, new_position: SizedPoint, action: PostMoveAction) {
+    ecs.shovel(entity, MovementComponent::init(new_position));
+    ecs.raise_event(EventKind::Move(MoveState::BeginAnimation, action), Some(entity));
 }
 
 pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
@@ -15,12 +15,12 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
             if state.is_complete_animation() {
                 complete_move(ecs, target.unwrap());
                 match action {
-                    PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, &target.unwrap(), range, damage, kind),
+                    PostMoveAction::Shoot(damage, range, kind) => begin_bolt_nearest_in_range(ecs, target.unwrap(), range, damage, kind),
                     PostMoveAction::CheckNewLocationDamage => check_new_location_for_damage(ecs, target.unwrap()),
                     PostMoveAction::Attack => {
                         let a = ecs.read_storage::<AttackComponent>().grab(target.unwrap()).clone();
                         ecs.write_storage::<AttackComponent>().remove(target.unwrap());
-                        begin_melee(ecs, &target.unwrap(), a.attack.target, a.attack.damage, a.attack.melee_kind());
+                        begin_melee(ecs, target.unwrap(), a.attack.target, a.attack.damage, a.attack.melee_kind());
                     }
                     PostMoveAction::None => {}
                 }
@@ -31,7 +31,7 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn complete_move(ecs: &mut World, entity: Entity) {
-    let current_position = ecs.get_position(&entity);
+    let current_position = ecs.get_position(entity);
     let new_position = {
         let mut movements = ecs.write_storage::<MovementComponent>();
         let new_position = movements.grab(entity).new_position;
@@ -57,8 +57,8 @@ pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<
 }
 
 // Is an area clear of all elements with PositionComponent and CharacterInfoComponent _except_ the invoker (if)
-pub fn is_area_clear_of_others(ecs: &World, area: &[Point], invoker: &Entity) -> bool {
-    is_area_clear(ecs, area, Some(*invoker))
+pub fn is_area_clear_of_others(ecs: &World, area: &[Point], invoker: Entity) -> bool {
+    is_area_clear(ecs, area, Some(invoker))
 }
 
 pub fn is_area_clear(ecs: &World, area: &[Point], invoker: Option<Entity>) -> bool {
@@ -150,9 +150,9 @@ pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
     all
 }
 
-pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool {
+pub fn can_move_character(ecs: &World, mover: Entity, new: SizedPoint) -> bool {
     let has_exhaustion = {
-        if let Some(skill_resource) = ecs.read_storage::<SkillResourceComponent>().get(*mover) {
+        if let Some(skill_resource) = ecs.read_storage::<SkillResourceComponent>().get(mover) {
             skill_resource.exhaustion + EXHAUSTION_COST_PER_MOVE <= MAX_EXHAUSTION
         } else {
             true
@@ -172,33 +172,33 @@ pub fn can_move_character(ecs: &World, mover: &Entity, new: SizedPoint) -> bool 
 
 // Move a character, spending standard time and exhaustion
 pub fn move_character_action(ecs: &mut World, entity: Entity, new: SizedPoint) -> bool {
-    if !can_move_character(ecs, &entity, new) {
+    if !can_move_character(ecs, entity, new) {
         return false;
     }
 
-    begin_move(ecs, &entity, new, PostMoveAction::None);
+    begin_move(ecs, entity, new, PostMoveAction::None);
 
-    let time_cost = if ecs.has_status(&entity, StatusKind::Frozen) {
+    let time_cost = if ecs.has_status(entity, StatusKind::Frozen) {
         MOVE_ACTION_COST + (MOVE_ACTION_COST / 2)
     } else {
         MOVE_ACTION_COST
     };
 
-    spend_time(ecs, &entity, time_cost);
+    spend_time(ecs, entity, time_cost);
     if ecs.read_storage::<SkillResourceComponent>().get(entity).is_some() {
-        spend_exhaustion(ecs, &entity, EXHAUSTION_COST_PER_MOVE);
+        spend_exhaustion(ecs, entity, EXHAUSTION_COST_PER_MOVE);
     }
     true
 }
 
 pub fn wait(ecs: &mut World, entity: Entity) {
-    spend_time(ecs, &entity, BASE_ACTION_COST);
+    spend_time(ecs, entity, BASE_ACTION_COST);
 }
 
 pub const MAX_EXHAUSTION: f64 = 100.0;
-pub fn spend_exhaustion(ecs: &mut World, invoker: &Entity, cost: f64) {
-    ecs.write_storage::<SkillResourceComponent>().grab_mut(*invoker).exhaustion += cost;
-    assert!(ecs.read_storage::<SkillResourceComponent>().grab(*invoker).exhaustion <= MAX_EXHAUSTION);
+pub fn spend_exhaustion(ecs: &mut World, invoker: Entity, cost: f64) {
+    ecs.write_storage::<SkillResourceComponent>().grab_mut(invoker).exhaustion += cost;
+    assert!(ecs.read_storage::<SkillResourceComponent>().grab(invoker).exhaustion <= MAX_EXHAUSTION);
 }
 
 #[cfg(test)]
@@ -247,14 +247,14 @@ mod tests {
     fn walk_into_clear() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
-        assert_position(&ecs, &entity, Point::init(2, 2));
+        assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(true, success);
         wait_for_animations(&mut ecs);
 
-        assert_position(&ecs, &entity, Point::init(2, 3));
-        assert_eq!(0, get_ticks(&ecs, &entity));
+        assert_position(&ecs, entity, Point::init(2, 3));
+        assert_eq!(0, get_ticks(&ecs, entity));
     }
 
     #[test]
@@ -266,13 +266,13 @@ mod tests {
             .with(FieldComponent::init_single(255, 0, 0))
             .build();
 
-        assert_position(&ecs, &entity, Point::init(2, 2));
+        assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(true, success);
         wait_for_animations(&mut ecs);
 
-        assert_position(&ecs, &entity, Point::init(2, 3));
+        assert_position(&ecs, entity, Point::init(2, 3));
     }
 
     #[test]
@@ -283,13 +283,13 @@ mod tests {
         ecs.insert(MapComponent::init(map));
         let entity = find_at(&ecs, 2, 2);
 
-        assert_position(&ecs, &entity, Point::init(2, 2));
+        assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
-        assert_position(&ecs, &entity, Point::init(2, 2))
+        assert_position(&ecs, entity, Point::init(2, 2))
     }
 
     #[test]
@@ -297,26 +297,26 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 0).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        assert_position(&ecs, &entity, Point::init(2, 2));
+        assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
-        assert_position(&ecs, &entity, Point::init(2, 2));
+        assert_position(&ecs, entity, Point::init(2, 2));
     }
 
     #[test]
     fn walk_off_map() {
         let mut ecs = create_test_state().with_character(13, 13, 100).with_map().build();
         let entity = find_at(&ecs, 13, 13);
-        assert_position(&ecs, &entity, Point::init(13, 13));
+        assert_position(&ecs, entity, Point::init(13, 13));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(13, 14));
         assert_eq!(false, success);
         wait_for_animations(&mut ecs);
 
-        assert_position(&ecs, &entity, Point::init(13, 13));
+        assert_position(&ecs, entity, Point::init(13, 13));
     }
 
     #[test]
@@ -366,7 +366,7 @@ mod tests {
     fn frozen_slows_movement() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        ecs.add_trait(&player, StatusKind::Frozen);
+        ecs.add_trait(player, StatusKind::Frozen);
 
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
         let skill_resource = SkillResourceComponent {
@@ -376,7 +376,7 @@ mod tests {
         ecs.shovel(player, skill_resource);
 
         assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
-        assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, &player));
+        assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, player));
     }
 
     #[test]
@@ -386,6 +386,6 @@ mod tests {
             .with_map()
             .build();
         let enemy = find_at(&ecs, 8, 1);
-        can_move_character(&ecs, &enemy, SizedPoint::init_multi(8, 0, 2, 2));
+        can_move_character(&ecs, enemy, SizedPoint::init_multi(8, 0, 2, 2));
     }
 }
