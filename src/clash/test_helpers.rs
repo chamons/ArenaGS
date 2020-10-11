@@ -187,7 +187,7 @@ pub fn assert_field_exists(ecs: &World, x: u32, y: u32) {
             }
         })
     });
-    assert_eq!(true, found_field);
+    assert!(found_field);
 }
 
 pub fn assert_field_count(ecs: &World, expected: usize) {

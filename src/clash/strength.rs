@@ -32,6 +32,6 @@ mod tests {
         let d = Strength::init(14);
         let v = d.roll(&mut rng);
         // 7 * 2 + 7 * (1,2) = 21 - 28
-        assert_eq!(true, v >= 21 && v <= 28);
+        assert!(v >= 21 && v <= 28);
     }
 }

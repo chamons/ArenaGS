@@ -314,7 +314,7 @@ mod tests {
         );
         wait_for_animations(&mut ecs);
 
-        assert_eq!(false, ecs.has_status(target, StatusKind::StaticCharge));
+        assert!(!ecs.has_status(target, StatusKind::StaticCharge));
         let health = &ecs.get_defenses(target);
         assert_ne!(health.max_health, health.health);
     }
@@ -337,7 +337,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         assert_eq!(1, ecs.read_resource::<LogComponent>().log.contains_count("is knocked back"));
-        assert_eq!(false, ecs.has_status(target, StatusKind::StaticCharge));
+        assert!(!ecs.has_status(target, StatusKind::StaticCharge));
         assert_eq!(target, find_at(&ecs, 2, 4));
     }
 
@@ -356,7 +356,7 @@ mod tests {
         );
         wait_for_animations(&mut ecs);
 
-        assert_eq!(false, ecs.has_status(target, StatusKind::StaticCharge));
+        assert!(!ecs.has_status(target, StatusKind::StaticCharge));
 
         let health = &ecs.get_defenses(target);
         assert_eq!(health.max_health, health.health);

@@ -320,15 +320,15 @@ mod tests {
     #[test]
     fn contains_point() {
         let point = SizedPoint::init_multi(2, 2, 2, 3);
-        assert_eq!(true, point.contains_point(&Point::init(2, 2)));
-        assert_eq!(true, point.contains_point(&Point::init(3, 2)));
-        assert_eq!(true, point.contains_point(&Point::init(2, 1)));
-        assert_eq!(true, point.contains_point(&Point::init(3, 1)));
-        assert_eq!(true, point.contains_point(&Point::init(2, 0)));
-        assert_eq!(true, point.contains_point(&Point::init(3, 0)));
-        assert_eq!(false, point.contains_point(&Point::init(4, 4)));
-        assert_eq!(false, point.contains_point(&Point::init(0, 0)));
-        assert_eq!(false, point.contains_point(&Point::init(2, 5)));
+        assert!(point.contains_point(&Point::init(2, 2)));
+        assert!(point.contains_point(&Point::init(3, 2)));
+        assert!(point.contains_point(&Point::init(2, 1)));
+        assert!(point.contains_point(&Point::init(3, 1)));
+        assert!(point.contains_point(&Point::init(2, 0)));
+        assert!(point.contains_point(&Point::init(3, 0)));
+        assert!(!point.contains_point(&Point::init(4, 4)));
+        assert!(!point.contains_point(&Point::init(0, 0)));
+        assert!(!point.contains_point(&Point::init(2, 5)));
     }
 
     #[test]
