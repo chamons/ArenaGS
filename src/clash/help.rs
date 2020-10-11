@@ -645,7 +645,7 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         }
     }
 
-    let temperature = char_info.temperature.current_temperature();
+    let temperature = ecs.read_storage::<TemperatureComponent>().grab(entity).temperature.current_temperature();
     if temperature != 0 {
         on_text(&format!("{}: {:.2}", linkify("Temperature"), temperature));
     }

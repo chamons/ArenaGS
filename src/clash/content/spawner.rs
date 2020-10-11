@@ -11,7 +11,8 @@ pub fn player(ecs: &mut World, position: Point) {
     let player = ecs
         .create_entity()
         .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
-        .with(CharacterInfoComponent::init("Player", Defenses::init(2, 0, 0, 20), Temperature::init(), 0))
+        .with(CharacterInfoComponent::init("Player", Defenses::init(2, 0, 0, 20), 0))
+        .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
         .with(SkillsComponent::init(&[]))
@@ -38,7 +39,8 @@ fn create_monster(
     let monster = ecs
         .create_entity()
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(name, defenses, Temperature::init(), skill_power))
+        .with(CharacterInfoComponent::init(name, defenses, skill_power))
+        .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(BehaviorComponent::init(behavior_kind))
         .with(TimeComponent::init(0))

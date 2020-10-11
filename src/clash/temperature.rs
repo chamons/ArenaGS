@@ -94,11 +94,11 @@ fn check_temperature_state(ecs: &mut World, target: Entity) {
 }
 
 fn reduce_temperature(ecs: &mut World, target: Entity, ticks: i32) {
-    if ecs.read_storage::<CharacterInfoComponent>().has(target) {
+    if ecs.read_storage::<TemperatureComponent>().has(target) {
         {
-            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            let character_info = character_infos.grab_mut(target);
-            let temperature = &mut character_info.temperature;
+            let mut temperatures = ecs.write_storage::<TemperatureComponent>();
+            let temperature = temperatures.grab_mut(target);
+            let temperature = &mut temperature.temperature;
             if temperature.is_ready(ticks) {
                 temperature.reduce_temperature();
             }
@@ -110,10 +110,10 @@ fn reduce_temperature(ecs: &mut World, target: Entity, ticks: i32) {
 }
 
 fn apply_temperature_damage_delta(ecs: &mut World, target: Entity, rolled_damage: RolledDamage) {
-    if ecs.read_storage::<CharacterInfoComponent>().has(target) {
+    if ecs.read_storage::<TemperatureComponent>().has(target) {
         {
-            let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-            let character_info = character_infos.grab_mut(target);
+            let mut temperatures = ecs.write_storage::<TemperatureComponent>();
+            let temperature = temperatures.grab_mut(target);
             let direction = {
                 if rolled_damage.options.contains(DamageOptions::RAISE_TEMPERATURE) {
                     Some(TemperatureDirection::Heat)
@@ -131,7 +131,7 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: Entity, rolled_damage
             }
 
             if let Some(direction) = direction {
-                character_info.temperature.change_from_incoming_damage(amount, direction);
+                temperature.temperature.change_from_incoming_damage(amount, direction);
             }
         }
         // change_from_incoming_damage could have changed burning/frozen
@@ -296,7 +296,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         let basic_delta = ecs.get_temperature(target).current_temperature;
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).temperature.current_temperature = 0;
+        ecs.write_storage::<TemperatureComponent>().grab_mut(target).temperature.current_temperature = 0;
 
         begin_bolt(
             &mut ecs,

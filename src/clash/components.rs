@@ -52,18 +52,27 @@ impl PlayerComponent {
 pub struct CharacterInfoComponent {
     pub name: String,
     pub defenses: Defenses,
-    pub temperature: Temperature,
     pub skill_power: u32,
 }
 
 impl CharacterInfoComponent {
-    pub fn init(name: &str, defenses: Defenses, temperature: Temperature, skill_power: u32) -> CharacterInfoComponent {
+    pub fn init(name: &str, defenses: Defenses, skill_power: u32) -> CharacterInfoComponent {
         CharacterInfoComponent {
             name: name.to_string(),
             defenses,
-            temperature,
             skill_power,
         }
+    }
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct TemperatureComponent {
+    pub temperature: Temperature,
+}
+
+impl TemperatureComponent {
+    pub fn init(temperature: Temperature) -> TemperatureComponent {
+        TemperatureComponent { temperature }
     }
 }
 
@@ -315,6 +324,7 @@ pub fn create_world() -> World {
     ecs.register::<FieldComponent>();
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
+    ecs.register::<TemperatureComponent>();
     ecs.register::<MapComponent>();
     ecs.register::<FrameComponent>();
     ecs.register::<TimeComponent>();
@@ -385,7 +395,7 @@ impl ShortInfo for World {
         self.read_storage::<CharacterInfoComponent>().grab(entity).defenses.clone()
     }
     fn get_temperature(&self, entity: Entity) -> Temperature {
-        self.read_storage::<CharacterInfoComponent>().grab(entity).temperature.clone()
+        self.read_storage::<TemperatureComponent>().grab(entity).temperature.clone()
     }
     fn get_name(&self, entity: Entity) -> Option<String> {
         if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(entity) {
