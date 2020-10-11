@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::{BehaviorComponent, CharacterInfoComponent, FieldComponent, OrbComponent, PlayerComponent, PositionComponent};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::prelude::*;
 
 pub const MAX_MAP_TILES: u32 = crate::atlas::MAX_POINT_SIZE;
 pub const MAX_MAP_TILES_SIZED: usize = MAX_MAP_TILES as usize;
@@ -111,7 +111,6 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
 mod tests {
     use super::super::{create_test_state, BehaviorKind, FieldComponent};
     use super::*;
-    use crate::atlas::SizedPoint;
 
     #[test]
     fn map_hittest() {

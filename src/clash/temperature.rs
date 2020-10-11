@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS};
+use crate::atlas::prelude::*;
 
 pub const TEMPERATURE_MIDPOINT: i32 = 0;
 pub const TEMPERATURE_BURN_POINT: i32 = 100;
@@ -169,7 +169,6 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::Point;
 
     #[test]
     fn apply_temperature_based_upon_damage_dice() {

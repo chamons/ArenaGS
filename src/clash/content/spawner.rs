@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{MarkedBuilder, SimpleMarker};
 
-use crate::atlas::{Point, SizedPoint, ToSerialize};
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 // All non-test create_entity() call should live here

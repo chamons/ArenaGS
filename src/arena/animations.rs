@@ -2,7 +2,7 @@ use specs::prelude::*;
 
 use super::{AccelerateAnimationsComponent, AnimationComponent};
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyMutECS, EasyMutWorld, Point};
+use crate::atlas::prelude::*;
 use crate::clash::{EventCoordinator, EventKind};
 
 #[derive(PartialEq)]

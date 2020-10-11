@@ -7,7 +7,8 @@ use sdl2::render::Texture;
 
 use super::Sprite;
 use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
+use crate::atlas::get_exe_folder;
+use crate::atlas::prelude::*;
 
 pub struct Background {
     image: Texture,

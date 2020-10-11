@@ -12,7 +12,7 @@ use sdl2::video::FullscreenType;
 use super::{Scene, Storyteller};
 
 use crate::after_image::RenderContextHolder;
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
 pub enum EventStatus {

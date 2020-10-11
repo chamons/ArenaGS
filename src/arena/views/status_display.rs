@@ -7,7 +7,7 @@ use specs::prelude::*;
 
 use super::{HitTestResult, View};
 use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
-use crate::atlas::{BoxResult, EasyECS};
+use crate::atlas::prelude::*;
 use crate::clash::{find_player, StatusComponent, StatusKind};
 
 pub struct StatusBarView {

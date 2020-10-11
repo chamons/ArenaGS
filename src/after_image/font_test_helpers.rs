@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use leak::Leak;
 
 use super::*;
-use crate::atlas::*;
+use crate::atlas::get_exe_folder;
 
 lazy_static! {
     static ref TTF_CONTEXT: &'static sdl2::ttf::Sdl2TtfContext = Box::from(sdl2::ttf::init().unwrap()).leak();

@@ -1,4 +1,4 @@
-use crate::atlas::{Point, SizedPoint};
+use crate::atlas::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction {

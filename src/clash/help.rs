@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::*;
 use crate::after_image::LayoutChunkIcon;
-use crate::atlas::EasyECS;
+use crate::atlas::prelude::*;
 
 pub enum HelpHeader {
     None,

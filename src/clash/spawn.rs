@@ -4,7 +4,7 @@ use specs::prelude::*;
 use super::content::spawner;
 use super::find_clear_landing;
 use super::ShortInfo;
-use crate::atlas::SizedPoint;
+use crate::atlas::prelude::*;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum SpawnKind {

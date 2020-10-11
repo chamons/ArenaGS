@@ -7,7 +7,7 @@ use sdl2::rect::Point as SDLPoint;
 use super::components::*;
 use super::views::TILE_SIZE;
 use crate::after_image::*;
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 
 pub struct SpriteLoader {
     sprite_cache: HashMap<u32, Box<dyn Sprite>>,

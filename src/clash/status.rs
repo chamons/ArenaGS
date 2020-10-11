@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::{EventCoordinator, EventKind, StatusComponent, TickTimer};
-use crate::atlas::EasyMutECS;
+use crate::atlas::prelude::*;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Debug, FromPrimitive, IntoPrimitive, is_enum_variant)]
 #[repr(u32)]

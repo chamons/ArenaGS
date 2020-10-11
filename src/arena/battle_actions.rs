@@ -2,7 +2,7 @@ use specs::prelude::*;
 
 use super::components::*;
 use super::AnimationComponent;
-use crate::atlas::{Direction, Point};
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 #[derive(Clone)]

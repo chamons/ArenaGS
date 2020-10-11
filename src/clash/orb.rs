@@ -3,7 +3,7 @@ use std::cmp;
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
+use crate::atlas::prelude::*;
 
 pub fn create_orb(ecs: &mut World, invoker: Entity) -> Entity {
     let orb_component = ecs.read_storage::<OrbComponent>().grab(invoker).clone();
@@ -76,7 +76,6 @@ fn add_orb_movement_fields(ecs: &mut World, entity: Entity, current: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::atlas::Point;
 
     #[test]
     fn orb_has_correct_fields() {

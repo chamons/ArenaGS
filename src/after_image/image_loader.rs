@@ -1,10 +1,11 @@
-use super::RenderContext;
-use crate::atlas::{get_exe_folder, BoxResult};
-
 use std::path::Path;
 
 use sdl2::image::LoadTexture;
 use sdl2::render::Texture;
+
+use super::RenderContext;
+use crate::atlas::get_exe_folder;
+use crate::atlas::prelude::*;
 
 pub fn load_image(path: &str, render_context: &RenderContext) -> BoxResult<Texture> {
     let dest_path = Path::new(&get_exe_folder()).join(path);

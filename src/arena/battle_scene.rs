@@ -13,7 +13,7 @@ use crate::clash::*;
 
 use super::{new_game, saveload};
 use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Direction, EasyMutECS, EasyMutWorld, Point};
+use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
 
 pub struct BattleScene {

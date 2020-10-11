@@ -8,7 +8,7 @@ use super::super::{LogIndexDelta, LogIndexPosition};
 use super::view_components::{Frame, FrameKind};
 use super::{render_text_layout, HitTestResult, TextHitTester, View};
 use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
 
 pub struct LogView {

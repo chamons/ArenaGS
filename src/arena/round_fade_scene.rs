@@ -7,7 +7,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 use crate::after_image::RenderCanvas;
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
 
 pub struct RoundFadeScene {

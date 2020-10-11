@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
 use super::Font;
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::prelude::*;
 
 pub struct LayoutRequest {
     position: Point,
@@ -406,7 +406,6 @@ pub fn layout_text(text: &str, font: &Font, request: LayoutRequest) -> BoxResult
 mod tests {
     use super::super::font_test_helpers::*;
     use super::*;
-    use crate::atlas::assert_points_equal;
 
     fn get_text(chunk: &LayoutChunkValue) -> &String {
         match chunk {

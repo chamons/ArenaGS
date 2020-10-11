@@ -9,7 +9,7 @@ use super::{screen_rect_for_map_grid, View};
 use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
 use crate::arena::battle_actions;
 use crate::arena::components::*;
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::prelude::*;
 use crate::clash::MapComponent;
 
 use crate::clash::MAX_MAP_TILES;

@@ -3,7 +3,8 @@ use specs::prelude::*;
 
 use super::content::spawner;
 use super::*;
-use crate::atlas::{extend_line_along_path, Direction, EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::extend_line_along_path;
+use crate::atlas::prelude::*;
 use crate::clash::EventCoordinator;
 
 #[derive(Clone, Copy, Deserialize, Serialize)]

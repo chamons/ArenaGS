@@ -6,7 +6,8 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::{Texture, TextureQuery};
 
 use super::{FontCache, FontContext, LayoutRequest, LayoutResult, RenderCanvas};
-use crate::atlas::{get_exe_folder, BoxResult};
+use crate::atlas::get_exe_folder;
+use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
 pub enum FontSize {

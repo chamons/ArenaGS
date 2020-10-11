@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use super::IconLoader;
 use crate::after_image::RenderContext;
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 
 pub struct IconCache {
     cache: HashMap<String, Texture>,

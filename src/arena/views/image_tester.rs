@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::View;
 use crate::after_image::{IconLoader, RenderCanvas, RenderContextHolder, TextRenderer};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::prelude::*;
 use crate::conductor::{EventStatus, Scene, StageDirection, Storyteller};
 
 pub struct ImageTesterScene {

@@ -1,12 +1,12 @@
 use std::path::Path;
 
-use super::{Sprite, SpriteFolderDescription};
-use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::{BoxResult, EasyPath};
-
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
+
+use super::{Sprite, SpriteFolderDescription};
+use crate::after_image::{load_image, RenderCanvas, RenderContext};
+use crate::atlas::prelude::*;
 
 pub struct Bolt {
     texture: Texture,
