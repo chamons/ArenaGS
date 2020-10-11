@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn get_next_with_no_actors() {
         let ecs = create_world();
-        assert_eq!(true, get_next_actor(&ecs).is_none());
+        assert!(get_next_actor(&ecs).is_none());
     }
 
     #[test]
@@ -123,7 +123,7 @@ mod tests {
         let mut ecs = create_world();
 
         let next = wait_for_next(&mut ecs);
-        assert_eq!(true, next.is_none());
+        assert!(next.is_none());
     }
 
     #[test]

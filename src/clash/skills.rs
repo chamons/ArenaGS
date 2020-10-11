@@ -623,10 +623,10 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&ecs, entity, &info, Point::init(2, 5)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
+        assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 5)));
         let info = SkillInfo::init("TestInfo", None, TargetType::Tile, SkillEffect::None);
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 5)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 5)));
     }
 
     #[test]
@@ -635,8 +635,8 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = get_skill("TestWithRange");
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 4)));
-        assert_eq!(false, is_good_target(&ecs, entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
+        assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 3)));
     }
 
     #[test]
@@ -645,10 +645,10 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::Tile, SkillEffect::None, Some(2), true);
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 4)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
         make_test_character(&mut ecs, SizedPoint::init(2, 3), 0);
 
-        assert_eq!(false, is_good_target(&ecs, entity, &info, Point::init(2, 4)));
+        assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 4)));
     }
 
     #[test]
@@ -668,9 +668,9 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
 
         let info = SkillInfo::init_with_distance("TestInfo", None, TargetType::AnyoneButSelf, SkillEffect::None, Some(2), false);
-        assert_eq!(false, is_good_target(&ecs, entity, &info, Point::init(2, 2)));
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 3)));
-        assert_eq!(true, is_good_target(&ecs, entity, &info, Point::init(2, 4)));
+        assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 2)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 3)));
+        assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
     }
 
     #[test]
@@ -793,7 +793,7 @@ mod tests {
         let ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
 
-        assert_eq!(true, get_skill("TestMelee").get_remaining_usages(&ecs, player).is_none());
+        assert!(get_skill("TestMelee").get_remaining_usages(&ecs, player).is_none());
     }
 
     #[test]
@@ -805,12 +805,12 @@ mod tests {
         let skill = get_skill("TestAmmo");
 
         for _ in 0..3 {
-            assert_eq!(true, can_invoke_skill(&mut ecs, player, &skill, None));
+            assert!(can_invoke_skill(&mut ecs, player, &skill, None));
             invoke_skill(&mut ecs, player, "TestAmmo", None);
             add_ticks(&mut ecs, 100);
         }
 
-        assert_eq!(false, can_invoke_skill(&mut ecs, player, &skill, None));
+        assert!(!can_invoke_skill(&mut ecs, player, &skill, None));
     }
 
     #[test]
@@ -905,7 +905,7 @@ mod tests {
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
-        assert_eq!(true, get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap() > 0);
+        assert!(get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap() > 0);
     }
 
     fn add_focus(ecs: &mut World, player: Entity, focus: f64) {
@@ -935,7 +935,7 @@ mod tests {
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
-        assert_eq!(true, get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap() > 0);
+        assert!(get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap() > 0);
     }
 
     #[test]

@@ -395,14 +395,14 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_trait(StatusKind::TestTrait);
         store.remove_trait_if_found(StatusKind::TestTrait);
-        assert_eq!(false, store.has(StatusKind::TestTrait));
+        assert!(!store.has(StatusKind::TestTrait));
     }
 
     #[test]
     fn remove_trait_missing() {
         let mut store = StatusStore::init();
         store.remove_trait_if_found(StatusKind::TestTrait);
-        assert_eq!(false, store.has(StatusKind::TestTrait));
+        assert!(!store.has(StatusKind::TestTrait));
     }
 
     #[test]
@@ -410,7 +410,7 @@ mod tests {
         let mut store = StatusStore::init();
         store.add_status(StatusKind::TestStatus, 100);
         store.remove_status(StatusKind::TestStatus);
-        assert_eq!(false, store.has(StatusKind::TestTrait));
+        assert!(!store.has(StatusKind::TestTrait));
     }
 
     #[test]

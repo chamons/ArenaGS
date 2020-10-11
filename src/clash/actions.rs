@@ -81,7 +81,7 @@ mod tests {
     fn move_not_current_actor() {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).with_map().build();
 
-        assert_eq!(false, player_move(&mut ecs, Direction::North));
+        assert!(!player_move(&mut ecs, Direction::North));
     }
 
     #[test]
@@ -89,7 +89,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
         let player = find_player(&ecs);
 
-        assert_eq!(true, player_move(&mut ecs, Direction::North));
+        assert!(player_move(&mut ecs, Direction::North));
 
         assert_eq!(0, get_ticks(&ecs, player));
     }
@@ -99,7 +99,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_timed(10).build();
         ecs.insert(LogComponent::init());
 
-        assert_eq!(false, player_use_skill(&mut ecs, "TestNone", None));
+        assert!(!player_use_skill(&mut ecs, "TestNone", None));
     }
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_timed(10).build();
         let player = find_player(&ecs);
 
-        assert_eq!(true, player_use_skill(&mut ecs, "TestNone", None));
+        assert!(player_use_skill(&mut ecs, "TestNone", None));
         assert_eq!(0, get_ticks(&ecs, player));
     }
 }

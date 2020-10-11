@@ -555,7 +555,7 @@ mod tests {
         begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+        assert!(get_field_at(&ecs, &Point::init(2, 3)).is_some());
     }
 
     #[test]
@@ -569,7 +569,7 @@ mod tests {
         begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
         wait_for_animations(&mut ecs);
 
-        assert_eq!(true, get_field_at(&ecs, &Point::init(2, 3)).is_some());
+        assert!(get_field_at(&ecs, &Point::init(2, 3)).is_some());
     }
 
     #[test]

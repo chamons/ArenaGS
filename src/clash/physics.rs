@@ -249,7 +249,7 @@ mod tests {
         assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
-        assert_eq!(true, success);
+        assert!(success);
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, entity, Point::init(2, 3));
@@ -268,7 +268,7 @@ mod tests {
         assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
-        assert_eq!(true, success);
+        assert!(success);
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, entity, Point::init(2, 3));
@@ -285,7 +285,7 @@ mod tests {
         assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
-        assert_eq!(false, success);
+        assert!(!success);
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, entity, Point::init(2, 2))
@@ -299,7 +299,7 @@ mod tests {
         assert_position(&ecs, entity, Point::init(2, 2));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(2, 3));
-        assert_eq!(false, success);
+        assert!(!success);
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, entity, Point::init(2, 2));
@@ -312,7 +312,7 @@ mod tests {
         assert_position(&ecs, entity, Point::init(13, 13));
 
         let success = move_character_action(&mut ecs, entity, SizedPoint::init(13, 14));
-        assert_eq!(false, success);
+        assert!(!success);
         wait_for_animations(&mut ecs);
 
         assert_position(&ecs, entity, Point::init(13, 13));
@@ -327,7 +327,7 @@ mod tests {
             .build();
         let bottom = find_at(&ecs, 2, 4);
 
-        assert_eq!(false, move_character_action(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
+        assert!(!move_character_action(&mut ecs, bottom, SizedPoint::init_multi(2, 3, 2, 2)));
         wait_for_animations(&mut ecs);
     }
 
@@ -338,7 +338,7 @@ mod tests {
         // All of these tests by default do not include an SkillResourceComponent, so they get no exhaustion
         ecs.shovel(player, SkillResourceComponent::init(&[]));
 
-        assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
+        assert!(move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         wait_for_animations(&mut ecs);
 
         let skills = ecs.read_storage::<SkillResourceComponent>();
@@ -356,7 +356,7 @@ mod tests {
         };
         ecs.shovel(player, skill_resource);
 
-        assert_eq!(false, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
+        assert!(!move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         let skills = ecs.read_storage::<SkillResourceComponent>();
         assert_approx_eq!(100.0, skills.grab(player).exhaustion);
     }
@@ -374,7 +374,7 @@ mod tests {
         };
         ecs.shovel(player, skill_resource);
 
-        assert_eq!(true, move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
+        assert!(move_character_action(&mut ecs, player, SizedPoint::init(2, 3)));
         assert_eq!(MOVE_ACTION_COST / -2, get_ticks(&ecs, player));
     }
 

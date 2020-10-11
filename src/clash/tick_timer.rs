@@ -59,11 +59,11 @@ mod tests {
     #[test]
     fn multiple_small_ticks() {
         let mut timer = TickTimer::init();
-        assert_eq!(false, timer.apply_ticks(50));
-        assert_eq!(true, timer.apply_ticks(50));
-        assert_eq!(false, timer.apply_ticks(30));
-        assert_eq!(false, timer.apply_ticks(30));
-        assert_eq!(true, timer.apply_ticks(40));
+        assert!(!timer.apply_ticks(50));
+        assert!(timer.apply_ticks(50));
+        assert!(!timer.apply_ticks(30));
+        assert!(!timer.apply_ticks(30));
+        assert!(timer.apply_ticks(40));
     }
 
     #[test]
@@ -76,10 +76,10 @@ mod tests {
     #[test]
     fn custom_duration() {
         let mut timer = TickTimer::init_with_duration(150);
-        assert_eq!(false, timer.apply_ticks(50));
-        assert_eq!(false, timer.apply_ticks(50));
-        assert_eq!(false, timer.apply_ticks(30));
-        assert_eq!(true, timer.apply_ticks(30));
+        assert!(!timer.apply_ticks(50));
+        assert!(!timer.apply_ticks(50));
+        assert!(!timer.apply_ticks(30));
+        assert!(timer.apply_ticks(30));
     }
 
     #[test]
