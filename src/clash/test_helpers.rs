@@ -89,12 +89,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
     ecs.create_entity()
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(CharacterInfo::init(
-            "TestCharacter",
-            Defenses::just_health(10),
-            Temperature::init(),
-            0,
-        )))
+        .with(CharacterInfoComponent::init("TestCharacter", Defenses::just_health(10), Temperature::init(), 0))
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
@@ -105,13 +100,12 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
 pub fn set_temperature(ecs: &mut World, player: Entity, temperature: i32) {
     ecs.write_storage::<CharacterInfoComponent>()
         .grab_mut(player)
-        .character
         .temperature
         .set_temperature(temperature);
 }
 
 pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
-    ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = Defenses::just_health(health);
+    ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses = Defenses::just_health(health);
 }
 
 // This can be dangerous, if something invalidates the entity reference

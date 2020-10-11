@@ -1,7 +1,4 @@
 // The game rules and logic for the games
-mod character_info;
-pub use character_info::CharacterInfo;
-
 mod skills;
 pub use skills::*;
 

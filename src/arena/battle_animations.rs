@@ -47,7 +47,7 @@ pub fn projectile_animation(ecs: &mut World, projectile: Entity, target_position
 pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.grab(target).attack.ranged_kind() {
+        match attacks.grab(target).ranged_kind() {
             BoltKind::Fire => CharacterAnimationState::Magic,
             BoltKind::Water => CharacterAnimationState::Magic,
             BoltKind::Lightning => CharacterAnimationState::Magic,
@@ -64,7 +64,7 @@ pub fn begin_ranged_cast_animation(ecs: &mut World, target: Entity) {
 pub fn begin_orb_cast_animation(ecs: &mut World, target: Entity) {
     let animation = {
         let attacks = ecs.read_storage::<AttackComponent>();
-        match attacks.grab(target).attack.orb_kind() {
+        match attacks.grab(target).orb_kind() {
             OrbKind::Feather => CharacterAnimationState::Magic,
         }
     };
@@ -75,7 +75,7 @@ pub fn begin_orb_cast_animation(ecs: &mut World, target: Entity) {
 pub fn create_orb_sprite(ecs: &mut World, orb: Entity) {
     let sprite = {
         let attacks = ecs.write_storage::<AttackComponent>();
-        match attacks.grab(orb).attack.orb_kind() {
+        match attacks.grab(orb).orb_kind() {
             OrbKind::Feather => SpriteKinds::AirBullet,
         }
     };
@@ -85,7 +85,7 @@ pub fn create_orb_sprite(ecs: &mut World, orb: Entity) {
 pub fn begin_ranged_bolt_animation(ecs: &mut World, bolt: Entity) {
     let (target, sprite) = {
         let attacks = ecs.write_storage::<AttackComponent>();
-        let attack = attacks.grab(bolt).attack;
+        let attack = attacks.grab(bolt);
         let sprite = match attack.ranged_kind() {
             BoltKind::Fire => SpriteKinds::FireBolt,
             BoltKind::Water => SpriteKinds::WaterBolt,
@@ -159,7 +159,7 @@ fn begin_weapon_animation(ecs: &mut World, target: Entity, post_event: EventKind
 fn begin_cone_hit_animation(ecs: &mut World, entity: Entity) {
     let frame = ecs.get_current_frame();
     let sprite = {
-        match ecs.read_storage::<AttackComponent>().grab(entity).attack.cone_kind() {
+        match ecs.read_storage::<AttackComponent>().grab(entity).cone_kind() {
             ConeKind::Fire => SpriteKinds::FireBolt,
             ConeKind::Water => SpriteKinds::WaterBolt,
         }
@@ -220,7 +220,7 @@ const SECONDARY_LENGTH: u64 = 8;
 
 pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
-    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
+    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).clone();
     let (kind, _) = match attack_info.kind {
         AttackKind::Explode(kind, range) => (kind, range),
         _ => panic!("begin_explode_animation with non-explosion attack?"),
@@ -244,7 +244,7 @@ pub fn begin_explode_animation(ecs: &mut World, target: Entity) {
 
 fn begin_secondary_explode_animation(ecs: &mut World, target: Entity) {
     let frame = ecs.get_current_frame();
-    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).attack;
+    let attack_info = ecs.read_storage::<AttackComponent>().grab(target).clone();
     let range = match attack_info.kind {
         AttackKind::Explode(_, range) => range,
         _ => panic!("begin_secondary_explode_animation with non-explosion attack?"),

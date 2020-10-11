@@ -90,7 +90,7 @@ pub fn defense_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
         match kind {
             EventKind::MoveComplete(distance) => {
                 if let Some(char_info) = ecs.write_storage::<CharacterInfoComponent>().get_mut(target) {
-                    char_info.character.defenses.regain_dodge(2 * distance);
+                    char_info.defenses.regain_dodge(2 * distance);
                 }
             }
             _ => {}
@@ -230,10 +230,10 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let mut defenses = Defenses::just_health(10);
         defenses.max_dodge = 5;
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses = defenses;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses = defenses;
         move_character_action(&mut ecs, player, SizedPoint::init(2, 3));
         wait_for_animations(&mut ecs);
-        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(player).character.defenses.dodge;
+        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(player).defenses.dodge;
         assert_eq!(2, dodge);
     }
 }

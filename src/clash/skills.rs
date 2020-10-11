@@ -424,11 +424,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
 }
 
 fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target: Option<Point>) {
-    let skill_power = ecs
-        .read_storage::<CharacterInfoComponent>()
-        .get(invoker)
-        .map(|c| c.character.skill_power)
-        .unwrap_or(0);
+    let skill_power = ecs.read_storage::<CharacterInfoComponent>().get(invoker).map(|c| c.skill_power).unwrap_or(0);
 
     match effect {
         SkillEffect::Move => {
@@ -999,12 +995,12 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
         let mut defenses = Defenses::just_health(10);
         defenses.max_dodge = 5;
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).character.defenses = defenses;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).defenses = defenses;
 
         invoke_skill(&mut ecs, entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);
 
-        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.dodge;
+        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).defenses.dodge;
         assert_eq!(4, dodge);
     }
 
@@ -1252,7 +1248,7 @@ mod tests {
     fn skill_power() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.skill_power = 1;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).skill_power = 1;
 
         let target = find_at(&ecs, 4, 2);
         let starting_health = ecs.get_defenses(target).health;

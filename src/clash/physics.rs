@@ -20,7 +20,7 @@ pub fn move_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
                     PostMoveAction::Attack => {
                         let a = ecs.read_storage::<AttackComponent>().grab(target.unwrap()).clone();
                         ecs.write_storage::<AttackComponent>().remove(target.unwrap());
-                        begin_melee(ecs, target.unwrap(), a.attack.target, a.attack.damage, a.attack.melee_kind());
+                        begin_melee(ecs, target.unwrap(), a.target, a.damage, a.melee_kind());
                     }
                     PostMoveAction::None => {}
                 }
