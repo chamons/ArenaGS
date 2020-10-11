@@ -162,7 +162,7 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     let attack = ecs.read_storage::<AttackComponent>().grab(source).clone();
 
     // NotConvertSaveload - Bolts only last during an animation
-    let bolt = ecs.create_entity().with(PositionComponent::init(source_position)).with(attack.clone()).build();
+    let bolt = ecs.create_entity().with(PositionComponent::init(source_position)).with(attack).build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
