@@ -330,7 +330,7 @@ pub fn reap_killed(ecs: &mut World) {
         let players = ecs.read_storage::<PlayerComponent>();
 
         for (entity, character_info, player) in (&entities, &character_infos, (&players).maybe()).join() {
-            if character_info.character.defenses.health == 0 {
+            if character_info.defenses.health == 0 {
                 // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
                 if player.is_some() {
                     player_dead = true;

@@ -98,7 +98,7 @@ fn reduce_temperature(ecs: &mut World, target: Entity, ticks: i32) {
         {
             let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
             let character_info = character_infos.grab_mut(target);
-            let temperature = &mut character_info.character.temperature;
+            let temperature = &mut character_info.temperature;
             if temperature.is_ready(ticks) {
                 temperature.reduce_temperature();
             }
@@ -131,7 +131,7 @@ fn apply_temperature_damage_delta(ecs: &mut World, target: Entity, rolled_damage
             }
 
             if let Some(direction) = direction {
-                character_info.character.temperature.change_from_incoming_damage(amount, direction);
+                character_info.temperature.change_from_incoming_damage(amount, direction);
             }
         }
         // change_from_incoming_damage could have changed burning/frozen
@@ -211,7 +211,7 @@ mod tests {
         set_temperature(&mut ecs, player, TEMPERATURE_BURN_POINT + 20);
 
         // Set armor so high burning must pierce to do actual damage
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.armor = 100;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses.armor = 100;
 
         let starting_health = ecs.get_defenses(player).health;
         add_ticks(&mut ecs, 100);
@@ -296,11 +296,7 @@ mod tests {
         wait_for_animations(&mut ecs);
 
         let basic_delta = ecs.get_temperature(target).current_temperature;
-        ecs.write_storage::<CharacterInfoComponent>()
-            .grab_mut(target)
-            .character
-            .temperature
-            .current_temperature = 0;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).temperature.current_temperature = 0;
 
         begin_bolt(
             &mut ecs,

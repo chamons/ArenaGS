@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::prelude::*;
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, CharacterInfo, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
+use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -50,12 +50,20 @@ impl PlayerComponent {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct CharacterInfoComponent {
-    pub character: CharacterInfo,
+    pub name: String,
+    pub defenses: Defenses,
+    pub temperature: Temperature,
+    pub skill_power: u32,
 }
 
 impl CharacterInfoComponent {
-    pub const fn init(character: CharacterInfo) -> CharacterInfoComponent {
-        CharacterInfoComponent { character }
+    pub fn init(name: &str, defenses: Defenses, temperature: Temperature, skill_power: u32) -> CharacterInfoComponent {
+        CharacterInfoComponent {
+            name: name.to_string(),
+            defenses,
+            temperature,
+            skill_power,
+        }
     }
 }
 
@@ -371,14 +379,14 @@ impl ShortInfo for World {
         self.read_storage::<PositionComponent>().grab(entity).position
     }
     fn get_defenses(&self, entity: Entity) -> Defenses {
-        self.read_storage::<CharacterInfoComponent>().grab(entity).character.defenses.clone()
+        self.read_storage::<CharacterInfoComponent>().grab(entity).defenses.clone()
     }
     fn get_temperature(&self, entity: Entity) -> Temperature {
-        self.read_storage::<CharacterInfoComponent>().grab(entity).character.temperature.clone()
+        self.read_storage::<CharacterInfoComponent>().grab(entity).temperature.clone()
     }
     fn get_name(&self, entity: Entity) -> Option<String> {
         if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(entity) {
-            Some(character_info.character.name.to_string())
+            Some(character_info.name.to_string())
         } else {
             None
         }

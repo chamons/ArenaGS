@@ -80,7 +80,7 @@ pub fn apply_healing_to_character(ecs: &mut World, amount: Strength, target: Ent
     let healing_total = {
         let amount_to_heal = amount.roll(&mut ecs.fetch_mut::<RandomComponent>().rand);
         let mut defenses = ecs.write_storage::<CharacterInfoComponent>();
-        let mut defense = &mut defenses.grab_mut(target).character.defenses;
+        let mut defense = &mut defenses.grab_mut(target).defenses;
 
         let initial_health = defense.health;
         defense.health = cmp::min(defense.health + amount_to_heal, defense.max_health);
@@ -117,7 +117,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: Entity, source_pos
 
     let rolled_damage = {
         let mut character_infos = ecs.write_storage::<CharacterInfoComponent>();
-        let defenses = &mut character_infos.grab_mut(target).character.defenses;
+        let defenses = &mut character_infos.grab_mut(target).defenses;
 
         if ecs.has_status(target, StatusKind::Armored) {
             defenses.apply_damage_with_additional_armor(damage, ARMORED_ADDITIONAL_ARMOR, &mut ecs.fetch_mut::<RandomComponent>().rand)
@@ -384,7 +384,7 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         let target = find_at(&ecs, 2, 3);
 
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).character.defenses.armor = 6;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(target).defenses.armor = 6;
 
         begin_bolt(
             &mut ecs,
@@ -470,7 +470,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses.health = 5;
         ecs.add_status(player, StatusKind::Regen, 300);
 
         add_ticks(&mut ecs, 100);
@@ -511,7 +511,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses.health = 5;
         apply_healing_to_character(&mut ecs, Strength::init(2), player);
         assert!(ecs.get_defenses(player).health > 5);
     }
@@ -521,7 +521,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).character.defenses.health = 5;
+        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses.health = 5;
         apply_healing_to_character(&mut ecs, Strength::init(20), player);
         assert_eq!(ecs.get_defenses(player).max_health, ecs.get_defenses(player).health);
     }
