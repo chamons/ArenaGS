@@ -565,14 +565,14 @@ impl HelpInfo {
 
         let attacks = ecs.read_storage::<AttackComponent>();
 
-        HelpInfo::report_damage(&mut details, &attacks.grab(entity).attack.damage);
+        HelpInfo::report_damage(&mut details, &attacks.grab(entity).damage);
 
         HelpInfo::text_header("Field", details)
     }
 
     pub fn find_orb(ecs: &World, entity: Entity) -> HelpInfo {
         let attacks = ecs.read_storage::<AttackComponent>();
-        let attack = attacks.grab(entity).attack;
+        let attack = attacks.grab(entity);
 
         let mut details = vec![];
 

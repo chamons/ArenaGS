@@ -69,15 +69,11 @@ pub enum AttackKind {
     Orb(OrbKind),
 }
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct AttackInfo {
-    pub damage: Damage,
-    pub target: Point,
-    pub kind: AttackKind,
-    pub source: Option<Point>,
-}
+impl AttackComponent {
+    pub fn init(target: Point, damage: Damage, kind: AttackKind, source: Option<Point>) -> AttackComponent {
+        AttackComponent { target, damage, kind, source }
+    }
 
-impl AttackInfo {
     pub fn melee_kind(&self) -> WeaponKind {
         match self.kind {
             AttackKind::Melee(kind) => kind,
@@ -103,14 +99,6 @@ impl AttackInfo {
         match self.kind {
             AttackKind::Orb(kind) => kind,
             _ => panic!("Wrong type in orb_kind"),
-        }
-    }
-}
-
-impl AttackComponent {
-    pub fn init(target: Point, damage: Damage, kind: AttackKind, source: Option<Point>) -> AttackComponent {
-        AttackComponent {
-            attack: AttackInfo { target, damage, kind, source },
         }
     }
 }
@@ -171,24 +159,17 @@ pub fn start_bolt(ecs: &mut World, source: Entity) {
     let caster_origin = ecs.get_position(source).origin;
     let source_position = SizedPoint::from(caster_origin);
 
-    let attack = ecs.read_storage::<AttackComponent>().grab(source).attack;
+    let attack = ecs.read_storage::<AttackComponent>().grab(source).clone();
 
     // NotConvertSaveload - Bolts only last during an animation
-    let bolt = ecs
-        .create_entity()
-        .with(PositionComponent::init(source_position))
-        .with(AttackComponent { attack })
-        .build();
+    let bolt = ecs.create_entity().with(PositionComponent::init(source_position)).with(attack.clone()).build();
 
     ecs.write_storage::<AttackComponent>().remove(source);
     ecs.raise_event(EventKind::Bolt(BoltState::BeginFlyingAnimation), Some(bolt));
 }
 
 pub fn apply_bolt(ecs: &mut World, bolt: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(bolt).attack
-    };
+    let attack = ecs.read_storage::<AttackComponent>().grab(bolt).clone();
     apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
     ecs.delete_entity(bolt).unwrap();
 }
@@ -206,10 +187,7 @@ pub fn melee_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn apply_melee(ecs: &mut World, character: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(character).attack
-    };
+    let attack = ecs.read_storage::<AttackComponent>().grab(character).clone();
     apply_damage_to_location(ecs, attack.target, attack.source, attack.damage);
 
     ecs.write_storage::<AttackComponent>().remove(character);
@@ -299,7 +277,7 @@ pub fn explode_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
 pub fn apply_explode(ecs: &mut World, source: Entity) {
     let (damage, range, source_position) = {
-        let attack_info = ecs.read_storage::<AttackComponent>().grab(source).attack;
+        let attack_info = ecs.read_storage::<AttackComponent>().grab(source).clone();
         match attack_info.kind {
             AttackKind::Explode(_, range) => (attack_info.damage, range, attack_info.source),
             _ => panic!("Explode with wrong AttackKind"),
@@ -381,10 +359,7 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
 // Apply orb can damage enties not on it's exact location
 // if it will run into them this turn
 pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(orb).attack
-    };
+    let attack = ecs.read_storage::<AttackComponent>().grab(orb).clone();
     apply_damage_to_location(ecs, point, attack.source, attack.damage);
     ecs.delete_entity(orb).unwrap();
 }
@@ -408,7 +383,7 @@ pub fn check_new_location_for_damage(ecs: &mut World, entity: Entity) {
 }
 
 pub fn tick_damage(ecs: &mut World, entity: Entity) {
-    let attack = ecs.read_storage::<AttackComponent>().grab(entity).attack;
+    let attack = ecs.read_storage::<AttackComponent>().grab(entity).clone();
     for p in ecs.get_position(entity).all_positions() {
         if let Some(target) = find_character_at_location(ecs, p) {
             apply_damage_to_character(ecs, attack.damage, target, Some(p));
@@ -431,10 +406,7 @@ pub fn cone_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 }
 
 pub fn apply_cone(ecs: &mut World, character: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(character).attack
-    };
+    let attack = ecs.read_storage::<AttackComponent>().grab(character).clone();
     let size = match attack.kind {
         AttackKind::Cone(_, size) => size,
         _ => panic!("Unexpected kind in apply_cone"),
@@ -445,7 +417,7 @@ pub fn apply_cone(ecs: &mut World, character: Entity) {
         let hit = ecs
             .create_entity()
             .with(PositionComponent::init(SizedPoint::from(p)))
-            .with(AttackComponent { attack })
+            .with(attack.clone())
             .build();
         ecs.raise_event(EventKind::Cone(ConeState::BeginHitAnimation), Some(hit));
     }
@@ -454,10 +426,7 @@ pub fn apply_cone(ecs: &mut World, character: Entity) {
 }
 
 pub fn cone_hits(ecs: &mut World, entity: Entity) {
-    let attack = {
-        let attacks = ecs.read_storage::<AttackComponent>();
-        attacks.grab(entity).attack
-    };
+    let attack = ecs.read_storage::<AttackComponent>().grab(entity).clone();
     let position = ecs.get_position(entity);
     apply_damage_to_location(ecs, position.single_position(), attack.source, attack.damage);
     ecs.delete_entity(entity).unwrap();

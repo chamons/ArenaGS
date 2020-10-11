@@ -11,7 +11,7 @@ use specs_derive::*;
 use super::EventCoordinator;
 use super::Log;
 use crate::atlas::prelude::*;
-use crate::clash::{AmmoKind, AttackInfo, BehaviorKind, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
+use crate::clash::{AmmoKind, AttackKind, BehaviorKind, Damage, Defenses, FieldEffect, FieldKind, Map, StatusKind, StatusStore, Temperature};
 
 #[derive(Hash, PartialEq, Eq, Component, ConvertSaveload, Clone)]
 pub struct TimeComponent {
@@ -160,7 +160,10 @@ pub struct SkillResourceComponent {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct AttackComponent {
-    pub attack: AttackInfo,
+    pub damage: Damage,
+    pub target: Point,
+    pub kind: AttackKind,
+    pub source: Option<Point>,
 }
 
 #[derive(Component, ConvertSaveload, Clone)]
