@@ -63,13 +63,13 @@ impl Distribution<BattleKind> for Standard {
 
 pub fn random_new_world(phase: u32) -> World {
     let (kind, difficulty) = match phase {
-        0 => (BattleKind::SimpleGolem, 0),
-        1 => (BattleKind::Bird, 0),
-        2 => (BattleKind::Elementalist, 0),
+        // 0 => (BattleKind::SimpleGolem, 0),
+        // 1 => (BattleKind::Bird, 0),
+        // 2 => (BattleKind::Elementalist, 0),
         _ => {
             // Since we are creating an entire new world, it is acceptable to use thread RNG
             let mut random = rand::thread_rng();
-            (random.gen(), phase - 3)
+            (random.gen(), phase)
         }
     };
 

@@ -23,7 +23,7 @@ impl LargeEnemy {
     pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription, size: LargeCharacterSize) -> BoxResult<LargeEnemy> {
         let folder = Path::new(&description.base_folder)
             .join("monsters")
-            .join(format!("{}{}", &description.character, ".png"))
+            .join(format!("{}.png", &description.name))
             .stringify_owned();
 
         Ok(LargeEnemy {

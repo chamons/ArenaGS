@@ -20,7 +20,7 @@ impl Bolt {
     pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription, start: usize, length: usize) -> BoxResult<Bolt> {
         let folder = Path::new(&description.base_folder)
             .join("bolts")
-            .join(format!("{}{}", &description.character, ".png"))
+            .join(format!("{}.png", &description.name))
             .stringify_owned();
 
         Ok(Bolt {
