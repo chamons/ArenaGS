@@ -7,7 +7,7 @@ use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::View;
-use crate::after_image::{IconLoader, RenderCanvas, RenderContextHolder, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{EventStatus, Scene, StageDirection, Storyteller};
 

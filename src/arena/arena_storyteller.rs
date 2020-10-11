@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use super::death_scene::DeathScene;
 use super::round_fade_scene::RoundFadeScene;
-use crate::after_image::{RenderContextHolder, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
 use super::battle_scene::BattleScene;

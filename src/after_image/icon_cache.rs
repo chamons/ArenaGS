@@ -2,7 +2,7 @@ use sdl2::render::Texture;
 use std::collections::HashMap;
 
 use super::IconLoader;
-use crate::after_image::RenderContext;
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 
 pub struct IconCache {

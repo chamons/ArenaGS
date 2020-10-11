@@ -1,7 +1,7 @@
 use std::cmp;
 use std::path::Path;
 
-use crate::after_image::{load_image, RenderCanvas, RenderContext};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 
 use sdl2::rect::Point as SDLPoint;

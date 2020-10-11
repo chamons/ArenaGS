@@ -4,7 +4,7 @@ use std::path::Path;
 
 use sdl2::render::Texture;
 
-use crate::after_image::{load_image, RenderContext};
+use crate::after_image::prelude::*;
 
 use crate::atlas::get_exe_folder;
 use crate::atlas::prelude::*;

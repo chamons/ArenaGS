@@ -5,7 +5,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
 use super::{Sprite, SpriteFolderDescription};
-use crate::after_image::{load_image, RenderCanvas, RenderContext};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 
 pub struct Bolt {

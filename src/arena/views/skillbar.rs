@@ -8,7 +8,7 @@ use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::{HitTestResult, View};
-use crate::after_image::{FontColor, FontSize, IconCache, IconLoader, RenderCanvas, RenderContext, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
 

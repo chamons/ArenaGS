@@ -5,7 +5,7 @@ use specs::prelude::*;
 
 use super::view_components::LifeBar;
 use super::TILE_SIZE;
-use crate::after_image::{IconCache, IconLoader, RenderCanvas, RenderContext};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{ShortInfo, StatusInfo, StatusKind};
 

@@ -11,7 +11,7 @@ use sdl2::video::FullscreenType;
 
 use super::{Scene, Storyteller};
 
-use crate::after_image::RenderContextHolder;
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 
 #[allow(dead_code)]

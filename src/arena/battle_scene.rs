@@ -12,7 +12,7 @@ use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
 
 use super::{new_game, saveload};
-use crate::after_image::{RenderCanvas, RenderContextHolder, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
 

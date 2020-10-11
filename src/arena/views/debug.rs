@@ -6,7 +6,7 @@ use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::{screen_rect_for_map_grid, View};
-use crate::after_image::{FontColor, FontSize, RenderCanvas, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::arena::battle_actions;
 use crate::arena::components::*;
 use crate::atlas::prelude::*;
