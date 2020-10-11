@@ -7,7 +7,7 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 
-use super::{sprite::load_set, SpriteFolderDescription};
+use super::SpriteFolderDescription;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 
@@ -20,7 +20,6 @@ pub enum CharacterAnimationState {
     Bow,
     Cheer,
     Crouch,
-    Down,
     Hit,
     Idle,
     Item,
@@ -30,65 +29,59 @@ pub enum CharacterAnimationState {
 }
 
 pub struct DetailedCharacter {
-    attack_one: [Texture; 3],
-    attack_two: [Texture; 3],
-    bow: [Texture; 3],
-    cheer: [Texture; 3],
-    crouch: [Texture; 3],
-    down: Texture,
-    hit: [Texture; 3],
-    idle: [Texture; 3],
-    item: [Texture; 3],
-    magic: [Texture; 3],
-    status: [Texture; 3],
-    walk: [Texture; 3],
+    sprites: Texture,
 }
 
 impl DetailedCharacter {
     pub fn init(render_context: &RenderContext, description: &SpriteFolderDescription) -> BoxResult<DetailedCharacter> {
-        let folder = Path::new(&description.base_folder)
+        let sheet_path = Path::new(&description.base_folder)
             .join("battle")
-            .join(format!("set{}", &description.set))
-            .join(&description.character)
+            .join(format!("{}.png", &description.name))
             .stringify_owned();
 
         Ok(DetailedCharacter {
-            attack_one: load_set(&folder, description, "atk1", render_context)?,
-            attack_two: load_set(&folder, description, "atk2", render_context)?,
-            bow: load_set(&folder, description, "bow", render_context)?,
-            cheer: load_set(&folder, description, "cheer", render_context)?,
-            crouch: load_set(&folder, description, "crouch", render_context)?,
-            hit: load_set(&folder, description, "hit", render_context)?,
-            idle: load_set(&folder, description, "idle1", render_context)?,
-            item: load_set(&folder, description, "item", render_context)?,
-            magic: load_set(&folder, description, "magic", render_context)?,
-            status: load_set(&folder, description, "status", render_context)?,
-            walk: load_set(&folder, description, "walk", render_context)?,
-            down: load_image(&get_single_name(&folder, description), render_context)?,
+            sprites: load_image(&sheet_path, render_context)?,
         })
     }
 
-    fn get_texture(&self, state: &CharacterAnimationState, frame: u64) -> &Texture {
+    fn get_sprite_sheet_rect_for_index(&self, i: usize) -> SDLRect {
+        let (width, height) = (144, 144);
+        let row = i % 9;
+        let col = i / 9;
+        SDLRect::new(width * row as i32, height * col as i32, width as u32, height as u32)
+    }
+
+    fn get_texture(&self, state: &CharacterAnimationState, frame: u64) -> (&Texture, SDLRect) {
         let animation_length = match state {
             CharacterAnimationState::Idle => 55,
             _ => 15,
         };
         let offset = self.get_animation_frame(3, animation_length, frame);
 
-        match state {
-            CharacterAnimationState::AttackOne => &self.attack_one[offset],
-            CharacterAnimationState::AttackTwo => &self.attack_two[offset],
-            CharacterAnimationState::Bow => &self.bow[offset],
-            CharacterAnimationState::Cheer => &self.cheer[offset],
-            CharacterAnimationState::Crouch => &self.crouch[offset],
-            CharacterAnimationState::Down => &self.down,
-            CharacterAnimationState::Hit => &self.hit[offset],
-            CharacterAnimationState::Idle => &self.idle[offset],
-            CharacterAnimationState::Item => &self.item[offset],
-            CharacterAnimationState::Magic => &self.magic[offset],
-            CharacterAnimationState::Status => &self.status[offset],
-            CharacterAnimationState::Walk => &self.walk[offset],
-        }
+        // The detailed character sheets are somewhat strangely laid out
+        // 1, 2, 0
+        let offset = match offset {
+            0 => 2,
+            1 => 0,
+            2 => 1,
+            _ => panic!("Unexpected animation offset"),
+        };
+
+        let sprite_index = match state {
+            CharacterAnimationState::Idle => 0,
+            CharacterAnimationState::AttackOne => 3,
+            CharacterAnimationState::Walk => 6,
+            CharacterAnimationState::AttackTwo => 12,
+            CharacterAnimationState::Cheer => 15,
+            CharacterAnimationState::Magic => 18,
+            CharacterAnimationState::Bow => 21,
+            CharacterAnimationState::Crouch => 24,
+            CharacterAnimationState::Hit => 36,
+            CharacterAnimationState::Status => 42,
+            CharacterAnimationState::Item => 48,
+        };
+
+        (&self.sprites, self.get_sprite_sheet_rect_for_index(sprite_index + offset))
     }
 }
 
@@ -96,14 +89,9 @@ impl Sprite for DetailedCharacter {
     fn draw(&self, canvas: &mut RenderCanvas, screen_position: SDLPoint, state: u32, frame: u64) -> BoxResult<()> {
         if let Some(state) = CharacterAnimationState::from_u32(state) {
             let screen_rect = SDLRect::from_center(screen_position, 96, 96);
-            canvas.copy(self.get_texture(&state, frame), SDLRect::new(0, 0, 96, 96), screen_rect)?;
+            let (texture, texture_rect) = self.get_texture(&state, frame);
+            canvas.copy(texture, texture_rect, screen_rect)?;
         }
         Ok(())
     }
-}
-
-pub fn get_single_name(folder: &str, description: &SpriteFolderDescription) -> String {
-    Path::new(&folder)
-        .join(format!("{}_{}_down.png", description.set, description.character))
-        .stringify_owned()
 }

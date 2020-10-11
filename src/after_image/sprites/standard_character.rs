@@ -30,7 +30,7 @@ impl StandardCharacter {
         // This is not generic enough
         let folder = Path::new(&description.base_folder)
             .join("monsters")
-            .join(format!("{}{}", &description.character, ".png"))
+            .join(format!("{}.png", &description.name))
             .stringify_owned();
 
         Ok(StandardCharacter {
