@@ -52,16 +52,25 @@ impl PlayerComponent {
 pub struct CharacterInfoComponent {
     pub name: String,
     pub defenses: Defenses,
-    pub skill_power: u32,
 }
 
 impl CharacterInfoComponent {
-    pub fn init(name: &str, defenses: Defenses, skill_power: u32) -> CharacterInfoComponent {
+    pub fn init(name: &str, defenses: Defenses) -> CharacterInfoComponent {
         CharacterInfoComponent {
             name: name.to_string(),
             defenses,
-            skill_power,
         }
+    }
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct SkillPowerComponent {
+    pub skill_power: u32,
+}
+
+impl SkillPowerComponent {
+    pub fn init(skill_power: u32) -> SkillPowerComponent {
+        SkillPowerComponent { skill_power }
     }
 }
 
@@ -325,6 +334,7 @@ pub fn create_world() -> World {
     ecs.register::<PlayerComponent>();
     ecs.register::<CharacterInfoComponent>();
     ecs.register::<TemperatureComponent>();
+    ecs.register::<SkillPowerComponent>();
     ecs.register::<MapComponent>();
     ecs.register::<FrameComponent>();
     ecs.register::<TimeComponent>();

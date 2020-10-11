@@ -424,7 +424,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
 }
 
 fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target: Option<Point>) {
-    let skill_power = ecs.read_storage::<CharacterInfoComponent>().get(invoker).map(|c| c.skill_power).unwrap_or(0);
+    let skill_power = ecs.read_storage::<SkillPowerComponent>().get(invoker).map(|c| c.skill_power).unwrap_or(0);
 
     match effect {
         SkillEffect::Move => {
@@ -1248,7 +1248,7 @@ mod tests {
     fn skill_power() {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_character(4, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).skill_power = 1;
+        ecs.write_storage::<SkillPowerComponent>().grab_mut(player).skill_power = 1;
 
         let target = find_at(&ecs, 4, 2);
         let starting_health = ecs.get_defenses(target).health;
