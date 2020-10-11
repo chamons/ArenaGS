@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyMutECS, Point};
+use crate::atlas::prelude::*;
 use crate::clash::EventCoordinator;
 
 bitflags! {
@@ -212,7 +212,6 @@ pub fn regen_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::atlas::EasyMutECS;
 
     #[test]
     fn knockback() {

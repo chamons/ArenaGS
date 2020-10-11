@@ -2,7 +2,7 @@ use specs::prelude::*;
 use std::collections::HashMap;
 
 use super::super::*;
-use crate::atlas::{EasyMutECS, EasyMutWorld};
+use crate::atlas::prelude::*;
 use crate::sequence;
 
 pub fn setup_gunslinger(ecs: &mut World, invoker: Entity) {
@@ -320,7 +320,6 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::atlas::EasyECS;
 
     #[test]
     fn gunslinger_starts_correctly() {

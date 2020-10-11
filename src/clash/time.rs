@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use specs::prelude::*;
 
 use super::{EventCoordinator, EventKind, TimeComponent};
-use crate::atlas::{EasyECS, EasyMutECS};
+use crate::atlas::prelude::*;
 
 pub const BASE_ACTION_COST: i32 = 100;
 pub const MOVE_ACTION_COST: i32 = BASE_ACTION_COST;

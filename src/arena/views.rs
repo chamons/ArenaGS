@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use crate::after_image::{LayoutChunkIcon, RenderCanvas};
-use crate::atlas::{BoxResult, Point};
+use crate::atlas::prelude::*;
 use crate::clash::StatusKind;
 
 mod character_overlay;

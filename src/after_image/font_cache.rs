@@ -3,7 +3,7 @@ use std::mem;
 use sdl2::render::Texture;
 
 use super::{FontColor, FontSize, RenderCanvas, TextRenderer};
-use crate::atlas::BoxResult;
+use crate::atlas::prelude::*;
 
 const CACHE_SIZE: usize = 32;
 

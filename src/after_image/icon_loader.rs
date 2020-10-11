@@ -4,9 +4,10 @@ use std::path::Path;
 
 use sdl2::render::Texture;
 
-use crate::after_image::{load_image, RenderContext};
+use crate::after_image::prelude::*;
 
-use crate::atlas::{get_exe_folder, BoxResult, EasyPath};
+use crate::atlas::get_exe_folder;
+use crate::atlas::prelude::*;
 
 // IconLoader lazily loads on first access. This means consumers must
 // all get all all relevant images outside of a render loop (else we die)

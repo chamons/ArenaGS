@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use super::{render_text_layout, HitTestResult, TextHitTester, View};
 use crate::after_image::*;
-use crate::atlas::{BoxResult, Point, SizedPoint};
+use crate::atlas::prelude::*;
 use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
 
 enum HelpPopupSize {

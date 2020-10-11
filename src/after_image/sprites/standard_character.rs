@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use super::{Sprite, SpriteFolderDescription};
-use crate::after_image::{load_image, RenderCanvas, RenderContext};
-use crate::atlas::{BoxResult, EasyPath};
+use crate::after_image::prelude::*;
+use crate::atlas::prelude::*;
 
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;

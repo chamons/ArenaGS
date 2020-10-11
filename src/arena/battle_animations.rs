@@ -4,7 +4,7 @@ use super::components::*;
 use super::{add_animation, Animation};
 
 use crate::after_image::CharacterAnimationState;
-use crate::atlas::{EasyECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 pub fn battle_animation_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {

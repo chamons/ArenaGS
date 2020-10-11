@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{EasyECS, EasyMutECS, Point, SizedPoint};
+use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Copy)]
@@ -576,7 +576,6 @@ pub fn tick_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 mod tests {
     use super::super::{add_ticks, create_test_state, find_at, find_first_entity, get_ticks, wait_for_animations};
     use super::*;
-    use crate::atlas::{EasyMutWorld, SizedPoint};
     use assert_approx_eq::assert_approx_eq;
 
     #[test]

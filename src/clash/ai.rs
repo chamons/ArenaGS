@@ -7,7 +7,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, Point, SizedPoint};
+use crate::atlas::prelude::*;
 
 #[macro_export]
 macro_rules! try_behavior {
@@ -267,7 +267,6 @@ pub fn any_ally_without_buff_in_range(ecs: &World, enemy: Entity, buff: StatusKi
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyMutWorld, Point, SizedPoint};
 
     #[test]
     fn no_behavior() {

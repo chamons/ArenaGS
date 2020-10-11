@@ -1,5 +1,6 @@
 use super::{EventStatus, Scene};
-use crate::after_image::RenderContextHolder;
+use crate::after_image::prelude::*;
+
 pub enum StageDirection {
     Continue,
     NewGame(u32),

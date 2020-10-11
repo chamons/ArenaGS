@@ -110,7 +110,7 @@ fn apply_with_remain(to_apply: u32, pool: u32) -> (u32, u32) {
 mod tests {
     use super::super::*;
     use super::*;
-    use crate::atlas::{EasyECS, EasyMutECS, SizedPoint};
+    use crate::atlas::prelude::*;
 
     #[test]
     fn apply_remain() {

@@ -3,15 +3,13 @@ use std::path::Path;
 use num_derive::FromPrimitive;
 use num_enum::IntoPrimitive;
 use num_traits::FromPrimitive;
-
-use super::{sprite::load_set, SpriteFolderDescription};
-use crate::after_image::{load_image, RenderCanvas, RenderContext, Sprite};
-
-use crate::atlas::{BoxResult, EasyPath};
-
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
+
+use super::{sprite::load_set, SpriteFolderDescription};
+use crate::after_image::prelude::*;
+use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, IntoPrimitive, FromPrimitive)]

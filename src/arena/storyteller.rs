@@ -3,7 +3,7 @@ use std::rc::Rc;
 use specs::prelude::*;
 
 use super::battle_scene::BattleScene;
-use crate::after_image::{RenderContextHolder, TextRenderer};
+use crate::after_image::prelude::*;
 use crate::conductor::{EventStatus, StageDirection, Storyteller};
 
 pub struct ArenaStoryteller {}

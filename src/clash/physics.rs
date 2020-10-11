@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use super::*;
-use crate::atlas::{Direction, EasyECS, EasyMutECS, EasyMutWorld, Point, SizedPoint};
+use crate::atlas::prelude::*;
 
 // Begin the move itself, does not spend time
 pub fn begin_move(ecs: &mut World, entity: Entity, new_position: SizedPoint, action: PostMoveAction) {
@@ -232,7 +232,6 @@ pub fn find_clear_landing(ecs: &mut World, initial: &SizedPoint, entity: Option<
 mod tests {
     use super::create_test_state;
     use super::*;
-    use crate::atlas::{EasyMutWorld, SizedPoint};
     use assert_approx_eq::assert_approx_eq;
 
     #[test]

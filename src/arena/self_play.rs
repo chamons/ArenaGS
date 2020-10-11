@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use crate::atlas::SizedPoint;
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 pub fn take_player_action(ecs: &mut World) {

@@ -22,3 +22,5 @@ mod ecs;
 pub use ecs::*;
 
 pub type BoxResult<T> = Result<T, Box<dyn std::error::Error>>;
+
+pub mod prelude;

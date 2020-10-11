@@ -1,8 +1,8 @@
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 
-use crate::after_image::RenderCanvas;
-use crate::atlas::BoxResult;
+use crate::after_image::prelude::*;
+use crate::atlas::prelude::*;
 use crate::conductor::StageDirection;
 
 pub trait Scene {

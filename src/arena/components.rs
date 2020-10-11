@@ -11,7 +11,7 @@ pub use render::{RenderInfo, RenderOrder, SpriteKinds};
 
 use super::Animation;
 use super::BattleActionRequest;
-use crate::atlas::Point;
+use crate::atlas::prelude::*;
 use crate::clash::EventCoordinator;
 
 #[derive(Clone, Serialize, Deserialize)]

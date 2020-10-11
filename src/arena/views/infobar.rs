@@ -6,8 +6,9 @@ use specs::prelude::*;
 
 use super::view_components::{Frame, FrameKind};
 use super::{render_text_layout, HitTestResult, TextHitTester, View};
-use crate::after_image::{FontColor, FontSize, IconLoader, LayoutRequest, RenderCanvas, RenderContext, TextRenderer};
-use crate::atlas::BoxResult;
+use crate::after_image::prelude::*;
+use crate::after_image::LayoutRequest;
+use crate::atlas::prelude::*;
 use crate::clash::{find_enemies, find_player, summarize_character};
 
 pub struct InfoBarView {

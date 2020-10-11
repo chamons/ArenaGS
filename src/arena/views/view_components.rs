@@ -4,8 +4,8 @@ use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::{HitTestResult, View};
-use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
-use crate::atlas::BoxResult;
+use crate::after_image::prelude::*;
+use crate::atlas::prelude::*;
 
 pub struct Frame {
     position: SDLPoint,

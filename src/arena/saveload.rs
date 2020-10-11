@@ -10,7 +10,7 @@ use specs::saveload::{DeserializeComponents, MarkedBuilder, SerializeComponents,
 use specs_derive::Component;
 
 use super::components::*;
-use crate::atlas::{BoxResult, ToSerialize};
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 // Lovingly borrowed from https://bfnightly.bracketproductions.com/rustbook/chapter_11.html
@@ -180,7 +180,6 @@ fn load(data: String) -> BoxResult<World> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::atlas::Point;
 
     #[test]
     fn save_load_smoke() {

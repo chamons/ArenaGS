@@ -10,8 +10,8 @@ use super::super::{battle_actions, AnimationComponent, SpriteLoader};
 use super::view_components::{Frame, FrameKind};
 use super::{CharacterOverlay, HitTestResult, View};
 
-use crate::after_image::{IconLoader, RenderCanvas, RenderContext};
-use crate::atlas::{BoxResult, Point};
+use crate::after_image::prelude::*;
+use crate::atlas::prelude::*;
 use crate::clash::*;
 
 pub struct MapView {
