@@ -279,9 +279,10 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
         return StageDirection::BattlePlayerDeath("This is where detailed death info goes".to_string());
     }
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let character_infos = ecs.read_storage::<IsCharacterComponent>();
     let player = ecs.read_storage::<PlayerComponent>();
 
+    // ALLIES_TODO - https://github.com/chamons/ArenaGS/issues/201
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
         return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GamePhaseComponent>().phase + 1);

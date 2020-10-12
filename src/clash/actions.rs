@@ -12,11 +12,11 @@ pub fn find_player(ecs: &World) -> Entity {
 
 pub fn find_enemies(ecs: &World) -> Vec<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
     let players = ecs.read_storage::<PlayerComponent>();
 
     let mut enemies = vec![];
-    for (entity, _, player) in (&entities, &char_infos, (&players).maybe()).join() {
+    for (entity, _, player) in (&entities, &is_characters, (&players).maybe()).join() {
         if player.is_none() {
             enemies.push(entity);
         }

@@ -89,7 +89,8 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
     ecs.create_entity()
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init("TestCharacter"))
+        .with(IsCharacterComponent::init())
+        .with(NamedComponent::init("TestCharacter"))
         .with(DefenseComponent::init(Defenses::just_health(10)))
         .with(SkillPowerComponent::init(0))
         .with(TemperatureComponent::init(Temperature::init()))
@@ -136,14 +137,14 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
 #[allow(dead_code)]
 pub fn dump_all_position(ecs: &World) {
     let positions = ecs.read_storage::<PositionComponent>();
-    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
     let orb_components = ecs.read_storage::<OrbComponent>();
     let attack_components = ecs.read_storage::<AttackComponent>();
     let fields = ecs.read_storage::<FieldComponent>();
     let times = ecs.read_storage::<TimeComponent>();
-    for (position, char_info, orb, attack, field, time) in (
+    for (position, is_character, orb, attack, field, time) in (
         &positions,
-        (&char_infos).maybe(),
+        (&is_characters).maybe(),
         (&orb_components).maybe(),
         (&attack_components).maybe(),
         (&fields).maybe(),
@@ -152,7 +153,7 @@ pub fn dump_all_position(ecs: &World) {
         .join()
     {
         let mut description = format!("{}", position.position);
-        if char_info.is_some() {
+        if is_character.is_some() {
             description.push_str(" (Char)");
         }
         if orb.is_some() {

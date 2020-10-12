@@ -48,14 +48,23 @@ impl PlayerComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct IsCharacterComponent {}
+
+impl IsCharacterComponent {
+    pub fn init() -> IsCharacterComponent {
+        IsCharacterComponent {}
+    }
+}
+
 #[derive(Component, ConvertSaveload, Clone)]
-pub struct CharacterInfoComponent {
+pub struct NamedComponent {
     pub name: String,
 }
 
-impl CharacterInfoComponent {
-    pub fn init(name: &str) -> CharacterInfoComponent {
-        CharacterInfoComponent { name: name.to_string() }
+impl NamedComponent {
+    pub fn init(name: &str) -> NamedComponent {
+        NamedComponent { name: name.to_string() }
     }
 }
 
@@ -339,10 +348,11 @@ pub fn create_world() -> World {
     ecs.register::<PositionComponent>();
     ecs.register::<FieldComponent>();
     ecs.register::<PlayerComponent>();
-    ecs.register::<CharacterInfoComponent>();
+    ecs.register::<IsCharacterComponent>();
     ecs.register::<TemperatureComponent>();
     ecs.register::<SkillPowerComponent>();
     ecs.register::<DefenseComponent>();
+    ecs.register::<NamedComponent>();
     ecs.register::<MapComponent>();
     ecs.register::<FrameComponent>();
     ecs.register::<TimeComponent>();
@@ -416,8 +426,8 @@ impl ShortInfo for World {
         self.read_storage::<TemperatureComponent>().grab(entity).temperature.clone()
     }
     fn get_name(&self, entity: Entity) -> Option<String> {
-        if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(entity) {
-            Some(character_info.name.to_string())
+        if let Some(named) = self.read_storage::<NamedComponent>().get(entity) {
+            Some(named.name.to_string())
         } else {
             None
         }
