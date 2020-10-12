@@ -193,8 +193,8 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
     ecs.write_storage::<AttackComponent>().remove(character);
 }
 
-pub fn begin_field(ecs: &mut World, source: Entity, target: Point, effect: FieldEffect, kind: FieldKind) {
-    ecs.shovel(source, FieldCastComponent::init(effect, kind, SizedPoint::from(target)));
+pub fn begin_field(ecs: &mut World, source: Entity, target: Point, effect: FieldEffect, name: &str, kind: FieldKind) {
+    ecs.shovel(source, FieldCastComponent::init(effect, name, kind, SizedPoint::from(target)));
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(source));
 }
 
@@ -246,7 +246,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 .iter()
                 .map(|p| (Some(*p), (r, g, b, 140)))
                 .collect();
-            spawner::create_damage_field(ecs, cast.target, attack, FieldComponent::init_group(fields));
+            spawner::create_damage_field(ecs, &cast.name, cast.target, attack, FieldComponent::init_group(fields));
         }
         FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
         FieldEffect::SustainedDamage(damage, duration) => {
@@ -259,7 +259,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
 
             let attack = AttackComponent::init(cast.target.origin, damage, AttackKind::DamageTick, Some(cast.target.origin));
             let fields = FieldComponent::init_single(r, g, b);
-            let field = spawner::create_sustained_damage_field(ecs, cast.target, attack, fields, duration);
+            let field = spawner::create_sustained_damage_field(ecs, &cast.name, cast.target, attack, fields, duration);
             tick_damage(ecs, field);
         }
     }
@@ -327,11 +327,12 @@ pub fn reap_killed(ecs: &mut World) {
     }
 }
 
-pub fn begin_orb(ecs: &mut World, source: Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32) {
+#[allow(clippy::too_many_arguments)]
+pub fn begin_orb(ecs: &mut World, source: Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32, name: &str) {
     let source_position = ecs.get_position(source);
     let path = source_position.line_to(target_position).unwrap();
     let path = extend_line_along_path(&path, duration);
-    ecs.shovel(source, OrbComponent::init(path, speed, duration));
+    ecs.shovel(source, OrbComponent::init(path, speed, duration, name));
     ecs.shovel(
         source,
         AttackComponent::init(target_position, strength, AttackKind::Orb(kind), Some(source_position.origin)),
@@ -356,7 +357,7 @@ pub fn start_orb(ecs: &mut World, source: Entity) {
     ecs.raise_event(EventKind::Orb(OrbState::Created), Some(orb));
 }
 
-// Apply orb can damage enties not on it's exact location
+// Apply orb can damage entities not on it's exact location
 // if it will run into them this turn
 pub fn apply_orb(ecs: &mut World, orb: Entity, point: Point) {
     let attack = ecs.read_storage::<AttackComponent>().grab(orb).clone();
@@ -521,7 +522,14 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
+        begin_field(
+            &mut ecs,
+            player,
+            Point::init(2, 3),
+            FieldEffect::Damage(Damage::init(1), 0),
+            "TestField",
+            FieldKind::Fire,
+        );
         wait_for_animations(&mut ecs);
 
         assert!(get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -535,7 +543,14 @@ mod tests {
         // Some conditions, like flying can remove position temporarly. They should still be able to make fields
         ecs.write_storage::<PositionComponent>().remove(player);
 
-        begin_field(&mut ecs, player, Point::init(2, 3), FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire);
+        begin_field(
+            &mut ecs,
+            player,
+            Point::init(2, 3),
+            FieldEffect::Damage(Damage::init(1), 0),
+            "TestField",
+            FieldKind::Fire,
+        );
         wait_for_animations(&mut ecs);
 
         assert!(get_field_at(&ecs, &Point::init(2, 3)).is_some());
@@ -648,7 +663,7 @@ mod tests {
         let target = find_at(&ecs, 2, 6);
         let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -666,7 +681,7 @@ mod tests {
         let target = find_at(&ecs, 2, 6);
         let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 10, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         assert_orb_at_position(&ecs, Point::init(2, 3));
 
@@ -682,7 +697,7 @@ mod tests {
         let target = find_at(&ecs, 2, 6);
         let starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -709,7 +724,7 @@ mod tests {
         let target_starting_health = ecs.get_defenses(target).health;
         let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -738,7 +753,7 @@ mod tests {
         let target_starting_health = ecs.get_defenses(target).health;
         let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 7), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -763,7 +778,7 @@ mod tests {
         let target_starting_health = ecs.get_defenses(target).health;
         let bystander_starting_health = ecs.get_defenses(bystander).health;
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -787,7 +802,7 @@ mod tests {
         let enemy = find_at(&ecs, 2, 6);
         let player_starting_health = ecs.get_defenses(player).health;
 
-        begin_orb(&mut ecs, enemy, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, enemy, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         new_turn_wait_characters(&mut ecs);
@@ -818,7 +833,7 @@ mod tests {
 
         let target_starting_health = ecs.get_defenses(target).health;
 
-        begin_orb(&mut ecs, orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, orb_caster, Point::init(1, 7), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         begin_bolt(
@@ -868,6 +883,7 @@ mod tests {
             player,
             Point::init(2, 6),
             FieldEffect::SustainedDamage(Damage::init(1), 3),
+            "TestField",
             FieldKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -895,6 +911,7 @@ mod tests {
             player,
             Point::init(2, 5),
             FieldEffect::SustainedDamage(Damage::init(1), 3),
+            "TestField",
             FieldKind::Fire,
         );
         wait_for_animations(&mut ecs);

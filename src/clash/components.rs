@@ -247,11 +247,17 @@ pub struct OrbComponent {
     pub path: Vec<Point>,
     pub speed: u32,
     pub duration: u32,
+    pub name: String,
 }
 
 impl OrbComponent {
-    pub fn init(path: Vec<Point>, speed: u32, duration: u32) -> OrbComponent {
-        OrbComponent { path, speed, duration }
+    pub fn init(path: Vec<Point>, speed: u32, duration: u32, name: &str) -> OrbComponent {
+        OrbComponent {
+            path,
+            speed,
+            duration,
+            name: name.to_string(),
+        }
     }
 }
 
@@ -291,13 +297,19 @@ impl SkipRenderComponent {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct FieldCastComponent {
     pub effect: FieldEffect,
+    pub name: String,
     pub kind: FieldKind,
     pub target: SizedPoint,
 }
 
 impl FieldCastComponent {
-    pub fn init(effect: FieldEffect, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
-        FieldCastComponent { effect, kind, target }
+    pub fn init(effect: FieldEffect, name: &str, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
+        FieldCastComponent {
+            effect,
+            name: name.to_string(),
+            kind,
+            target,
+        }
     }
 }
 

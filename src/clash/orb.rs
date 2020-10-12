@@ -82,7 +82,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
@@ -95,7 +95,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 4);
         assert_field_exists(&ecs, 2, 5);
@@ -112,7 +112,7 @@ mod tests {
             .build();
         let invoker = find_at(&ecs, 2, 6);
 
-        begin_orb(&mut ecs, invoker, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, invoker, Point::init(2, 2), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         assert_field_exists(&ecs, 2, 3);
         assert_field_exists(&ecs, 2, 2);
@@ -124,7 +124,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 8, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         new_turn_wait_characters(&mut ecs);
         assert_field_count(&ecs, 0);
@@ -135,7 +135,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 10, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
 
         for _ in 0..2 {
@@ -154,7 +154,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 3, 0).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 3), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 3), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
     }
 
@@ -165,7 +165,7 @@ mod tests {
         let mut ecs = create_test_state().with_player(2, 2, 0).with_map().build();
 
         let player = find_at(&ecs, 2, 2);
-        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         dump_all_position(&ecs);
 
@@ -183,7 +183,7 @@ mod tests {
 
         // Bolt #2 at (2,3)
         let player = find_at(&ecs, 2, 2);
-        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12);
+        begin_orb(&mut ecs, player, Point::init(2, 10), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
         wait_for_animations(&mut ecs);
         dump_all_position(&ecs);
 

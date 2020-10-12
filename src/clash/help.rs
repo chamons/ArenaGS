@@ -567,7 +567,7 @@ impl HelpInfo {
 
         HelpInfo::report_damage(&mut details, &attacks.grab(entity).damage);
 
-        HelpInfo::text_header("Field", details)
+        HelpInfo::text_header(&ecs.get_name(entity).unwrap_or_else(|| "Field".to_string()), details)
     }
 
     pub fn find_orb(ecs: &World, entity: Entity) -> HelpInfo {
@@ -578,7 +578,7 @@ impl HelpInfo {
 
         HelpInfo::report_damage(&mut details, &attack.damage);
 
-        HelpInfo::text_header("Orb Projectile", details)
+        HelpInfo::text_header(&ecs.get_name(entity).unwrap_or_else(|| "Orb Projectile".to_string()), details)
     }
 }
 
