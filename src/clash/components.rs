@@ -48,22 +48,56 @@ impl PlayerComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct IsCharacterComponent {}
+
+impl IsCharacterComponent {
+    pub fn init() -> IsCharacterComponent {
+        IsCharacterComponent {}
+    }
+}
+
 #[derive(Component, ConvertSaveload, Clone)]
-pub struct CharacterInfoComponent {
+pub struct NamedComponent {
     pub name: String,
+}
+
+impl NamedComponent {
+    pub fn init(name: &str) -> NamedComponent {
+        NamedComponent { name: name.to_string() }
+    }
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct DefenseComponent {
     pub defenses: Defenses,
-    pub temperature: Temperature,
+}
+
+impl DefenseComponent {
+    pub fn init(defenses: Defenses) -> DefenseComponent {
+        DefenseComponent { defenses }
+    }
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct SkillPowerComponent {
     pub skill_power: u32,
 }
 
-impl CharacterInfoComponent {
-    pub fn init(name: &str, defenses: Defenses, temperature: Temperature, skill_power: u32) -> CharacterInfoComponent {
-        CharacterInfoComponent {
-            name: name.to_string(),
-            defenses,
-            temperature,
-            skill_power,
-        }
+impl SkillPowerComponent {
+    pub fn init(skill_power: u32) -> SkillPowerComponent {
+        SkillPowerComponent { skill_power }
+    }
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct TemperatureComponent {
+    pub temperature: Temperature,
+}
+
+impl TemperatureComponent {
+    pub fn init(temperature: Temperature) -> TemperatureComponent {
+        TemperatureComponent { temperature }
     }
 }
 
@@ -314,7 +348,11 @@ pub fn create_world() -> World {
     ecs.register::<PositionComponent>();
     ecs.register::<FieldComponent>();
     ecs.register::<PlayerComponent>();
-    ecs.register::<CharacterInfoComponent>();
+    ecs.register::<IsCharacterComponent>();
+    ecs.register::<TemperatureComponent>();
+    ecs.register::<SkillPowerComponent>();
+    ecs.register::<DefenseComponent>();
+    ecs.register::<NamedComponent>();
     ecs.register::<MapComponent>();
     ecs.register::<FrameComponent>();
     ecs.register::<TimeComponent>();
@@ -382,14 +420,14 @@ impl ShortInfo for World {
         self.read_storage::<PositionComponent>().grab(entity).position
     }
     fn get_defenses(&self, entity: Entity) -> Defenses {
-        self.read_storage::<CharacterInfoComponent>().grab(entity).defenses.clone()
+        self.read_storage::<DefenseComponent>().grab(entity).defenses.clone()
     }
     fn get_temperature(&self, entity: Entity) -> Temperature {
-        self.read_storage::<CharacterInfoComponent>().grab(entity).temperature.clone()
+        self.read_storage::<TemperatureComponent>().grab(entity).temperature.clone()
     }
     fn get_name(&self, entity: Entity) -> Option<String> {
-        if let Some(character_info) = self.read_storage::<CharacterInfoComponent>().get(entity) {
-            Some(character_info.name.to_string())
+        if let Some(named) = self.read_storage::<NamedComponent>().get(entity) {
+            Some(named.name.to_string())
         } else {
             None
         }

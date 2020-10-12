@@ -5,7 +5,7 @@ use std::io::Write;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{BehaviorComponent, CharacterInfoComponent, FieldComponent, OrbComponent, PlayerComponent, PositionComponent};
+use super::{BehaviorComponent, FieldComponent, IsCharacterComponent, OrbComponent, PlayerComponent, PositionComponent};
 use crate::atlas::prelude::*;
 
 pub const MAX_MAP_TILES: u32 = crate::atlas::MAX_POINT_SIZE;
@@ -64,14 +64,14 @@ pub enum MapHitTestResult {
 pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResult {
     let positions = ecs.read_storage::<PositionComponent>();
     let orbs = ecs.read_storage::<OrbComponent>();
-    let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
     let player = ecs.read_storage::<PlayerComponent>();
     let fields = ecs.read_storage::<FieldComponent>();
     let behaviors = ecs.read_storage::<BehaviorComponent>();
 
-    for (position, character, player, orb, field, behavior) in (
+    for (position, is_character, player, orb, field, behavior) in (
         &positions,
-        (&character_infos).maybe(),
+        (&is_characters).maybe(),
         (&player).maybe(),
         (&orbs).maybe(),
         (&fields).maybe(),
@@ -80,7 +80,7 @@ pub fn element_at_location(ecs: &World, map_position: &Point) -> MapHitTestResul
         .join()
     {
         if position.position.contains_point(map_position) {
-            if let Some(_character) = character {
+            if is_character.is_some() {
                 if player.is_none() {
                     return MapHitTestResult::Enemy;
                 }

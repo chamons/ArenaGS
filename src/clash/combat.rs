@@ -304,12 +304,12 @@ pub fn reap_killed(ecs: &mut World) {
     let mut player_dead = false;
     {
         let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-        let character_infos = ecs.read_storage::<CharacterInfoComponent>();
+        let defenses = ecs.read_storage::<DefenseComponent>();
         let players = ecs.read_storage::<PlayerComponent>();
 
-        for (entity, character_info, player) in (&entities, &character_infos, (&players).maybe()).join() {
-            if character_info.defenses.health == 0 {
-                // We do not remove the player on death, as the UI assumes existance (and may paint before tick)
+        for (entity, defense, player) in (&entities, &defenses, (&players).maybe()).join() {
+            if defense.defenses.health == 0 {
+                // We do not remove the player on death, as the UI assumes existence (and may paint before tick)
                 if player.is_some() {
                     player_dead = true;
                 } else {

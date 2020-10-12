@@ -56,7 +56,7 @@ pub fn point_in_direction(initial: &SizedPoint, direction: Direction) -> Option<
     }
 }
 
-// Is an area clear of all elements with PositionComponent and CharacterInfoComponent _except_ the invoker (if)
+// Is an area clear of all elements with PositionComponent and IsCharacterComponent _except_ the invoker (if)
 pub fn is_area_clear_of_others(ecs: &World, area: &[Point], invoker: Entity) -> bool {
     is_area_clear(ecs, area, Some(invoker))
 }
@@ -64,10 +64,10 @@ pub fn is_area_clear_of_others(ecs: &World, area: &[Point], invoker: Entity) -> 
 pub fn is_area_clear(ecs: &World, area: &[Point], invoker: Option<Entity>) -> bool {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
-    let char_info = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
     let map = &ecs.read_resource::<MapComponent>().map;
 
-    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+    for (entity, position, _) in (&entities, &positions, &is_characters).join() {
         for p in area.iter() {
             if !p.is_in_bounds() || !map.is_walkable(&p) {
                 return false;
@@ -95,9 +95,9 @@ pub fn find_entity_at_location(ecs: &World, area: Point) -> Option<Entity> {
 pub fn find_character_at_location(ecs: &World, area: Point) -> Option<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let positions = ecs.read_storage::<PositionComponent>();
-    let char_info = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
 
-    for (entity, position, _) in (&entities, &positions, &char_info).join() {
+    for (entity, position, _) in (&entities, &positions, &is_characters).join() {
         if position.position.contains_point(&area) {
             return Some(entity);
         }
@@ -141,10 +141,10 @@ pub fn find_field_at_location(ecs: &World, target: &SizedPoint) -> Option<Entity
 
 pub fn find_all_characters(ecs: &World) -> Vec<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
-    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
 
     let mut all = vec![];
-    for (entity, _) in (&entities, &char_infos).join() {
+    for (entity, _) in (&entities, &is_characters).join() {
         all.push(entity);
     }
     all

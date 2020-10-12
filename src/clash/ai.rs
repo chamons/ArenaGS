@@ -326,7 +326,7 @@ mod tests {
             damage_source,
             AttackComponent::init(Point::init(2, 2), Damage::init(1), AttackKind::DamageTick, Some(Point::init(2, 2))),
         );
-        ecs.write_storage::<CharacterInfoComponent>().remove(damage_source);
+        ecs.write_storage::<IsCharacterComponent>().remove(damage_source);
 
         for _ in 0..2 {
             let target_health = ecs.get_defenses(player).health;

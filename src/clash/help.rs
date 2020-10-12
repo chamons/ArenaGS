@@ -595,9 +595,9 @@ fn top_level_topics() -> Vec<&'static str> {
 }
 
 pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effect: bool, use_links: bool, mut on_text: impl FnMut(&str) + 'a) {
-    let char_infos = &ecs.read_storage::<CharacterInfoComponent>();
-    let char_info = char_infos.grab(entity);
-    let defenses = &char_info.defenses;
+    let defense_components = &ecs.read_storage::<DefenseComponent>();
+    let defence_component = defense_components.grab(entity);
+    let defenses = &defence_component.defenses;
 
     let linkify = |s: &str| -> String {
         if use_links {
@@ -645,7 +645,7 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         }
     }
 
-    let temperature = char_info.temperature.current_temperature();
+    let temperature = ecs.read_storage::<TemperatureComponent>().grab(entity).temperature.current_temperature();
     if temperature != 0 {
         on_text(&format!("{}: {:.2}", linkify("Temperature"), temperature));
     }

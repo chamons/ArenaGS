@@ -89,7 +89,11 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
     ecs.create_entity()
         .with(TimeComponent::init(time))
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init("TestCharacter", Defenses::just_health(10), Temperature::init(), 0))
+        .with(IsCharacterComponent::init())
+        .with(NamedComponent::init("TestCharacter"))
+        .with(DefenseComponent::init(Defenses::just_health(10)))
+        .with(SkillPowerComponent::init(0))
+        .with(TemperatureComponent::init(Temperature::init()))
         .with(SkillResourceComponent::init(&[]))
         .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
@@ -98,14 +102,14 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
 }
 
 pub fn set_temperature(ecs: &mut World, player: Entity, temperature: i32) {
-    ecs.write_storage::<CharacterInfoComponent>()
+    ecs.write_storage::<TemperatureComponent>()
         .grab_mut(player)
         .temperature
         .set_temperature(temperature);
 }
 
 pub fn set_health(ecs: &mut World, player: Entity, health: u32) {
-    ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses = Defenses::just_health(health);
+    ecs.write_storage::<DefenseComponent>().grab_mut(player).defenses = Defenses::just_health(health);
 }
 
 // This can be dangerous, if something invalidates the entity reference
@@ -133,14 +137,14 @@ pub fn new_turn_wait_characters(ecs: &mut World) {
 #[allow(dead_code)]
 pub fn dump_all_position(ecs: &World) {
     let positions = ecs.read_storage::<PositionComponent>();
-    let char_infos = ecs.read_storage::<CharacterInfoComponent>();
+    let is_characters = ecs.read_storage::<IsCharacterComponent>();
     let orb_components = ecs.read_storage::<OrbComponent>();
     let attack_components = ecs.read_storage::<AttackComponent>();
     let fields = ecs.read_storage::<FieldComponent>();
     let times = ecs.read_storage::<TimeComponent>();
-    for (position, char_info, orb, attack, field, time) in (
+    for (position, is_character, orb, attack, field, time) in (
         &positions,
-        (&char_infos).maybe(),
+        (&is_characters).maybe(),
         (&orb_components).maybe(),
         (&attack_components).maybe(),
         (&fields).maybe(),
@@ -149,7 +153,7 @@ pub fn dump_all_position(ecs: &World) {
         .join()
     {
         let mut description = format!("{}", position.position);
-        if char_info.is_some() {
+        if is_character.is_some() {
             description.push_str(" (Char)");
         }
         if orb.is_some() {

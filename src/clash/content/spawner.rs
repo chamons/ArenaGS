@@ -11,7 +11,11 @@ pub fn player(ecs: &mut World, position: Point) {
     let player = ecs
         .create_entity()
         .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
-        .with(CharacterInfoComponent::init("Player", Defenses::init(2, 0, 0, 20), Temperature::init(), 0))
+        .with(IsCharacterComponent::init())
+        .with(NamedComponent::init("Player"))
+        .with(DefenseComponent::init(Defenses::init(2, 0, 0, 20)))
+        .with(SkillPowerComponent::init(0))
+        .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
         .with(SkillsComponent::init(&[]))
@@ -38,7 +42,11 @@ fn create_monster(
     let monster = ecs
         .create_entity()
         .with(PositionComponent::init(position))
-        .with(CharacterInfoComponent::init(name, defenses, Temperature::init(), skill_power))
+        .with(IsCharacterComponent::init())
+        .with(NamedComponent::init(name))
+        .with(DefenseComponent::init(defenses))
+        .with(SkillPowerComponent::init(skill_power))
+        .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(BehaviorComponent::init(behavior_kind))
         .with(TimeComponent::init(0))
@@ -58,7 +66,7 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::init(0, 0, 40 + 10 * difficulty, 40),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[(AmmoKind::Charge, 60, 100)]),
-        difficulty,
+        0,
     );
 }
 
@@ -71,7 +79,7 @@ pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::just_health(40 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
-        difficulty,
+        0,
     );
 }
 
@@ -84,7 +92,7 @@ pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::init(0, 0, 30 + 10 * difficulty, 10),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
-        difficulty,
+        0,
     );
 }
 
@@ -97,7 +105,7 @@ pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::init(1, 0, 0, 30 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
-        difficulty,
+        0,
     );
 }
 
@@ -110,7 +118,7 @@ pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::init(0, 1, 0, 30 + 10 * difficulty),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
-        difficulty,
+        0,
     );
 }
 
@@ -136,7 +144,7 @@ pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
         Defenses::just_health(150 + 20 * difficulty),
         SizedPoint::init_multi(position.x, position.y, 2, 2),
         SkillResourceComponent::init(&[(AmmoKind::Feathers, 4, 4), (AmmoKind::Eggs, 3, 3)]),
-        1 + difficulty,
+        1,
     );
 }
 
