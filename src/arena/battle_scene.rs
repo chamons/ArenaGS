@@ -69,16 +69,10 @@ impl BattleScene {
         }
         if cfg!(debug_assertions) {
             match keycode {
-                Keycode::D => {
-                    self.ecs
-                        .write_storage::<CharacterInfoComponent>()
-                        .grab_mut(find_player(&self.ecs))
-                        .defenses
-                        .health = 0
-                }
+                Keycode::D => self.ecs.write_storage::<DefenseComponent>().grab_mut(find_player(&self.ecs)).defenses.health = 0,
                 Keycode::K => {
                     for e in find_enemies(&self.ecs) {
-                        self.ecs.write_storage::<CharacterInfoComponent>().grab_mut(e).defenses.health = 0
+                        self.ecs.write_storage::<DefenseComponent>().grab_mut(e).defenses.health = 0
                     }
                 }
                 Keycode::N => {

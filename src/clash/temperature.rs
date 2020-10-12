@@ -211,7 +211,7 @@ mod tests {
         set_temperature(&mut ecs, player, TEMPERATURE_BURN_POINT + 20);
 
         // Set armor so high burning must pierce to do actual damage
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(player).defenses.armor = 100;
+        ecs.write_storage::<DefenseComponent>().grab_mut(player).defenses.armor = 100;
 
         let starting_health = ecs.get_defenses(player).health;
         add_ticks(&mut ecs, 100);

@@ -995,12 +995,12 @@ mod tests {
         let entity = find_at(&ecs, 2, 2);
         let mut defenses = Defenses::just_health(10);
         defenses.max_dodge = 5;
-        ecs.write_storage::<CharacterInfoComponent>().grab_mut(entity).defenses = defenses;
+        ecs.write_storage::<DefenseComponent>().grab_mut(entity).defenses = defenses;
 
         invoke_skill(&mut ecs, entity, "TestMove", Some(Point::init(3, 3)));
         wait_for_animations(&mut ecs);
 
-        let dodge = ecs.read_storage::<CharacterInfoComponent>().grab(entity).defenses.dodge;
+        let dodge = ecs.read_storage::<DefenseComponent>().grab(entity).defenses.dodge;
         assert_eq!(4, dodge);
     }
 
