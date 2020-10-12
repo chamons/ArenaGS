@@ -177,6 +177,7 @@ pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {
     ecs.create_entity()
         .with(PositionComponent::init(SizedPoint::from(position)))
+        .with(NamedComponent::init(&orb.name))
         .with(attack)
         .with(orb)
         .with(BehaviorComponent::init(BehaviorKind::Orb))
@@ -186,9 +187,10 @@ pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb
         .build()
 }
 
-pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, fields: FieldComponent) -> Entity {
+pub fn create_damage_field(ecs: &mut World, name: &str, position: SizedPoint, attack: AttackComponent, fields: FieldComponent) -> Entity {
     ecs.create_entity()
         .with(PositionComponent::init(position))
+        .with(NamedComponent::init(name))
         .with(attack)
         .with(BehaviorComponent::init(BehaviorKind::Explode))
         .with(fields)
@@ -197,9 +199,17 @@ pub fn create_damage_field(ecs: &mut World, position: SizedPoint, attack: Attack
         .build()
 }
 
-pub fn create_sustained_damage_field(ecs: &mut World, position: SizedPoint, attack: AttackComponent, fields: FieldComponent, duration: u32) -> Entity {
+pub fn create_sustained_damage_field(
+    ecs: &mut World,
+    name: &str,
+    position: SizedPoint,
+    attack: AttackComponent,
+    fields: FieldComponent,
+    duration: u32,
+) -> Entity {
     ecs.create_entity()
         .with(PositionComponent::init(position))
+        .with(NamedComponent::init(name))
         .with(attack)
         .with(BehaviorComponent::init(BehaviorKind::TickDamage))
         .with(fields)

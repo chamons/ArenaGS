@@ -420,10 +420,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
 
     gain_adrenaline(ecs, invoker, skill);
 
-    process_skill(ecs, invoker, &skill.effect, target);
+    process_skill(ecs, invoker, &skill.effect, target, skill.name);
 }
 
-fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target: Option<Point>) {
+fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target: Option<Point>, skill_name: &str) {
     let skill_power = ecs.read_storage::<SkillPowerComponent>().get(invoker).map(|c| c.skill_power).unwrap_or(0);
 
     match effect {
@@ -444,19 +444,26 @@ fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target:
         SkillEffect::Reload(kind) => reload(ecs, invoker, *kind, None),
         SkillEffect::ReloadSome(kind, amount) => reload(ecs, invoker, *kind, Some(*amount)),
         SkillEffect::ReloadSomeRandom(kind, amount) => reload_random(ecs, invoker, *kind, *amount),
-        SkillEffect::Field(effect, kind) => begin_field(ecs, invoker, target.unwrap(), *effect, *kind),
+        SkillEffect::Field(effect, kind) => begin_field(ecs, invoker, target.unwrap(), *effect, skill_name, *kind),
         SkillEffect::ReloadAndRotateAmmo() => content::gunslinger::rotate_ammo(ecs, invoker),
         SkillEffect::Buff(buff, duration) => {
             ecs.add_status(find_valid_buff_target(ecs, invoker, target), *buff, *duration);
         }
-        SkillEffect::Orb(damage, kind, speed, duration) => {
-            begin_orb(ecs, invoker, target.unwrap(), damage.more_strength(skill_power), *kind, *speed, *duration)
-        }
+        SkillEffect::Orb(damage, kind, speed, duration) => begin_orb(
+            ecs,
+            invoker,
+            target.unwrap(),
+            damage.more_strength(skill_power),
+            *kind,
+            *speed,
+            *duration,
+            skill_name,
+        ),
         SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, invoker, *kind),
         SkillEffect::Sequence(first, second) => {
-            process_skill(ecs, invoker, first, target);
-            process_skill(ecs, invoker, second, target);
+            process_skill(ecs, invoker, first, target, skill_name);
+            process_skill(ecs, invoker, second, target, skill_name);
         }
         SkillEffect::None => {}
     }
@@ -1318,5 +1325,24 @@ mod tests {
         invoke_skill(&mut ecs, player, "TestSequence", None);
         assert!(ecs.has_status(player, StatusKind::Armored));
         assert!(ecs.has_status(player, StatusKind::Aimed));
+    }
+
+    #[test]
+    fn orbs_and_fields_have_names() {
+        let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
+        let player = find_at(&ecs, 2, 2);
+
+        invoke_skill(&mut ecs, player, "TestField", Some(Point::init(3, 3)));
+        wait_for_animations(&mut ecs);
+        assert_eq!(
+            "TestField",
+            &ecs.get_name(find_field_at_location(&ecs, &SizedPoint::init(3, 3)).unwrap()).unwrap()
+        );
+
+        add_ticks(&mut ecs, 100);
+
+        invoke_skill(&mut ecs, player, "TestOrb", Some(Point::init(2, 0)));
+        wait_for_animations(&mut ecs);
+        assert_eq!("TestOrb", &ecs.get_name(find_orb_at_location(&ecs, &SizedPoint::init(2, 1)).unwrap()).unwrap());
     }
 }

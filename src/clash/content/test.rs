@@ -39,6 +39,14 @@ pub fn add_test_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         Some(1),
         false,
     ));
+    m.add_skill(SkillInfo::init_with_distance(
+        "TestOrb",
+        None,
+        TargetType::Any,
+        SkillEffect::Orb(Damage::init(1), OrbKind::Feather, 2, 8),
+        Some(5),
+        false,
+    ));
     m.add_skill(SkillInfo::init("TestAmmo", None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 1));
     m.add_skill(SkillInfo::init("TestMultiAmmo", None, TargetType::None, SkillEffect::None).with_ammo(AmmoKind::Bullets, 3));
     m.add_skill(SkillInfo::init("TestReload", None, TargetType::None, SkillEffect::Reload(AmmoKind::Bullets)));
