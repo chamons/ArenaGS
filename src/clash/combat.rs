@@ -327,6 +327,7 @@ pub fn reap_killed(ecs: &mut World) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn begin_orb(ecs: &mut World, source: Entity, target_position: Point, strength: Damage, kind: OrbKind, speed: u32, duration: u32, name: &str) {
     let source_position = ecs.get_position(source);
     let path = source_position.line_to(target_position).unwrap();
