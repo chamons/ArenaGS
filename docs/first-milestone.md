@@ -10,9 +10,7 @@ I plan on extending it to include a few folks from work who's expressed interest
 
 The plan is to get a small number of people (less than ten) to try out what I've made so far and provide frank and honest feedback.
 
-Here's the video of current game play:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wfEVKsZMoPs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+Here's the [video of current game play](https://www.youtube.com/watch?v=wfEVKsZMoPs&t=3s).
 
 ## What's next?
 
