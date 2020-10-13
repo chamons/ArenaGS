@@ -4,6 +4,7 @@ Inspired by the [best game development blog ever](https://factorio.com/blog/), t
 
 I hope to have at least a monthly updates cadence. 
 
+- [Progress to Progression](progression.md) [10/12/2020]
 - [First Milestone](first-milestone.md) [10/11/2020]
 - [Help I Need Somebody](help-i-need-somebody.md) [10/4/2020]
 - [Playing One's Self](playing-one-self.md) [9/15/2020]
