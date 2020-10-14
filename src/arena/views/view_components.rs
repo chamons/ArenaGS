@@ -1,3 +1,4 @@
+use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
@@ -54,28 +55,41 @@ impl View for Frame {
     }
 }
 
-type ButtonHandler = dyn Fn() -> Option<HitTestResult>;
+pub type EnabledHandler = dyn Fn(&World) -> bool;
+pub type ButtonHandler = dyn Fn() -> Option<HitTestResult>;
 
 pub struct Button {
     frame: SDLRect,
     background: Texture,
+    enabled: Box<EnabledHandler>,
     handler: Box<ButtonHandler>,
 }
 
-#[allow(dead_code)]
 impl Button {
-    pub fn init(frame: SDLRect, background: Texture, handler: impl Fn() -> Option<HitTestResult> + 'static) -> BoxResult<Button> {
+    pub fn init(
+        frame: SDLRect,
+        background: Texture,
+        enabled: impl Fn(&World) -> bool + 'static,
+        handler: impl Fn() -> Option<HitTestResult> + 'static,
+    ) -> BoxResult<Button> {
         Ok(Button {
             frame,
             background,
+            enabled: Box::new(enabled),
             handler: Box::new(handler),
         })
     }
 }
 
 impl View for Button {
-    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.copy(&self.background, None, self.frame)?;
+
+        if !(self.enabled)(ecs) {
+            canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
+            canvas.fill_rect(self.frame)?;
+        }
+
         Ok(())
     }
 

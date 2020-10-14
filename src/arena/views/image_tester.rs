@@ -23,6 +23,7 @@ impl ImageTesterScene {
             view: Box::new(super::view_components::Button::init(
                 SDLRect::new(20, 20, 60, 60),
                 IconLoader::init_icons().get(&render_context_holder.borrow(), "b_07_a.png")?,
+                |_| true,
                 || Some(super::HitTestResult::Tile(Point::init(0, 0))),
             )?),
         })
