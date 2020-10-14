@@ -16,7 +16,7 @@ debug_text_layout = []
 crash_reporting = ["sentry"]
 
 for_release = ["crash_reporting"]
-default = []
+default = ["image_tester"]
 #default = ["for_release"]
 
 [dependencies]

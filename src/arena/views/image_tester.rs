@@ -6,6 +6,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
+use super::view_components::*;
 use super::View;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -17,14 +18,18 @@ pub struct ImageTesterScene {
 }
 
 impl ImageTesterScene {
-    pub fn init(render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
         Ok(ImageTesterScene {
             ecs: World::new(),
-            view: Box::new(super::view_components::Button::init(
-                SDLRect::new(20, 20, 60, 60),
-                IconLoader::init_icons().get(&render_context_holder.borrow(), "b_07_a.png")?,
-                |_| true,
-                || Some(super::HitTestResult::Tile(Point::init(0, 0))),
+            view: Box::new(TabView::init(
+                SDLRect::new(20, 20, 600, 600),
+                &render_context_holder.borrow(),
+                text_renderer,
+                vec![
+                    TabButtonInfo::init("First", |_| true, || None),
+                    TabButtonInfo::init("Second", |_| true, || None),
+                    TabButtonInfo::init("Third", |_| true, || None),
+                ],
             )?),
         })
     }

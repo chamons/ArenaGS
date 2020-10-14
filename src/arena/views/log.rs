@@ -25,12 +25,7 @@ impl LogView {
         Ok(LogView {
             position,
             text,
-            frame: Frame::init(
-                SDLPoint::new(position.x() - 27, position.y() - 9),
-                render_context,
-                &IconLoader::init_ui(),
-                FrameKind::Log,
-            )?,
+            frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 9), render_context, FrameKind::Log)?,
             icons: IconCache::init(render_context, IconLoader::init_symbols(), &["plain-dagger.png"])?,
             hit_tester: RefCell::new(TextHitTester::init()),
         })
@@ -40,7 +35,7 @@ impl LogView {
         let log = &ecs.read_resource::<LogComponent>().log;
         let mut line_count = 0;
 
-        // Walk back countint until we hit LOG_SIZE lines
+        // Walk back counting until we hit LOG_SIZE lines
         for (i, l) in log.logs.iter().enumerate().rev() {
             let count = self.text.layout_text(&l, FontSize::Small, LayoutRequest::init(0, 0, 210, 0))?.line_count;
             if count + line_count > LOG_COUNT as u32 {

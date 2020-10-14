@@ -23,12 +23,7 @@ impl InfoBarView {
         Ok(InfoBarView {
             position,
             text,
-            frame: Frame::init(
-                SDLPoint::new(position.x() - 27, position.y() - 20),
-                render_context,
-                &IconLoader::init_ui(),
-                FrameKind::InfoBar,
-            )?,
+            frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 20), render_context, FrameKind::InfoBar)?,
             hit_tester: RefCell::new(TextHitTester::init()),
         })
     }
