@@ -44,7 +44,7 @@ impl Frame {
             FrameKind::InfoBar => (271, 541),
             FrameKind::Log => (271, 227),
             FrameKind::Map => (753, 768),
-            FrameKind::Button => (297, 140),
+            FrameKind::Button => (145, 42),
         }
     }
 }
@@ -116,7 +116,15 @@ impl View for Button {
             ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
             ButtonKind::Text(text, text_frame, text_renderer) => {
                 text_frame.render(ecs, canvas, frame)?;
-                text_renderer.render_text(text, self.frame.x() + 20, self.frame.y() + 20, canvas, FontSize::Bold, FontColor::White)?;
+                text_renderer.render_text_centered(
+                    text,
+                    self.frame.x(),
+                    self.frame.y() + 10,
+                    text_frame.frame_size().0,
+                    canvas,
+                    FontSize::Bold,
+                    FontColor::Brown,
+                )?;
             }
         };
 
@@ -128,7 +136,11 @@ impl View for Button {
         Ok(())
     }
 
-    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if !(self.enabled)(ecs) {
+            return None;
+        }
+
         if self.frame.contains_point(SDLPoint::new(x, y)) {
             (self.handler)()
         } else {
@@ -166,7 +178,7 @@ impl TabView {
             .enumerate()
             .map(|(i, b)| {
                 Button::text(
-                    SDLPoint::new(frame.x() + (300 * i as i32), frame.y()),
+                    SDLPoint::new(frame.x() + (75 + 150 * i as i32), frame.y()),
                     &b.text,
                     render_context,
                     text_renderer,
