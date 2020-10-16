@@ -172,13 +172,20 @@ pub struct TabView {
 }
 
 impl TabView {
-    pub fn init(frame: SDLRect, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut buttons: Vec<TabButtonInfo>) -> BoxResult<TabView> {
+    pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut buttons: Vec<TabButtonInfo>) -> BoxResult<TabView> {
+        //984, 728
+        let button_width: i32 = 150;
+        let tab_button_total_width = button_width * buttons.len() as i32;
+        let (canvas_width, canvas_height) = render_context.canvas.logical_size();
+        let tab_view_height = canvas_height as i32 - (corner.y() * 2);
+        let tab_view_width = canvas_width as i32 - (corner.x() * 2);
+        let tab_button_start = (tab_view_width - tab_button_total_width) / 2;
         let buttons: Vec<Button> = buttons
             .drain(0..)
             .enumerate()
             .map(|(i, b)| {
                 Button::text(
-                    SDLPoint::new(frame.x() + (75 + 150 * i as i32), frame.y()),
+                    SDLPoint::new(corner.x() + (tab_button_start + button_width * i as i32), corner.y()),
                     &b.text,
                     render_context,
                     text_renderer,
@@ -189,8 +196,8 @@ impl TabView {
             })
             .collect();
         Ok(TabView {
-            frame,
-            background: IconLoader::init_ui().get(render_context, "bg_04.png")?,
+            frame: SDLRect::new(corner.x(), corner.y(), tab_view_width as u32, tab_view_height as u32),
+            background: IconLoader::init_ui().get(render_context, "tab_background.png")?,
             buttons,
         })
     }

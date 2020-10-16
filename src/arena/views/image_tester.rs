@@ -3,7 +3,7 @@ use std::rc::Rc;
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect as SDLRect;
+use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::view_components::*;
@@ -22,7 +22,7 @@ impl ImageTesterScene {
         Ok(ImageTesterScene {
             ecs: World::new(),
             view: Box::new(TabView::init(
-                SDLRect::new(20, 20, 600, 600),
+                SDLPoint::new(20, 20),
                 &render_context_holder.borrow(),
                 text_renderer,
                 vec![
