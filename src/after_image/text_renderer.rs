@@ -10,6 +10,7 @@ use crate::atlas::get_exe_folder;
 use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub enum FontSize {
     Micro,
     VeryTiny,
@@ -25,6 +26,7 @@ pub enum FontColor {
     Black,
     White,
     Red,
+    Brown,
 }
 
 pub type Font = sdl2::ttf::Font<'static, 'static>;
@@ -99,6 +101,7 @@ impl TextRenderer {
             FontColor::Black => Color::RGB(0, 0, 0),
             FontColor::White => Color::RGB(255, 255, 255),
             FontColor::Red => Color::RGB(255, 0, 0),
+            FontColor::Brown => Color::RGB(73, 54, 41),
         };
 
         let surface = self.get_font(size).render(text).blended(color).map_err(|e| e.to_string())?;
@@ -121,5 +124,26 @@ impl TextRenderer {
         }
 
         Ok((width, height))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn render_text_centered(
+        &self,
+        text: &str,
+        x: i32,
+        y: i32,
+        text_render_width: u32,
+        canvas: &mut RenderCanvas,
+        size: FontSize,
+        color: FontColor,
+    ) -> BoxResult<(u32, u32)> {
+        let text_x = {
+            let mut cache = self.cache.borrow_mut();
+            let texture = cache.get(&self, canvas, size, color, text)?;
+            let TextureQuery { width, .. } = texture.query();
+            (text_render_width - width) / 2
+        };
+
+        self.render_text(text, x + text_x as i32, y, canvas, size, color)
     }
 }

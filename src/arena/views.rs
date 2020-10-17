@@ -30,6 +30,7 @@ pub enum HitTestResult {
     Status(StatusKind),
     BackButton,
     CloseButton,
+    Button,
     // Consider adding a check in lookup_hittest if we need it to display help
 }
 

@@ -9,6 +9,7 @@
         "keymod",
         "knockback",
         "lifebar",
+        "rgba",
         "rustc",
         "sdl",
         "type"

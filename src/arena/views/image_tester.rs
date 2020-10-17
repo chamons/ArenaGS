@@ -3,9 +3,10 @@ use std::rc::Rc;
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect as SDLRect;
+use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
+use super::view_components::*;
 use super::View;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -17,13 +18,41 @@ pub struct ImageTesterScene {
 }
 
 impl ImageTesterScene {
-    pub fn init(render_context_holder: &RenderContextHolder, _text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
+        let render_context = render_context_holder.borrow();
         Ok(ImageTesterScene {
             ecs: World::new(),
-            view: Box::new(super::view_components::Button::init(
-                SDLRect::new(20, 20, 60, 60),
-                IconLoader::init_icons().get(&render_context_holder.borrow(), "b_07_a.png")?,
-                || Some(super::HitTestResult::Tile(Point::init(0, 0))),
+            view: Box::new(TabView::init(
+                SDLPoint::new(20, 20),
+                &render_context,
+                text_renderer,
+                vec![
+                    TabInfo::init(
+                        "First",
+                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::InfoBar)?),
+                        |_| true,
+                    ),
+                    TabInfo::init(
+                        "Second",
+                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::Log)?),
+                        |_| true,
+                    ),
+                    TabInfo::init(
+                        "Third",
+                        Box::from(Button::text(
+                            SDLPoint::new(60, 60),
+                            "Click me!",
+                            &render_context,
+                            text_renderer,
+                            None,
+                            Some(Box::new(|| {
+                                println!("Button Pressed!");
+                                None
+                            })),
+                        )?),
+                        |_| true,
+                    ),
+                ],
             )?),
         })
     }

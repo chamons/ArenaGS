@@ -1,3 +1,7 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
@@ -17,27 +21,30 @@ pub enum FrameKind {
     InfoBar,
     Log,
     Map,
+    Button,
 }
 
 impl Frame {
-    pub fn init(position: SDLPoint, render_context: &RenderContext, loader: &IconLoader, kind: FrameKind) -> BoxResult<Frame> {
+    pub fn init(position: SDLPoint, render_context: &RenderContext, kind: FrameKind) -> BoxResult<Frame> {
         let image = match kind {
             FrameKind::InfoBar => "info_frame.png",
             FrameKind::Log => "log_frame.png",
             FrameKind::Map => "map_frame.png",
+            FrameKind::Button => "button_frame.png",
         };
         Ok(Frame {
             position,
-            frame: loader.get(render_context, image)?,
+            frame: IconLoader::init_ui().get(render_context, image)?,
             kind,
         })
     }
 
-    fn frame_size(&self) -> (u32, u32) {
+    pub fn frame_size(&self) -> (u32, u32) {
         match self.kind {
             FrameKind::InfoBar => (271, 541),
             FrameKind::Log => (271, 227),
             FrameKind::Map => (753, 768),
+            FrameKind::Button => (145, 42),
         }
     }
 }
@@ -54,37 +61,169 @@ impl View for Frame {
     }
 }
 
-type ButtonHandler = dyn Fn() -> Option<HitTestResult>;
+#[allow(dead_code)]
+pub enum ButtonKind {
+    Image(Texture),
+    Text(String, Frame, Rc<TextRenderer>),
+}
 
+pub type EnabledHandler = Box<dyn Fn(&World) -> bool + 'static>;
+pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult> + 'static>;
 pub struct Button {
     frame: SDLRect,
-    background: Texture,
-    handler: Box<ButtonHandler>,
+    kind: ButtonKind,
+    enabled: Option<Box<EnabledHandler>>,
+    handler: Option<Box<ButtonHandler>>,
 }
 
 #[allow(dead_code)]
 impl Button {
-    pub fn init(frame: SDLRect, background: Texture, handler: impl Fn() -> Option<HitTestResult> + 'static) -> BoxResult<Button> {
+    pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
         Ok(Button {
             frame,
-            background,
-            handler: Box::new(handler),
+            kind: ButtonKind::Image(image),
+            enabled: enabled.map(Box::new),
+            handler: handler.map(Box::new),
+        })
+    }
+
+    pub fn text(
+        corner: SDLPoint,
+        text: &str,
+        render_context: &RenderContext,
+        text_renderer: &Rc<TextRenderer>,
+        enabled: Option<EnabledHandler>,
+        handler: Option<ButtonHandler>,
+    ) -> BoxResult<Button> {
+        let text_frame = Frame::init(corner, render_context, FrameKind::Button)?;
+        let text_size = text_frame.frame_size();
+        Ok(Button {
+            frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
+            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
+            enabled: enabled.map(Box::new),
+            handler: handler.map(Box::new),
         })
     }
 }
 
 impl View for Button {
-    fn render(&self, _: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
-        canvas.copy(&self.background, None, self.frame)?;
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        match &self.kind {
+            ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
+            ButtonKind::Text(text, text_frame, text_renderer) => {
+                text_frame.render(ecs, canvas, frame)?;
+                text_renderer.render_text_centered(
+                    text,
+                    self.frame.x(),
+                    self.frame.y() + 10,
+                    text_frame.frame_size().0,
+                    canvas,
+                    FontSize::Bold,
+                    FontColor::Brown,
+                )?;
+            }
+        };
+
+        if !self.enabled.as_ref().map_or(true, |e| (e)(ecs)) {
+            canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
+            canvas.fill_rect(self.frame)?;
+        }
+
         Ok(())
     }
 
-    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if let Some(enabled) = &self.enabled {
+            if !(enabled)(ecs) {
+                return None;
+            }
+        }
+
         if self.frame.contains_point(SDLPoint::new(x, y)) {
-            (self.handler)()
+            if let Some(handler) = &self.handler {
+                (handler)()
+            } else {
+                Some(HitTestResult::Button)
+            }
         } else {
             None
         }
+    }
+}
+
+pub struct TabInfo {
+    text: String,
+    enabled: EnabledHandler,
+    view: Box<dyn View>,
+}
+
+#[allow(dead_code)]
+impl TabInfo {
+    pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
+        TabInfo {
+            text: text.to_string(),
+            view,
+            enabled: Box::new(enabled),
+        }
+    }
+}
+pub struct TabView {
+    frame: SDLRect,
+    background: Texture,
+    tabs: Vec<(Button, Box<dyn View>)>,
+    index: RefCell<usize>,
+}
+
+#[allow(dead_code)]
+impl TabView {
+    pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
+        let button_width: i32 = 150;
+        let tab_button_total_width = button_width * tabs.len() as i32;
+        let (canvas_width, canvas_height) = render_context.canvas.logical_size();
+        let tab_view_height = canvas_height as i32 - (corner.y() * 2);
+        let tab_view_width = canvas_width as i32 - (corner.x() * 2);
+        let tab_button_start = (tab_view_width - tab_button_total_width) / 2;
+        let tabs: Vec<(Button, Box<dyn View>)> = tabs
+            .drain(0..)
+            .enumerate()
+            .map(|(i, b)| {
+                let button = Button::text(
+                    SDLPoint::new(corner.x() + (tab_button_start + button_width * i as i32), corner.y()),
+                    &b.text,
+                    render_context,
+                    text_renderer,
+                    Some(Box::new(b.enabled)),
+                    None,
+                )
+                .expect("Unable to create TabView button");
+                (button, b.view)
+            })
+            .collect();
+        Ok(TabView {
+            frame: SDLRect::new(corner.x(), corner.y(), tab_view_width as u32, tab_view_height as u32),
+            background: IconLoader::init_ui().get(render_context, "tab_background.png")?,
+            tabs,
+            index: RefCell::new(0),
+        })
+    }
+}
+
+impl View for TabView {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        canvas.copy(&self.background, None, self.frame)?;
+        for (b, _) in &self.tabs {
+            b.render(ecs, canvas, frame)?;
+        }
+        self.tabs[*self.index.borrow()].1.render(ecs, canvas, frame)?;
+        Ok(())
+    }
+
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
+        if let Some(index) = tab_hit {
+            *self.index.borrow_mut() = index;
+        }
+        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
     }
 }
 
