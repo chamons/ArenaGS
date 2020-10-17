@@ -9,6 +9,7 @@ use super::{FontCache, FontContext, LayoutRequest, LayoutResult, RenderCanvas};
 use crate::atlas::get_exe_folder;
 use crate::atlas::prelude::*;
 
+#[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum FontSize {
     Micro,
@@ -125,6 +126,7 @@ impl TextRenderer {
         Ok((width, height))
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn render_text_centered(
         &self,
         text: &str,

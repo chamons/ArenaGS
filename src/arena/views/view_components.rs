@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::mem;
 use std::rc::Rc;
 
 use sdl2::pixels::Color;
@@ -62,6 +61,7 @@ impl View for Frame {
     }
 }
 
+#[allow(dead_code)]
 pub enum ButtonKind {
     Image(Texture),
     Text(String, Frame, Rc<TextRenderer>),
@@ -69,7 +69,6 @@ pub enum ButtonKind {
 
 pub type EnabledHandler = Box<dyn Fn(&World) -> bool + 'static>;
 pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult> + 'static>;
-
 pub struct Button {
     frame: SDLRect,
     kind: ButtonKind,
@@ -77,13 +76,14 @@ pub struct Button {
     handler: Option<Box<ButtonHandler>>,
 }
 
+#[allow(dead_code)]
 impl Button {
     pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
         Ok(Button {
             frame,
             kind: ButtonKind::Image(image),
-            enabled: enabled.map(|e| Box::new(e)),
-            handler: handler.map(|h| Box::new(h)),
+            enabled: enabled.map(Box::new),
+            handler: handler.map(Box::new),
         })
     }
 
@@ -100,8 +100,8 @@ impl Button {
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
             kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
-            enabled: enabled.map(|e| Box::new(e)),
-            handler: handler.map(|h| Box::new(h)),
+            enabled: enabled.map(Box::new),
+            handler: handler.map(Box::new),
         })
     }
 }
@@ -157,6 +157,7 @@ pub struct TabInfo {
     view: Box<dyn View>,
 }
 
+#[allow(dead_code)]
 impl TabInfo {
     pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
         TabInfo {
@@ -166,7 +167,6 @@ impl TabInfo {
         }
     }
 }
-
 pub struct TabView {
     frame: SDLRect,
     background: Texture,
@@ -174,6 +174,7 @@ pub struct TabView {
     index: RefCell<usize>,
 }
 
+#[allow(dead_code)]
 impl TabView {
     pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
         //984, 728
