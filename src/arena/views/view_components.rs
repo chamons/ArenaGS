@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::mem;
 use std::rc::Rc;
 
@@ -66,28 +67,23 @@ pub enum ButtonKind {
     Text(String, Frame, Rc<TextRenderer>),
 }
 
-pub type EnabledHandler = dyn Fn(&World) -> bool;
-pub type ButtonHandler = dyn Fn() -> Option<HitTestResult>;
+pub type EnabledHandler = Box<dyn Fn(&World) -> bool + 'static>;
+pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult> + 'static>;
 
 pub struct Button {
     frame: SDLRect,
     kind: ButtonKind,
-    enabled: Box<EnabledHandler>,
-    handler: Box<ButtonHandler>,
+    enabled: Option<Box<EnabledHandler>>,
+    handler: Option<Box<ButtonHandler>>,
 }
 
 impl Button {
-    pub fn image(
-        frame: SDLRect,
-        image: Texture,
-        enabled: impl Fn(&World) -> bool + 'static,
-        handler: impl Fn() -> Option<HitTestResult> + 'static,
-    ) -> BoxResult<Button> {
+    pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
         Ok(Button {
             frame,
             kind: ButtonKind::Image(image),
-            enabled: Box::new(enabled),
-            handler: Box::new(handler),
+            enabled: enabled.map(|e| Box::new(e)),
+            handler: handler.map(|h| Box::new(h)),
         })
     }
 
@@ -96,16 +92,16 @@ impl Button {
         text: &str,
         render_context: &RenderContext,
         text_renderer: &Rc<TextRenderer>,
-        enabled: impl Fn(&World) -> bool + 'static,
-        handler: impl Fn() -> Option<HitTestResult> + 'static,
+        enabled: Option<EnabledHandler>,
+        handler: Option<ButtonHandler>,
     ) -> BoxResult<Button> {
         let text_frame = Frame::init(corner, render_context, FrameKind::Button)?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
             kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
-            enabled: Box::new(enabled),
-            handler: Box::new(handler),
+            enabled: enabled.map(|e| Box::new(e)),
+            handler: handler.map(|h| Box::new(h)),
         })
     }
 }
@@ -128,7 +124,7 @@ impl View for Button {
             }
         };
 
-        if !(self.enabled)(ecs) {
+        if !self.enabled.as_ref().map_or(true, |e| (e)(ecs)) {
             canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
             canvas.fill_rect(self.frame)?;
         }
@@ -137,30 +133,36 @@ impl View for Button {
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        if !(self.enabled)(ecs) {
-            return None;
+        if let Some(enabled) = &self.enabled {
+            if !(enabled)(ecs) {
+                return None;
+            }
         }
 
         if self.frame.contains_point(SDLPoint::new(x, y)) {
-            (self.handler)()
+            if let Some(handler) = &self.handler {
+                (handler)()
+            } else {
+                Some(HitTestResult::Button)
+            }
         } else {
             None
         }
     }
 }
 
-pub struct TabButtonInfo {
+pub struct TabInfo {
     text: String,
-    enabled: Box<EnabledHandler>,
-    handler: Box<ButtonHandler>,
+    enabled: EnabledHandler,
+    view: Box<dyn View>,
 }
 
-impl TabButtonInfo {
-    pub fn init(text: &str, enabled: impl Fn(&World) -> bool + 'static, handler: impl Fn() -> Option<HitTestResult> + 'static) -> TabButtonInfo {
-        TabButtonInfo {
+impl TabInfo {
+    pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
+        TabInfo {
             text: text.to_string(),
+            view,
             enabled: Box::new(enabled),
-            handler: Box::new(handler),
         }
     }
 }
@@ -168,37 +170,40 @@ impl TabButtonInfo {
 pub struct TabView {
     frame: SDLRect,
     background: Texture,
-    buttons: Vec<Button>,
+    tabs: Vec<(Button, Box<dyn View>)>,
+    index: RefCell<usize>,
 }
 
 impl TabView {
-    pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut buttons: Vec<TabButtonInfo>) -> BoxResult<TabView> {
+    pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
         //984, 728
         let button_width: i32 = 150;
-        let tab_button_total_width = button_width * buttons.len() as i32;
+        let tab_button_total_width = button_width * tabs.len() as i32;
         let (canvas_width, canvas_height) = render_context.canvas.logical_size();
         let tab_view_height = canvas_height as i32 - (corner.y() * 2);
         let tab_view_width = canvas_width as i32 - (corner.x() * 2);
         let tab_button_start = (tab_view_width - tab_button_total_width) / 2;
-        let buttons: Vec<Button> = buttons
+        let tabs: Vec<(Button, Box<dyn View>)> = tabs
             .drain(0..)
             .enumerate()
             .map(|(i, b)| {
-                Button::text(
+                let button = Button::text(
                     SDLPoint::new(corner.x() + (tab_button_start + button_width * i as i32), corner.y()),
                     &b.text,
                     render_context,
                     text_renderer,
-                    b.enabled,
-                    b.handler,
+                    Some(Box::new(b.enabled)),
+                    None,
                 )
-                .expect("Unable to create TabView button")
+                .expect("Unable to create TabView button");
+                (button, b.view)
             })
             .collect();
         Ok(TabView {
             frame: SDLRect::new(corner.x(), corner.y(), tab_view_width as u32, tab_view_height as u32),
             background: IconLoader::init_ui().get(render_context, "tab_background.png")?,
-            buttons,
+            tabs,
+            index: RefCell::new(0),
         })
     }
 }
@@ -206,13 +211,19 @@ impl TabView {
 impl View for TabView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.copy(&self.background, None, self.frame)?;
-        for b in &self.buttons {
+        for (b, _) in &self.tabs {
             b.render(ecs, canvas, frame)?;
         }
+        self.tabs[*self.index.borrow()].1.render(ecs, canvas, frame)?;
         Ok(())
     }
 
-    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
+        if let Some(index) = tab_hit {
+            *self.index.borrow_mut() = index;
+        }
+
         None
     }
 }

@@ -19,16 +19,29 @@ pub struct ImageTesterScene {
 
 impl ImageTesterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<ImageTesterScene> {
+        let render_context = render_context_holder.borrow();
         Ok(ImageTesterScene {
             ecs: World::new(),
             view: Box::new(TabView::init(
                 SDLPoint::new(20, 20),
-                &render_context_holder.borrow(),
+                &render_context,
                 text_renderer,
                 vec![
-                    TabButtonInfo::init("First", |_| true, || None),
-                    TabButtonInfo::init("Second", |_| true, || None),
-                    TabButtonInfo::init("Third", |_| true, || None),
+                    TabInfo::init(
+                        "First",
+                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::InfoBar)?),
+                        |_| true,
+                    ),
+                    TabInfo::init(
+                        "Second",
+                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::Log)?),
+                        |_| true,
+                    ),
+                    TabInfo::init(
+                        "Third",
+                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::Map)?),
+                        |_| true,
+                    ),
                 ],
             )?),
         })
