@@ -177,7 +177,6 @@ pub struct TabView {
 #[allow(dead_code)]
 impl TabView {
     pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
-        //984, 728
         let button_width: i32 = 150;
         let tab_button_total_width = button_width * tabs.len() as i32;
         let (canvas_width, canvas_height) = render_context.canvas.logical_size();
