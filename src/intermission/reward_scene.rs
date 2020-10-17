@@ -8,11 +8,14 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
 
-pub struct RewardScene {}
+pub struct RewardScene {
+    interacted: bool,
+    phase: u32,
+}
 
 impl RewardScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>) -> BoxResult<RewardScene> {
-        Ok(RewardScene {})
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<RewardScene> {
+        Ok(RewardScene { interacted: false, phase })
     }
 }
 
@@ -22,6 +25,7 @@ impl Scene for RewardScene {
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {}
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        self.interacted = true;
         Ok(())
     }
 
@@ -32,6 +36,10 @@ impl Scene for RewardScene {
     }
 
     fn ask_stage_direction(&self) -> StageDirection {
-        StageDirection::NewGame(1)
+        if self.interacted {
+            StageDirection::NewRound(self.phase)
+        } else {
+            StageDirection::Continue
+        }
     }
 }

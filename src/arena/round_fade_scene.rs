@@ -81,7 +81,7 @@ impl Scene for RoundFadeScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewGame(self.phase)
+            StageDirection::ShowRewards(self.phase)
         } else {
             StageDirection::Continue
         }
