@@ -223,8 +223,7 @@ impl View for TabView {
         if let Some(index) = tab_hit {
             *self.index.borrow_mut() = index;
         }
-
-        None
+        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
     }
 }
 

@@ -39,7 +39,17 @@ impl ImageTesterScene {
                     ),
                     TabInfo::init(
                         "Third",
-                        Box::from(Frame::init(SDLPoint::new(60, 60), &render_context, FrameKind::Map)?),
+                        Box::from(Button::text(
+                            SDLPoint::new(60, 60),
+                            "Click me!",
+                            &render_context,
+                            text_renderer,
+                            None,
+                            Some(Box::new(|| {
+                                println!("Button Pressed!");
+                                None
+                            })),
+                        )?),
                         |_| true,
                     ),
                 ],
