@@ -35,8 +35,14 @@ impl ArenaStoryteller {
 impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {
+            StageDirection::ShowRewards(phase) => EventStatus::NewScene(Box::from(
+                crate::intermission::RewardScene::init(render_context, &self.text_renderer, phase).expect("Unable to load reward scene"),
+            )),
+            StageDirection::ShowCharacter(phase) => EventStatus::NewScene(Box::from(
+                crate::intermission::CharacterScene::init(render_context, &self.text_renderer, phase).expect("Unable to load character scene"),
+            )),
             StageDirection::Continue => EventStatus::Continue,
-            StageDirection::NewGame(phase) => EventStatus::NewScene(Box::new(
+            StageDirection::NewRound(phase) => EventStatus::NewScene(Box::new(
                 BattleScene::init(&self.render_context, &self.text_renderer, phase).expect("Unable to load additional battle scene"),
             )),
             StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),

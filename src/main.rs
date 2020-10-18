@@ -27,9 +27,9 @@ use after_image::{FontContext, RenderContext, RenderContextHolder, TextRenderer}
 mod conductor;
 use conductor::{Director, Storyteller};
 
-mod clash;
-
 mod arena;
+mod clash;
+mod intermission;
 
 pub fn main() -> BoxResult<()> {
     #[cfg(feature = "profile_self_play")]

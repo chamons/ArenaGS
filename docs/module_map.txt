@@ -1,46 +1,49 @@
-                                                      A brief map of module layering in ArenaGS
+                                            A brief map of module layering in ArenaGS
 
-                                                      Each layer depends on all below
+                                            Each layer depends on all below
 
-                                                      +------------+     Wires up other components and hits go
-                                                      |            |
-                                                      |    main    |
-                                                      |            |
-                                                      +-----+------+
-                                                            |
-                                                            |
-                                                      +-----+------+
-                                                      |            |
-                                                      |   arena    |    Game Scene/UI
-                                                      |            |
-                    +-----------+                     +-----+------+
-                    |           |                           |
-Game State / Rules  |   clash   +---------------------------+
-                    |           |                           |
-                    +-----+-----+                           |
-                          |                                 |
-                          |      No components / state      |
-                          |           below here            |
-                          |                                 |
-                          |                           +-----+---------+
-                          |                           |               |
-                          |                           |   conductor   |
-                          |                           |               |
-                          |                           +-----+---------+
-                          |                                 |
-                          |                                 |
-                          |                           +-----+-----------+
-                          |                           |                 |
-                          |                           |   after_image   |
-                          |                           |                 |
-                          |                           +-----+-----------+
-                          |                                 |
-                          |                                 |
-                          +------------+--------------------+
-                                       |
-                                 +-----+-----+
-                                 |           |
-                                 |   atlas   |
-                                 |           |
-                                 +-----------+
-
+                                            +------------+     Wires up other components and hits go
+                                            |            |
+                                            |    main    |
+                                            |            |
+                                            +-----+------+
+                                                  |
+                                                  |
+                     +-----------------+    +-----+------+
+                     |                 |    |            |
+Between Combat UI    |  intermission   +----+   arena    |   Combat UI
+                     |                 |    |            |
+                     +-----------------+    +-----+------+
+                                       |          |
+                                   +---+----------+------------------+
+                                   |                                 |
+                             +-----+-----+                           |
+                             |           |                           |
+         Game State / Rules  |   clash   +---------------------------+
+                             |           |                           |
+                             +-----+-----+                           |
+                                   |                                 |
+                                   |      No components / state      |
+                                   |           below here            |
+                                   |                                 |
+                                   |                           +-----+---------+
+                                   |                           |               |
+                                   |                           |   conductor   |
+                                   |                           |               |
+                                   |                           +-----+---------+
+                                   |                                 |
+                                   |                                 |
+                                   |                           +-----+-----------+
+                                   |                           |                 |
+                                   |                           |   after_image   |
+                                   |                           |                 |
+                                   |                           +-----+-----------+
+                                   |                                 |
+                                   |                                 |
+                                   +------------+--------------------+
+                                                |
+                                          +-----+-----+
+                                          |           |
+                                          |   atlas   |
+                                          |           |
+                                          +-----------+

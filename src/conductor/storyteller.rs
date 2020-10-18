@@ -3,7 +3,9 @@ use crate::after_image::prelude::*;
 
 pub enum StageDirection {
     Continue,
-    NewGame(u32),
+    ShowRewards(u32),
+    ShowCharacter(u32),
+    NewRound(u32),
     BattlePlayerDeath(String),
     BattleEnemyDefeated(u32),
 }
