@@ -9,15 +9,15 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
 
-pub struct RewardScene {
+pub struct CharacterScene {
     interacted: bool,
     phase: u32,
     text_renderer: Rc<TextRenderer>,
 }
 
-impl RewardScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<RewardScene> {
-        Ok(RewardScene {
+impl CharacterScene {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<CharacterScene> {
+        Ok(CharacterScene {
             interacted: false,
             phase,
             text_renderer: Rc::clone(text_renderer),
@@ -25,7 +25,7 @@ impl RewardScene {
     }
 }
 
-impl Scene for RewardScene {
+impl Scene for CharacterScene {
     fn handle_key(&mut self, keycode: Keycode, _keymod: Mod) {}
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
@@ -38,7 +38,7 @@ impl Scene for RewardScene {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.text_renderer.render_text("Reward", 50, 50, canvas, FontSize::Large, FontColor::White)?;
+        self.text_renderer.render_text("Character", 50, 50, canvas, FontSize::Large, FontColor::White)?;
 
         canvas.present();
 
@@ -53,7 +53,7 @@ impl Scene for RewardScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::ShowCharacter(self.phase)
+            StageDirection::NewRound(self.phase)
         } else {
             StageDirection::Continue
         }
