@@ -23,8 +23,8 @@ pub struct BattleScene {
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(phase);
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<BattleScene> {
+        let ecs = new_game::random_new_world(progression);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -76,7 +76,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(0);
+                    self.ecs = new_game::random_new_world(ProgressionState::init(0));
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {
@@ -285,7 +285,8 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
     // ALLIES_TODO - https://github.com/chamons/ArenaGS/issues/201
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
-        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GamePhaseComponent>().phase + 1);
+        ecs.write_resource::<ProgressionComponent>().state.phase += 1;
+        return StageDirection::BattleEnemyDefeated(wrap_progression(&ecs.read_resource::<ProgressionComponent>().state));
     }
     StageDirection::Continue
 }

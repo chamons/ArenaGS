@@ -8,22 +8,23 @@ use sdl2::render::Texture;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
+use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 
 pub struct RoundFadeScene {
     background: Texture,
     presentation_frame: u64,
     interacted: bool,
-    phase: u32,
+    progression: ProgressionState,
 }
 
 impl RoundFadeScene {
-    pub fn init(background: Texture, phase: u32) -> RoundFadeScene {
+    pub fn init(background: Texture, progression: ProgressionState) -> RoundFadeScene {
         RoundFadeScene {
             background,
             presentation_frame: std::u64::MAX,
             interacted: false,
-            phase,
+            progression,
         }
     }
 
@@ -81,7 +82,7 @@ impl Scene for RoundFadeScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::ShowRewards(self.phase)
+            StageDirection::ShowRewards(wrap_progression(&self.progression))
         } else {
             StageDirection::Continue
         }

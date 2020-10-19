@@ -36,6 +36,11 @@ impl StateBuilder {
         self
     }
 
+    pub fn with_progression(&mut self) -> &mut Self {
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init(0)));
+        self
+    }
+
     pub fn build(&mut self) -> World {
         std::mem::replace(&mut self.ecs, World::new())
     }

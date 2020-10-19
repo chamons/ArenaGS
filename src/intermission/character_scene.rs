@@ -6,19 +6,20 @@ use sdl2::pixels::Color;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
+use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 
 pub struct CharacterScene {
     interacted: bool,
-    phase: u32,
+    progression: ProgressionState,
     text_renderer: Rc<TextRenderer>,
 }
 
 impl CharacterScene {
-    pub fn init(_render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<CharacterScene> {
+    pub fn init(_render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
         Ok(CharacterScene {
             interacted: false,
-            phase,
+            progression,
             text_renderer: Rc::clone(text_renderer),
         })
     }
@@ -52,7 +53,7 @@ impl Scene for CharacterScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewRound(self.phase)
+            StageDirection::NewRound(wrap_progression(&self.progression))
         } else {
             StageDirection::Continue
         }

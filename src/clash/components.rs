@@ -314,17 +314,6 @@ impl FieldCastComponent {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
-pub struct GamePhaseComponent {
-    pub phase: u32,
-}
-
-impl GamePhaseComponent {
-    pub fn init(phase: u32) -> GamePhaseComponent {
-        GamePhaseComponent { phase }
-    }
-}
-
-#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct DurationComponent {
     pub duration: u32,
 }
@@ -382,7 +371,6 @@ pub fn create_world() -> World {
     ecs.register::<FlightComponent>();
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
-    ecs.register::<GamePhaseComponent>();
     ecs.register::<DurationComponent>();
     // If you add additional components remember to update saveload.rs
 
@@ -393,7 +381,6 @@ pub fn create_world() -> World {
     ecs.insert(RandomComponent::init());
     ecs.insert(FrameComponent::init());
     ecs.insert(LogComponent::init());
-    ecs.insert(GamePhaseComponent::init(0));
     ecs.insert(SimpleMarkerAllocator::<ToSerialize>::new());
 
     ecs.subscribe(super::physics::move_event);
