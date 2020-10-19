@@ -30,7 +30,7 @@ impl RoundFadeScene {
 
     fn get_frame_alpha(&mut self, frame: u64) -> u8 {
         self.presentation_frame = cmp::min(self.presentation_frame, frame);
-        let frame = (frame - self.presentation_frame + 10) * 5;
+        let frame = (frame - self.presentation_frame + 10) * 10;
         if frame > 200 {
             25u8
         } else {
