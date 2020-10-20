@@ -39,7 +39,16 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        node.dependencies.iter().all(|d| state.skills.contains(d))
+        node.dependencies.iter().all(|d| state.skills.contains(d)) && node.cost <= state.experience
+    }
+
+    pub fn select(&self, state: &mut ProgressionState, name: &str) {
+        if self.can_select(state, name) {
+            let node = self.nodes.get(name).unwrap();
+
+            state.skills.insert(name.to_string());
+            state.experience -= node.cost;
+        }
     }
 }
 
@@ -49,7 +58,7 @@ mod tests {
 
     #[test]
     fn all_has_selected() {
-        let state = ProgressionState::init(0, &["Foo", "Bar"]);
+        let state = ProgressionState::init(0, 0, &["Foo", "Bar"]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 0, &[]),
             SkillTreeNode::init("Bar", Point::init(0, 0), 0, &[]),
@@ -62,8 +71,8 @@ mod tests {
     }
 
     #[test]
-    fn can_select() {
-        let mut state = ProgressionState::init(0, &[]);
+    fn can_select_dependencies() {
+        let mut state = ProgressionState::init(0, 0, &[]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 0, &[]),
             SkillTreeNode::init("Bar", Point::init(0, 0), 0, &["Foo"]),
@@ -77,5 +86,41 @@ mod tests {
         assert!(tree.can_select(&state, "Foo"));
         assert!(tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
+    }
+
+    #[test]
+    fn can_select_cost() {
+        let mut state = ProgressionState::init(0, 0, &[]);
+        let tree = SkillTree::init(&[
+            SkillTreeNode::init("Foo", Point::init(0, 0), 5, &[]),
+            SkillTreeNode::init("Bazz", Point::init(0, 0), 10, &[]),
+            SkillTreeNode::init("Bar", Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::init("Buzz", Point::init(0, 0), 0, &["Bar"]),
+        ]);
+        assert_eq!(false, tree.can_select(&state, "Foo"));
+        assert_eq!(false, tree.can_select(&state, "Bazz"));
+        assert_eq!(false, tree.can_select(&state, "Bar"));
+        assert_eq!(false, tree.can_select(&state, "Buzz"));
+
+        state.experience = 5;
+        assert!(tree.can_select(&state, "Foo"));
+        assert_eq!(false, tree.can_select(&state, "Bazz"));
+        assert_eq!(false, tree.can_select(&state, "Bar"));
+        assert_eq!(false, tree.can_select(&state, "Buzz"));
+    }
+
+    #[test]
+    fn select() {
+        let mut state = ProgressionState::init(0, 7, &[]);
+        let tree = SkillTree::init(&[
+            SkillTreeNode::init("Foo", Point::init(0, 0), 5, &[]),
+            SkillTreeNode::init("Bazz", Point::init(0, 0), 10, &[]),
+            SkillTreeNode::init("Bar", Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::init("Buzz", Point::init(0, 0), 0, &["Bar"]),
+        ]);
+
+        tree.select(&mut state, "Foo");
+        assert_eq!(2, state.experience);
+        assert!(state.skills.contains("Foo"));
     }
 }
