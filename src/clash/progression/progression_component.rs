@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::*;
@@ -16,12 +18,19 @@ impl ProgressionComponent {
 #[derive(Deserialize, Serialize, Clone)]
 pub struct ProgressionState {
     pub phase: u32,
-    pub skills: Vec<String>,
+    pub skills: HashSet<String>,
 }
 
 impl ProgressionState {
-    pub fn init(phase: u32) -> ProgressionState {
-        ProgressionState { phase, skills: vec![] }
+    pub fn init_empty() -> ProgressionState {
+        ProgressionState::init(0, &[])
+    }
+
+    pub fn init(phase: u32, skills: &[&str]) -> ProgressionState {
+        ProgressionState {
+            phase,
+            skills: skills.iter().map(|s| s.to_string()).collect(),
+        }
     }
 }
 

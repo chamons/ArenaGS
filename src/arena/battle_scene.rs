@@ -76,7 +76,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(ProgressionState::init(0));
+                    self.ecs = new_game::random_new_world(ProgressionState::init_empty());
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {

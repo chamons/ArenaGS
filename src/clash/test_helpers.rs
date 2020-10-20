@@ -37,7 +37,7 @@ impl StateBuilder {
     }
 
     pub fn with_progression(&mut self) -> &mut Self {
-        self.ecs.insert(ProgressionComponent::init(ProgressionState::init(0)));
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_empty()));
         self
     }
 

@@ -116,7 +116,7 @@ impl Scene for DeathScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewRound(super::arena_storyteller::create_stage_direction_from_state(&ProgressionState::init(0)))
+            StageDirection::NewRound(super::arena_storyteller::create_stage_direction_from_state(&ProgressionState::init_empty()))
         } else {
             StageDirection::Continue
         }
