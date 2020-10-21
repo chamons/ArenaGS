@@ -26,9 +26,9 @@ pub fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
 
 pub fn get_skill_tree() -> Vec<SkillTreeNode> {
     vec![
-        SkillTreeNode::init("First", Point::init(40, 100), 10, &[]),
-        SkillTreeNode::init("Second", Point::init(140, 100), 10, &["First"]),
-        SkillTreeNode::init("Third", Point::init(240, 100), 10, &["Second"]),
+        SkillTreeNode::init("First", Some("ar_b_04.png"), Point::init(40, 100), 10, &[]),
+        SkillTreeNode::init("Second", Some("ar_b_04.PNG"), Point::init(140, 100), 10, &["First"]),
+        SkillTreeNode::init("Third", Some("ar_b_04.PNG"), Point::init(240, 100), 10, &["Second"]),
     ]
 }
 

@@ -10,18 +10,18 @@ pub struct IconCache {
 }
 
 impl IconCache {
-    pub fn init(render_context: &RenderContext, loader: IconLoader, names: &[&str]) -> BoxResult<IconCache> {
+    pub fn init<T: AsRef<str>>(render_context: &RenderContext, loader: IconLoader, names: &[T]) -> BoxResult<IconCache> {
         IconCache::init_with_alpha(render_context, loader, names, None)
     }
 
-    pub fn init_with_alpha(render_context: &RenderContext, loader: IconLoader, names: &[&str], alpha: Option<u8>) -> BoxResult<IconCache> {
+    pub fn init_with_alpha<T: AsRef<str>>(render_context: &RenderContext, loader: IconLoader, names: &[T], alpha: Option<u8>) -> BoxResult<IconCache> {
         let mut cache = HashMap::new();
         for n in names {
-            let mut image = loader.get(render_context, n)?;
+            let mut image = loader.get(render_context, n.as_ref())?;
             if let Some(alpha) = alpha {
                 image.set_alpha_mod(alpha);
             }
-            cache.insert(n.to_string(), image);
+            cache.insert(n.as_ref().to_string(), image);
         }
         Ok(IconCache { cache })
     }
