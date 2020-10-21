@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use super::ProgressionState;
+use super::{CharacterWeaponKind, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
-struct SkillTreeNode {
-    name: String,
-    position: Point,
-    cost: u32,
-    dependencies: Vec<String>,
+pub struct SkillTreeNode {
+    pub name: String,
+    pub position: Point,
+    pub cost: u32,
+    pub dependencies: Vec<String>,
 }
 
 impl SkillTreeNode {
@@ -22,8 +22,15 @@ impl SkillTreeNode {
     }
 }
 
-struct SkillTree {
+pub struct SkillTree {
     nodes: HashMap<String, SkillTreeNode>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SkillNodeStatus {
+    Selected,
+    Available,
+    Unavailable,
 }
 
 impl SkillTree {
@@ -33,8 +40,20 @@ impl SkillTree {
         }
     }
 
-    pub fn all(&self, state: &ProgressionState) -> Vec<(SkillTreeNode, bool)> {
-        self.nodes.values().map(|n| (n.clone(), state.skills.contains(&n.name))).collect()
+    pub fn all(&self, state: &ProgressionState) -> Vec<(SkillTreeNode, SkillNodeStatus)> {
+        self.nodes
+            .values()
+            .map(|n| {
+                let status = if state.skills.contains(&n.name) {
+                    SkillNodeStatus::Selected
+                } else if self.can_select(state, &n.name) {
+                    SkillNodeStatus::Available
+                } else {
+                    SkillNodeStatus::Unavailable
+                };
+                (n.clone(), status)
+            })
+            .collect()
     }
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
@@ -56,23 +75,29 @@ impl SkillTree {
 mod tests {
     use super::*;
 
+    fn state_with_deps(experience: u32, deps: &[&str]) -> ProgressionState {
+        ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger)
+    }
+
     #[test]
     fn all_has_selected() {
-        let state = ProgressionState::init(0, 0, &["Foo", "Bar"]);
+        let state = state_with_deps(0, &["Foo", "Bar"]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 0, &[]),
             SkillTreeNode::init("Bar", Point::init(0, 0), 0, &[]),
             SkillTreeNode::init("Buzz", Point::init(0, 0), 0, &[]),
+            SkillTreeNode::init("Moo", Point::init(0, 0), 100, &[]),
         ]);
         let all = tree.all(&state);
-        assert!(all.iter().find(|&a| a.0.name == "Foo").unwrap().1);
-        assert!(all.iter().find(|&a| a.0.name == "Bar").unwrap().1);
-        assert_eq!(false, all.iter().find(|&a| a.0.name == "Buzz").unwrap().1);
+        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name == "Foo").unwrap().1);
+        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name == "Bar").unwrap().1);
+        assert_eq!(SkillNodeStatus::Available, all.iter().find(|&a| a.0.name == "Buzz").unwrap().1);
+        assert_eq!(SkillNodeStatus::Unavailable, all.iter().find(|&a| a.0.name == "Moo").unwrap().1);
     }
 
     #[test]
     fn can_select_dependencies() {
-        let mut state = ProgressionState::init(0, 0, &[]);
+        let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 0, &[]),
             SkillTreeNode::init("Bar", Point::init(0, 0), 0, &["Foo"]),
@@ -90,7 +115,7 @@ mod tests {
 
     #[test]
     fn can_select_cost() {
-        let mut state = ProgressionState::init(0, 0, &[]);
+        let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 5, &[]),
             SkillTreeNode::init("Bazz", Point::init(0, 0), 10, &[]),
@@ -111,7 +136,7 @@ mod tests {
 
     #[test]
     fn select() {
-        let mut state = ProgressionState::init(0, 7, &[]);
+        let mut state = state_with_deps(7, &[]);
         let tree = SkillTree::init(&[
             SkillTreeNode::init("Foo", Point::init(0, 0), 5, &[]),
             SkillTreeNode::init("Bazz", Point::init(0, 0), 10, &[]),

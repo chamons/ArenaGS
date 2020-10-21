@@ -1,6 +1,7 @@
 use specs::prelude::*;
 use std::collections::HashMap;
 
+use super::super::progression::SkillTreeNode;
 use super::super::*;
 use crate::atlas::prelude::*;
 use crate::sequence;
@@ -21,6 +22,14 @@ pub fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
         TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Showdown", "Swap Ammo"],
         TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Dive", "Swap Ammo"],
     }
+}
+
+pub fn get_skill_tree() -> Vec<SkillTreeNode> {
+    vec![
+        SkillTreeNode::init("First", Point::init(40, 100), 10, &[]),
+        SkillTreeNode::init("Second", Point::init(140, 100), 10, &["First"]),
+        SkillTreeNode::init("Third", Point::init(240, 100), 10, &["Second"]),
+    ]
 }
 
 #[derive(Copy, Clone)]
