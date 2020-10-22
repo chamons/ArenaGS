@@ -7,8 +7,7 @@ pub enum StageDirection {
     Continue,
     BattlePlayerDeath(String),
 
-    // The World here is a separate instance
-    // just with a ProgressionState black from (from this layer)
+    // These worlds are temporary holders for ProgressionState like things
     ShowRewards(World),
     ShowCharacter(World),
     NewRound(World),
