@@ -66,7 +66,7 @@ impl TextRenderer {
         let mut bold_font = font_context.ttf_context.load_font(font_path.clone(), 16)?;
         bold_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut large_font = font_context.ttf_context.load_font(font_path, 20)?;
-        large_font.set_style(sdl2::ttf::FontStyle::NORMAL);
+        large_font.set_style(sdl2::ttf::FontStyle::BOLD);
 
         Ok(TextRenderer {
             cache: RefCell::new(FontCache::init()),

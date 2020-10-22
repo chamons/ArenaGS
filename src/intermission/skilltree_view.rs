@@ -1,3 +1,6 @@
+use std::rc::Rc;
+
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -13,6 +16,7 @@ pub struct SkillTreeView {
     icons: IconCache,
     ui: IconCache,
     tree: SkillTree,
+    text_renderer: Rc<TextRenderer>,
 }
 
 const SKILL_NODE_SIZE: u32 = 48;
@@ -25,7 +29,12 @@ fn get_tree(kind: &CharacterWeaponKind) -> Vec<SkillTreeNode> {
 }
 
 impl SkillTreeView {
-    pub fn init(position: SDLPoint, render_context: &RenderContext, progression: &ProgressionState) -> BoxResult<SkillTreeView> {
+    pub fn init(
+        position: SDLPoint,
+        render_context: &RenderContext,
+        text_renderer: &Rc<TextRenderer>,
+        progression: &ProgressionState,
+    ) -> BoxResult<SkillTreeView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
         let tree_icons = tree.icons();
 
@@ -38,6 +47,7 @@ impl SkillTreeView {
                 &["skill_tree_frame.png", "skill_tree_frame_inactive.png"],
             )?,
             tree,
+            text_renderer: Rc::clone(&text_renderer),
         })
     }
 }
@@ -49,6 +59,15 @@ impl View for SkillTreeView {
         let node_frame = self.ui.get("skill_tree_frame.png");
         let node_frame_inactive = self.ui.get("skill_tree_frame_inactive.png");
         let progression = ecs.read_resource::<ProgressionState>();
+
+        self.text_renderer.render_text(
+            &format!("Experience: {}", progression.experience),
+            770,
+            70,
+            canvas,
+            FontSize::Large,
+            FontColor::Brown,
+        )?;
 
         let all = self.tree.all(&progression);
         for (node, status) in &all {
@@ -126,5 +145,34 @@ impl View for SkillTreeView {
         }
 
         Ok(())
+    }
+
+    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if let Some(button) = button {
+            if button == MouseButton::Left {
+                let mut progression = ecs.write_resource::<ProgressionState>();
+                if let Some(hit) = self
+                    .tree
+                    .all(&progression)
+                    .iter()
+                    .filter_map(|(node, _)| {
+                        let position = SDLRect::new(
+                            self.position.x() + node.position.x as i32,
+                            self.position.x() + node.position.y as i32,
+                            SKILL_NODE_SIZE,
+                            SKILL_NODE_SIZE,
+                        );
+                        if position.contains_point(SDLPoint::new(x, y)) {
+                            Some(node)
+                        } else {
+                            None
+                        }
+                    })
+                    .next()
+                {
+                    self.tree.select(&mut progression, &hit.name);
+                }
+            }
+        }
     }
 }
