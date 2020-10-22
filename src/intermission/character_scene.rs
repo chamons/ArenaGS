@@ -11,21 +11,35 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
-use crate::props::View;
+use crate::props::{EmptyView, TabInfo, TabView, View};
 
 pub struct CharacterScene {
     interacted: bool,
     text_renderer: Rc<TextRenderer>,
-    tree: SkillTreeView,
+    tab: TabView,
     world: World,
 }
 
 impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
+        let render_context = &render_context_holder.borrow();
         Ok(CharacterScene {
             interacted: false,
             text_renderer: Rc::clone(text_renderer),
-            tree: SkillTreeView::init(SDLPoint::new(10, 10), &render_context_holder.borrow(), &progression)?,
+            tab: TabView::init(
+                SDLPoint::new(0, 0),
+                render_context,
+                text_renderer,
+                vec![
+                    TabInfo::init(
+                        "Skill Tree",
+                        Box::new(SkillTreeView::init(SDLPoint::new(10, 10), render_context, &progression)?),
+                        |_| true,
+                    ),
+                    TabInfo::init("Equipment", Box::new(EmptyView::init()?), |_| true),
+                    TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
+                ],
+            )?,
             world: {
                 let mut world = World::new();
                 world.insert(progression);
@@ -48,9 +62,7 @@ impl Scene for CharacterScene {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.text_renderer.render_text("Character", 50, 50, canvas, FontSize::Large, FontColor::White)?;
-
-        self.tree.render(&self.world, canvas, frame)?;
+        self.tab.render(&self.world, canvas, frame)?;
 
         canvas.present();
 

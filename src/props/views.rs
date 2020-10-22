@@ -11,6 +11,20 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::props::{HitTestResult, View};
 
+pub struct EmptyView {}
+
+impl EmptyView {
+    pub fn init() -> BoxResult<EmptyView> {
+        Ok(EmptyView {})
+    }
+}
+
+impl View for EmptyView {
+    fn render(&self, _: &World, _canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        Ok(())
+    }
+}
+
 pub struct Frame {
     position: SDLPoint,
     frame: Texture,

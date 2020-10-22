@@ -26,8 +26,8 @@ pub fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
 
 pub fn get_skill_tree() -> Vec<SkillTreeNode> {
     fn skill_pos(x: u32, y: u32) -> Point {
-        let x = 40 + (100 * x);
-        let y = 100 + (50 * y);
+        let x = 60 + (100 * x);
+        let y = 20 + 50 * y;
         Point::init(x, y)
     }
 
