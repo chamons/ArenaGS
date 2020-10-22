@@ -11,12 +11,13 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{EmptyView, TabInfo, TabView, View};
+use crate::props::{Button, EmptyView, TabInfo, TabView, View};
 
 pub struct CharacterScene {
     interacted: bool,
     text_renderer: Rc<TextRenderer>,
     tab: TabView,
+    continue_button: Button,
     world: World,
 }
 
@@ -45,6 +46,7 @@ impl CharacterScene {
                 world.insert(progression);
                 world
             },
+            continue_button: Button::text(SDLPoint::new(800, 650), "Next Fight", render_context, text_renderer, true, None, None)?,
         })
     }
 }
@@ -63,6 +65,7 @@ impl Scene for CharacterScene {
         canvas.clear();
 
         self.tab.render(&self.world, canvas, frame)?;
+        self.continue_button.render(&self.world, canvas, frame)?;
 
         canvas.present();
 

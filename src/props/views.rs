@@ -36,6 +36,7 @@ pub enum FrameKind {
     Log,
     Map,
     Button,
+    ButtonFull,
 }
 
 impl Frame {
@@ -45,6 +46,7 @@ impl Frame {
             FrameKind::Log => "log_frame.png",
             FrameKind::Map => "map_frame.png",
             FrameKind::Button => "button_frame.png",
+            FrameKind::ButtonFull => "button_frame_full.png",
         };
         Ok(Frame {
             position,
@@ -58,7 +60,7 @@ impl Frame {
             FrameKind::InfoBar => (271, 541),
             FrameKind::Log => (271, 227),
             FrameKind::Map => (753, 768),
-            FrameKind::Button => (145, 42),
+            FrameKind::Button | FrameKind::ButtonFull => (145, 42),
         }
     }
 }
@@ -106,10 +108,11 @@ impl Button {
         text: &str,
         render_context: &RenderContext,
         text_renderer: &Rc<TextRenderer>,
+        full_frame: bool,
         enabled: Option<EnabledHandler>,
         handler: Option<ButtonHandler>,
     ) -> BoxResult<Button> {
-        let text_frame = Frame::init(corner, render_context, FrameKind::Button)?;
+        let text_frame = Frame::init(corner, render_context, if full_frame { FrameKind::ButtonFull } else { FrameKind::Button })?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
@@ -206,6 +209,7 @@ impl TabView {
                     &b.text,
                     render_context,
                     text_renderer,
+                    false,
                     Some(Box::new(b.enabled)),
                     None,
                 )
