@@ -15,6 +15,9 @@
         "rustc",
         "sdl",
         "skillbar",
-        "type"
+        "skilltree",
+        "skilltree view",
+        "type",
+        "view"
     ]
 }
