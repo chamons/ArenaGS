@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::keyboard::{Keycode, Mod};
@@ -14,7 +15,7 @@ use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, TabInfo, TabView, View};
 
 pub struct CharacterScene {
-    next_fight: bool,
+    next_fight: Rc<RefCell<bool>>,
     tab: TabView,
     continue_button: Button,
     world: World,
@@ -23,8 +24,19 @@ pub struct CharacterScene {
 impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
+        let next_fight = Rc::new(RefCell::new(false));
         Ok(CharacterScene {
-            next_fight: false,
+            next_fight: Rc::clone(&next_fight),
+            continue_button: Button::text(
+                SDLPoint::new(800, 650),
+                "Next Fight",
+                render_context,
+                text_renderer,
+                true,
+                true,
+                None,
+                Some(Box::new(move || *next_fight.borrow_mut() = true)),
+            )?,
             tab: TabView::init(
                 SDLPoint::new(0, 0),
                 render_context,
@@ -44,7 +56,6 @@ impl CharacterScene {
                 world.insert(progression);
                 world
             },
-            continue_button: Button::text(SDLPoint::new(800, 650), "Next Fight", render_context, text_renderer, true, true, None, None)?,
         })
     }
 }
@@ -76,7 +87,7 @@ impl Scene for CharacterScene {
     }
 
     fn ask_stage_direction(&self) -> StageDirection {
-        if self.next_fight {
+        if *self.next_fight.borrow() {
             StageDirection::NewRound(wrap_progression(&self.world.read_resource::<ProgressionState>()))
         } else {
             StageDirection::Continue

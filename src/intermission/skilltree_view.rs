@@ -104,7 +104,7 @@ impl View for SkillTreeView {
                 self.position.y() + (left.position.y + (SKILL_NODE_SIZE / 2)) as i32,
             );
             let right = SDLPoint::new(
-                self.position.x() + (right.position.x - SKILL_BORDER) as i32,
+                self.position.x() + (right.position.x - SKILL_BORDER - 1) as i32,
                 self.position.y() + (right.position.y + (SKILL_NODE_SIZE / 2)) as i32,
             );
 
