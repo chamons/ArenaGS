@@ -7,10 +7,10 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{HitTestResult, View};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
+use crate::props::{HitTestResult, View};
 
 pub struct SkillBarView {
     views: Vec<SkillBarItemView>,

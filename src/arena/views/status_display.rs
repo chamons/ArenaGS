@@ -5,10 +5,10 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{HitTestResult, View};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{find_player, StatusComponent, StatusKind};
+use crate::props::{HitTestResult, View};
 
 pub struct StatusBarView {
     views: Vec<StatusBarItemView>,

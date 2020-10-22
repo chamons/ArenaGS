@@ -4,12 +4,12 @@ use std::rc::Rc;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
-use super::view_components::{Frame, FrameKind};
-use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use super::{render_text_layout, TextHitTester};
 use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{find_enemies, find_player, summarize_character};
+use crate::props::{Frame, FrameKind, HitTestResult, View};
 
 pub struct InfoBarView {
     position: SDLPoint,

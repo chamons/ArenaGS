@@ -67,7 +67,7 @@ impl Storyteller for ArenaStoryteller {
     fn initial_scene(&self) -> Box<dyn Scene> {
         let mut state = ProgressionState::init_empty();
         state.skills.insert("First".to_owned());
-        state.experience = 10;
+        state.experience = 100;
         Box::new(BattleScene::init(&self.render_context, &self.text_renderer, state).expect("Unable to load initial battle scene"))
     }
 }

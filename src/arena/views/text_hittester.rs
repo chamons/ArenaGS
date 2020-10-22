@@ -1,7 +1,7 @@
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 
-use super::HitTestResult;
+use crate::props::HitTestResult;
 
 pub struct TextHitTester {
     entries: Vec<(SDLRect, HitTestResult)>,

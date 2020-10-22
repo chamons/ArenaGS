@@ -5,12 +5,13 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::{screen_rect_for_map_grid, View};
+use super::screen_rect_for_map_grid;
 use crate::after_image::prelude::*;
 use crate::arena::battle_actions;
 use crate::arena::components::*;
 use crate::atlas::prelude::*;
 use crate::clash::MapComponent;
+use crate::props::View;
 
 use crate::clash::MAX_MAP_TILES;
 

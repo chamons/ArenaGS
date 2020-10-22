@@ -1,8 +1,8 @@
 use sdl2::rect::Rect as SDLRect;
 
-use super::HitTestResult;
 use crate::after_image::*;
 use crate::atlas::prelude::*;
+use crate::props::HitTestResult;
 
 #[allow(clippy::too_many_arguments)]
 pub fn render_text_layout<'a>(

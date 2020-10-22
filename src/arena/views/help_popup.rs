@@ -6,10 +6,11 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use super::{render_text_layout, TextHitTester};
 use crate::after_image::*;
 use crate::atlas::prelude::*;
 use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
+use crate::props::{HitTestResult, View};
 
 enum HelpPopupSize {
     Unknown,
