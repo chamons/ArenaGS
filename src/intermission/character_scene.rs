@@ -14,8 +14,7 @@ use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, TabInfo, TabView, View};
 
 pub struct CharacterScene {
-    interacted: bool,
-    text_renderer: Rc<TextRenderer>,
+    next_fight: bool,
     tab: TabView,
     continue_button: Button,
     world: World,
@@ -25,8 +24,7 @@ impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         Ok(CharacterScene {
-            interacted: false,
-            text_renderer: Rc::clone(text_renderer),
+            next_fight: false,
             tab: TabView::init(
                 SDLPoint::new(0, 0),
                 render_context,
@@ -54,10 +52,9 @@ impl CharacterScene {
 impl Scene for CharacterScene {
     fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
 
-    fn handle_mouse(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
-        if button.is_some() {
-            self.interacted = true;
-        }
+    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+        self.tab.handle_mouse(&self.world, x, y, button);
+        self.continue_button.handle_mouse(&self.world, x, y, button);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
@@ -79,7 +76,7 @@ impl Scene for CharacterScene {
     }
 
     fn ask_stage_direction(&self) -> StageDirection {
-        if self.interacted {
+        if self.next_fight {
             StageDirection::NewRound(wrap_progression(&self.world.read_resource::<ProgressionState>()))
         } else {
             StageDirection::Continue

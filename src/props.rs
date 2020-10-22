@@ -1,5 +1,7 @@
 use specs::prelude::*;
 
+use sdl2::mouse::MouseButton;
+
 use crate::after_image::{LayoutChunkIcon, RenderCanvas};
 use crate::atlas::prelude::*;
 use crate::clash::StatusKind;
@@ -27,6 +29,7 @@ pub trait View {
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }
+    fn handle_mouse(&mut self, _ecs: &World, _x: i32, _y: i32, _button: Option<MouseButton>) {}
 }
 
 mod views;

@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -149,19 +150,27 @@ impl View for Button {
         Ok(())
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        if let Some(enabled) = &self.enabled {
-            if !(enabled)(ecs) {
-                return None;
+    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if let Some(button) = button {
+            if button == MouseButton::Left {
+                if self.frame.contains_point(SDLPoint::new(x, y)) {
+                    if let Some(enabled) = &self.enabled {
+                        if !(enabled)(ecs) {
+                            return;
+                        }
+                    }
+
+                    if let Some(handler) = &self.handler {
+                        (handler)();
+                    }
+                }
             }
         }
+    }
 
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if self.frame.contains_point(SDLPoint::new(x, y)) {
-            if let Some(handler) = &self.handler {
-                (handler)()
-            } else {
-                Some(HitTestResult::Button)
-            }
+            Some(HitTestResult::Button)
         } else {
             None
         }
@@ -236,12 +245,20 @@ impl View for TabView {
         Ok(())
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
-        if let Some(index) = tab_hit {
-            *self.index.borrow_mut() = index;
+    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if let Some(button) = button {
+            if button == MouseButton::Left {
+                let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
+                if let Some(index) = tab_hit {
+                    *self.index.borrow_mut() = index;
+                }
+            }
         }
-        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
+        self.tabs[*self.index.borrow()].1.handle_mouse(ecs, x, y, button);
+    }
+
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        self.tabs.iter().filter_map(|(_, t)| t.hit_test(ecs, x, y)).next()
     }
 }
 
