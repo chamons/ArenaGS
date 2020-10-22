@@ -84,13 +84,15 @@ pub enum ButtonKind {
     Text(String, Frame, Rc<TextRenderer>),
 }
 
-pub type EnabledHandler = Box<dyn Fn(&World) -> bool + 'static>;
-pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult> + 'static>;
+pub type EnabledHandler = Box<dyn Fn(&World) -> bool>;
+pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult>>;
+
 pub struct Button {
     frame: SDLRect,
     kind: ButtonKind,
     enabled: Option<Box<EnabledHandler>>,
     handler: Option<Box<ButtonHandler>>,
+    active: bool,
 }
 
 #[allow(dead_code)]
@@ -101,6 +103,7 @@ impl Button {
             kind: ButtonKind::Image(image),
             enabled: enabled.map(Box::new),
             handler: handler.map(Box::new),
+            active: false,
         })
     }
 
@@ -110,6 +113,7 @@ impl Button {
         render_context: &RenderContext,
         text_renderer: &Rc<TextRenderer>,
         full_frame: bool,
+        active: bool,
         enabled: Option<EnabledHandler>,
         handler: Option<ButtonHandler>,
     ) -> BoxResult<Button> {
@@ -120,6 +124,7 @@ impl Button {
             kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
             enabled: enabled.map(Box::new),
             handler: handler.map(Box::new),
+            active,
         })
     }
 }
@@ -137,7 +142,7 @@ impl View for Button {
                     text_frame.frame_size().0,
                     canvas,
                     FontSize::Bold,
-                    FontColor::Brown,
+                    if self.active { FontColor::White } else { FontColor::Brown },
                 )?;
             }
         };
@@ -219,6 +224,7 @@ impl TabView {
                     render_context,
                     text_renderer,
                     false,
+                    i == 0,
                     Some(Box::new(b.enabled)),
                     None,
                 )
@@ -250,7 +256,9 @@ impl View for TabView {
             if button == MouseButton::Left {
                 let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
                 if let Some(index) = tab_hit {
+                    self.tabs[*self.index.borrow()].0.active = false;
                     *self.index.borrow_mut() = index;
+                    self.tabs[index].0.active = true;
                 }
             }
         }

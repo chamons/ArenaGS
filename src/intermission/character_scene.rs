@@ -44,7 +44,7 @@ impl CharacterScene {
                 world.insert(progression);
                 world
             },
-            continue_button: Button::text(SDLPoint::new(800, 650), "Next Fight", render_context, text_renderer, true, None, None)?,
+            continue_button: Button::text(SDLPoint::new(800, 650), "Next Fight", render_context, text_renderer, true, true, None, None)?,
         })
     }
 }
