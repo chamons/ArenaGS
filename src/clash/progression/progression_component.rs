@@ -45,5 +45,5 @@ impl ProgressionState {
 pub fn wrap_progression(state: &ProgressionState) -> World {
     let mut world = World::new();
     world.insert(ProgressionComponent::init(state.clone()));
-    return world;
+    world
 }

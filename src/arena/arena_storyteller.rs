@@ -41,7 +41,7 @@ fn get_progression(ecs: &World) -> ProgressionState {
 pub fn create_stage_direction_from_state(state: &ProgressionState) -> World {
     let mut world = World::new();
     world.insert(ProgressionComponent::init(state.clone()));
-    return world;
+    world
 }
 
 impl Storyteller for ArenaStoryteller {

@@ -95,8 +95,8 @@ pub struct Button {
     active: bool,
 }
 
-#[allow(dead_code)]
 impl Button {
+    #[allow(dead_code)]
     pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
         Ok(Button {
             frame,
@@ -107,6 +107,7 @@ impl Button {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn text(
         corner: SDLPoint,
         text: &str,
@@ -188,7 +189,6 @@ pub struct TabInfo {
     view: Box<dyn View>,
 }
 
-#[allow(dead_code)]
 impl TabInfo {
     pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
         TabInfo {
@@ -205,7 +205,6 @@ pub struct TabView {
     index: RefCell<usize>,
 }
 
-#[allow(dead_code)]
 impl TabView {
     pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
         let button_width: i32 = 150;
