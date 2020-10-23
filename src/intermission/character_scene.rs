@@ -87,9 +87,9 @@ impl Scene for CharacterScene {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.help.render(&self.ecs, canvas, frame)?;
         self.tab.render(&self.ecs, canvas, frame)?;
         self.continue_button.render(&self.ecs, canvas, frame)?;
+        self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
 
