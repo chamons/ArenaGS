@@ -59,9 +59,7 @@ impl ImageTesterScene {
 }
 
 impl Scene for ImageTesterScene {
-    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
-
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 let hit = self.view.hit_test(&self.ecs, x, y);

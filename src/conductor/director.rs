@@ -91,9 +91,9 @@ impl<'a> Director<'a> {
                                     _ => {}
                                 }
                             }
-                            self.scene.handle_mouse(x, y, Some(mouse_btn));
+                            self.scene.handle_mouse_click(x, y, Some(mouse_btn));
                         }
-                        Event::MouseMotion { x, y, .. } => self.scene.handle_mouse(x, y, None),
+                        Event::MouseMotion { x, y, mousestate, .. } => self.scene.handle_mouse_move(x, y, mousestate),
                         _ => {}
                     };
                 }

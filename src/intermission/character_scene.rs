@@ -74,7 +74,7 @@ impl Scene for CharacterScene {
         self.help.handle_key(&self.ecs, keycode, keymod);
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         if self.help.handle_mouse_event(&self.ecs, x, y, button, slice::from_ref(&self.tab)) {
             return;
         }

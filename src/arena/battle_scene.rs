@@ -197,7 +197,7 @@ impl Scene for BattleScene {
         };
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
 
         if self.help.handle_mouse_event(&self.ecs, x, y, button, &self.views) {
