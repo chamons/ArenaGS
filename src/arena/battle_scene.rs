@@ -205,13 +205,6 @@ impl Scene for BattleScene {
         }
 
         if let Some(button) = button {
-            if button == MouseButton::Middle {
-                let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                if let Some(hit) = hit {
-                    self.help.enable(&self.ecs, Some(Point::init(x as u32, y as u32)), hit);
-                }
-            }
-
             let state = battle_actions::read_action_state(&self.ecs);
             match state {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
