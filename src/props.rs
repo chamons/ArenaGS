@@ -34,3 +34,12 @@ pub trait View {
 
 mod views;
 pub use views::*;
+
+mod help_popup;
+pub use help_popup::*;
+
+mod text_hittester;
+pub use text_hittester::*;
+
+mod text_render_helper;
+pub use text_render_helper::*;

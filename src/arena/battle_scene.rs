@@ -15,7 +15,7 @@ use super::{new_game, saveload};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{HitTestResult, View};
+use crate::props::{HelpPopup, HitTestResult, View};
 
 pub struct BattleScene {
     ecs: World,
@@ -179,10 +179,8 @@ impl BattleScene {
 }
 
 impl Scene for BattleScene {
-    fn handle_key(&mut self, keycode: Keycode, _keymod: Mod) {
-        if self.help.is_enabled() && keycode == Keycode::Escape {
-            self.help.disable();
-        }
+    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {
+        self.help.handle_key(&self.ecs, keycode, keymod);
 
         match keycode {
             Keycode::PageUp => {
@@ -205,9 +203,8 @@ impl Scene for BattleScene {
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
-        self.help.handle_mouse(&self.ecs, x, y, button);
-        // Prevent stray clicks from passing through
-        if self.help.is_enabled() {
+
+        if self.help.handle_mouse_event(&self.ecs, x, y, button, &self.views) {
             return;
         }
 

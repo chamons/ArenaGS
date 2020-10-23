@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::slice;
 
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
@@ -12,19 +13,21 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{Button, EmptyView, TabInfo, TabView, View};
+use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
 pub struct CharacterScene {
     next_fight: Rc<RefCell<bool>>,
-    tab: TabView,
+    tab: Box<dyn View>,
     continue_button: Button,
-    world: World,
+    ecs: World,
+    help: HelpPopup,
 }
 
 impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
+
         Ok(CharacterScene {
             next_fight: Rc::clone(&next_fight),
             continue_button: Button::text(
@@ -37,7 +40,7 @@ impl CharacterScene {
                 None,
                 Some(Box::new(move || *next_fight.borrow_mut() = true)),
             )?,
-            tab: TabView::init(
+            tab: Box::from(TabView::init(
                 SDLPoint::new(0, 0),
                 render_context,
                 text_renderer,
@@ -50,30 +53,38 @@ impl CharacterScene {
                     TabInfo::init("Equipment", Box::new(EmptyView::init()?), |_| true),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
-            )?,
-            world: {
-                let mut world = World::new();
-                world.insert(progression);
-                world
+            )?),
+            ecs: {
+                let mut ecs = World::new();
+                ecs.insert(progression);
+                ecs
             },
+            help: HelpPopup::init(&render_context, Rc::clone(&text_renderer))?,
         })
     }
 }
 
 impl Scene for CharacterScene {
-    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
+    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {
+        self.help.handle_key(&self.ecs, keycode, keymod);
+    }
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
-        self.tab.handle_mouse(&self.world, x, y, button);
-        self.continue_button.handle_mouse(&self.world, x, y, button);
+        if self.help.handle_mouse_event(&self.ecs, x, y, button, slice::from_ref(&self.tab)) {
+            return;
+        }
+
+        self.tab.handle_mouse(&self.ecs, x, y, button);
+        self.continue_button.handle_mouse(&self.ecs, x, y, button);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.tab.render(&self.world, canvas, frame)?;
-        self.continue_button.render(&self.world, canvas, frame)?;
+        self.tab.render(&self.ecs, canvas, frame)?;
+        self.continue_button.render(&self.ecs, canvas, frame)?;
+        self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
 
@@ -88,7 +99,7 @@ impl Scene for CharacterScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if *self.next_fight.borrow() {
-            StageDirection::NewRound(wrap_progression(&self.world.read_resource::<ProgressionState>()))
+            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionState>()))
         } else {
             StageDirection::Continue
         }

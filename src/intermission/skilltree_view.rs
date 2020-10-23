@@ -9,7 +9,7 @@ use specs::prelude::*;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
-use crate::props::View;
+use crate::props::{HitTestResult, View};
 
 pub struct SkillTreeView {
     position: SDLPoint,
@@ -49,6 +49,28 @@ impl SkillTreeView {
             tree,
             text_renderer: Rc::clone(&text_renderer),
         })
+    }
+
+    fn find_node_at(&self, ecs: &World, x: i32, y: i32) -> Option<SkillTreeNode> {
+        let progression = ecs.read_resource::<ProgressionState>();
+        self.tree
+            .all(&progression)
+            .iter()
+            .filter_map(|(node, _)| {
+                let position = SDLRect::new(
+                    self.position.x() + node.position.x as i32,
+                    self.position.x() + node.position.y as i32,
+                    SKILL_NODE_SIZE,
+                    SKILL_NODE_SIZE,
+                );
+                if position.contains_point(SDLPoint::new(x, y)) {
+                    Some(node)
+                } else {
+                    None
+                }
+            })
+            .next()
+            .map(|n| n.clone())
     }
 }
 
@@ -150,29 +172,19 @@ impl View for SkillTreeView {
     fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
-                let mut progression = ecs.write_resource::<ProgressionState>();
-                if let Some(hit) = self
-                    .tree
-                    .all(&progression)
-                    .iter()
-                    .filter_map(|(node, _)| {
-                        let position = SDLRect::new(
-                            self.position.x() + node.position.x as i32,
-                            self.position.x() + node.position.y as i32,
-                            SKILL_NODE_SIZE,
-                            SKILL_NODE_SIZE,
-                        );
-                        if position.contains_point(SDLPoint::new(x, y)) {
-                            Some(node)
-                        } else {
-                            None
-                        }
-                    })
-                    .next()
-                {
+                if let Some(hit) = self.find_node_at(ecs, x, y) {
+                    let mut progression = ecs.write_resource::<ProgressionState>();
                     self.tree.select(&mut progression, &hit.name);
                 }
             }
+        }
+    }
+
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if let Some(hit) = self.find_node_at(ecs, x, y) {
+            Some(HitTestResult::Skill(hit.name))
+        } else {
+            None
         }
     }
 }
