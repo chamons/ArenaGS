@@ -9,7 +9,7 @@ use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
-use crate::props::{Frame, FrameKind, HitTestResult, View, render_text_layout, TextHitTester};
+use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, TextHitTester, View};
 
 pub struct LogView {
     position: SDLPoint,
