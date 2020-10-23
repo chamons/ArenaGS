@@ -79,8 +79,8 @@ impl Scene for CharacterScene {
             return;
         }
 
-        self.tab.handle_mouse(&self.ecs, x, y, button);
-        self.continue_button.handle_mouse(&self.ecs, x, y, button);
+        self.tab.handle_mouse_click(&self.ecs, x, y, button);
+        self.continue_button.handle_mouse_click(&self.ecs, x, y, button);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {

@@ -181,7 +181,7 @@ impl HelpPopup {
         false
     }
 
-    pub fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    pub fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         match self.state {
             HelpPopupState::Tooltip { .. } => {
                 if let Some(button) = button {
@@ -293,7 +293,7 @@ impl HelpPopup {
     }
 
     pub fn handle_mouse_event(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>, views: &[Box<dyn View>]) -> bool {
-        self.handle_mouse(ecs, x, y, button);
+        self.handle_mouse_click(ecs, x, y, button);
         // Prevent stray clicks from passing through
         if self.is_enabled() {
             return true;
