@@ -8,6 +8,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
+use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -50,7 +51,11 @@ impl CharacterScene {
                         Box::new(SkillTreeView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
                         |_| true,
                     ),
-                    TabInfo::init("Equipment", Box::new(EmptyView::init()?), |_| true),
+                    TabInfo::init(
+                        "Equipment",
+                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
+                        |_| true,
+                    ),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),
