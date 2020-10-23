@@ -61,10 +61,6 @@ impl BattleScene {
             Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
             Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
             Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
-            Keycode::F1 => {
-                self.help.enable(&self.ecs, None, HitTestResult::Text("Top Level Help".to_string()));
-                self.help.force_size_large();
-            }
 
             _ => {}
         }
