@@ -70,7 +70,7 @@ impl SkillTreeView {
                 }
             })
             .next()
-            .map(|n| n.clone())
+            .cloned()
     }
 }
 
