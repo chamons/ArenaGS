@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::keyboard::{Keycode, Mod};
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
@@ -154,15 +154,10 @@ impl HelpPopup {
         }
     }
 
-    const MOUSE_POPUP_DRIFT: u32 = 10;
     fn should_close_help(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
             HelpPopupState::Tooltip { start_mouse, .. } => {
                 if button.is_some() {
-                    return true;
-                }
-
-                if start_mouse.distance_to(Point::init(x as u32, y as u32)).unwrap_or(10) > HelpPopup::MOUSE_POPUP_DRIFT {
                     return true;
                 }
             }
@@ -312,6 +307,8 @@ impl HelpPopup {
 }
 
 const HELP_OFFSET: u32 = 25;
+const MOUSE_POPUP_DRIFT: u32 = 10;
+
 impl View for HelpPopup {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         self.clear_hit_areas();
@@ -407,5 +404,16 @@ impl View for HelpPopup {
         }
 
         Ok(())
+    }
+
+    fn handle_mouse_move(&mut self, _ecs: &World, x: i32, y: i32, _state: MouseState) {
+        match &self.state {
+            HelpPopupState::Tooltip { start_mouse, .. } => {
+                if start_mouse.distance_to(Point::init(x as u32, y as u32)).unwrap_or(10) > MOUSE_POPUP_DRIFT {
+                    self.disable();
+                }
+            }
+            _ => {}
+        }
     }
 }

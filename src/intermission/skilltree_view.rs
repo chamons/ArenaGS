@@ -19,13 +19,18 @@ pub struct SkillTreeView {
     text_renderer: Rc<TextRenderer>,
 }
 
-const SKILL_NODE_SIZE: u32 = 48;
-const SKILL_BORDER: u32 = 2;
+pub const SKILL_NODE_SIZE: u32 = 48;
+pub const SKILL_BORDER: u32 = 2;
 
-fn get_tree(kind: &CharacterWeaponKind) -> Vec<SkillTreeNode> {
+pub fn get_tree(kind: &CharacterWeaponKind) -> Vec<SkillTreeNode> {
     match kind {
         CharacterWeaponKind::Gunslinger => crate::clash::content::gunslinger::get_skill_tree(),
     }
+}
+
+pub fn get_tree_icons(render_context: &RenderContext, tree: &SkillTree) -> BoxResult<IconCache> {
+    let tree_icons = tree.icons();
+    Ok(IconCache::init(&render_context, IconLoader::init_icons(), &tree_icons[..])?)
 }
 
 impl SkillTreeView {
@@ -36,11 +41,10 @@ impl SkillTreeView {
         progression: &ProgressionState,
     ) -> BoxResult<SkillTreeView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
-        let tree_icons = tree.icons();
 
         Ok(SkillTreeView {
             position,
-            icons: IconCache::init(&render_context, IconLoader::init_icons(), &tree_icons[..])?,
+            icons: get_tree_icons(render_context, &tree)?,
             ui: IconCache::init(
                 &render_context,
                 IconLoader::init_ui(),

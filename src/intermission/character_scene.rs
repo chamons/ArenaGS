@@ -53,7 +53,7 @@ impl CharacterScene {
                     ),
                     TabInfo::init(
                         "Equipment",
-                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer)?),
+                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
                         |_| true,
                     ),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),

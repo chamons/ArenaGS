@@ -8,6 +8,7 @@ use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
+use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
@@ -17,21 +18,32 @@ pub struct CardView {
     frame: SDLRect,
     text_renderer: Rc<TextRenderer>,
     ui: Rc<IconCache>,
+    icons: Rc<IconCache>,
     name: String,
+    image: Option<String>,
     grabbed: Option<SDLPoint>,
 }
 
 const CARD_WIDTH: u32 = 110;
-const CARD_HEIGHT: u32 = 160;
+const CARD_HEIGHT: u32 = 110;
 
 impl CardView {
-    pub fn init(position: SDLPoint, text_renderer: &Rc<TextRenderer>, ui: &Rc<IconCache>, name: &str) -> BoxResult<CardView> {
+    pub fn init(
+        position: SDLPoint,
+        text_renderer: &Rc<TextRenderer>,
+        ui: &Rc<IconCache>,
+        icons: &Rc<IconCache>,
+        name: &str,
+        image: &Option<String>,
+    ) -> BoxResult<CardView> {
         Ok(CardView {
             frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH, CARD_HEIGHT),
             text_renderer: Rc::clone(&text_renderer),
             ui: Rc::clone(&ui),
+            icons: Rc::clone(&icons),
             name: name.to_string(),
             grabbed: None,
+            image: image.clone(),
         })
     }
 }
@@ -39,6 +51,30 @@ impl CardView {
 impl View for CardView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.copy(self.ui.get("card_frame.png"), None, self.frame)?;
+
+        if let Some(image) = &self.image {
+            canvas.copy(
+                self.icons.get(&image),
+                None,
+                SDLRect::new(
+                    (self.frame.x() as u32 + (CARD_WIDTH / 2) - (SKILL_NODE_SIZE / 2)) as i32,
+                    self.frame.y() + 20,
+                    SKILL_NODE_SIZE,
+                    SKILL_NODE_SIZE,
+                ),
+            )?;
+        }
+
+        self.text_renderer.render_text_centered(
+            &self.name,
+            self.frame.x(),
+            self.frame.y() + 75,
+            CARD_WIDTH,
+            canvas,
+            FontSize::Bold,
+            FontColor::Brown,
+        )?;
+
         Ok(())
     }
 
@@ -63,23 +99,37 @@ impl View for CardView {
         }
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        None
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if self.frame.contains_point(SDLPoint::new(x, y)) {
+            Some(HitTestResult::Skill(self.name.clone()))
+        } else {
+            None
+        }
     }
 }
 
 pub struct EquipmentView {
     position: SDLPoint,
+    tree: SkillTree,
     ui: Rc<IconCache>,
+    icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
     cards: RefCell<Vec<Box<CardView>>>,
 }
 
 impl EquipmentView {
-    pub fn init(position: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>) -> BoxResult<EquipmentView> {
+    pub fn init(
+        position: SDLPoint,
+        render_context: &RenderContext,
+        text_renderer: &Rc<TextRenderer>,
+        progression: &ProgressionState,
+    ) -> BoxResult<EquipmentView> {
+        let tree = SkillTree::init(&get_tree(&progression.weapon));
         let ui = Rc::new(IconCache::init(&render_context, IconLoader::init_ui(), &["card_frame.png"])?);
         let view = EquipmentView {
             position,
+            icons: Rc::new(get_tree_icons(render_context, &tree)?),
+            tree,
             ui,
             text_renderer: Rc::clone(text_renderer),
             cards: RefCell::new(vec![]),
@@ -91,7 +141,12 @@ impl EquipmentView {
         *self.cards.borrow_mut() = progression
             .skills
             .iter()
-            .map(|s| Box::from(CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, s).expect("Unable to load equipment card")))
+            .map(|s| {
+                Box::from(
+                    CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, s, self.tree.get_image(&s))
+                        .expect("Unable to load equipment card"),
+                )
+            })
             .collect();
     }
 
@@ -134,6 +189,6 @@ impl View for EquipmentView {
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        None
+        self.cards.borrow().iter().filter_map(|c| c.hit_test(ecs, x, y)).next()
     }
 }

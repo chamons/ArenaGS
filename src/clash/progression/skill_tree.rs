@@ -75,6 +75,10 @@ impl SkillTree {
             state.experience -= node.cost;
         }
     }
+
+    pub fn get_image(&self, name: &str) -> &Option<String> {
+        &self.nodes.get(name).unwrap().image
+    }
 }
 
 #[cfg(test)]

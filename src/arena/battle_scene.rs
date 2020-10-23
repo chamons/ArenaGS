@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use sdl2::keyboard::{Keycode, Mod};
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
@@ -212,6 +212,10 @@ impl Scene for BattleScene {
                 BattleSceneState::Debug(kind) => self.handle_debug_mouse(kind, x, y, button),
             };
         }
+    }
+
+    fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {
+        self.help.handle_mouse_move(&self.ecs, x, y, state);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
