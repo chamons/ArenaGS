@@ -152,7 +152,7 @@ impl EquipmentView {
 
     pub fn arrange(&self) {
         for (i, c) in &mut self.cards.borrow_mut().iter_mut().enumerate() {
-            c.frame = SDLRect::new(50 + i as i32 * 150, 50, CARD_WIDTH, CARD_HEIGHT);
+            c.frame = SDLRect::new(70 + (i % 7) as i32 * 125, 70 + (i / 7) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
         }
     }
 
