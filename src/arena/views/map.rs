@@ -7,12 +7,11 @@ use sdl2::rect::Rect as SDLRect;
 
 use super::super::components::*;
 use super::super::{battle_actions, AnimationComponent, SpriteLoader};
-use super::view_components::{Frame, FrameKind};
-use super::{CharacterOverlay, HitTestResult, View};
-
+use super::CharacterOverlay;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::*;
+use crate::props::{Frame, FrameKind, HitTestResult, View};
 
 pub struct MapView {
     sprites: SpriteLoader,

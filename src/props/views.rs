@@ -1,15 +1,30 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{HitTestResult, View};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
+use crate::props::{HitTestResult, View};
+
+pub struct EmptyView {}
+
+impl EmptyView {
+    pub fn init() -> BoxResult<EmptyView> {
+        Ok(EmptyView {})
+    }
+}
+
+impl View for EmptyView {
+    fn render(&self, _: &World, _canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        Ok(())
+    }
+}
 
 pub struct Frame {
     position: SDLPoint,
@@ -22,6 +37,7 @@ pub enum FrameKind {
     Log,
     Map,
     Button,
+    ButtonFull,
 }
 
 impl Frame {
@@ -31,6 +47,7 @@ impl Frame {
             FrameKind::Log => "log_frame.png",
             FrameKind::Map => "map_frame.png",
             FrameKind::Button => "button_frame.png",
+            FrameKind::ButtonFull => "button_frame_full.png",
         };
         Ok(Frame {
             position,
@@ -44,7 +61,7 @@ impl Frame {
             FrameKind::InfoBar => (271, 541),
             FrameKind::Log => (271, 227),
             FrameKind::Map => (753, 768),
-            FrameKind::Button => (145, 42),
+            FrameKind::Button | FrameKind::ButtonFull => (145, 42),
         }
     }
 }
@@ -67,41 +84,48 @@ pub enum ButtonKind {
     Text(String, Frame, Rc<TextRenderer>),
 }
 
-pub type EnabledHandler = Box<dyn Fn(&World) -> bool + 'static>;
-pub type ButtonHandler = Box<dyn Fn() -> Option<HitTestResult> + 'static>;
+pub type EnabledHandler = Box<dyn Fn(&World) -> bool>;
+pub type ButtonHandler = Box<dyn Fn()>;
+
 pub struct Button {
     frame: SDLRect,
     kind: ButtonKind,
     enabled: Option<Box<EnabledHandler>>,
     handler: Option<Box<ButtonHandler>>,
+    active: bool,
 }
 
-#[allow(dead_code)]
 impl Button {
+    #[allow(dead_code)]
     pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
         Ok(Button {
             frame,
             kind: ButtonKind::Image(image),
             enabled: enabled.map(Box::new),
             handler: handler.map(Box::new),
+            active: false,
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn text(
         corner: SDLPoint,
         text: &str,
         render_context: &RenderContext,
         text_renderer: &Rc<TextRenderer>,
+        full_frame: bool,
+        active: bool,
         enabled: Option<EnabledHandler>,
         handler: Option<ButtonHandler>,
     ) -> BoxResult<Button> {
-        let text_frame = Frame::init(corner, render_context, FrameKind::Button)?;
+        let text_frame = Frame::init(corner, render_context, if full_frame { FrameKind::ButtonFull } else { FrameKind::Button })?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
             kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
             enabled: enabled.map(Box::new),
             handler: handler.map(Box::new),
+            active,
         })
     }
 }
@@ -119,7 +143,7 @@ impl View for Button {
                     text_frame.frame_size().0,
                     canvas,
                     FontSize::Bold,
-                    FontColor::Brown,
+                    if self.active { FontColor::White } else { FontColor::Brown },
                 )?;
             }
         };
@@ -132,19 +156,27 @@ impl View for Button {
         Ok(())
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        if let Some(enabled) = &self.enabled {
-            if !(enabled)(ecs) {
-                return None;
+    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if let Some(button) = button {
+            if button == MouseButton::Left {
+                if self.frame.contains_point(SDLPoint::new(x, y)) {
+                    if let Some(enabled) = &self.enabled {
+                        if !(enabled)(ecs) {
+                            return;
+                        }
+                    }
+
+                    if let Some(handler) = &self.handler {
+                        (handler)();
+                    }
+                }
             }
         }
+    }
 
+    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if self.frame.contains_point(SDLPoint::new(x, y)) {
-            if let Some(handler) = &self.handler {
-                (handler)()
-            } else {
-                Some(HitTestResult::Button)
-            }
+            Some(HitTestResult::Button)
         } else {
             None
         }
@@ -157,7 +189,6 @@ pub struct TabInfo {
     view: Box<dyn View>,
 }
 
-#[allow(dead_code)]
 impl TabInfo {
     pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
         TabInfo {
@@ -174,7 +205,6 @@ pub struct TabView {
     index: RefCell<usize>,
 }
 
-#[allow(dead_code)]
 impl TabView {
     pub fn init(corner: SDLPoint, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, mut tabs: Vec<TabInfo>) -> BoxResult<TabView> {
         let button_width: i32 = 150;
@@ -192,6 +222,8 @@ impl TabView {
                     &b.text,
                     render_context,
                     text_renderer,
+                    false,
+                    i == 0,
                     Some(Box::new(b.enabled)),
                     None,
                 )
@@ -218,12 +250,22 @@ impl View for TabView {
         Ok(())
     }
 
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
-        if let Some(index) = tab_hit {
-            *self.index.borrow_mut() = index;
+    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if let Some(button) = button {
+            if button == MouseButton::Left {
+                let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
+                if let Some(index) = tab_hit {
+                    self.tabs[*self.index.borrow()].0.active = false;
+                    *self.index.borrow_mut() = index;
+                    self.tabs[index].0.active = true;
+                }
+            }
         }
-        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
+        self.tabs[*self.index.borrow()].1.handle_mouse(ecs, x, y, button);
+    }
+
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        self.tabs.iter().filter_map(|(_, t)| t.hit_test(ecs, x, y)).next()
     }
 }
 

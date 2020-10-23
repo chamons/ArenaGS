@@ -5,12 +5,11 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::super::{LogIndexDelta, LogIndexPosition};
-use super::view_components::{Frame, FrameKind};
-use super::{render_text_layout, HitTestResult, TextHitTester, View};
 use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
+use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, TextHitTester, View};
 
 pub struct LogView {
     position: SDLPoint,

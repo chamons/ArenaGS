@@ -30,6 +30,7 @@ use conductor::{Director, Storyteller};
 mod arena;
 mod clash;
 mod intermission;
+mod props;
 
 pub fn main() -> BoxResult<()> {
     #[cfg(feature = "profile_self_play")]

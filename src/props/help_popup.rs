@@ -1,15 +1,17 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
 use specs::prelude::*;
 
-use super::{render_text_layout, HitTestResult, TextHitTester, View};
+use super::{render_text_layout, TextHitTester};
 use crate::after_image::*;
 use crate::atlas::prelude::*;
 use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
+use crate::props::{HitTestResult, View};
 
 enum HelpPopupSize {
     Unknown,
@@ -274,6 +276,38 @@ impl HelpPopup {
             }
             _ => {}
         }
+    }
+
+    pub fn handle_key(&mut self, ecs: &World, keycode: Keycode, _keymod: Mod) {
+        if self.is_enabled() && keycode == Keycode::Escape {
+            self.disable();
+        }
+
+        match keycode {
+            Keycode::F1 => {
+                self.enable(ecs, None, HitTestResult::Text("Top Level Help".to_string()));
+                self.force_size_large();
+            }
+            _ => {}
+        }
+    }
+
+    pub fn handle_mouse_event(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>, views: &[Box<dyn View>]) -> bool {
+        self.handle_mouse(ecs, x, y, button);
+        // Prevent stray clicks from passing through
+        if self.is_enabled() {
+            return true;
+        }
+
+        if let Some(button) = button {
+            if button == MouseButton::Middle {
+                let hit = views.iter().rev().filter_map(|v| v.hit_test(ecs, x, y)).next();
+                if let Some(hit) = hit {
+                    self.enable(ecs, Some(Point::init(x as u32, y as u32)), hit);
+                }
+            }
+        }
+        false
     }
 }
 

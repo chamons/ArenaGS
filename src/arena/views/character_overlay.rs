@@ -3,11 +3,11 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::view_components::LifeBar;
 use super::TILE_SIZE;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{ShortInfo, StatusInfo, StatusKind};
+use crate::props::LifeBar;
 
 pub struct CharacterOverlay {
     cache: IconCache,

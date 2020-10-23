@@ -1,11 +1,13 @@
 use std::rc::Rc;
 
+use specs::prelude::*;
+
+use super::battle_scene::BattleScene;
 use super::death_scene::DeathScene;
 use super::round_fade_scene::RoundFadeScene;
 use crate::after_image::prelude::*;
+use crate::clash::{ProgressionComponent, ProgressionState};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
-
-use super::battle_scene::BattleScene;
 
 pub struct ArenaStoryteller {
     render_context: RenderContextHolder,
@@ -26,31 +28,46 @@ impl ArenaStoryteller {
         Box::from(DeathScene::init(snapshot, render_context, &self.text_renderer, message).unwrap())
     }
 
-    fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder, phase: u32) -> Box<dyn Scene> {
+    fn prepare_round_fade_scene(&self, render_context: &RenderContextHolder, progression: ProgressionState) -> Box<dyn Scene> {
         let snapshot = Director::screen_shot(render_context).unwrap();
-        Box::from(RoundFadeScene::init(snapshot, phase))
+        Box::from(RoundFadeScene::init(snapshot, progression))
     }
+}
+
+fn get_progression(ecs: &World) -> ProgressionState {
+    ecs.read_resource::<ProgressionComponent>().state.clone()
+}
+
+pub fn create_stage_direction_from_state(state: &ProgressionState) -> World {
+    let mut world = World::new();
+    world.insert(ProgressionComponent::init(state.clone()));
+    world
 }
 
 impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {
-            StageDirection::ShowRewards(phase) => EventStatus::NewScene(Box::from(
-                crate::intermission::RewardScene::init(render_context, &self.text_renderer, phase).expect("Unable to load reward scene"),
-            )),
-            StageDirection::ShowCharacter(phase) => EventStatus::NewScene(Box::from(
-                crate::intermission::CharacterScene::init(render_context, &self.text_renderer, phase).expect("Unable to load character scene"),
-            )),
             StageDirection::Continue => EventStatus::Continue,
-            StageDirection::NewRound(phase) => EventStatus::NewScene(Box::new(
-                BattleScene::init(&self.render_context, &self.text_renderer, phase).expect("Unable to load additional battle scene"),
-            )),
             StageDirection::BattlePlayerDeath(message) => EventStatus::NewScene(self.prepare_battle_end_scene(render_context, message)),
-            StageDirection::BattleEnemyDefeated(phase) => EventStatus::NewScene(self.prepare_round_fade_scene(render_context, phase)),
+
+            StageDirection::ShowRewards(state) => EventStatus::NewScene(Box::from(
+                crate::intermission::RewardScene::init(render_context, &self.text_renderer, get_progression(&state)).expect("Unable to load reward scene"),
+            )),
+            StageDirection::ShowCharacter(state) => EventStatus::NewScene(Box::from(
+                crate::intermission::CharacterScene::init(render_context, &self.text_renderer, get_progression(&state))
+                    .expect("Unable to load character scene"),
+            )),
+            StageDirection::NewRound(state) => EventStatus::NewScene(Box::new(
+                BattleScene::init(&self.render_context, &self.text_renderer, get_progression(&state)).expect("Unable to load additional battle scene"),
+            )),
+            StageDirection::BattleEnemyDefeated(state) => EventStatus::NewScene(self.prepare_round_fade_scene(render_context, get_progression(&state))),
         }
     }
 
     fn initial_scene(&self) -> Box<dyn Scene> {
-        Box::new(BattleScene::init(&self.render_context, &self.text_renderer, 0).expect("Unable to load initial battle scene"))
+        let mut state = ProgressionState::init_empty();
+        state.skills.insert("First".to_owned());
+        state.experience = 100;
+        Box::new(BattleScene::init(&self.render_context, &self.text_renderer, state).expect("Unable to load initial battle scene"))
     }
 }

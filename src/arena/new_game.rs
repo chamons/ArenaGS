@@ -61,26 +61,26 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
-pub fn random_new_world(phase: u32) -> World {
-    let (kind, difficulty) = match phase {
+pub fn random_new_world(progression: ProgressionState) -> World {
+    let (kind, difficulty) = match progression.phase {
         0 => (BattleKind::SimpleGolem, 0),
         1 => (BattleKind::Bird, 0),
         2 => (BattleKind::Elementalist, 0),
         _ => {
             // Since we are creating an entire new world, it is acceptable to use thread RNG
             let mut random = rand::thread_rng();
-            (random.gen(), phase - 3)
+            (random.gen(), progression.phase - 3)
         }
     };
 
-    create_battle(kind, difficulty, phase)
+    create_battle(progression, kind, difficulty)
 }
 
-fn create_battle(kind: BattleKind, difficulty: u32, phase: u32) -> World {
+fn create_battle(progression: ProgressionState, kind: BattleKind, difficulty: u32) -> World {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
-    if phase == 0 {
+    if progression.phase == 0 {
         ecs.log("Welcome to ArenaGS!");
         ecs.log("Press F1 for help.");
     }
@@ -88,7 +88,7 @@ fn create_battle(kind: BattleKind, difficulty: u32, phase: u32) -> World {
     let map_data_path = Path::new(&get_exe_folder()).join("maps").join("beach").join("map1.dat");
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
-    ecs.write_resource::<GamePhaseComponent>().phase = phase;
+    ecs.insert(ProgressionComponent::init(progression));
 
     let player_position = find_placement(&ecs, 1, 1);
     spawner::player(&mut ecs, player_position);

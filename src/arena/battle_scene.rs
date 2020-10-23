@@ -15,6 +15,7 @@ use super::{new_game, saveload};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
+use crate::props::{HelpPopup, HitTestResult, View};
 
 pub struct BattleScene {
     ecs: World,
@@ -23,8 +24,8 @@ pub struct BattleScene {
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, phase: u32) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(phase);
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<BattleScene> {
+        let ecs = new_game::random_new_world(progression);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -60,10 +61,6 @@ impl BattleScene {
             Keycode::Down => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::South)),
             Keycode::Left => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::West)),
             Keycode::Right => battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::Move(Direction::East)),
-            Keycode::F1 => {
-                self.help.enable(&self.ecs, None, HitTestResult::Text("Top Level Help".to_string()));
-                self.help.force_size_large();
-            }
 
             _ => {}
         }
@@ -76,7 +73,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(0);
+                    self.ecs = new_game::random_new_world(ProgressionState::init_empty());
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {
@@ -178,10 +175,8 @@ impl BattleScene {
 }
 
 impl Scene for BattleScene {
-    fn handle_key(&mut self, keycode: Keycode, _keymod: Mod) {
-        if self.help.is_enabled() && keycode == Keycode::Escape {
-            self.help.disable();
-        }
+    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {
+        self.help.handle_key(&self.ecs, keycode, keymod);
 
         match keycode {
             Keycode::PageUp => {
@@ -204,20 +199,12 @@ impl Scene for BattleScene {
 
     fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         self.ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
-        self.help.handle_mouse(&self.ecs, x, y, button);
-        // Prevent stray clicks from passing through
-        if self.help.is_enabled() {
+
+        if self.help.handle_mouse_event(&self.ecs, x, y, button, &self.views) {
             return;
         }
 
         if let Some(button) = button {
-            if button == MouseButton::Middle {
-                let hit = self.views.iter().rev().filter_map(|v| v.hit_test(&self.ecs, x, y)).next();
-                if let Some(hit) = hit {
-                    self.help.enable(&self.ecs, Some(Point::init(x as u32, y as u32)), hit);
-                }
-            }
-
             let state = battle_actions::read_action_state(&self.ecs);
             match state {
                 BattleSceneState::Default() => self.handle_default_mouse(x, y, button),
@@ -285,7 +272,8 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
     // ALLIES_TODO - https://github.com/chamons/ArenaGS/issues/201
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
-        return StageDirection::BattleEnemyDefeated(ecs.read_resource::<GamePhaseComponent>().phase + 1);
+        ecs.write_resource::<ProgressionComponent>().state.phase += 1;
+        return StageDirection::BattleEnemyDefeated(wrap_progression(&ecs.read_resource::<ProgressionComponent>().state));
     }
     StageDirection::Continue
 }

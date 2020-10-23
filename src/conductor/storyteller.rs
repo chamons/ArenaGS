@@ -1,14 +1,19 @@
+use specs::prelude::*;
+
 use super::{EventStatus, Scene};
 use crate::after_image::prelude::*;
 
 pub enum StageDirection {
     Continue,
-    ShowRewards(u32),
-    ShowCharacter(u32),
-    NewRound(u32),
     BattlePlayerDeath(String),
-    BattleEnemyDefeated(u32),
+
+    // These worlds are temporary holders for ProgressionState like things
+    ShowRewards(World),
+    ShowCharacter(World),
+    NewRound(World),
+    BattleEnemyDefeated(World),
 }
+
 pub trait Storyteller {
     fn initial_scene(&self) -> Box<dyn Scene>;
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus;

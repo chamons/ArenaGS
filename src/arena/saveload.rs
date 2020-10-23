@@ -46,7 +46,7 @@ macro_rules! deserialize_individually {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SerializationHelper {
     pub map: Map,
-    pub phase: u32,
+    pub progression: ProgressionComponent,
 }
 
 #[cfg(test)]
@@ -69,9 +69,10 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
     let mut serializer = serde_json::Serializer::new(&mut *writer);
     {
         let map = ecs.read_resource::<MapComponent>().map.clone();
-        let phase = ecs.read_resource::<GamePhaseComponent>().phase;
+        let progression = (*ecs.read_resource::<ProgressionComponent>()).clone();
+
         ecs.create_entity()
-            .with(SerializationHelper { map, phase })
+            .with(SerializationHelper { map, progression })
             .marked::<SimpleMarker<ToSerialize>>()
             .build();
     }
@@ -107,7 +108,6 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
         RenderComponent,
         BattleSceneStateComponent,
         MousePositionComponent,
-        GamePhaseComponent,
         DurationComponent,
         SerializationHelper
     );
@@ -165,20 +165,19 @@ fn load(data: String) -> BoxResult<World> {
             RenderComponent,
             BattleSceneStateComponent,
             MousePositionComponent,
-            GamePhaseComponent,
             DurationComponent,
             SerializationHelper
         );
     }
     {
-        let (map, phase, entity) = {
+        let (map, entity, progression) = {
             let entities = ecs.entities();
             let helper = ecs.read_storage::<SerializationHelper>();
             let (entity, helper) = (&entities, &helper).join().next().unwrap();
-            (helper.map.clone(), helper.phase, entity)
+            (helper.map.clone(), entity, helper.progression.clone())
         };
         ecs.insert(MapComponent::init(map));
-        ecs.insert(GamePhaseComponent::init(phase));
+        ecs.insert(progression);
         ecs.delete_entity(entity)?;
     }
 
@@ -191,15 +190,27 @@ mod tests {
 
     #[test]
     fn save_load_smoke() {
-        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 0)
+            .with_map()
+            .with_progression()
+            .build();
         let save = save_to_string(&mut ecs);
         ecs = load_from_string(save).unwrap();
         assert_eq!(2, find_all_characters(&ecs).len());
+        assert!(ecs.has_value::<MapComponent>());
+        assert!(ecs.has_value::<ProgressionComponent>());
     }
 
     #[test]
     fn save_load_with_field() {
-        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 0)
+            .with_map()
+            .with_progression()
+            .build();
         let player = find_at(&ecs, 2, 2);
 
         begin_field(
@@ -222,7 +233,12 @@ mod tests {
 
     #[test]
     fn save_load_with_orbs() {
-        let mut ecs = create_test_state().with_player(2, 2, 0).with_character(2, 6, 0).with_map().build();
+        let mut ecs = create_test_state()
+            .with_player(2, 2, 0)
+            .with_character(2, 6, 0)
+            .with_map()
+            .with_progression()
+            .build();
         let player = find_at(&ecs, 2, 2);
 
         begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");

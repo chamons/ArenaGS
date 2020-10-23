@@ -6,12 +6,18 @@
         "fullscreen",
         "fullscreen type",
         "gameplay",
+        "hittester",
+        "infobar",
         "keymod",
         "knockback",
         "lifebar",
         "rgba",
         "rustc",
         "sdl",
-        "type"
+        "skillbar",
+        "skilltree",
+        "skilltree view",
+        "type",
+        "view"
     ]
 }
