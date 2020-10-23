@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::slice;
 
 use sdl2::keyboard::{Keycode, Mod};
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
@@ -53,7 +53,7 @@ impl CharacterScene {
                     ),
                     TabInfo::init(
                         "Equipment",
-                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
+                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer)?),
                         |_| true,
                     ),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
@@ -81,6 +81,12 @@ impl Scene for CharacterScene {
 
         self.tab.handle_mouse_click(&self.ecs, x, y, button);
         self.continue_button.handle_mouse_click(&self.ecs, x, y, button);
+    }
+
+    fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {
+        self.help.handle_mouse_move(&self.ecs, x, y, state);
+        self.tab.handle_mouse_move(&self.ecs, x, y, state);
+        self.continue_button.handle_mouse_move(&self.ecs, x, y, state);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {

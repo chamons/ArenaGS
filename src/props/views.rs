@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -262,6 +262,10 @@ impl View for TabView {
             }
         }
         self.tabs[*self.index.borrow()].1.handle_mouse_click(ecs, x, y, button);
+    }
+
+    fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
+        self.tabs[*self.index.borrow()].1.handle_mouse_move(ecs, x, y, state);
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
