@@ -11,7 +11,7 @@ use specs::prelude::*;
 use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{CharacterWeaponKind, EquipmentKinds, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
 use crate::props::{Button, HitTestResult, View};
 
 pub struct CardView {
@@ -57,7 +57,7 @@ impl View for CardView {
                 self.icons.get(&image),
                 None,
                 SDLRect::new(
-                    (self.frame.x() as u32 + (CARD_WIDTH / 2) - (SKILL_NODE_SIZE / 2)) as i32,
+                    (self.frame.x() + (CARD_WIDTH as i32 / 2) - (SKILL_NODE_SIZE as i32 / 2)) as i32,
                     self.frame.y() + 20,
                     SKILL_NODE_SIZE,
                     SKILL_NODE_SIZE,
@@ -111,19 +111,29 @@ impl View for CardView {
 pub struct EquipmentSlotView {
     frame: SDLRect,
     ui: Rc<IconCache>,
+    kind: EquipmentKinds,
 }
 
 impl EquipmentSlotView {
-    pub fn init(position: SDLPoint, ui: &Rc<IconCache>) -> BoxResult<EquipmentSlotView> {
+    pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds) -> BoxResult<EquipmentSlotView> {
         Ok(EquipmentSlotView {
-            frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH, CARD_HEIGHT),
-            ui: Rc::clone(&ui),
+            frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH + 4, CARD_HEIGHT + 4),
+            ui: Rc::clone(ui),
+            kind,
         })
     }
 }
 
 impl View for EquipmentSlotView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        let equipment_frame = self.ui.get(match self.kind {
+            EquipmentKinds::Weapon => "equipment_weapon_slot.png",
+            EquipmentKinds::Armor => "equipment_armor_slot.png",
+            EquipmentKinds::Accessory => "equipment_accessory_slot.png",
+            EquipmentKinds::Mastery => "equipment_mastery_slot.png",
+        });
+        canvas.copy(equipment_frame, None, self.frame)?;
+
         Ok(())
     }
 }
@@ -148,7 +158,17 @@ impl EquipmentView {
         progression: &ProgressionState,
     ) -> BoxResult<EquipmentView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
-        let ui = Rc::new(IconCache::init(&render_context, IconLoader::init_ui(), &["card_frame.png"])?);
+        let ui = Rc::new(IconCache::init(
+            &render_context,
+            IconLoader::init_ui(),
+            &[
+                "card_frame.png",
+                "equipment_weapon_slot.png",
+                "equipment_armor_slot.png",
+                "equipment_accessory_slot.png",
+                "equipment_mastery_slot.png",
+            ],
+        )?);
         let should_sort = Rc::new(RefCell::new(false));
 
         let view = EquipmentView {
@@ -175,7 +195,13 @@ impl EquipmentView {
                 .flat_map(|(kind, amount)| {
                     std::iter::repeat(())
                         .take(*amount as usize)
-                        .map(|()| Box::from(EquipmentSlotView::init(position, &ui).expect("Unable to load equipment slot")))
+                        .enumerate()
+                        .map(|(i, ())| {
+                            Box::from(
+                                EquipmentSlotView::init(SDLPoint::new(70 + (i % 7) as i32 * 125, 520 + (i / 7) as i32 * 125), &ui, *kind)
+                                    .expect("Unable to load equipment slot"),
+                            )
+                        })
                         .collect::<Vec<Box<EquipmentSlotView>>>()
                 })
                 .collect(),
@@ -220,9 +246,15 @@ impl View for EquipmentView {
         }
         self.check_for_missing_cards(ecs);
 
+        // Slots below cards
+        for c in &self.slots {
+            c.render(ecs, canvas, frame)?;
+        }
+
         for c in self.cards.borrow().iter() {
             c.render(ecs, canvas, frame)?;
         }
+
         self.sort.render(ecs, canvas, frame)?;
 
         Ok(())
