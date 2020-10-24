@@ -108,6 +108,26 @@ impl View for CardView {
     }
 }
 
+pub struct EquipmentSlotView {
+    frame: SDLRect,
+    ui: Rc<IconCache>,
+}
+
+impl EquipmentSlotView {
+    pub fn init(position: SDLPoint, ui: &Rc<IconCache>) -> BoxResult<EquipmentSlotView> {
+        Ok(EquipmentSlotView {
+            frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH, CARD_HEIGHT),
+            ui: Rc::clone(&ui),
+        })
+    }
+}
+
+impl View for EquipmentSlotView {
+    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        Ok(())
+    }
+}
+
 pub struct EquipmentView {
     should_sort: Rc<RefCell<bool>>,
     position: SDLPoint,
@@ -116,6 +136,7 @@ pub struct EquipmentView {
     icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
     cards: RefCell<Vec<Box<CardView>>>,
+    slots: Vec<Box<EquipmentSlotView>>,
     sort: Button,
 }
 
@@ -134,7 +155,6 @@ impl EquipmentView {
             position,
             icons: Rc::new(get_tree_icons(render_context, &tree)?),
             tree,
-            ui,
             text_renderer: Rc::clone(text_renderer),
             cards: RefCell::new(vec![]),
             should_sort: Rc::clone(&should_sort),
@@ -148,6 +168,18 @@ impl EquipmentView {
                 None,
                 Some(Box::new(move || *should_sort.borrow_mut() = true)),
             )?,
+            slots: progression
+                .equipment
+                .count()
+                .iter()
+                .flat_map(|(kind, amount)| {
+                    std::iter::repeat(())
+                        .take(*amount as usize)
+                        .map(|()| Box::from(EquipmentSlotView::init(position, &ui).expect("Unable to load equipment slot")))
+                        .collect::<Vec<Box<EquipmentSlotView>>>()
+                })
+                .collect(),
+            ui,
         };
         Ok(view)
     }

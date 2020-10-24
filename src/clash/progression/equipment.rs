@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum EquipmentKinds {
     Weapon,
     Armor,
@@ -9,7 +9,7 @@ pub enum EquipmentKinds {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
-struct Equipment {
+pub struct Equipment {
     pub weapon: Vec<String>,
     pub weapon_count: u32,
 
@@ -24,6 +24,10 @@ struct Equipment {
 }
 
 impl Equipment {
+    pub fn init_empty() -> Equipment {
+        Equipment::init(0, 0, 0, 0)
+    }
+
     pub fn init(weapon_count: u32, armor_count: u32, accessory_count: u32, mastery_count: u32) -> Equipment {
         Equipment {
             weapon_count,
@@ -37,7 +41,16 @@ impl Equipment {
         }
     }
 
-    fn get(&mut self, kind: EquipmentKinds) -> (u32, &mut Vec<String>) {
+    fn get(&self, kind: EquipmentKinds) -> (u32, &Vec<String>) {
+        match kind {
+            EquipmentKinds::Weapon => (self.weapon_count, &self.weapon),
+            EquipmentKinds::Armor => (self.armor_count, &self.armor),
+            EquipmentKinds::Accessory => (self.accessory_count, &self.accessory),
+            EquipmentKinds::Mastery => (self.mastery_count, &self.mastery),
+        }
+    }
+
+    fn get_mut(&mut self, kind: EquipmentKinds) -> (u32, &mut Vec<String>) {
         match kind {
             EquipmentKinds::Weapon => (self.weapon_count, &mut self.weapon),
             EquipmentKinds::Armor => (self.armor_count, &mut self.armor),
@@ -47,7 +60,7 @@ impl Equipment {
     }
 
     pub fn add(&mut self, kind: EquipmentKinds, name: &str) -> bool {
-        let (max, store) = self.get(kind);
+        let (max, store) = self.get_mut(kind);
         if store.len() + 1 <= max as usize {
             store.push(name.to_string());
             true
@@ -57,7 +70,7 @@ impl Equipment {
     }
 
     pub fn remove(&mut self, kind: EquipmentKinds, index: usize) -> bool {
-        let (_, store) = self.get(kind);
+        let (_, store) = self.get_mut(kind);
         if index < store.len() {
             store.remove(index);
             true
@@ -67,7 +80,7 @@ impl Equipment {
     }
 
     pub fn swap(&mut self, kind: EquipmentKinds, name: &str, index: usize) -> bool {
-        let (_, store) = self.get(kind);
+        let (_, store) = self.get_mut(kind);
         if index < store.len() {
             store.remove(index);
             store.insert(index, name.to_string());
@@ -75,6 +88,15 @@ impl Equipment {
         } else {
             false
         }
+    }
+
+    pub fn count(&self) -> Vec<(EquipmentKinds, u32)> {
+        vec![
+            (EquipmentKinds::Weapon, self.get(EquipmentKinds::Weapon).0),
+            (EquipmentKinds::Armor, self.get(EquipmentKinds::Armor).0),
+            (EquipmentKinds::Accessory, self.get(EquipmentKinds::Accessory).0),
+            (EquipmentKinds::Mastery, self.get(EquipmentKinds::Mastery).0),
+        ]
     }
 }
 
@@ -139,5 +161,19 @@ mod tests {
     fn swap_no_space() {
         let mut equipment = Equipment::init(0, 0, 0, 0);
         assert_eq!(false, equipment.swap(EquipmentKinds::Weapon, "Test2", 0));
+    }
+
+    #[test]
+    fn count() {
+        let equipment = Equipment::init(1, 2, 3, 4);
+        let count = equipment.count();
+        assert_eq!(EquipmentKinds::Weapon, count[0].0);
+        assert_eq!(1, count[0].1);
+        assert_eq!(EquipmentKinds::Armor, count[1].0);
+        assert_eq!(2, count[1].1);
+        assert_eq!(EquipmentKinds::Accessory, count[2].0);
+        assert_eq!(3, count[2].1);
+        assert_eq!(EquipmentKinds::Mastery, count[3].0);
+        assert_eq!(4, count[3].1);
     }
 }

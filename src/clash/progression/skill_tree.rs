@@ -83,11 +83,11 @@ impl SkillTree {
 
 #[cfg(test)]
 mod tests {
-    use super::super::CharacterWeaponKind;
+    use super::super::{CharacterWeaponKind, Equipment};
     use super::*;
 
     fn state_with_deps(experience: u32, deps: &[&str]) -> ProgressionState {
-        ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger)
+        ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
     }
 
     #[test]

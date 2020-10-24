@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use super::Equipment;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::*;
@@ -25,19 +26,21 @@ pub struct ProgressionState {
     pub experience: u32,
     pub skills: HashSet<String>,
     pub weapon: CharacterWeaponKind,
+    pub equipment: Equipment,
 }
 
 impl ProgressionState {
     pub fn init_empty() -> ProgressionState {
-        ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger)
+        ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init_empty())
     }
 
-    pub fn init(phase: u32, experience: u32, skills: &[&str], weapon: CharacterWeaponKind) -> ProgressionState {
+    pub fn init(phase: u32, experience: u32, skills: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
         ProgressionState {
             phase,
             experience,
             skills: skills.iter().map(|s| s.to_string()).collect(),
             weapon,
+            equipment,
         }
     }
 }
