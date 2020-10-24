@@ -12,7 +12,7 @@ use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
-use crate::props::{HitTestResult, View};
+use crate::props::{Button, HitTestResult, View};
 
 pub struct CardView {
     frame: SDLRect,
@@ -109,12 +109,14 @@ impl View for CardView {
 }
 
 pub struct EquipmentView {
+    should_sort: Rc<RefCell<bool>>,
     position: SDLPoint,
     tree: SkillTree,
     ui: Rc<IconCache>,
     icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
     cards: RefCell<Vec<Box<CardView>>>,
+    sort: Button,
 }
 
 impl EquipmentView {
@@ -126,6 +128,8 @@ impl EquipmentView {
     ) -> BoxResult<EquipmentView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
         let ui = Rc::new(IconCache::init(&render_context, IconLoader::init_ui(), &["card_frame.png"])?);
+        let should_sort = Rc::new(RefCell::new(false));
+
         let view = EquipmentView {
             position,
             icons: Rc::new(get_tree_icons(render_context, &tree)?),
@@ -133,6 +137,17 @@ impl EquipmentView {
             ui,
             text_renderer: Rc::clone(text_renderer),
             cards: RefCell::new(vec![]),
+            should_sort: Rc::clone(&should_sort),
+            sort: Button::text(
+                SDLPoint::new(650, 650),
+                "Sort",
+                render_context,
+                text_renderer,
+                true,
+                true,
+                None,
+                Some(Box::new(move || *should_sort.borrow_mut() = true)),
+            )?,
         };
         Ok(view)
     }
@@ -167,11 +182,16 @@ impl EquipmentView {
 
 impl View for EquipmentView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        if *self.should_sort.borrow() {
+            *self.should_sort.borrow_mut() = false;
+            self.arrange();
+        }
         self.check_for_missing_cards(ecs);
 
         for c in self.cards.borrow().iter() {
             c.render(ecs, canvas, frame)?;
         }
+        self.sort.render(ecs, canvas, frame)?;
 
         Ok(())
     }
@@ -180,12 +200,14 @@ impl View for EquipmentView {
         for c in self.cards.borrow_mut().iter_mut() {
             c.handle_mouse_click(ecs, x, y, button);
         }
+        self.sort.handle_mouse_click(ecs, x, y, button);
     }
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
         for c in self.cards.borrow_mut().iter_mut() {
             c.handle_mouse_move(ecs, x, y, state);
         }
+        self.sort.handle_mouse_move(ecs, x, y, state);
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
