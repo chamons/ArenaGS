@@ -12,7 +12,6 @@ use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, Skill
 use crate::props::{HitTestResult, View};
 
 pub struct SkillTreeView {
-    position: SDLPoint,
     icons: IconCache,
     ui: IconCache,
     tree: SkillTree,
@@ -34,16 +33,10 @@ pub fn get_tree_icons(render_context: &RenderContext, tree: &SkillTree) -> BoxRe
 }
 
 impl SkillTreeView {
-    pub fn init(
-        position: SDLPoint,
-        render_context: &RenderContext,
-        text_renderer: &Rc<TextRenderer>,
-        progression: &ProgressionState,
-    ) -> BoxResult<SkillTreeView> {
+    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, progression: &ProgressionState) -> BoxResult<SkillTreeView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
 
         Ok(SkillTreeView {
-            position,
             icons: get_tree_icons(render_context, &tree)?,
             ui: IconCache::init(
                 &render_context,
@@ -61,12 +54,7 @@ impl SkillTreeView {
             .all(&progression)
             .iter()
             .filter_map(|(node, _)| {
-                let position = SDLRect::new(
-                    self.position.x() + node.position.x as i32,
-                    self.position.x() + node.position.y as i32,
-                    SKILL_NODE_SIZE,
-                    SKILL_NODE_SIZE,
-                );
+                let position = SDLRect::new(node.position.x as i32, node.position.y as i32, SKILL_NODE_SIZE, SKILL_NODE_SIZE);
                 if position.contains_point(SDLPoint::new(x, y)) {
                     Some(node)
                 } else {
@@ -106,19 +94,14 @@ impl View for SkillTreeView {
                 border,
                 None,
                 SDLRect::new(
-                    self.position.x() + node.position.x as i32 - SKILL_BORDER as i32,
-                    self.position.y() + node.position.y as i32 - SKILL_BORDER as i32,
+                    node.position.x as i32 - SKILL_BORDER as i32,
+                    node.position.y as i32 - SKILL_BORDER as i32,
                     SKILL_NODE_SIZE + (SKILL_BORDER * 2),
                     SKILL_NODE_SIZE + (SKILL_BORDER * 2),
                 ),
             )?;
 
-            let node_rect = SDLRect::new(
-                self.position.x() + node.position.x as i32,
-                self.position.y() + node.position.y as i32,
-                SKILL_NODE_SIZE,
-                SKILL_NODE_SIZE,
-            );
+            let node_rect = SDLRect::new(node.position.x as i32, node.position.y as i32, SKILL_NODE_SIZE, SKILL_NODE_SIZE);
             canvas.copy(self.icons.get(&node.image.as_ref().unwrap()), None, node_rect)?;
 
             if let Some(color) = match status {
@@ -145,13 +128,10 @@ impl View for SkillTreeView {
             }
 
             let left = SDLPoint::new(
-                self.position.x() + (left.position.x + SKILL_NODE_SIZE + SKILL_BORDER) as i32,
-                self.position.y() + (left.position.y + (SKILL_NODE_SIZE / 2)) as i32,
+                (left.position.x + SKILL_NODE_SIZE + SKILL_BORDER) as i32,
+                (left.position.y + (SKILL_NODE_SIZE / 2)) as i32,
             );
-            let right = SDLPoint::new(
-                self.position.x() + (right.position.x - SKILL_BORDER - 1) as i32,
-                self.position.y() + (right.position.y + (SKILL_NODE_SIZE / 2)) as i32,
-            );
+            let right = SDLPoint::new((right.position.x - SKILL_BORDER - 1) as i32, (right.position.y + (SKILL_NODE_SIZE / 2)) as i32);
 
             // Draw a straight line
             if left.y == right.y {

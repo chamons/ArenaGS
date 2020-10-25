@@ -89,15 +89,6 @@ impl Equipment {
             false
         }
     }
-
-    pub fn count(&self) -> Vec<(EquipmentKinds, u32)> {
-        vec![
-            (EquipmentKinds::Weapon, self.get(EquipmentKinds::Weapon).0),
-            (EquipmentKinds::Armor, self.get(EquipmentKinds::Armor).0),
-            (EquipmentKinds::Accessory, self.get(EquipmentKinds::Accessory).0),
-            (EquipmentKinds::Mastery, self.get(EquipmentKinds::Mastery).0),
-        ]
-    }
 }
 
 #[cfg(test)]
@@ -161,19 +152,5 @@ mod tests {
     fn swap_no_space() {
         let mut equipment = Equipment::init(0, 0, 0, 0);
         assert_eq!(false, equipment.swap(EquipmentKinds::Weapon, "Test2", 0));
-    }
-
-    #[test]
-    fn count() {
-        let equipment = Equipment::init(1, 2, 3, 4);
-        let count = equipment.count();
-        assert_eq!(EquipmentKinds::Weapon, count[0].0);
-        assert_eq!(1, count[0].1);
-        assert_eq!(EquipmentKinds::Armor, count[1].0);
-        assert_eq!(2, count[1].1);
-        assert_eq!(EquipmentKinds::Accessory, count[2].0);
-        assert_eq!(3, count[2].1);
-        assert_eq!(EquipmentKinds::Mastery, count[3].0);
-        assert_eq!(4, count[3].1);
     }
 }

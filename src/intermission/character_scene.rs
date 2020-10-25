@@ -48,14 +48,12 @@ impl CharacterScene {
                 vec![
                     TabInfo::init(
                         "Skill Tree",
-                        Box::new(SkillTreeView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
+                        Box::new(SkillTreeView::init(render_context, text_renderer, &progression)?),
                         |_| true,
                     ),
-                    TabInfo::init(
-                        "Equipment",
-                        Box::new(EquipmentView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
-                        |_| true,
-                    ),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &progression)?), |_| {
+                        true
+                    }),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),

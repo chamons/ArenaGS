@@ -22,6 +22,7 @@ pub struct CardView {
     name: String,
     image: Option<String>,
     grabbed: Option<SDLPoint>,
+    pub z_order: u32,
 }
 
 const CARD_WIDTH: u32 = 110;
@@ -44,6 +45,7 @@ impl CardView {
             name: name.to_string(),
             grabbed: None,
             image: image.clone(),
+            z_order: 0,
         })
     }
 }
@@ -115,12 +117,12 @@ pub struct EquipmentSlotView {
 }
 
 impl EquipmentSlotView {
-    pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds) -> BoxResult<EquipmentSlotView> {
-        Ok(EquipmentSlotView {
+    pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds) -> EquipmentSlotView {
+        EquipmentSlotView {
             frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH + 4, CARD_HEIGHT + 4),
             ui: Rc::clone(ui),
             kind,
-        })
+        }
     }
 }
 
@@ -140,7 +142,6 @@ impl View for EquipmentSlotView {
 
 pub struct EquipmentView {
     should_sort: Rc<RefCell<bool>>,
-    position: SDLPoint,
     tree: SkillTree,
     ui: Rc<IconCache>,
     icons: Rc<IconCache>,
@@ -148,15 +149,12 @@ pub struct EquipmentView {
     cards: RefCell<Vec<Box<CardView>>>,
     slots: Vec<Box<EquipmentSlotView>>,
     sort: Button,
+    max_z_order: u32,
+    needs_z_reorder: RefCell<bool>,
 }
 
 impl EquipmentView {
-    pub fn init(
-        position: SDLPoint,
-        render_context: &RenderContext,
-        text_renderer: &Rc<TextRenderer>,
-        progression: &ProgressionState,
-    ) -> BoxResult<EquipmentView> {
+    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, progression: &ProgressionState) -> BoxResult<EquipmentView> {
         let tree = SkillTree::init(&get_tree(&progression.weapon));
         let ui = Rc::new(IconCache::init(
             &render_context,
@@ -172,7 +170,6 @@ impl EquipmentView {
         let should_sort = Rc::new(RefCell::new(false));
 
         let view = EquipmentView {
-            position,
             icons: Rc::new(get_tree_icons(render_context, &tree)?),
             tree,
             text_renderer: Rc::clone(text_renderer),
@@ -188,26 +185,50 @@ impl EquipmentView {
                 None,
                 Some(Box::new(move || *should_sort.borrow_mut() = true)),
             )?,
-            slots: progression
-                .equipment
-                .count()
-                .iter()
-                .flat_map(|(kind, amount)| {
-                    std::iter::repeat(())
-                        .take(*amount as usize)
-                        .enumerate()
-                        .map(|(i, ())| {
-                            Box::from(
-                                EquipmentSlotView::init(SDLPoint::new(70 + (i % 7) as i32 * 125, 520 + (i / 7) as i32 * 125), &ui, *kind)
-                                    .expect("Unable to load equipment slot"),
-                            )
-                        })
-                        .collect::<Vec<Box<EquipmentSlotView>>>()
-                })
-                .collect(),
+            slots: EquipmentView::create_slots(progression, &ui),
             ui,
+            max_z_order: 1,
+            needs_z_reorder: RefCell::new(false),
         };
         Ok(view)
+    }
+
+    fn create_slots(progression: &ProgressionState, ui: &Rc<IconCache>) -> Vec<Box<EquipmentSlotView>> {
+        let mut slots = vec![];
+
+        for i in 0..progression.equipment.weapon_count {
+            slots.push(Box::from(EquipmentSlotView::init(
+                SDLPoint::new(70 + (i as i32 % 7) * 125, 210),
+                &ui,
+                EquipmentKinds::Weapon,
+            )));
+        }
+
+        for i in 0..progression.equipment.armor_count {
+            slots.push(Box::from(EquipmentSlotView::init(
+                SDLPoint::new(70 + (i as i32 % 7) * 125, 330),
+                &ui,
+                EquipmentKinds::Armor,
+            )));
+        }
+
+        for i in 0..progression.equipment.accessory_count {
+            slots.push(Box::from(EquipmentSlotView::init(
+                SDLPoint::new(70 + (i as i32 % 7) * 125, 450),
+                &ui,
+                EquipmentKinds::Accessory,
+            )));
+        }
+
+        for i in 0..progression.equipment.mastery_count {
+            slots.push(Box::from(EquipmentSlotView::init(
+                SDLPoint::new(70 + (i as i32 % 7) * 125, 570),
+                &ui,
+                EquipmentKinds::Mastery,
+            )));
+        }
+
+        slots
     }
 
     fn create_cards(&self, progression: &ProgressionState) {
@@ -224,8 +245,15 @@ impl EquipmentView {
     }
 
     pub fn arrange(&self) {
-        for (i, c) in &mut self.cards.borrow_mut().iter_mut().enumerate() {
-            c.frame = SDLRect::new(70 + (i % 7) as i32 * 125, 70 + (i / 7) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
+        let cards = &mut self.cards.borrow_mut();
+        let compact = cards.len() > 12;
+
+        for (i, c) in cards.iter_mut().enumerate() {
+            if compact {
+                c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
+            } else {
+                c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
+            }
         }
     }
 
@@ -245,6 +273,10 @@ impl View for EquipmentView {
             self.arrange();
         }
         self.check_for_missing_cards(ecs);
+        if *self.needs_z_reorder.borrow() {
+            *self.needs_z_reorder.borrow_mut() = false;
+            self.cards.borrow_mut().sort_by(|a, b| a.z_order.cmp(&b.z_order));
+        }
 
         // Slots below cards
         for c in &self.slots {
@@ -261,8 +293,14 @@ impl View for EquipmentView {
     }
 
     fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
-        for c in self.cards.borrow_mut().iter_mut() {
+        for c in self.cards.borrow_mut().iter_mut().rev() {
             c.handle_mouse_click(ecs, x, y, button);
+            if c.grabbed.is_some() {
+                c.z_order = self.max_z_order;
+                self.max_z_order += 1;
+                *self.needs_z_reorder.borrow_mut() = true;
+                return;
+            }
         }
         self.sort.handle_mouse_click(ecs, x, y, button);
     }
