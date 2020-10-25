@@ -156,7 +156,7 @@ impl HelpPopup {
 
     fn should_close_help(&mut self, x: i32, y: i32, button: Option<MouseButton>) -> bool {
         match &self.state {
-            HelpPopupState::Tooltip { start_mouse, .. } => {
+            HelpPopupState::Tooltip { .. } => {
                 if button.is_some() {
                     return true;
                 }

@@ -23,6 +23,7 @@ pub struct Equipment {
     pub mastery_count: u32,
 }
 
+#[allow(dead_code)]
 impl Equipment {
     pub fn init_empty() -> Equipment {
         Equipment::init(0, 0, 0, 0)

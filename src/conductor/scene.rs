@@ -6,11 +6,11 @@ use crate::atlas::prelude::*;
 use crate::conductor::StageDirection;
 
 pub trait Scene {
-    fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {}
+    fn handle_mouse_click(&mut self, _x: i32, _y: i32, _button: Option<MouseButton>) {}
 
-    fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {}
+    fn handle_mouse_move(&mut self, _x: i32, _y: i32, _state: MouseState) {}
 
-    fn handle_key(&mut self, keycode: Keycode, keymod: Mod) {}
+    fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
 
     fn render(&mut self, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()>;
 

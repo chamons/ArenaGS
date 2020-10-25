@@ -2,16 +2,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::mouse::{MouseButton, MouseState};
-use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
-use sdl2::render::Texture;
 use specs::prelude::*;
 
 use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, EquipmentKinds, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{EquipmentKinds, ProgressionState, SkillTree};
 use crate::props::{Button, HitTestResult, View};
 
 pub struct CardView {
@@ -51,7 +49,7 @@ impl CardView {
 }
 
 impl View for CardView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.copy(self.ui.get("card_frame.png"), None, self.frame)?;
 
         if let Some(image) = &self.image {
@@ -80,7 +78,7 @@ impl View for CardView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, _ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if self.frame.contains_point(SDLPoint::new(x, y)) {
@@ -127,7 +125,7 @@ impl EquipmentSlotView {
 }
 
 impl View for EquipmentSlotView {
-    fn render(&self, ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+    fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         let equipment_frame = self.ui.get(match self.kind {
             EquipmentKinds::Weapon => "equipment_weapon_slot.png",
             EquipmentKinds::Armor => "equipment_armor_slot.png",
@@ -175,6 +173,7 @@ impl EquipmentView {
             text_renderer: Rc::clone(text_renderer),
             cards: RefCell::new(vec![]),
             should_sort: Rc::clone(&should_sort),
+            needs_z_reorder: RefCell::new(false),
             sort: Button::text(
                 SDLPoint::new(650, 650),
                 "Sort",
@@ -188,7 +187,6 @@ impl EquipmentView {
             slots: EquipmentView::create_slots(progression, &ui),
             ui,
             max_z_order: 1,
-            needs_z_reorder: RefCell::new(false),
         };
         Ok(view)
     }
