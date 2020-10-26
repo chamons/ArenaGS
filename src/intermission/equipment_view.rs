@@ -1,4 +1,6 @@
 use std::cell::RefCell;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 use std::rc::Rc;
 
 use sdl2::mouse::{MouseButton, MouseState};
@@ -114,10 +116,16 @@ pub struct EquipmentSlotView {
     kind: EquipmentKinds,
 }
 
+const EQUIPMENT_SLOT_OFFSET: u32 = 2;
 impl EquipmentSlotView {
     pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds) -> EquipmentSlotView {
         EquipmentSlotView {
-            frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH + 4, CARD_HEIGHT + 4),
+            frame: SDLRect::new(
+                position.x(),
+                position.y(),
+                CARD_WIDTH + EQUIPMENT_SLOT_OFFSET * 2,
+                CARD_HEIGHT + EQUIPMENT_SLOT_OFFSET * 2,
+            ),
             ui: Rc::clone(ui),
             kind,
         }
@@ -196,7 +204,7 @@ impl EquipmentView {
 
         for i in 0..progression.equipment.weapon_count {
             slots.push(Box::from(EquipmentSlotView::init(
-                SDLPoint::new(70 + (i as i32 % 7) * 125, 210),
+                EquipmentView::frame_for_slot(EquipmentKinds::Weapon, i),
                 &ui,
                 EquipmentKinds::Weapon,
             )));
@@ -204,7 +212,7 @@ impl EquipmentView {
 
         for i in 0..progression.equipment.armor_count {
             slots.push(Box::from(EquipmentSlotView::init(
-                SDLPoint::new(70 + (i as i32 % 7) * 125, 330),
+                EquipmentView::frame_for_slot(EquipmentKinds::Armor, i),
                 &ui,
                 EquipmentKinds::Armor,
             )));
@@ -212,7 +220,7 @@ impl EquipmentView {
 
         for i in 0..progression.equipment.accessory_count {
             slots.push(Box::from(EquipmentSlotView::init(
-                SDLPoint::new(70 + (i as i32 % 7) * 125, 450),
+                EquipmentView::frame_for_slot(EquipmentKinds::Accessory, i),
                 &ui,
                 EquipmentKinds::Accessory,
             )));
@@ -220,13 +228,22 @@ impl EquipmentView {
 
         for i in 0..progression.equipment.mastery_count {
             slots.push(Box::from(EquipmentSlotView::init(
-                SDLPoint::new(70 + (i as i32 % 7) * 125, 570),
+                EquipmentView::frame_for_slot(EquipmentKinds::Mastery, i),
                 &ui,
                 EquipmentKinds::Mastery,
             )));
         }
 
         slots
+    }
+
+    fn frame_for_slot(kind: EquipmentKinds, i: u32) -> SDLPoint {
+        match kind {
+            EquipmentKinds::Weapon => SDLPoint::new(70 + (i as i32 % 7) * 125, 210),
+            EquipmentKinds::Armor => SDLPoint::new(70 + (i as i32 % 7) * 125, 330),
+            EquipmentKinds::Accessory => SDLPoint::new(70 + (i as i32 % 7) * 125, 450),
+            EquipmentKinds::Mastery => SDLPoint::new(70 + (i as i32 % 7) * 125, 570),
+        }
     }
 
     fn create_cards(&self, progression: &ProgressionState) {
@@ -242,15 +259,24 @@ impl EquipmentView {
             .collect();
     }
 
-    pub fn arrange(&self) {
+    pub fn arrange(&self, progression: &ProgressionState) {
         let cards = &mut self.cards.borrow_mut();
-        let compact = cards.len() > 12;
+        let cards_in_equipment: HashSet<String> = HashSet::from_iter(progression.equipment.all());
+
+        let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.name)).count() > 12;
 
         for (i, c) in cards.iter_mut().enumerate() {
-            if compact {
-                c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
+            if cards_in_equipment.contains(&c.name) {
+                let (kind, equipment_index) = progression.equipment.find(&c.name).unwrap();
+                let equipment_frame =
+                    EquipmentView::frame_for_slot(kind, equipment_index as u32).offset(EQUIPMENT_SLOT_OFFSET as i32, EQUIPMENT_SLOT_OFFSET as i32);
+                c.frame = SDLRect::new(equipment_frame.x(), equipment_frame.y(), CARD_WIDTH, CARD_HEIGHT)
             } else {
-                c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
+                if compact {
+                    c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
+                } else {
+                    c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
+                }
             }
         }
     }
@@ -259,7 +285,7 @@ impl EquipmentView {
         let progression = ecs.read_resource::<ProgressionState>();
         if progression.skills.len() != self.cards.borrow().len() {
             self.create_cards(&progression);
-            self.arrange();
+            self.arrange(&progression);
         }
     }
 }
@@ -268,7 +294,7 @@ impl View for EquipmentView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         if *self.should_sort.borrow() {
             *self.should_sort.borrow_mut() = false;
-            self.arrange();
+            self.arrange(&ecs.read_resource::<ProgressionState>());
         }
         self.check_for_missing_cards(ecs);
         if *self.needs_z_reorder.borrow() {

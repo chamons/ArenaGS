@@ -80,15 +80,29 @@ impl Equipment {
         }
     }
 
-    pub fn swap(&mut self, kind: EquipmentKinds, name: &str, index: usize) -> bool {
-        let (_, store) = self.get_mut(kind);
-        if index < store.len() {
-            store.remove(index);
-            store.insert(index, name.to_string());
-            true
-        } else {
-            false
+    pub fn all(&self) -> Vec<String> {
+        let mut all = self.weapon.clone();
+        all.extend(self.armor.clone());
+        all.extend(self.accessory.clone());
+        all.extend(self.mastery.clone());
+        all
+    }
+
+    pub fn find(&self, name: &str) -> Option<(EquipmentKinds, usize)> {
+        if let Some((i, _)) = self.weapon.iter().enumerate().find(|(_, w)| *w == name) {
+            return Some((EquipmentKinds::Weapon, i));
         }
+        if let Some((i, _)) = self.armor.iter().enumerate().find(|(_, w)| *w == name) {
+            return Some((EquipmentKinds::Armor, i));
+        }
+        if let Some((i, _)) = self.accessory.iter().enumerate().find(|(_, w)| *w == name) {
+            return Some((EquipmentKinds::Accessory, i));
+        }
+        if let Some((i, _)) = self.mastery.iter().enumerate().find(|(_, w)| *w == name) {
+            return Some((EquipmentKinds::Mastery, i));
+        }
+
+        None
     }
 }
 
@@ -132,26 +146,23 @@ mod tests {
     }
 
     #[test]
-    fn swap_full() {
-        let mut equipment = Equipment::init(3, 0, 0, 0);
-        equipment.add(EquipmentKinds::Weapon, "Test");
-        equipment.add(EquipmentKinds::Weapon, "Test2");
-        equipment.add(EquipmentKinds::Weapon, "Test3");
-        assert!(equipment.swap(EquipmentKinds::Weapon, "Test4", 1));
-        assert_eq!("Test", equipment.weapon.get(0).unwrap());
-        assert_eq!("Test4", equipment.weapon.get(1).unwrap());
-        assert_eq!("Test3", equipment.weapon.get(2).unwrap());
+    fn all() {
+        let mut equipment = Equipment::init(4, 3, 2, 1);
+        equipment.add(EquipmentKinds::Weapon, "Weapon");
+        equipment.add(EquipmentKinds::Armor, "Armor");
+        let all = equipment.all();
+        assert_eq!("Weapon", all[0]);
+        assert_eq!("Armor", all[1]);
     }
 
     #[test]
-    fn swap_empty() {
-        let mut equipment = Equipment::init(2, 0, 0, 0);
-        assert_eq!(false, equipment.swap(EquipmentKinds::Weapon, "Test2", 0));
-    }
+    fn find() {
+        let mut equipment = Equipment::init(4, 3, 2, 1);
+        equipment.add(EquipmentKinds::Weapon, "Weapon");
+        equipment.add(EquipmentKinds::Armor, "Armor");
+        equipment.add(EquipmentKinds::Armor, "Armor2");
 
-    #[test]
-    fn swap_no_space() {
-        let mut equipment = Equipment::init(0, 0, 0, 0);
-        assert_eq!(false, equipment.swap(EquipmentKinds::Weapon, "Test2", 0));
+        assert_eq!((EquipmentKinds::Weapon, 0), equipment.find("Weapon").unwrap());
+        assert_eq!((EquipmentKinds::Armor, 1), equipment.find("Armor2").unwrap());
     }
 }

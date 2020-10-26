@@ -6,7 +6,7 @@ use super::battle_scene::BattleScene;
 use super::death_scene::DeathScene;
 use super::round_fade_scene::RoundFadeScene;
 use crate::after_image::prelude::*;
-use crate::clash::{Equipment, ProgressionComponent, ProgressionState};
+use crate::clash::{Equipment, EquipmentKinds, ProgressionComponent, ProgressionState};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
 pub struct ArenaStoryteller {
@@ -68,6 +68,7 @@ impl Storyteller for ArenaStoryteller {
         let mut state = ProgressionState::init_empty();
         state.skills.insert("First".to_owned());
         state.equipment = Equipment::init(4, 3, 2, 1);
+        state.equipment.add(EquipmentKinds::Weapon, "First");
         state.experience = 200;
         Box::new(BattleScene::init(&self.render_context, &self.text_renderer, state).expect("Unable to load initial battle scene"))
     }
