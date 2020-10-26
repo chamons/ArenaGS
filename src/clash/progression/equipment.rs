@@ -1,3 +1,5 @@
+use std::iter;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -10,17 +12,10 @@ pub enum EquipmentKinds {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Equipment {
-    pub weapon: Vec<String>,
-    pub weapon_count: u32,
-
-    pub armor: Vec<String>,
-    pub armor_count: u32,
-
-    pub accessory: Vec<String>,
-    pub accessory_count: u32,
-
-    pub mastery: Vec<String>,
-    pub mastery_count: u32,
+    weapon: Vec<Option<String>>,
+    armor: Vec<Option<String>>,
+    accessory: Vec<Option<String>>,
+    mastery: Vec<Option<String>>,
 }
 
 #[allow(dead_code)]
@@ -29,58 +24,76 @@ impl Equipment {
         Equipment::init(0, 0, 0, 0)
     }
 
-    pub fn init(weapon_count: u32, armor_count: u32, accessory_count: u32, mastery_count: u32) -> Equipment {
+    pub fn init(weapon_slots: u32, armor_slots: u32, accessory_slots: u32, mastery_slots: u32) -> Equipment {
         Equipment {
-            weapon_count,
-            armor_count,
-            accessory_count,
-            mastery_count,
-            weapon: vec![],
-            armor: vec![],
-            accessory: vec![],
-            mastery: vec![],
+            weapon: iter::repeat(None).take(weapon_slots as usize).collect(),
+            armor: iter::repeat(None).take(armor_slots as usize).collect(),
+            accessory: iter::repeat(None).take(accessory_slots as usize).collect(),
+            mastery: iter::repeat(None).take(mastery_slots as usize).collect(),
         }
     }
 
-    fn get(&self, kind: EquipmentKinds) -> (u32, &Vec<String>) {
+    fn get_store(&self, kind: EquipmentKinds) -> &Vec<Option<String>> {
         match kind {
-            EquipmentKinds::Weapon => (self.weapon_count, &self.weapon),
-            EquipmentKinds::Armor => (self.armor_count, &self.armor),
-            EquipmentKinds::Accessory => (self.accessory_count, &self.accessory),
-            EquipmentKinds::Mastery => (self.mastery_count, &self.mastery),
+            EquipmentKinds::Weapon => &self.weapon,
+            EquipmentKinds::Armor => &self.armor,
+            EquipmentKinds::Accessory => &self.accessory,
+            EquipmentKinds::Mastery => &self.mastery,
         }
     }
 
-    fn get_mut(&mut self, kind: EquipmentKinds) -> (u32, &mut Vec<String>) {
+    fn get_mut_store(&mut self, kind: EquipmentKinds) -> &mut Vec<Option<String>> {
         match kind {
-            EquipmentKinds::Weapon => (self.weapon_count, &mut self.weapon),
-            EquipmentKinds::Armor => (self.armor_count, &mut self.armor),
-            EquipmentKinds::Accessory => (self.accessory_count, &mut self.accessory),
-            EquipmentKinds::Mastery => (self.mastery_count, &mut self.mastery),
+            EquipmentKinds::Weapon => &mut self.weapon,
+            EquipmentKinds::Armor => &mut self.armor,
+            EquipmentKinds::Accessory => &mut self.accessory,
+            EquipmentKinds::Mastery => &mut self.mastery,
         }
     }
 
-    pub fn add(&mut self, kind: EquipmentKinds, name: &str) -> bool {
-        let (max, store) = self.get_mut(kind);
-        if store.len() + 1 <= max as usize {
-            store.push(name.to_string());
-            true
+    pub fn get(&self, kind: EquipmentKinds, index: usize) -> Option<String> {
+        let store = self.get_store(kind);
+        if let Some(slot) = store.get(index) {
+            slot.clone()
+        } else {
+            None
+        }
+    }
+
+    pub fn count(&self, kind: EquipmentKinds) -> usize {
+        let store = self.get_store(kind);
+        store.len()
+    }
+
+    pub fn add(&mut self, kind: EquipmentKinds, name: &str, index: usize) -> bool {
+        let store = self.get_mut_store(kind);
+        if let Some(slot) = store.get_mut(index) {
+            if slot.is_none() {
+                *slot = Some(name.to_string());
+                true
+            } else {
+                false
+            }
         } else {
             false
         }
     }
 
     pub fn remove(&mut self, kind: EquipmentKinds, index: usize) -> bool {
-        let (_, store) = self.get_mut(kind);
-        if index < store.len() {
-            store.remove(index);
-            true
+        let store = self.get_mut_store(kind);
+        if let Some(slot) = store.get_mut(index) {
+            if slot.is_some() {
+                *slot = None;
+                true
+            } else {
+                false
+            }
         } else {
             false
         }
     }
 
-    pub fn all(&self) -> Vec<String> {
+    pub fn all(&self) -> Vec<Option<String>> {
         let mut all = self.weapon.clone();
         all.extend(self.armor.clone());
         all.extend(self.accessory.clone());
@@ -89,19 +102,17 @@ impl Equipment {
     }
 
     pub fn find(&self, name: &str) -> Option<(EquipmentKinds, usize)> {
-        if let Some((i, _)) = self.weapon.iter().enumerate().find(|(_, w)| *w == name) {
-            return Some((EquipmentKinds::Weapon, i));
+        for kind in &[
+            EquipmentKinds::Weapon,
+            EquipmentKinds::Armor,
+            EquipmentKinds::Accessory,
+            EquipmentKinds::Mastery,
+        ] {
+            let store = self.get_store(*kind);
+            if let Some((i, _)) = store.iter().enumerate().find(|(_, e)| e.as_deref() == Some(name)) {
+                return Some((*kind, i));
+            }
         }
-        if let Some((i, _)) = self.armor.iter().enumerate().find(|(_, w)| *w == name) {
-            return Some((EquipmentKinds::Armor, i));
-        }
-        if let Some((i, _)) = self.accessory.iter().enumerate().find(|(_, w)| *w == name) {
-            return Some((EquipmentKinds::Accessory, i));
-        }
-        if let Some((i, _)) = self.mastery.iter().enumerate().find(|(_, w)| *w == name) {
-            return Some((EquipmentKinds::Mastery, i));
-        }
-
         None
     }
 }
@@ -113,30 +124,39 @@ mod tests {
     #[test]
     fn add_empty_space() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        assert!(equipment.add(EquipmentKinds::Weapon, "Test"));
-        assert_eq!("Test", equipment.weapon.get(0).unwrap());
+        assert!(equipment.add(EquipmentKinds::Weapon, "Test", 1));
+        assert_eq!(Some("Test".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
+    }
+
+    #[test]
+    fn add_on_top() {
+        let mut equipment = Equipment::init(2, 0, 0, 0);
+        assert!(equipment.add(EquipmentKinds::Weapon, "Test", 1));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test2", 1));
+        assert_eq!(Some("Test".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
     }
 
     #[test]
     fn add_no_space() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        equipment.weapon = vec!["a".to_string(), "b".to_string()];
-        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test"));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test", 3));
     }
 
     #[test]
     fn add_zero_spaces() {
         let mut equipment = Equipment::init(0, 0, 0, 0);
-        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test"));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test", 0));
     }
 
     #[test]
     fn remove_has_item() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        equipment.add(EquipmentKinds::Weapon, "Test");
-        equipment.add(EquipmentKinds::Weapon, "Test2");
-        assert!(equipment.remove(EquipmentKinds::Weapon, 1));
-        assert_eq!("Test", equipment.weapon.get(0).unwrap());
+        equipment.add(EquipmentKinds::Weapon, "Test", 0);
+        equipment.add(EquipmentKinds::Weapon, "Test2", 1);
+
+        assert!(equipment.remove(EquipmentKinds::Weapon, 0));
+        assert_eq!(None, equipment.get(EquipmentKinds::Weapon, 0));
+        assert_eq!(Some("Test2".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
     }
 
     #[test]
@@ -146,23 +166,30 @@ mod tests {
     }
 
     #[test]
+    fn count() {
+        let equipment = Equipment::init(4, 3, 0, 0);
+        assert_eq!(3, equipment.count(EquipmentKinds::Armor));
+    }
+
+    #[test]
     fn all() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
-        equipment.add(EquipmentKinds::Weapon, "Weapon");
-        equipment.add(EquipmentKinds::Armor, "Armor");
+        equipment.add(EquipmentKinds::Weapon, "Weapon", 1);
+        equipment.add(EquipmentKinds::Armor, "Armor", 2);
         let all = equipment.all();
-        assert_eq!("Weapon", all[0]);
-        assert_eq!("Armor", all[1]);
+        assert_eq!(None, all[0]);
+        assert_eq!(Some("Weapon".to_string()), all[1]);
+        assert_eq!(Some("Armor".to_string()), all[6]);
     }
 
     #[test]
     fn find() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
-        equipment.add(EquipmentKinds::Weapon, "Weapon");
-        equipment.add(EquipmentKinds::Armor, "Armor");
-        equipment.add(EquipmentKinds::Armor, "Armor2");
+        equipment.add(EquipmentKinds::Weapon, "Weapon", 2);
+        equipment.add(EquipmentKinds::Armor, "Armor", 1);
+        equipment.add(EquipmentKinds::Armor, "Armor2", 0);
 
-        assert_eq!((EquipmentKinds::Weapon, 0), equipment.find("Weapon").unwrap());
-        assert_eq!((EquipmentKinds::Armor, 1), equipment.find("Armor2").unwrap());
+        assert_eq!((EquipmentKinds::Weapon, 2), equipment.find("Weapon").unwrap());
+        assert_eq!((EquipmentKinds::Armor, 0), equipment.find("Armor2").unwrap());
     }
 }

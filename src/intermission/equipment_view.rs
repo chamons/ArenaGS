@@ -202,36 +202,15 @@ impl EquipmentView {
     fn create_slots(progression: &ProgressionState, ui: &Rc<IconCache>) -> Vec<Box<EquipmentSlotView>> {
         let mut slots = vec![];
 
-        for i in 0..progression.equipment.weapon_count {
-            slots.push(Box::from(EquipmentSlotView::init(
-                EquipmentView::frame_for_slot(EquipmentKinds::Weapon, i),
-                &ui,
-                EquipmentKinds::Weapon,
-            )));
-        }
-
-        for i in 0..progression.equipment.armor_count {
-            slots.push(Box::from(EquipmentSlotView::init(
-                EquipmentView::frame_for_slot(EquipmentKinds::Armor, i),
-                &ui,
-                EquipmentKinds::Armor,
-            )));
-        }
-
-        for i in 0..progression.equipment.accessory_count {
-            slots.push(Box::from(EquipmentSlotView::init(
-                EquipmentView::frame_for_slot(EquipmentKinds::Accessory, i),
-                &ui,
-                EquipmentKinds::Accessory,
-            )));
-        }
-
-        for i in 0..progression.equipment.mastery_count {
-            slots.push(Box::from(EquipmentSlotView::init(
-                EquipmentView::frame_for_slot(EquipmentKinds::Mastery, i),
-                &ui,
-                EquipmentKinds::Mastery,
-            )));
+        for kind in &[
+            EquipmentKinds::Weapon,
+            EquipmentKinds::Armor,
+            EquipmentKinds::Accessory,
+            EquipmentKinds::Mastery,
+        ] {
+            for i in 0..progression.equipment.count(*kind) {
+                slots.push(Box::from(EquipmentSlotView::init(EquipmentView::frame_for_slot(*kind, i as u32), &ui, *kind)));
+            }
         }
 
         slots
@@ -261,7 +240,7 @@ impl EquipmentView {
 
     pub fn arrange(&self, progression: &ProgressionState) {
         let cards = &mut self.cards.borrow_mut();
-        let cards_in_equipment: HashSet<String> = HashSet::from_iter(progression.equipment.all());
+        let cards_in_equipment: HashSet<String> = HashSet::from_iter(progression.equipment.all().drain(0..).filter_map(|x| x));
 
         let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.name)).count() > 12;
 
