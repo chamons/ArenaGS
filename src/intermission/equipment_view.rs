@@ -96,8 +96,6 @@ impl View for CardView {
             if state.left() {
                 self.frame = SDLRect::new(x - origin.x(), y - origin.y(), CARD_WIDTH, CARD_HEIGHT);
             } else {
-                // If we're over a slot,
-                // Add to state, and then rearrange it
                 self.grabbed = None;
             }
         }
@@ -115,12 +113,13 @@ impl View for CardView {
 pub struct EquipmentSlotView {
     frame: SDLRect,
     ui: Rc<IconCache>,
-    kind: EquipmentKinds,
+    pub kind: EquipmentKinds,
+    pub equipment_offset: usize,
 }
 
 const EQUIPMENT_SLOT_OFFSET: u32 = 2;
 impl EquipmentSlotView {
-    pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds) -> EquipmentSlotView {
+    pub fn init(position: SDLPoint, ui: &Rc<IconCache>, kind: EquipmentKinds, equipment_offset: usize) -> EquipmentSlotView {
         EquipmentSlotView {
             frame: SDLRect::new(
                 position.x(),
@@ -130,6 +129,7 @@ impl EquipmentSlotView {
             ),
             ui: Rc::clone(ui),
             kind,
+            equipment_offset,
         }
     }
 }
@@ -211,7 +211,12 @@ impl EquipmentView {
             EquipmentKinds::Mastery,
         ] {
             for i in 0..progression.equipment.count(*kind) {
-                slots.push(Box::from(EquipmentSlotView::init(EquipmentView::frame_for_slot(*kind, i as u32), &ui, *kind)));
+                slots.push(Box::from(EquipmentSlotView::init(
+                    EquipmentView::frame_for_slot(*kind, i as u32),
+                    &ui,
+                    *kind,
+                    i,
+                )));
             }
         }
 
@@ -314,8 +319,19 @@ impl View for EquipmentView {
     }
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
+        let mut progression = ecs.write_resource::<ProgressionState>();
+
         for c in self.cards.borrow_mut().iter_mut() {
+            let was_grabbed = c.grabbed.is_some();
             c.handle_mouse_move(ecs, x, y, state);
+            if was_grabbed && !c.grabbed.is_some() {
+                if let Some(slot) = self.slots.iter().find(|s| s.frame.contains_point(SDLPoint::new(x, y))) {
+                    progression.equipment.add(slot.kind, &c.name, slot.equipment_offset);
+                    self.arrange_card_into_slot(c, &progression);
+                }
+            }
+            // If we're over a slot,
+            // Add to state, and then rearrange it
         }
         self.sort.handle_mouse_move(ecs, x, y, state);
     }
