@@ -96,6 +96,8 @@ impl View for CardView {
             if state.left() {
                 self.frame = SDLRect::new(x - origin.x(), y - origin.y(), CARD_WIDTH, CARD_HEIGHT);
             } else {
+                // If we're over a slot,
+                // Add to state, and then rearrange it
                 self.grabbed = None;
             }
         }
