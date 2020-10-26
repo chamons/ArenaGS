@@ -267,10 +267,7 @@ impl EquipmentView {
 
         for (i, c) in cards.iter_mut().enumerate() {
             if cards_in_equipment.contains(&c.name) {
-                let (kind, equipment_index) = progression.equipment.find(&c.name).unwrap();
-                let equipment_frame =
-                    EquipmentView::frame_for_slot(kind, equipment_index as u32).offset(EQUIPMENT_SLOT_OFFSET as i32, EQUIPMENT_SLOT_OFFSET as i32);
-                c.frame = SDLRect::new(equipment_frame.x(), equipment_frame.y(), CARD_WIDTH, CARD_HEIGHT)
+                self.arrange_card_into_slot(c, progression);
             } else {
                 if compact {
                     c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
@@ -279,6 +276,12 @@ impl EquipmentView {
                 }
             }
         }
+    }
+
+    pub fn arrange_card_into_slot(&self, card: &mut Box<CardView>, progression: &ProgressionState) {
+        let (kind, equipment_index) = progression.equipment.find(&card.name).unwrap();
+        let equipment_frame = EquipmentView::frame_for_slot(kind, equipment_index as u32).offset(EQUIPMENT_SLOT_OFFSET as i32, EQUIPMENT_SLOT_OFFSET as i32);
+        card.frame = SDLRect::new(equipment_frame.x(), equipment_frame.y(), CARD_WIDTH, CARD_HEIGHT);
     }
 
     pub fn check_for_missing_cards(&self, ecs: &World) {
