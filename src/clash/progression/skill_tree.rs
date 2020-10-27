@@ -1,31 +1,37 @@
 use std::collections::HashMap;
 
-use super::ProgressionState;
+use super::{EquipmentItem, EquipmentKinds, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub struct SkillTreeNode {
-    pub name: String,
-    pub image: Option<String>,
+    pub item: EquipmentItem,
     pub position: Point,
     pub cost: u32,
     pub dependencies: Vec<String>,
 }
 
 impl SkillTreeNode {
-    pub fn init(name: &str, image: Option<&str>, position: Point, cost: u32, dependencies: &[&str]) -> SkillTreeNode {
+    pub fn init(item: EquipmentItem, position: Point, cost: u32, dependencies: &[&str]) -> SkillTreeNode {
         SkillTreeNode {
-            name: name.to_string(),
-            image: image.map(|i| i.to_string()),
+            item,
             position,
             cost,
             dependencies: dependencies.iter().map(|d| d.to_string()).collect(),
         }
     }
-}
 
-pub struct SkillTree {
-    nodes: HashMap<String, SkillTreeNode>,
+    pub fn name(&self) -> &String {
+        &self.item.name
+    }
+
+    pub fn image(&self) -> &Option<String> {
+        &self.item.image
+    }
+
+    pub fn kind(&self) -> EquipmentKinds {
+        self.item.kind
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,24 +41,28 @@ pub enum SkillNodeStatus {
     Unavailable,
 }
 
+pub struct SkillTree {
+    nodes: HashMap<String, SkillTreeNode>,
+}
+
 impl SkillTree {
     pub fn init(nodes: &[SkillTreeNode]) -> SkillTree {
         SkillTree {
-            nodes: nodes.iter().map(|n| (n.name.clone(), n.clone())).collect(),
+            nodes: nodes.iter().map(|n| (n.name().clone(), n.clone())).collect(),
         }
     }
 
     pub fn icons(&self) -> Vec<String> {
-        self.nodes.values().filter_map(|n| n.image.to_owned()).collect()
+        self.nodes.values().filter_map(|n| n.image().to_owned()).collect()
     }
 
     pub fn all(&self, state: &ProgressionState) -> Vec<(SkillTreeNode, SkillNodeStatus)> {
         self.nodes
             .values()
             .map(|n| {
-                let status = if state.skills.contains(&n.name) {
+                let status = if state.skills.contains(n.name()) {
                     SkillNodeStatus::Selected
-                } else if self.can_select(state, &n.name) {
+                } else if self.can_select(state, &n.name()) {
                     SkillNodeStatus::Available
                 } else {
                     SkillNodeStatus::Unavailable
@@ -64,7 +74,7 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        !state.skills.contains(&node.name) && node.dependencies.iter().all(|d| state.skills.contains(d)) && node.cost <= state.experience
+        !state.skills.contains(node.name()) && node.dependencies.iter().all(|d| state.skills.contains(d)) && node.cost <= state.experience
     }
 
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
@@ -76,8 +86,8 @@ impl SkillTree {
         }
     }
 
-    pub fn get_image(&self, name: &str) -> &Option<String> {
-        &self.nodes.get(name).unwrap().image
+    pub fn get(&self, name: &str) -> &EquipmentItem {
+        &self.nodes.get(name).unwrap().item
     }
 }
 

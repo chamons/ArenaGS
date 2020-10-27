@@ -11,7 +11,7 @@ use specs::prelude::*;
 use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{EquipmentKinds, ProgressionState, SkillTree};
+use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionState, SkillTree};
 use crate::props::{Button, HitTestResult, View};
 
 pub struct CardView {
@@ -19,8 +19,7 @@ pub struct CardView {
     text_renderer: Rc<TextRenderer>,
     ui: Rc<IconCache>,
     icons: Rc<IconCache>,
-    name: String,
-    image: Option<String>,
+    pub equipment: EquipmentItem,
     grabbed: Option<SDLPoint>,
     pub z_order: u32,
 }
@@ -34,17 +33,15 @@ impl CardView {
         text_renderer: &Rc<TextRenderer>,
         ui: &Rc<IconCache>,
         icons: &Rc<IconCache>,
-        name: &str,
-        image: &Option<String>,
+        equipment: EquipmentItem,
     ) -> BoxResult<CardView> {
         Ok(CardView {
             frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH, CARD_HEIGHT),
             text_renderer: Rc::clone(&text_renderer),
             ui: Rc::clone(&ui),
             icons: Rc::clone(&icons),
-            name: name.to_string(),
+            equipment,
             grabbed: None,
-            image: image.clone(),
             z_order: 0,
         })
     }
@@ -54,7 +51,7 @@ impl View for CardView {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
         canvas.copy(self.ui.get("card_frame.png"), None, self.frame)?;
 
-        if let Some(image) = &self.image {
+        if let Some(image) = &self.equipment.image {
             canvas.copy(
                 self.icons.get(&image),
                 None,
@@ -68,7 +65,7 @@ impl View for CardView {
         }
 
         self.text_renderer.render_text_centered(
-            &self.name,
+            &self.equipment.name,
             self.frame.x(),
             self.frame.y() + 75,
             CARD_WIDTH,
@@ -103,7 +100,7 @@ impl View for CardView {
 
     fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if self.frame.contains_point(SDLPoint::new(x, y)) {
-            Some(HitTestResult::Skill(self.name.clone()))
+            Some(HitTestResult::Skill(self.equipment.name.clone()))
         } else {
             None
         }
@@ -238,7 +235,7 @@ impl EquipmentView {
             .iter()
             .map(|s| {
                 Box::from(
-                    CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, s, self.tree.get_image(&s))
+                    CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, self.tree.get(&s).clone())
                         .expect("Unable to load equipment card"),
                 )
             })
@@ -249,10 +246,10 @@ impl EquipmentView {
         let cards = &mut self.cards.borrow_mut();
         let cards_in_equipment: HashSet<String> = HashSet::from_iter(progression.equipment.all().drain(0..).filter_map(|x| x));
 
-        let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.name)).count() > 12;
+        let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.equipment.name)).count() > 12;
 
         for (i, c) in cards.iter_mut().enumerate() {
-            if cards_in_equipment.contains(&c.name) {
+            if cards_in_equipment.contains(&c.equipment.name) {
                 self.arrange_card_into_slot(c, progression);
             } else {
                 if compact {
@@ -265,7 +262,7 @@ impl EquipmentView {
     }
 
     pub fn arrange_card_into_slot(&self, card: &mut Box<CardView>, progression: &ProgressionState) {
-        let (kind, equipment_index) = progression.equipment.find(&card.name).unwrap();
+        let (kind, equipment_index) = progression.equipment.find(&card.equipment.name).unwrap();
         let equipment_frame = EquipmentView::frame_for_slot(kind, equipment_index as u32).offset(EQUIPMENT_SLOT_OFFSET as i32, EQUIPMENT_SLOT_OFFSET as i32);
         card.frame = SDLRect::new(equipment_frame.x(), equipment_frame.y(), CARD_WIDTH, CARD_HEIGHT);
     }
@@ -329,20 +326,20 @@ impl View for EquipmentView {
             let was_grabbed = c.grabbed.is_some();
             c.handle_mouse_move(ecs, x, y, state);
             if was_grabbed && !c.grabbed.is_some() {
-                let was_in_slot = progression.equipment.has(&c.name);
+                let was_in_slot = progression.equipment.has(&c.equipment.name);
                 let current_over_slot = self.find_slot_at(x, y);
 
                 if !was_in_slot {
                     // Case 1: Not in slot, now over slot - If empty parent else nothing
                     if let Some(current_slot) = current_over_slot {
                         if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
-                            assert!(progression.equipment.add(current_slot.kind, &c.name, current_slot.equipment_offset));
+                            assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
                             self.arrange_card_into_slot(c, &progression);
                         }
                     }
                 // Case 0: Not in slot, not over slot - No change
                 } else {
-                    let (previous_kind, previous_index) = progression.equipment.find(&c.name).unwrap();
+                    let (previous_kind, previous_index) = progression.equipment.find(&c.equipment.name).unwrap();
 
                     if let Some(current_slot) = current_over_slot {
                         if previous_kind == current_slot.kind && previous_index == current_slot.equipment_offset {
@@ -352,7 +349,7 @@ impl View for EquipmentView {
                             // Case 3: In slot, over different slot - If empty remove and parent else rearrange back
                             if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
                                 assert!(progression.equipment.remove(previous_kind, previous_index));
-                                assert!(progression.equipment.add(current_slot.kind, &c.name, current_slot.equipment_offset));
+                                assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
                             }
                             self.arrange_card_into_slot(c, &progression);
                         }

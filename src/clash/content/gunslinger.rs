@@ -31,22 +31,46 @@ pub fn get_skill_tree() -> Vec<SkillTreeNode> {
         Point::init(x, y)
     }
 
+    let equipment = get_equipment();
+    let get = |n| equipment.get(n).unwrap().clone();
+
     vec![
-        SkillTreeNode::init("First", Some("ar_b_04.png"), skill_pos(0, 6), 10, &[]),
-        SkillTreeNode::init("Second", Some("ar_b_04.PNG"), skill_pos(1, 6), 10, &["First"]),
-        SkillTreeNode::init("Third", Some("ar_b_04.PNG"), skill_pos(2, 5), 10, &["Second"]),
-        SkillTreeNode::init("Fourth", Some("ar_b_04.PNG"), skill_pos(2, 7), 10, &["Second"]),
-        SkillTreeNode::init("1", Some("artifact_12_b.png"), skill_pos(0, 1), 10, &[]),
-        SkillTreeNode::init("2", Some("artifact_12_b.png"), skill_pos(1, 1), 10, &["1"]),
-        SkillTreeNode::init("3", Some("artifact_12_b.png"), skill_pos(2, 1), 10, &["2"]),
-        SkillTreeNode::init("4", Some("artifact_12_b.png"), skill_pos(3, 1), 10, &["3"]),
-        SkillTreeNode::init("5", Some("artifact_12_b.png"), skill_pos(4, 1), 10, &["4"]),
-        SkillTreeNode::init("6", Some("artifact_12_b.png"), skill_pos(5, 1), 10, &["5"]),
-        SkillTreeNode::init("7", Some("artifact_12_b.png"), skill_pos(6, 1), 10, &["6"]),
-        SkillTreeNode::init("A", Some("book_13_b.png"), skill_pos(0, 10), 10, &[]),
-        SkillTreeNode::init("B", Some("book_13_b.png"), skill_pos(0, 12), 10, &[]),
-        SkillTreeNode::init("C", Some("book_13_b.png"), skill_pos(1, 11), 10, &["A", "B"]),
+        SkillTreeNode::init(get("First"), skill_pos(0, 6), 10, &[]),
+        SkillTreeNode::init(get("Second"), skill_pos(1, 6), 10, &["First"]),
+        SkillTreeNode::init(get("Third"), skill_pos(2, 5), 10, &["Second"]),
+        SkillTreeNode::init(get("Fourth"), skill_pos(2, 7), 10, &["Second"]),
+        SkillTreeNode::init(get("1"), skill_pos(0, 1), 10, &[]),
+        SkillTreeNode::init(get("2"), skill_pos(1, 1), 10, &["1"]),
+        SkillTreeNode::init(get("3"), skill_pos(2, 1), 10, &["2"]),
+        SkillTreeNode::init(get("4"), skill_pos(3, 1), 10, &["3"]),
+        SkillTreeNode::init(get("5"), skill_pos(4, 1), 10, &["4"]),
+        SkillTreeNode::init(get("6"), skill_pos(5, 1), 10, &["5"]),
+        SkillTreeNode::init(get("7"), skill_pos(6, 1), 10, &["6"]),
+        SkillTreeNode::init(get("A"), skill_pos(0, 10), 10, &[]),
+        SkillTreeNode::init(get("B"), skill_pos(0, 12), 10, &[]),
+        SkillTreeNode::init(get("C"), skill_pos(1, 11), 10, &["A", "B"]),
     ]
+}
+
+pub fn get_equipment() -> HashMap<String, EquipmentItem> {
+    let mut equipment = vec![
+        EquipmentItem::init("First", Some("ar_b_04.png"), EquipmentKinds::Weapon),
+        EquipmentItem::init("Second", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
+        EquipmentItem::init("Third", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
+        EquipmentItem::init("Fourth", Some("ar_b_04.PNG"), EquipmentKinds::Mastery),
+        EquipmentItem::init("1", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("2", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("3", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("4", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("5", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("6", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("7", Some("artifact_12_b.png"), EquipmentKinds::Armor),
+        EquipmentItem::init("A", Some("book_13_b.png"), EquipmentKinds::Accessory),
+        EquipmentItem::init("B", Some("book_13_b.png"), EquipmentKinds::Accessory),
+        EquipmentItem::init("C", Some("book_13_b.png"), EquipmentKinds::Accessory),
+    ];
+
+    equipment.drain(0..).map(|e| (e.name.clone(), e)).collect()
 }
 
 #[derive(Copy, Clone)]

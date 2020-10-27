@@ -102,7 +102,7 @@ impl View for SkillTreeView {
             )?;
 
             let node_rect = SDLRect::new(node.position.x as i32, node.position.y as i32, SKILL_NODE_SIZE, SKILL_NODE_SIZE);
-            canvas.copy(self.icons.get(&node.image.as_ref().unwrap()), None, node_rect)?;
+            canvas.copy(self.icons.get(&node.image().as_ref().unwrap()), None, node_rect)?;
 
             if let Some(color) = match status {
                 SkillNodeStatus::Selected => None,
@@ -113,13 +113,13 @@ impl View for SkillTreeView {
             }
 
             for d in &node.dependencies {
-                dependencies.push((d.to_string(), node.name.to_string()));
+                dependencies.push((d.to_string(), node.name().to_string()));
             }
         }
 
         for d in dependencies {
-            let left = all.iter().map(|a| &a.0).find(|a| a.name == d.0).unwrap();
-            let right = all.iter().map(|a| &a.0).find(|a| a.name == d.1).unwrap();
+            let left = all.iter().map(|a| &a.0).find(|a| a.name() == &d.0).unwrap();
+            let right = all.iter().map(|a| &a.0).find(|a| a.name() == &d.1).unwrap();
 
             if progression.skills.contains(&d.0) {
                 canvas.set_draw_color(Color::from((218, 218, 218)));
@@ -158,7 +158,7 @@ impl View for SkillTreeView {
             if button == MouseButton::Left {
                 if let Some(hit) = self.find_node_at(ecs, x, y) {
                     let mut progression = ecs.write_resource::<ProgressionState>();
-                    self.tree.select(&mut progression, &hit.name);
+                    self.tree.select(&mut progression, &hit.name());
                 }
             }
         }
@@ -166,7 +166,7 @@ impl View for SkillTreeView {
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(hit) = self.find_node_at(ecs, x, y) {
-            Some(HitTestResult::Skill(hit.name))
+            Some(HitTestResult::Skill(hit.name().to_string()))
         } else {
             None
         }

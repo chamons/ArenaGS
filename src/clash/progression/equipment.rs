@@ -2,12 +2,29 @@ use std::iter;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Hash, Deserialize, Serialize, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EquipmentKinds {
     Weapon,
     Armor,
     Accessory,
     Mastery,
+}
+
+#[derive(Hash, PartialEq, Eq, Deserialize, Serialize, Clone, Debug)]
+pub struct EquipmentItem {
+    pub name: String,
+    pub image: Option<String>,
+    pub kind: EquipmentKinds,
+}
+
+impl EquipmentItem {
+    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds) -> EquipmentItem {
+        EquipmentItem {
+            name: name.to_string(),
+            image: image.map(|i| i.to_string()),
+            kind,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
