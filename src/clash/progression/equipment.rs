@@ -142,42 +142,46 @@ impl Equipment {
 mod tests {
     use super::*;
 
+    fn eq(name: &str) -> EquipmentItem {
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon)
+    }
+
     #[test]
     fn add_empty_space() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        assert!(equipment.add(EquipmentKinds::Weapon, "Test", 1));
-        assert_eq!(Some("Test".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
+        assert!(equipment.add(EquipmentKinds::Weapon, eq("Test"), 1));
+        assert_eq!("Test", equipment.get(EquipmentKinds::Weapon, 1).unwrap().name);
     }
 
     #[test]
     fn add_on_top() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        assert!(equipment.add(EquipmentKinds::Weapon, "Test", 1));
-        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test2", 1));
-        assert_eq!(Some("Test".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
+        assert!(equipment.add(EquipmentKinds::Weapon, eq("Test"), 1));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, eq("Test2"), 1));
+        assert_eq!("Test", equipment.get(EquipmentKinds::Weapon, 1).unwrap().name);
     }
 
     #[test]
     fn add_no_space() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test", 3));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, eq("Test"), 3));
     }
 
     #[test]
     fn add_zero_spaces() {
         let mut equipment = Equipment::init(0, 0, 0, 0);
-        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, "Test", 0));
+        assert_eq!(false, equipment.add(EquipmentKinds::Weapon, eq("Test"), 0));
     }
 
     #[test]
     fn remove_has_item() {
         let mut equipment = Equipment::init(2, 0, 0, 0);
-        equipment.add(EquipmentKinds::Weapon, "Test", 0);
-        equipment.add(EquipmentKinds::Weapon, "Test2", 1);
+        equipment.add(EquipmentKinds::Weapon, eq("Test"), 0);
+        equipment.add(EquipmentKinds::Weapon, eq("Test2"), 1);
 
         assert!(equipment.remove(EquipmentKinds::Weapon, 0));
         assert_eq!(None, equipment.get(EquipmentKinds::Weapon, 0));
-        assert_eq!(Some("Test2".to_string()), equipment.get(EquipmentKinds::Weapon, 1));
+        assert_eq!("Test2", equipment.get(EquipmentKinds::Weapon, 1).unwrap().name);
     }
 
     #[test]
@@ -195,20 +199,20 @@ mod tests {
     #[test]
     fn all() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
-        equipment.add(EquipmentKinds::Weapon, "Weapon", 1);
-        equipment.add(EquipmentKinds::Armor, "Armor", 2);
+        equipment.add(EquipmentKinds::Weapon, eq("Weapon"), 1);
+        equipment.add(EquipmentKinds::Armor, eq("Armor"), 2);
         let all = equipment.all();
         assert_eq!(None, all[0]);
-        assert_eq!(Some("Weapon".to_string()), all[1]);
-        assert_eq!(Some("Armor".to_string()), all[6]);
+        assert_eq!("Weapon", all[1].as_ref().unwrap().name);
+        assert_eq!("Armor", all[6].as_ref().unwrap().name);
     }
 
     #[test]
     fn find() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
-        equipment.add(EquipmentKinds::Weapon, "Weapon", 2);
-        equipment.add(EquipmentKinds::Armor, "Armor", 1);
-        equipment.add(EquipmentKinds::Armor, "Armor2", 0);
+        equipment.add(EquipmentKinds::Weapon, eq("Weapon"), 2);
+        equipment.add(EquipmentKinds::Armor, eq("Armor"), 1);
+        equipment.add(EquipmentKinds::Armor, eq("Armor2"), 0);
 
         assert_eq!((EquipmentKinds::Weapon, 2), equipment.find("Weapon").unwrap());
         assert_eq!((EquipmentKinds::Armor, 0), equipment.find("Armor2").unwrap());
@@ -217,9 +221,9 @@ mod tests {
     #[test]
     fn has() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
-        equipment.add(EquipmentKinds::Weapon, "Weapon", 2);
-        equipment.add(EquipmentKinds::Armor, "Armor", 1);
-        equipment.add(EquipmentKinds::Armor, "Armor2", 0);
+        equipment.add(EquipmentKinds::Weapon, eq("Weapon"), 2);
+        equipment.add(EquipmentKinds::Armor, eq("Armor"), 1);
+        equipment.add(EquipmentKinds::Armor, eq("Armor2"), 0);
 
         assert!(equipment.has("Weapon"));
         assert!(equipment.has("Armor2"));

@@ -416,6 +416,7 @@ impl View for EquipmentView {
                         assert!(progression.equipment.remove(previous_kind, previous_index));
                     }
                 }
+                println!("{:#?}", progression.equipment);
             }
         }
         self.sort.handle_mouse_move(ecs, x, y, state);

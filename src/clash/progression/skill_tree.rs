@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{EquipmentItem, ProgressionState};
+use super::{EquipmentItem, EquipmentKinds, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -96,29 +96,33 @@ mod tests {
         ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
     }
 
+    fn eq(name: &str) -> EquipmentItem {
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon)
+    }
+
     #[test]
     fn all_has_selected() {
         let state = state_with_deps(0, &["Foo", "Bar"]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init("Foo", None, Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init("Bar", None, Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init("Buzz", None, Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init("Moo", None, Point::init(0, 0), 100, &[]),
+            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::init(eq("Moo"), Point::init(0, 0), 100, &[]),
         ]);
         let all = tree.all(&state);
-        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name == "Foo").unwrap().1);
-        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name == "Bar").unwrap().1);
-        assert_eq!(SkillNodeStatus::Available, all.iter().find(|&a| a.0.name == "Buzz").unwrap().1);
-        assert_eq!(SkillNodeStatus::Unavailable, all.iter().find(|&a| a.0.name == "Moo").unwrap().1);
+        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name() == "Foo").unwrap().1);
+        assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name() == "Bar").unwrap().1);
+        assert_eq!(SkillNodeStatus::Available, all.iter().find(|&a| a.0.name() == "Buzz").unwrap().1);
+        assert_eq!(SkillNodeStatus::Unavailable, all.iter().find(|&a| a.0.name() == "Moo").unwrap().1);
     }
 
     #[test]
     fn can_select_dependencies() {
         let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init("Foo", None, Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init("Bar", None, Point::init(0, 0), 0, &["Foo"]),
-            SkillTreeNode::init("Buzz", None, Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 0, &["Foo"]),
+            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
         assert!(tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bar"));
@@ -134,10 +138,10 @@ mod tests {
     fn can_select_cost() {
         let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init("Foo", None, Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init("Bazz", None, Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init("Bar", None, Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init("Buzz", None, Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
         assert_eq!(false, tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bazz"));
@@ -155,10 +159,10 @@ mod tests {
     fn select() {
         let mut state = state_with_deps(7, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init("Foo", None, Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init("Bazz", None, Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init("Bar", None, Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init("Buzz", None, Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
 
         tree.select(&mut state, "Foo");
@@ -170,10 +174,10 @@ mod tests {
     fn select_already_selected() {
         let mut state = state_with_deps(10, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init("Foo", None, Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init("Bazz", None, Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init("Bar", None, Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init("Buzz", None, Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
 
         tree.select(&mut state, "Foo");
