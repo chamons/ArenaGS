@@ -294,13 +294,13 @@ impl EquipmentView {
 
     pub fn arrange(&self, progression: &ProgressionState) {
         let cards = &mut self.cards.borrow_mut();
-        let cards_in_equipment: HashSet<String> = HashSet::from_iter(progression.equipment.all().drain(0..).filter_map(|x| x));
+        let cards_in_equipment: HashSet<EquipmentItem> = HashSet::from_iter(progression.equipment.all().drain(0..).filter_map(|x| x));
 
-        let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.equipment.name)).count() > 12;
+        let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.equipment)).count() > 12;
 
         for (i, c) in cards
             .iter_mut()
-            .filter(|c| !cards_in_equipment.contains(&c.equipment.name))
+            .filter(|c| !cards_in_equipment.contains(&c.equipment))
             .sorted_by(|a, b| a.equipment.name.cmp(&b.equipment.name))
             .enumerate()
         {
@@ -310,7 +310,7 @@ impl EquipmentView {
                 c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
             }
         }
-        for c in cards.iter_mut().filter(|c| cards_in_equipment.contains(&c.equipment.name)) {
+        for c in cards.iter_mut().filter(|c| cards_in_equipment.contains(&c.equipment)) {
             self.arrange_card_into_slot(c, progression);
         }
     }
@@ -398,7 +398,7 @@ impl View for EquipmentView {
                     // Case 1: Not in slot, now over slot - If empty parent else nothing
                     if let Some(current_slot) = current_over_slot {
                         if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() && c.equipment.kind == current_slot.kind {
-                            assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
+                            assert!(progression.equipment.add(current_slot.kind, c.equipment.clone(), current_slot.equipment_offset));
                             self.arrange_card_into_slot(c, &progression);
                         }
                     }
@@ -414,7 +414,7 @@ impl View for EquipmentView {
                             // Case 3: In slot, over different slot - If empty remove and parent else rearrange back
                             if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() && c.equipment.kind == current_slot.kind {
                                 assert!(progression.equipment.remove(previous_kind, previous_index));
-                                assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
+                                assert!(progression.equipment.add(current_slot.kind, c.equipment.clone(), current_slot.equipment_offset));
                             }
                             self.arrange_card_into_slot(c, &progression);
                         }

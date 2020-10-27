@@ -29,10 +29,10 @@ impl EquipmentItem {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Equipment {
-    weapon: Vec<Option<String>>,
-    armor: Vec<Option<String>>,
-    accessory: Vec<Option<String>>,
-    mastery: Vec<Option<String>>,
+    weapon: Vec<Option<EquipmentItem>>,
+    armor: Vec<Option<EquipmentItem>>,
+    accessory: Vec<Option<EquipmentItem>>,
+    mastery: Vec<Option<EquipmentItem>>,
 }
 
 #[allow(dead_code)]
@@ -50,7 +50,7 @@ impl Equipment {
         }
     }
 
-    fn get_store(&self, kind: EquipmentKinds) -> &Vec<Option<String>> {
+    fn get_store(&self, kind: EquipmentKinds) -> &Vec<Option<EquipmentItem>> {
         match kind {
             EquipmentKinds::Weapon => &self.weapon,
             EquipmentKinds::Armor => &self.armor,
@@ -59,7 +59,7 @@ impl Equipment {
         }
     }
 
-    fn get_mut_store(&mut self, kind: EquipmentKinds) -> &mut Vec<Option<String>> {
+    fn get_mut_store(&mut self, kind: EquipmentKinds) -> &mut Vec<Option<EquipmentItem>> {
         match kind {
             EquipmentKinds::Weapon => &mut self.weapon,
             EquipmentKinds::Armor => &mut self.armor,
@@ -68,7 +68,7 @@ impl Equipment {
         }
     }
 
-    pub fn get(&self, kind: EquipmentKinds, index: usize) -> Option<String> {
+    pub fn get(&self, kind: EquipmentKinds, index: usize) -> Option<EquipmentItem> {
         let store = self.get_store(kind);
         if let Some(slot) = store.get(index) {
             slot.clone()
@@ -82,11 +82,11 @@ impl Equipment {
         store.len()
     }
 
-    pub fn add(&mut self, kind: EquipmentKinds, name: &str, index: usize) -> bool {
+    pub fn add(&mut self, kind: EquipmentKinds, item: EquipmentItem, index: usize) -> bool {
         let store = self.get_mut_store(kind);
         if let Some(slot) = store.get_mut(index) {
             if slot.is_none() {
-                *slot = Some(name.to_string());
+                *slot = Some(item);
                 true
             } else {
                 false
@@ -110,7 +110,7 @@ impl Equipment {
         }
     }
 
-    pub fn all(&self) -> Vec<Option<String>> {
+    pub fn all(&self) -> Vec<Option<EquipmentItem>> {
         let mut all = self.weapon.clone();
         all.extend(self.armor.clone());
         all.extend(self.accessory.clone());
@@ -126,7 +126,7 @@ impl Equipment {
             EquipmentKinds::Mastery,
         ] {
             let store = self.get_store(*kind);
-            if let Some((i, _)) = store.iter().enumerate().find(|(_, e)| e.as_deref() == Some(name)) {
+            if let Some((i, _)) = store.iter().enumerate().find(|(_, e)| e.as_ref().map(|x| &x.name).map(|x| &**x) == Some(name)) {
                 return Some((*kind, i));
             }
         }
