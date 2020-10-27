@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{EquipmentItem, EquipmentKinds, ProgressionState};
+use super::{EquipmentItem, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
