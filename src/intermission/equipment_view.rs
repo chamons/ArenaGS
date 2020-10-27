@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::rc::Rc;
 
+use itertools::Itertools;
 use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -248,7 +249,12 @@ impl EquipmentView {
 
         let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.equipment.name)).count() > 12;
 
-        for (i, c) in cards.iter_mut().filter(|c| !cards_in_equipment.contains(&c.equipment.name)).enumerate() {
+        for (i, c) in cards
+            .iter_mut()
+            .filter(|c| !cards_in_equipment.contains(&c.equipment.name))
+            .sorted_by(|a, b| a.equipment.name.cmp(&b.equipment.name))
+            .enumerate()
+        {
             if compact {
                 c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
             } else {
@@ -357,7 +363,6 @@ impl View for EquipmentView {
                         assert!(progression.equipment.remove(previous_kind, previous_index));
                     }
                 }
-                println!("{:#?}", progression.equipment);
             }
         }
         self.sort.handle_mouse_move(ecs, x, y, state);
