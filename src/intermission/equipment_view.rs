@@ -277,6 +277,10 @@ impl EquipmentView {
             self.arrange(&progression);
         }
     }
+
+    fn find_slot_at(&self, x: i32, y: i32) -> Option<&Box<EquipmentSlotView>> {
+        self.slots.iter().find(|s| s.frame.contains_point(SDLPoint::new(x, y)))
+    }
 }
 
 impl View for EquipmentView {
@@ -325,13 +329,40 @@ impl View for EquipmentView {
             let was_grabbed = c.grabbed.is_some();
             c.handle_mouse_move(ecs, x, y, state);
             if was_grabbed && !c.grabbed.is_some() {
-                if let Some(slot) = self.slots.iter().find(|s| s.frame.contains_point(SDLPoint::new(x, y))) {
-                    progression.equipment.add(slot.kind, &c.name, slot.equipment_offset);
-                    self.arrange_card_into_slot(c, &progression);
+                let was_in_slot = progression.equipment.has(&c.name);
+                let current_over_slot = self.find_slot_at(x, y);
+
+                if !was_in_slot {
+                    // Case 1: Not in slot, now over slot - If empty parent else nothing
+                    if let Some(current_slot) = current_over_slot {
+                        if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
+                            assert!(progression.equipment.add(current_slot.kind, &c.name, current_slot.equipment_offset));
+                            self.arrange_card_into_slot(c, &progression);
+                        }
+                    }
+                // Case 0: Not in slot, not over slot - No change
+                } else {
+                    let (previous_kind, previous_index) = progression.equipment.find(&c.name).unwrap();
+
+                    if let Some(current_slot) = current_over_slot {
+                        if previous_kind == current_slot.kind && previous_index == current_slot.equipment_offset {
+                            // Case 2: In slot, over own slot - Rearrange back
+                            self.arrange_card_into_slot(c, &progression);
+                        } else {
+                            // Case 3: In slot, over different slot - If empty remove and parent else rearrange back
+                            if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
+                                assert!(progression.equipment.remove(previous_kind, previous_index));
+                                assert!(progression.equipment.add(current_slot.kind, &c.name, current_slot.equipment_offset));
+                            }
+                            self.arrange_card_into_slot(c, &progression);
+                        }
+                    } else {
+                        // Case 4: In slot, over not over slot - Unparent and keep there
+                        assert!(progression.equipment.remove(previous_kind, previous_index));
+                    }
                 }
+                println!("{:#?}", progression.equipment);
             }
-            // If we're over a slot,
-            // Add to state, and then rearrange it
         }
         self.sort.handle_mouse_move(ecs, x, y, state);
     }

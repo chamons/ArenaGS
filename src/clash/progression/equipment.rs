@@ -10,7 +10,7 @@ pub enum EquipmentKinds {
     Mastery,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Equipment {
     weapon: Vec<Option<String>>,
     armor: Vec<Option<String>>,
@@ -115,6 +115,10 @@ impl Equipment {
         }
         None
     }
+
+    pub fn has(&self, name: &str) -> bool {
+        self.find(name).is_some()
+    }
 }
 
 #[cfg(test)]
@@ -191,5 +195,17 @@ mod tests {
 
         assert_eq!((EquipmentKinds::Weapon, 2), equipment.find("Weapon").unwrap());
         assert_eq!((EquipmentKinds::Armor, 0), equipment.find("Armor2").unwrap());
+    }
+
+    #[test]
+    fn has() {
+        let mut equipment = Equipment::init(4, 3, 2, 1);
+        equipment.add(EquipmentKinds::Weapon, "Weapon", 2);
+        equipment.add(EquipmentKinds::Armor, "Armor", 1);
+        equipment.add(EquipmentKinds::Armor, "Armor2", 0);
+
+        assert!(equipment.has("Weapon"));
+        assert!(equipment.has("Armor2"));
+        assert_eq!(false, equipment.has("Foo"));
     }
 }

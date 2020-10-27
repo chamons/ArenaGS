@@ -1,5 +1,3 @@
-During drag
-if moved over empty slot, parent and move
-if parented and moved out, remove from equipment and keep position
+Check slot kind before accepting
 
 Possibly: if moving unparented card over valid spot, highlight it somehow
