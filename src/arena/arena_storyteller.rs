@@ -6,7 +6,7 @@ use super::battle_scene::BattleScene;
 use super::death_scene::DeathScene;
 use super::round_fade_scene::RoundFadeScene;
 use crate::after_image::prelude::*;
-use crate::clash::{Equipment, EquipmentKinds, ProgressionComponent, ProgressionState};
+use crate::clash::{Equipment, ProgressionComponent, ProgressionState};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
 pub struct ArenaStoryteller {

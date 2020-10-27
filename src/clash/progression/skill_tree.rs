@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{EquipmentItem, EquipmentKinds, ProgressionState};
+use super::{EquipmentItem, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -27,10 +27,6 @@ impl SkillTreeNode {
 
     pub fn image(&self) -> &Option<String> {
         &self.item.image
-    }
-
-    pub fn kind(&self) -> EquipmentKinds {
-        self.item.kind
     }
 }
 

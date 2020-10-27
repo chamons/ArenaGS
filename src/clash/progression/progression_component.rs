@@ -52,10 +52,5 @@ pub fn wrap_progression(state: &ProgressionState) -> World {
     world.insert(MousePositionComponent::init());
     world.insert(ProgressionComponent::init(state.clone()));
 
-    {
-        let v = world.read_resource::<ProgressionComponent>();
-        let m = world.read_resource::<MousePositionComponent>();
-    }
-
     world
 }

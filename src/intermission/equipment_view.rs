@@ -197,8 +197,8 @@ pub struct EquipmentView {
     ui: Rc<IconCache>,
     icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
-    cards: RefCell<Vec<Box<CardView>>>,
-    slots: Vec<Box<EquipmentSlotView>>,
+    cards: RefCell<Vec<CardView>>,
+    slots: Vec<EquipmentSlotView>,
     sort: Button,
     max_z_order: u32,
     needs_z_reorder: RefCell<bool>,
@@ -248,7 +248,7 @@ impl EquipmentView {
         Ok(view)
     }
 
-    fn create_slots(progression: &ProgressionState, ui: &Rc<IconCache>) -> Vec<Box<EquipmentSlotView>> {
+    fn create_slots(progression: &ProgressionState, ui: &Rc<IconCache>) -> Vec<EquipmentSlotView> {
         let mut slots = vec![];
 
         for kind in &[
@@ -258,12 +258,7 @@ impl EquipmentView {
             EquipmentKinds::Mastery,
         ] {
             for i in 0..progression.equipment.count(*kind) {
-                slots.push(Box::from(EquipmentSlotView::init(
-                    EquipmentView::frame_for_slot(*kind, i as u32),
-                    &ui,
-                    *kind,
-                    i,
-                )));
+                slots.push(EquipmentSlotView::init(EquipmentView::frame_for_slot(*kind, i as u32), &ui, *kind, i));
             }
         }
 
@@ -284,10 +279,8 @@ impl EquipmentView {
             .skills
             .iter()
             .map(|s| {
-                Box::from(
-                    CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, self.tree.get(&s).clone())
-                        .expect("Unable to load equipment card"),
-                )
+                CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, self.tree.get(&s).clone())
+                    .expect("Unable to load equipment card")
             })
             .collect();
     }
@@ -315,7 +308,7 @@ impl EquipmentView {
         }
     }
 
-    pub fn arrange_card_into_slot(&self, card: &mut Box<CardView>, progression: &ProgressionState) {
+    pub fn arrange_card_into_slot(&self, card: &mut CardView, progression: &ProgressionState) {
         let (kind, equipment_index) = progression.equipment.find(&card.equipment.name).unwrap();
         let equipment_frame = EquipmentView::frame_for_slot(kind, equipment_index as u32).offset(EQUIPMENT_SLOT_OFFSET as i32, EQUIPMENT_SLOT_OFFSET as i32);
         card.frame = SDLRect::new(equipment_frame.x(), equipment_frame.y(), CARD_WIDTH, CARD_HEIGHT);
@@ -329,7 +322,7 @@ impl EquipmentView {
         }
     }
 
-    fn find_slot_at(&self, x: i32, y: i32) -> Option<&Box<EquipmentSlotView>> {
+    fn find_slot_at(&self, x: i32, y: i32) -> Option<&EquipmentSlotView> {
         self.slots.iter().find(|s| s.frame.contains_point(SDLPoint::new(x, y)))
     }
 }
@@ -390,7 +383,7 @@ impl View for EquipmentView {
         for c in self.cards.borrow_mut().iter_mut() {
             let was_grabbed = c.grabbed.is_some();
             c.handle_mouse_move(ecs, x, y, state);
-            if was_grabbed && !c.grabbed.is_some() {
+            if was_grabbed && c.grabbed.is_none() {
                 let was_in_slot = progression.equipment.has(&c.equipment.name);
                 let current_over_slot = self.find_slot_at(x, y);
 
