@@ -12,8 +12,8 @@ use specs::prelude::*;
 use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionState, SkillTree};
-use crate::props::{Button, HitTestResult, View};
+use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionComponent, ProgressionState, SkillTree};
+use crate::props::{Button, HitTestResult, MousePositionComponent, View};
 
 pub struct CardView {
     frame: SDLRect,
@@ -113,6 +113,7 @@ pub struct EquipmentSlotView {
     ui: Rc<IconCache>,
     pub kind: EquipmentKinds,
     pub equipment_offset: usize,
+    pub highlighted: RefCell<bool>,
 }
 
 const EQUIPMENT_SLOT_OFFSET: u32 = 2;
@@ -128,19 +129,47 @@ impl EquipmentSlotView {
             ui: Rc::clone(ui),
             kind,
             equipment_offset,
+            highlighted: RefCell::new(false),
         }
     }
 }
 
 impl View for EquipmentSlotView {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
+        let highlighted = *self.highlighted.borrow();
         let equipment_frame = self.ui.get(match self.kind {
-            EquipmentKinds::Weapon => "equipment_weapon_slot.png",
-            EquipmentKinds::Armor => "equipment_armor_slot.png",
-            EquipmentKinds::Accessory => "equipment_accessory_slot.png",
-            EquipmentKinds::Mastery => "equipment_mastery_slot.png",
+            EquipmentKinds::Weapon => {
+                if highlighted {
+                    "equipment_weapon_slot_highlight.png"
+                } else {
+                    "equipment_weapon_slot.png"
+                }
+            }
+            EquipmentKinds::Armor => {
+                if highlighted {
+                    "equipment_armor_slot_highlight.png"
+                } else {
+                    "equipment_armor_slot.png"
+                }
+            }
+            EquipmentKinds::Accessory => {
+                if highlighted {
+                    "equipment_accessory_slot_highlight.png"
+                } else {
+                    "equipment_accessory_slot.png"
+                }
+            }
+            EquipmentKinds::Mastery => {
+                if highlighted {
+                    "equipment_mastery_slot_highlight.png"
+                } else {
+                    "equipment_mastery_slot.png"
+                }
+            }
         });
         canvas.copy(equipment_frame, None, self.frame)?;
+
+        *self.highlighted.borrow_mut() = false;
 
         Ok(())
     }
@@ -171,6 +200,10 @@ impl EquipmentView {
                 "equipment_armor_slot.png",
                 "equipment_accessory_slot.png",
                 "equipment_mastery_slot.png",
+                "equipment_weapon_slot_highlight.png",
+                "equipment_armor_slot_highlight.png",
+                "equipment_accessory_slot_highlight.png",
+                "equipment_mastery_slot_highlight.png",
             ],
         )?);
         let should_sort = Rc::new(RefCell::new(false));
@@ -273,7 +306,7 @@ impl EquipmentView {
     }
 
     pub fn check_for_missing_cards(&self, ecs: &World) {
-        let progression = ecs.read_resource::<ProgressionState>();
+        let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
         if progression.skills.len() != self.cards.borrow().len() {
             self.create_cards(&progression);
             self.arrange(&progression);
@@ -289,7 +322,7 @@ impl View for EquipmentView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         if *self.should_sort.borrow() {
             *self.should_sort.borrow_mut() = false;
-            self.arrange(&ecs.read_resource::<ProgressionState>());
+            self.arrange(&(*ecs.read_resource::<ProgressionComponent>()).state);
         }
         self.check_for_missing_cards(ecs);
         if *self.needs_z_reorder.borrow() {
@@ -297,9 +330,18 @@ impl View for EquipmentView {
             self.cards.borrow_mut().sort_by(|a, b| a.z_order.cmp(&b.z_order));
         }
 
+        let grabbed_card_kind = self.cards.borrow().iter().filter(|c| c.grabbed.is_some()).map(|c| c.equipment.kind).next();
         // Slots below cards
-        for c in &self.slots {
-            c.render(ecs, canvas, frame)?;
+        for s in &self.slots {
+            if grabbed_card_kind.is_some() && grabbed_card_kind.unwrap() == s.kind {
+                // If we're dragging a card over a slot, set a one render highlighted flag
+                let mouse = ecs.read_resource::<MousePositionComponent>().position;
+                let current_over_slot = self.find_slot_at(mouse.x as i32, mouse.y as i32);
+                if Some((s.kind, s.equipment_offset)) == current_over_slot.map(|c| (c.kind, c.equipment_offset)) {
+                    *s.highlighted.borrow_mut() = true;
+                }
+            }
+            s.render(ecs, canvas, frame)?;
         }
 
         for c in self.cards.borrow().iter() {
@@ -325,7 +367,9 @@ impl View for EquipmentView {
     }
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
-        let mut progression = ecs.write_resource::<ProgressionState>();
+        ecs.write_resource::<MousePositionComponent>().position = Point::init(x as u32, y as u32);
+
+        let progression = &mut ecs.write_resource::<ProgressionComponent>().state;
 
         for c in self.cards.borrow_mut().iter_mut() {
             let was_grabbed = c.grabbed.is_some();

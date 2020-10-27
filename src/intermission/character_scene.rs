@@ -12,7 +12,7 @@ use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionState};
+use crate::clash::{wrap_progression, ProgressionComponent, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
@@ -57,11 +57,7 @@ impl CharacterScene {
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),
-            ecs: {
-                let mut ecs = World::new();
-                ecs.insert(progression);
-                ecs
-            },
+            ecs: wrap_progression(&progression),
             help: HelpPopup::init(&render_context, Rc::clone(&text_renderer))?,
         })
     }
@@ -108,7 +104,7 @@ impl Scene for CharacterScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if *self.next_fight.borrow() {
-            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionState>()))
+            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionComponent>().state))
         } else {
             StageDirection::Continue
         }

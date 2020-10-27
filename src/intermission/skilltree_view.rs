@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{CharacterWeaponKind, ProgressionComponent, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
 use crate::props::{HitTestResult, View};
 
 pub struct SkillTreeView {
@@ -49,7 +49,7 @@ impl SkillTreeView {
     }
 
     fn find_node_at(&self, ecs: &World, x: i32, y: i32) -> Option<SkillTreeNode> {
-        let progression = ecs.read_resource::<ProgressionState>();
+        let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
         self.tree
             .all(&progression)
             .iter()
@@ -72,7 +72,7 @@ impl View for SkillTreeView {
 
         let node_frame = self.ui.get("skill_tree_frame.png");
         let node_frame_inactive = self.ui.get("skill_tree_frame_inactive.png");
-        let progression = ecs.read_resource::<ProgressionState>();
+        let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
 
         self.text_renderer.render_text(
             &format!("Experience: {}", progression.experience),
@@ -157,7 +157,7 @@ impl View for SkillTreeView {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if let Some(hit) = self.find_node_at(ecs, x, y) {
-                    let mut progression = ecs.write_resource::<ProgressionState>();
+                    let mut progression = &mut ecs.write_resource::<ProgressionComponent>().state;
                     self.tree.select(&mut progression, &hit.name());
                 }
             }

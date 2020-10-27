@@ -45,3 +45,6 @@ pub use text_hittester::*;
 
 mod text_render_helper;
 pub use text_render_helper::*;
+
+mod mouse_position;
+pub use mouse_position::*;

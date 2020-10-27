@@ -38,12 +38,6 @@ fn get_progression(ecs: &World) -> ProgressionState {
     ecs.read_resource::<ProgressionComponent>().state.clone()
 }
 
-pub fn create_stage_direction_from_state(state: &ProgressionState) -> World {
-    let mut world = World::new();
-    world.insert(ProgressionComponent::init(state.clone()));
-    world
-}
-
 impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {

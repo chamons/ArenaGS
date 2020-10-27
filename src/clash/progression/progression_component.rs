@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use super::Equipment;
+use crate::props::MousePositionComponent;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::*;
@@ -47,6 +48,14 @@ impl ProgressionState {
 
 pub fn wrap_progression(state: &ProgressionState) -> World {
     let mut world = World::new();
+    // Just to make UI work easier
+    world.insert(MousePositionComponent::init());
     world.insert(ProgressionComponent::init(state.clone()));
+
+    {
+        let v = world.read_resource::<ProgressionComponent>();
+        let m = world.read_resource::<MousePositionComponent>();
+    }
+
     world
 }

@@ -15,7 +15,7 @@ use super::{new_game, saveload};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{HelpPopup, HitTestResult, View};
+use crate::props::{HelpPopup, HitTestResult, MousePositionComponent, View};
 
 pub struct BattleScene {
     ecs: World,
