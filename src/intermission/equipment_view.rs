@@ -248,16 +248,15 @@ impl EquipmentView {
 
         let compact = cards.iter().filter(|&c| !cards_in_equipment.contains(&c.equipment.name)).count() > 12;
 
-        for (i, c) in cards.iter_mut().enumerate() {
-            if cards_in_equipment.contains(&c.equipment.name) {
-                self.arrange_card_into_slot(c, progression);
+        for (i, c) in cards.iter_mut().filter(|c| !cards_in_equipment.contains(&c.equipment.name)).enumerate() {
+            if compact {
+                c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
             } else {
-                if compact {
-                    c.frame = SDLRect::new(840 + (i / 12) as i32 * -120, 525 + (i % 12) as i32 * -40, CARD_WIDTH, CARD_HEIGHT);
-                } else {
-                    c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
-                }
+                c.frame = SDLRect::new(600 + (i % 3) as i32 * 125, 70 + (i / 3) as i32 * 125, CARD_WIDTH, CARD_HEIGHT);
             }
+        }
+        for c in cards.iter_mut().filter(|c| cards_in_equipment.contains(&c.equipment.name)) {
+            self.arrange_card_into_slot(c, progression);
         }
     }
 
