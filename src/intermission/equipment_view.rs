@@ -332,7 +332,7 @@ impl View for EquipmentView {
                 if !was_in_slot {
                     // Case 1: Not in slot, now over slot - If empty parent else nothing
                     if let Some(current_slot) = current_over_slot {
-                        if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
+                        if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() && c.equipment.kind == current_slot.kind {
                             assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
                             self.arrange_card_into_slot(c, &progression);
                         }
@@ -347,7 +347,7 @@ impl View for EquipmentView {
                             self.arrange_card_into_slot(c, &progression);
                         } else {
                             // Case 3: In slot, over different slot - If empty remove and parent else rearrange back
-                            if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() {
+                            if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() && c.equipment.kind == current_slot.kind {
                                 assert!(progression.equipment.remove(previous_kind, previous_index));
                                 assert!(progression.equipment.add(current_slot.kind, &c.equipment.name, current_slot.equipment_offset));
                             }
