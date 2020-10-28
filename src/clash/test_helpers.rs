@@ -47,7 +47,11 @@ impl StateBuilder {
 }
 
 pub fn create_test_state() -> StateBuilder {
-    StateBuilder { ecs: create_world() }
+    let mut ecs = create_world();
+    // TEMP
+    ecs.insert(init_skills());
+
+    StateBuilder { ecs }
 }
 
 pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
