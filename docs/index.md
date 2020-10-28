@@ -4,7 +4,7 @@ Inspired by the [best game development blog ever](https://factorio.com/blog/), t
 
 I hope to have at least a monthly updates cadence. 
 
-- [In the Cards][cards.md] [10/27/2020]
+- [In the Cards](cards.md) [10/27/2020]
 - [Progress to Progression](progression.md) [10/12/2020]
 - [First Milestone](first-milestone.md) [10/11/2020]
 - [Help I Need Somebody](help-i-need-somebody.md) [10/4/2020]
