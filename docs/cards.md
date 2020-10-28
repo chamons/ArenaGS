@@ -8,7 +8,7 @@ After about a half a month of work, I have some preliminary screens to share.
 
 This is the skill tree (the nodes themselves are just dev test data). 
 
-![Skill Tree](https://chamons.github.io/ArenaGS/images/skill-tree.png)
+![Skill Tree](https://chamons.github.io/ArenaGS/images/skill-tree.JPG )
 
 The idea here is that you'll spend some currency, experience, fame, or influence in a set of nodes that unlock skills that you can depend on every single run. 
 
@@ -16,7 +16,7 @@ This helps reduce the "unlucky" factor of not seeing a "common" card over and ov
 
 The nodes will likely not be super flashy, even a tad boring, but that helps make drops and shot purchases the exciting steak to the skill tree's potatoes.
 
-![Equipment](https://chamons.github.io/ArenaGS/images/equipment.png)
+![Equipment](https://chamons.github.io/ArenaGS/images/equipment.jpg )
 
 This is where you slot the equipment/items you unlocked to take effect. Right now there are four types:
 
