@@ -72,3 +72,5 @@ pub use progression::*;
 
 mod skill_resources;
 pub use skill_resources::*;
+
+pub mod new_game;

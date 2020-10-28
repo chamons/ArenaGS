@@ -48,8 +48,7 @@ impl StateBuilder {
 
 pub fn create_test_state() -> StateBuilder {
     let mut ecs = create_world();
-    // TEMP
-    ecs.insert(init_skills());
+    ecs.insert(super::content::test::get_test_skills());
 
     StateBuilder { ecs }
 }

@@ -10,8 +10,9 @@ use super::components::*;
 use super::views::*;
 use super::{battle_actions, force_complete_animations, tick_animations};
 use crate::clash::*;
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
-use super::{new_game, saveload};
+use super::saveload;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
@@ -23,9 +24,27 @@ pub struct BattleScene {
     help: HelpPopup,
 }
 
+pub fn set_map_background(ecs: &mut World) {
+    ecs.create_entity()
+        .with(RenderComponent::init(RenderInfo::init_with_order(
+            SpriteKinds::BeachBackground,
+            RenderOrder::Background,
+        )))
+        .marked::<SimpleMarker<ToSerialize>>()
+        .build();
+}
+
+fn setup_game(progression: ProgressionState) -> World {
+    let mut ecs = create_world();
+    add_ui_extension(&mut ecs);
+    new_game::random_new_world(&mut ecs, progression);
+    set_map_background(&mut ecs);
+    ecs
+}
+
 impl BattleScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<BattleScene> {
-        let ecs = new_game::random_new_world(progression);
+        let ecs = setup_game(progression);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -73,7 +92,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = new_game::random_new_world(ProgressionState::init_empty());
+                    self.ecs = setup_game(ProgressionState::init_empty());
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {

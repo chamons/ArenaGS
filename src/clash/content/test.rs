@@ -1,7 +1,9 @@
 use super::super::*;
 use crate::sequence;
 
-pub fn add_test_skills(m: &mut SkillsResource) {
+pub fn get_test_skills() -> SkillsResource {
+    let mut m = SkillsResource::init();
+
     m.add(SkillInfo::init("TestNone", None, TargetType::None, SkillEffect::None));
     m.add(SkillInfo::init("TestTile", None, TargetType::Tile, SkillEffect::None));
     m.add(SkillInfo::init("TestEnemy", None, TargetType::Enemy, SkillEffect::None));
@@ -167,4 +169,6 @@ pub fn add_test_skills(m: &mut SkillsResource) {
         TargetType::None,
         sequence!(SkillEffect::Buff(StatusKind::Aimed, 100), SkillEffect::Buff(StatusKind::Armored, 100)),
     ));
+
+    m
 }

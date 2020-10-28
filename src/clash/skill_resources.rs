@@ -32,9 +32,6 @@ impl SkillsResource {
 pub fn init_skills() -> SkillsResource {
     let mut m = SkillsResource::init();
 
-    #[cfg(test)]
-    super::content::test::add_test_skills(&mut m);
-
     super::content::gunslinger::gunslinger_skills(&mut m);
     super::content::bird::bird_skills(&mut m);
     super::content::elementalist::elementalist_skills(&mut m);

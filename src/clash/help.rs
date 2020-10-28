@@ -668,7 +668,8 @@ mod tests {
     use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
 
     fn check_links(link: &str, font: &Font) {
-        let ecs = create_test_state().build();
+        let mut ecs = create_world();
+        super::new_game::random_new_world(&mut ecs, ProgressionState::init_empty());
         let help = HelpInfo::find(&ecs, link);
         assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
         for chunk in help.text {
