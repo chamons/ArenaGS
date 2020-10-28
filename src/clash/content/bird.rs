@@ -1,16 +1,14 @@
 // The ai macros can add "unnecessary" returns occasionally
 #![allow(clippy::needless_return)]
 
-use std::collections::HashMap;
-
 use specs::prelude::*;
 
 use super::super::*;
 use crate::{do_behavior, try_behavior};
 
-pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+pub fn bird_skills(m: &mut SkillsResource) {
     // All skills will be boosted by default +1 skill_power on main bird
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Wing Blast",
         None,
         TargetType::Player,
@@ -18,7 +16,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         Some(2),
         true,
     ));
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Feather Orb",
             None,
@@ -29,7 +27,7 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         )
         .with_ammo(AmmoKind::Feathers, 1),
     );
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Tailwind",
             None,
@@ -46,19 +44,19 @@ pub fn bird_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         )
         .with_cooldown(400),
     );
-    m.add_skill(SkillInfo::init(
+    m.add(SkillInfo::init(
         "Explosive Eggs",
         None,
         TargetType::Tile,
         SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 1), FieldKind::Fire),
     ));
-    m.add_skill(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)).with_cooldown(1000));
-    m.add_skill(
+    m.add(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)).with_cooldown(1000));
+    m.add(
         SkillInfo::init("Hatch", None, TargetType::None, SkillEffect::SpawnReplace(SpawnKind::BirdSpawn))
             .with_cooldown(400)
             .with_cooldown_spent(),
     );
-    m.add_skill(
+    m.add(
         SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg))
             .with_ammo(AmmoKind::Eggs, 1)
             .with_cooldown(500),

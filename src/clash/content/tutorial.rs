@@ -1,15 +1,13 @@
 // The ai macros can add "unnecessary" returns occationally
 #![allow(clippy::needless_return)]
 
-use std::collections::HashMap;
-
 use specs::prelude::*;
 
 use super::super::*;
 use crate::try_behavior;
 
-pub fn golem_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.add_skill(SkillInfo::init_with_distance(
+pub fn golem_skills(m: &mut SkillsResource) {
+    m.add(SkillInfo::init_with_distance(
         "Golem Punch",
         None,
         TargetType::Player,
@@ -18,7 +16,7 @@ pub fn golem_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Ground Slam",
             None,

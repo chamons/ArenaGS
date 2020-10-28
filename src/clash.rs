@@ -69,3 +69,6 @@ pub use help::*;
 
 mod progression;
 pub use progression::*;
+
+mod skill_resources;
+pub use skill_resources::*;

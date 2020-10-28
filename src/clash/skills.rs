@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::slice::from_ref;
 
 use enum_iterator::IntoEnumIterator;
-use lazy_static::lazy_static;
 use ordered_float::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -24,6 +23,7 @@ pub enum TargetType {
 }
 
 #[allow(dead_code)]
+#[derive(Clone)]
 pub enum SkillEffect {
     None,
     Move,
@@ -60,6 +60,7 @@ pub enum AmmoKind {
     Adrenaline,
 }
 
+#[derive(Clone)]
 pub struct AmmoInfo {
     pub kind: AmmoKind,
     pub usage: u32,
@@ -86,6 +87,7 @@ impl SkillResourceComponent {
     }
 }
 
+#[derive(Clone)]
 pub struct SkillInfo {
     pub name: &'static str,
     pub image: Option<&'static str>,
@@ -255,50 +257,8 @@ pub enum UsableResults {
     LacksFocus,
 }
 
-pub trait SkillMap {
-    fn add_skill(&mut self, info: SkillInfo);
-}
-
-impl SkillMap for HashMap<&'static str, SkillInfo> {
-    fn add_skill(&mut self, info: SkillInfo) {
-        self.insert(&info.name, info);
-    }
-}
-
-lazy_static! {
-    static ref SKILLS: HashMap<&'static str, SkillInfo> = {
-        let mut m = HashMap::new();
-
-        #[cfg(test)]
-        super::content::test::add_test_skills(&mut m);
-
-        super::content::gunslinger::gunslinger_skills(&mut m);
-        super::content::bird::bird_skills(&mut m);
-        super::content::elementalist::elementalist_skills(&mut m);
-        super::content::tutorial::golem_skills(&mut m);
-
-        m.add_skill(
-            SkillInfo::init_with_distance("Dash", Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0),
-        );
-
-        m
-    };
-}
-
-pub fn is_skill(name: &str) -> bool {
-    SKILLS.contains_key(name)
-}
-
-pub fn get_skill(name: &str) -> &'static SkillInfo {
-    &SKILLS[name]
-}
-
-pub fn all_skill_image_filesnames() -> Vec<&'static str> {
-    SKILLS.values().filter_map(|s| s.image).collect()
-}
-
 fn assert_correct_targeting(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) {
-    let skill = get_skill(name);
+    let skill = ecs.get_skill(name);
 
     let requires_point = match skill.target {
         TargetType::None => false,
@@ -396,8 +356,8 @@ pub fn spend_cooldown(ecs: &mut World, invoker: Entity, skill: &SkillInfo) {
 
 pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) {
     assert_correct_targeting(ecs, invoker, name, target);
-    let skill = get_skill(name);
-    assert!(can_invoke_skill(ecs, invoker, skill, target));
+    let skill = ecs.get_skill(name);
+    assert!(can_invoke_skill(ecs, invoker, &skill, target));
 
     if let Some(invoker_name) = ecs.get_name(invoker) {
         ecs.log(format!("{} used [[{}]]", invoker_name.as_str(), name));
@@ -406,7 +366,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
     if !skill.no_time {
         spend_time(ecs, invoker, BASE_ACTION_COST);
     }
-    spend_ammo(ecs, invoker, skill);
+    spend_ammo(ecs, invoker, &skill);
 
     if let Some(exhaustion) = skill.exhaustion {
         spend_exhaustion(ecs, invoker, exhaustion);
@@ -415,10 +375,10 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
         spend_focus(ecs, invoker, focus_use);
     }
     if skill.cooldown.is_some() {
-        spend_cooldown(ecs, invoker, skill);
+        spend_cooldown(ecs, invoker, &skill);
     }
 
-    gain_adrenaline(ecs, invoker, skill);
+    gain_adrenaline(ecs, invoker, &skill);
 
     process_skill(ecs, invoker, &skill.effect, target, skill.name);
 }

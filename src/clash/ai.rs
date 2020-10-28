@@ -175,7 +175,7 @@ pub fn use_skill_at_position(ecs: &mut World, enemy: Entity, skill_name: &str, t
 }
 
 fn use_skill_core(ecs: &mut World, enemy: Entity, skill_name: &str, target_point: Option<Point>) -> bool {
-    if can_invoke_skill(ecs, enemy, get_skill(skill_name), target_point) {
+    if can_invoke_skill(ecs, enemy, &ecs.get_skill(skill_name), target_point) {
         invoke_skill(ecs, enemy, skill_name, target_point);
         return true;
     }
@@ -186,9 +186,9 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_nam
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(find_player(ecs));
     if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
-        let skill = get_skill(skill_name);
+        let skill = ecs.get_skill(skill_name);
         if distance <= skill.range.unwrap() {
-            if can_invoke_skill(ecs, enemy, skill, Some(target_point)) {
+            if can_invoke_skill(ecs, enemy, &skill, Some(target_point)) {
                 invoke_skill(ecs, enemy, skill_name, Some(target_point));
                 return true;
             }
@@ -198,7 +198,7 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_nam
 }
 
 pub fn use_skill_with_random_target(ecs: &mut World, enemy: Entity, skill_name: &str, range: u32) -> bool {
-    let skill = get_skill(skill_name);
+    let skill = ecs.get_skill(skill_name);
     // Early return for lack of resources before trying many target squares
     if !has_resources_for_skill(ecs, enemy, &skill) {
         return false;

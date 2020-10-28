@@ -51,7 +51,7 @@ pub fn has_animations_blocking(ecs: &World) -> bool {
 }
 
 fn select_skill(ecs: &mut World, name: &str) {
-    let skill = get_skill(name);
+    let skill = ecs.get_skill(name);
 
     match skill.is_usable(ecs, find_player(&ecs)) {
         UsableResults::Usable => {}
@@ -76,7 +76,7 @@ fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     // Selection has been made, drop out of targeting state
     reset_action_state(ecs);
 
-    let skill = get_skill(name);
+    let skill = ecs.get_skill(name);
 
     match skill.target {
         TargetType::AnyoneButSelf | TargetType::Enemy | TargetType::Tile | TargetType::Any => {

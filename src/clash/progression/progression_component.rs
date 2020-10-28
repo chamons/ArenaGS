@@ -51,6 +51,7 @@ pub fn wrap_progression(state: &ProgressionState) -> World {
     // Just to make UI work easier
     world.insert(MousePositionComponent::init());
     world.insert(ProgressionComponent::init(state.clone()));
+    // TODO - Get SkillsResource here somehow!??!
 
     world
 }

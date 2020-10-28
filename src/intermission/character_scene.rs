@@ -28,7 +28,7 @@ impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
-
+        let ecs = wrap_progression(&progression);
         Ok(CharacterScene {
             next_fight: Rc::clone(&next_fight),
             continue_button: Button::text(
@@ -57,8 +57,8 @@ impl CharacterScene {
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),
-            ecs: wrap_progression(&progression),
-            help: HelpPopup::init(&render_context, Rc::clone(&text_renderer))?,
+            help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,
+            ecs,
         })
     }
 }

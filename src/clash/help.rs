@@ -192,8 +192,8 @@ impl HelpInfo {
         }
     }
 
-    fn get_skill_help(word: &str) -> HelpInfo {
-        let skill = get_skill(word);
+    fn get_skill_help(ecs: &World, word: &str) -> HelpInfo {
+        let skill = ecs.get_skill(word);
         let header = {
             if let Some(image) = skill.image {
                 HelpHeader::Image(word.to_string(), image.to_string())
@@ -232,7 +232,7 @@ impl HelpInfo {
         HelpInfo::init(header, details)
     }
 
-    pub fn find(mut word: &str) -> HelpInfo {
+    pub fn find(ecs: &World, mut word: &str) -> HelpInfo {
         word = match word {
             "Burning" | "Frozen" | "temperature" | "ignite" => "Temperature",
             "static charge" => "Static Charge",
@@ -490,17 +490,17 @@ impl HelpInfo {
                     ],
                 )
             }
-            "Aimed" => return HelpInfo::find_status(StatusKind::Aimed),
+            "Aimed" => return HelpInfo::find_status(ecs, StatusKind::Aimed),
             _ => {}
         }
-        if is_skill(word) {
-            return HelpInfo::get_skill_help(word);
+        if ecs.read_resource::<SkillsResource>().contains(word) {
+            return HelpInfo::get_skill_help(ecs, word);
         }
 
         HelpInfo::get_error(word)
     }
 
-    pub fn find_status(status: StatusKind) -> HelpInfo {
+    pub fn find_status(ecs: &World, status: StatusKind) -> HelpInfo {
         match status {
             StatusKind::Burning => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
@@ -516,10 +516,10 @@ impl HelpInfo {
                     TEMPERATURE_FREEZE_POINT
                 )],
             ),
-            StatusKind::Magnum => HelpInfo::find("Magnum Bullets"),
-            StatusKind::Ignite => HelpInfo::find("Ignite Bullets"),
-            StatusKind::Cyclone => HelpInfo::find("Cyclone Bullets"),
-            StatusKind::StaticCharge => HelpInfo::find("Static Charge"),
+            StatusKind::Magnum => HelpInfo::find(ecs, "Magnum Bullets"),
+            StatusKind::Ignite => HelpInfo::find(ecs, "Ignite Bullets"),
+            StatusKind::Cyclone => HelpInfo::find(ecs, "Cyclone Bullets"),
+            StatusKind::StaticCharge => HelpInfo::find(ecs, "Static Charge"),
             StatusKind::Aimed => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
                 vec![format!(

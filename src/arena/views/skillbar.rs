@@ -9,7 +9,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{all_skill_image_filesnames, find_player, get_skill, SkillsComponent, UsableResults};
+use crate::clash::{find_player, SkillLookup, SkillsComponent, SkillsResource, UsableResults};
 use crate::props::{HitTestResult, View};
 
 pub struct SkillBarView {
@@ -22,8 +22,10 @@ const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
     pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
+        let skills = ecs.read_resource::<SkillsResource>();
+
         let mut views = Vec::with_capacity(10);
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons(), &all_skill_image_filesnames())?);
+        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?);
         let ui = IconLoader::init_ui();
 
         for i in 0..get_skill_count(ecs) {
@@ -118,11 +120,11 @@ impl SkillBarItemView {
 
     fn get_render_params(&self, ecs: &World) -> Option<(&HotKeyRenderInfo, &Texture, bool)> {
         if let Some(skill_name) = get_skill_name_on_skillbar(ecs, self.index) {
-            let skill = get_skill(&skill_name);
+            let skill = ecs.get_skill(&skill_name);
 
             match skill.is_usable(ecs, find_player(&ecs)) {
                 UsableResults::LacksAmmo if skill.alternate.is_some() => {
-                    let alternate_skill = get_skill(skill.alternate.as_ref().unwrap());
+                    let alternate_skill = ecs.get_skill(skill.alternate.as_ref().unwrap());
                     Some((&self.hotkey, self.icons.get(&alternate_skill.image.unwrap()), false))
                 }
                 UsableResults::Usable => Some((&self.hotkey, self.icons.get(&skill.image.unwrap()), false)),
@@ -187,7 +189,7 @@ pub fn get_skill_name_on_skillbar(ecs: &World, index: usize) -> Option<String> {
 
 // Some skills have an alternate when not usable (such as reload)
 pub fn get_current_skill_on_skillbar(ecs: &World, skill_name: &str) -> String {
-    let skill = get_skill(skill_name);
+    let skill = ecs.get_skill(skill_name);
 
     match skill.is_usable(ecs, find_player(&ecs)) {
         UsableResults::LacksAmmo if skill.alternate.is_some() => skill.alternate.as_ref().unwrap().to_string(),

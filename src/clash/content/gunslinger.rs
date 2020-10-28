@@ -128,19 +128,19 @@ pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
     reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
-pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+pub fn gunslinger_skills(m: &mut SkillsResource) {
     add_aimed_skills(m);
     add_triple_shot_skills(m);
     add_move_and_shoot_skills(m);
     add_utility_skills(m);
 
-    m.add_skill(SkillInfo::init(
+    m.add(SkillInfo::init(
         "Reload",
         Some("b_45.png"),
         TargetType::None,
         SkillEffect::Reload(AmmoKind::Bullets),
     ));
-    m.add_skill(SkillInfo::init(
+    m.add(SkillInfo::init(
         "Swap Ammo",
         Some("b_28.png"),
         TargetType::None,
@@ -148,11 +148,11 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     ));
 }
 
-fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+fn add_aimed_skills(m: &mut SkillsResource) {
     const AIMED_SHOT_BASE_RANGE: u32 = 7;
     const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Aimed Shot",
             Some("gun_06_b.PNG"),
@@ -169,7 +169,7 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Explosive Blast",
             Some("SpellBook01_37.png"),
@@ -188,7 +188,7 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Air Lance",
             Some("SpellBook06_46.png"),
@@ -206,11 +206,11 @@ fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
-fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+fn add_triple_shot_skills(m: &mut SkillsResource) {
     const TRIPLE_SHOT_BASE_RANGE: u32 = 5;
     const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Triple Shot",
             Some("SpellBook06_22.png"),
@@ -226,7 +226,7 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Dragon's Breath",
             Some("r_16.png"),
@@ -244,7 +244,7 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Tornado Shot",
             Some("SpellBookPage09_66.png"),
@@ -263,10 +263,10 @@ fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
-fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
+fn add_move_and_shoot_skills(m: &mut SkillsResource) {
     const MOVE_AND_SHOOT_BASE_RANGE: u32 = 5;
     const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Quick Shot",
             Some("SpellBook03_10.png"),
@@ -284,7 +284,7 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Hot Hands",
             Some("SpellBook01_15.png"),
@@ -302,7 +302,7 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_alternate("Reload"),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Lightning Speed",
             Some("SpellBookPage09_39.png"),
@@ -321,8 +321,8 @@ fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     );
 }
 
-fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.add_skill(
+fn add_utility_skills(m: &mut SkillsResource) {
+    m.add(
         SkillInfo::init_with_distance(
             "Blink Shot",
             Some("SpellBook06_118.png"),
@@ -337,7 +337,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_no_time()
         .with_ammo(AmmoKind::Adrenaline, 50),
     );
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Showdown",
             Some("SpellBook03_54.png"),
@@ -354,7 +354,7 @@ fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         )
         .with_ammo(AmmoKind::Adrenaline, 50),
     );
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Dive",
             Some("SpellBook08_121.png"),

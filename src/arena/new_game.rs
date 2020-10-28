@@ -80,6 +80,9 @@ fn create_battle(progression: ProgressionState, kind: BattleKind, difficulty: u3
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
 
+    // TEMP
+    ecs.insert(init_skills());
+
     if progression.phase == 0 {
         ecs.log("Welcome to ArenaGS!");
         ecs.log("Press F1 for help.");
