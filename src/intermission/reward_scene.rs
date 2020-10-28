@@ -28,7 +28,7 @@ impl RewardScene {
 impl Scene for RewardScene {
     fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
 
-    fn handle_mouse(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
         if button.is_some() {
             self.interacted = true;
         }

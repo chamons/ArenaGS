@@ -10,7 +10,7 @@ use sdl2::render::Texture;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::ProgressionState;
+use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 
 pub struct DeathScene {
@@ -75,7 +75,7 @@ impl Scene for DeathScene {
         self.interacted = true;
     }
 
-    fn handle_mouse(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, _x: i32, _y: i32, button: Option<MouseButton>) {
         if button.is_some() {
             self.interacted = true;
         }
@@ -116,7 +116,7 @@ impl Scene for DeathScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewRound(super::arena_storyteller::create_stage_direction_from_state(&ProgressionState::init_empty()))
+            StageDirection::NewRound(wrap_progression(&ProgressionState::init_empty()))
         } else {
             StageDirection::Continue
         }

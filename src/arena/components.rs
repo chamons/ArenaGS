@@ -13,6 +13,7 @@ use super::Animation;
 use super::BattleActionRequest;
 use crate::atlas::prelude::*;
 use crate::clash::EventCoordinator;
+use crate::props::MousePositionComponent;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum BattleTargetSource {
@@ -47,17 +48,6 @@ impl BattleSceneStateComponent {
         BattleSceneStateComponent {
             state: BattleSceneState::Default(),
         }
-    }
-}
-
-#[derive(Component, ConvertSaveload, Clone)]
-pub struct MousePositionComponent {
-    pub position: Point,
-}
-
-impl MousePositionComponent {
-    pub fn init() -> MousePositionComponent {
-        MousePositionComponent { position: Point::init(0, 0) }
     }
 }
 

@@ -3,15 +3,16 @@ use std::rc::Rc;
 use std::slice;
 
 use sdl2::keyboard::{Keycode, Mod};
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
+use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionState};
+use crate::clash::{wrap_progression, ProgressionComponent, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
@@ -47,18 +48,16 @@ impl CharacterScene {
                 vec![
                     TabInfo::init(
                         "Skill Tree",
-                        Box::new(SkillTreeView::init(SDLPoint::new(10, 10), render_context, text_renderer, &progression)?),
+                        Box::new(SkillTreeView::init(render_context, text_renderer, &progression)?),
                         |_| true,
                     ),
-                    TabInfo::init("Equipment", Box::new(EmptyView::init()?), |_| true),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &progression)?), |_| {
+                        true
+                    }),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),
-            ecs: {
-                let mut ecs = World::new();
-                ecs.insert(progression);
-                ecs
-            },
+            ecs: wrap_progression(&progression),
             help: HelpPopup::init(&render_context, Rc::clone(&text_renderer))?,
         })
     }
@@ -69,22 +68,28 @@ impl Scene for CharacterScene {
         self.help.handle_key(&self.ecs, keycode, keymod);
     }
 
-    fn handle_mouse(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         if self.help.handle_mouse_event(&self.ecs, x, y, button, slice::from_ref(&self.tab)) {
             return;
         }
 
-        self.tab.handle_mouse(&self.ecs, x, y, button);
-        self.continue_button.handle_mouse(&self.ecs, x, y, button);
+        self.tab.handle_mouse_click(&self.ecs, x, y, button);
+        self.continue_button.handle_mouse_click(&self.ecs, x, y, button);
+    }
+
+    fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {
+        self.help.handle_mouse_move(&self.ecs, x, y, state);
+        self.tab.handle_mouse_move(&self.ecs, x, y, state);
+        self.continue_button.handle_mouse_move(&self.ecs, x, y, state);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.help.render(&self.ecs, canvas, frame)?;
         self.tab.render(&self.ecs, canvas, frame)?;
         self.continue_button.render(&self.ecs, canvas, frame)?;
+        self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
 
@@ -99,7 +104,7 @@ impl Scene for CharacterScene {
 
     fn ask_stage_direction(&self) -> StageDirection {
         if *self.next_fight.borrow() {
-            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionState>()))
+            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionComponent>().state))
         } else {
             StageDirection::Continue
         }

@@ -6,7 +6,7 @@ use super::battle_scene::BattleScene;
 use super::death_scene::DeathScene;
 use super::round_fade_scene::RoundFadeScene;
 use crate::after_image::prelude::*;
-use crate::clash::{ProgressionComponent, ProgressionState};
+use crate::clash::{Equipment, ProgressionComponent, ProgressionState};
 use crate::conductor::{Director, EventStatus, Scene, StageDirection, Storyteller};
 
 pub struct ArenaStoryteller {
@@ -38,12 +38,6 @@ fn get_progression(ecs: &World) -> ProgressionState {
     ecs.read_resource::<ProgressionComponent>().state.clone()
 }
 
-pub fn create_stage_direction_from_state(state: &ProgressionState) -> World {
-    let mut world = World::new();
-    world.insert(ProgressionComponent::init(state.clone()));
-    world
-}
-
 impl Storyteller for ArenaStoryteller {
     fn follow_stage_direction(&self, direction: StageDirection, render_context: &RenderContextHolder) -> EventStatus {
         match direction {
@@ -66,8 +60,8 @@ impl Storyteller for ArenaStoryteller {
 
     fn initial_scene(&self) -> Box<dyn Scene> {
         let mut state = ProgressionState::init_empty();
-        state.skills.insert("First".to_owned());
-        state.experience = 100;
+        state.equipment = Equipment::init(4, 3, 2, 1);
+        state.experience = 200;
         Box::new(BattleScene::init(&self.render_context, &self.text_renderer, state).expect("Unable to load initial battle scene"))
     }
 }

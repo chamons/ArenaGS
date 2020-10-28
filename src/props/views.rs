@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
@@ -156,7 +156,7 @@ impl View for Button {
         Ok(())
     }
 
-    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if self.frame.contains_point(SDLPoint::new(x, y)) {
@@ -250,7 +250,7 @@ impl View for TabView {
         Ok(())
     }
 
-    fn handle_mouse(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
@@ -261,7 +261,11 @@ impl View for TabView {
                 }
             }
         }
-        self.tabs[*self.index.borrow()].1.handle_mouse(ecs, x, y, button);
+        self.tabs[*self.index.borrow()].1.handle_mouse_click(ecs, x, y, button);
+    }
+
+    fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
+        self.tabs[*self.index.borrow()].1.handle_mouse_move(ecs, x, y, state);
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
