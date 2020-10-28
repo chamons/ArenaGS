@@ -668,7 +668,8 @@ mod tests {
     use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
 
     fn check_links(link: &str, font: &Font) {
-        let help = HelpInfo::find(link);
+        let ecs = create_test_state().build();
+        let help = HelpInfo::find(&ecs, link);
         assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
         for chunk in help.text {
             let layout = layout_text(&chunk, font, LayoutRequest::init(0, 0, 500, 0)).unwrap();

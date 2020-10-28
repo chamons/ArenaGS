@@ -81,7 +81,7 @@ fn select_skill_with_target(ecs: &mut World, name: &str, position: &Point) {
     match skill.target {
         TargetType::AnyoneButSelf | TargetType::Enemy | TargetType::Tile | TargetType::Any => {
             let player = find_player(&ecs);
-            if can_invoke_skill(ecs, player, &skill, Some(*position)) {
+            if can_invoke_skill(ecs, player, name, Some(*position)) {
                 player_use_skill(ecs, name, Some(*position));
             }
         }

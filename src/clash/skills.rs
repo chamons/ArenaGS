@@ -337,9 +337,10 @@ pub fn has_resources_for_skill(ecs: &mut World, invoker: Entity, skill: &SkillIn
     has_needed_ammo && has_no_cooldown
 }
 
-pub fn can_invoke_skill(ecs: &mut World, invoker: Entity, skill: &SkillInfo, target: Option<Point>) -> bool {
-    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, skill, x));
-    has_resources_for_skill(ecs, invoker, skill) && has_valid_target
+pub fn can_invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) -> bool {
+    let skill = ecs.get_skill(name);
+    let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, &skill, x));
+    has_resources_for_skill(ecs, invoker, &skill) && has_valid_target
 }
 
 pub fn spend_focus(ecs: &mut World, invoker: Entity, cost: f64) {
@@ -357,7 +358,7 @@ pub fn spend_cooldown(ecs: &mut World, invoker: Entity, skill: &SkillInfo) {
 pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) {
     assert_correct_targeting(ecs, invoker, name, target);
     let skill = ecs.get_skill(name);
-    assert!(can_invoke_skill(ecs, invoker, &skill, target));
+    assert!(can_invoke_skill(ecs, invoker, name, target));
 
     if let Some(invoker_name) = ecs.get_name(invoker) {
         ecs.log(format!("{} used [[{}]]", invoker_name.as_str(), name));
@@ -585,7 +586,7 @@ mod tests {
         let ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = get_skill("TestWithRange");
+        let info = ecs.get_skill("TestWithRange");
         assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
         assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 5)));
         let info = SkillInfo::init("TestInfo", None, TargetType::Tile, SkillEffect::None);
@@ -597,7 +598,7 @@ mod tests {
         let ecs = create_test_state().with_character(2, 2, 100).with_character(2, 3, 100).with_map().build();
         let entity = find_at(&ecs, 2, 2);
 
-        let info = get_skill("TestWithRange");
+        let info = ecs.get_skill("TestWithRange");
         assert!(is_good_target(&ecs, entity, &info, Point::init(2, 4)));
         assert!(!is_good_target(&ecs, entity, &info, Point::init(2, 3)));
     }
@@ -731,7 +732,7 @@ mod tests {
         let player = find_first_entity(&ecs);
         add_bullets(&mut ecs, player, 3);
 
-        assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(3, ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -740,7 +741,7 @@ mod tests {
         let player = find_first_entity(&ecs);
         add_bullets(&mut ecs, player, 0);
 
-        assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(0, ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -748,7 +749,7 @@ mod tests {
         let ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
 
-        assert_eq!(0, get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(0, ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -756,7 +757,7 @@ mod tests {
         let ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
 
-        assert!(get_skill("TestMelee").get_remaining_usages(&ecs, player).is_none());
+        assert!(ecs.get_skill("TestMelee").get_remaining_usages(&ecs, player).is_none());
     }
 
     #[test]
@@ -765,15 +766,13 @@ mod tests {
         let player = find_at(&ecs, 2, 2);
         add_bullets(&mut ecs, player, 3);
 
-        let skill = get_skill("TestAmmo");
-
         for _ in 0..3 {
-            assert!(can_invoke_skill(&mut ecs, player, &skill, None));
+            assert!(can_invoke_skill(&mut ecs, player, "TestAmmo", None));
             invoke_skill(&mut ecs, player, "TestAmmo", None);
             add_ticks(&mut ecs, 100);
         }
 
-        assert!(!can_invoke_skill(&mut ecs, player, &skill, None));
+        assert!(!can_invoke_skill(&mut ecs, player, "TestAmmo", None));
     }
 
     #[test]
@@ -783,7 +782,7 @@ mod tests {
         add_bullets(&mut ecs, player, 6);
 
         invoke_skill(&mut ecs, player, "TestMultiAmmo", None);
-        assert_eq!(1, get_skill("TestMultiAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(1, ecs.get_skill("TestMultiAmmo").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -798,7 +797,7 @@ mod tests {
         }
 
         invoke_skill(&mut ecs, player, "TestReload", None);
-        assert_eq!(3, get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(3, ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
         assert_eq!(0, get_ticks(&ecs, player));
     }
 
@@ -816,7 +815,7 @@ mod tests {
         invoke_skill(&mut ecs, player, "TestReloadOne", None);
         add_ticks(&mut ecs, 100);
         invoke_skill(&mut ecs, player, "TestReloadOne", None);
-        assert_eq!(2, get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(2, ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap());
         assert_eq!(0, get_ticks(&ecs, player));
     }
 
@@ -832,7 +831,7 @@ mod tests {
         }
 
         invoke_skill(&mut ecs, player, "TestReloadSomeRandom", None);
-        let remaining = get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap();
+        let remaining = ecs.get_skill("TestAmmo").get_remaining_usages(&ecs, player).unwrap();
         assert!(remaining > 0);
         assert!(remaining <= 3);
         assert_eq!(0, get_ticks(&ecs, player));
@@ -842,7 +841,7 @@ mod tests {
     fn get_exhaustion_usage() {
         let ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
-        assert_eq!(2, get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(2, ecs.get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -850,7 +849,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
         add_bullets(&mut ecs, player, 3);
-        assert_eq!(3, get_skill("TestMultiple").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(3, ecs.get_skill("TestMultiple").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -864,11 +863,11 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
 
-        assert_eq!(0, get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(0, ecs.get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap());
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
-        assert!(get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap() > 0);
+        assert!(ecs.get_skill("TestExhaustion").get_remaining_usages(&ecs, player).unwrap() > 0);
     }
 
     fn add_focus(ecs: &mut World, player: Entity, focus: f64) {
@@ -880,7 +879,7 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 0).build();
         let player = find_first_entity(&ecs);
         add_focus(&mut ecs, player, 1.0);
-        assert_eq!(2, get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(2, ecs.get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap());
     }
 
     #[test]
@@ -894,11 +893,11 @@ mod tests {
             add_ticks(&mut ecs, 100);
         }
 
-        assert_eq!(0, get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap());
+        assert_eq!(0, ecs.get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap());
         for _ in 0..10 {
             add_ticks(&mut ecs, 100);
         }
-        assert!(get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap() > 0);
+        assert!(ecs.get_skill("TestFocus").get_remaining_usages(&ecs, player).unwrap() > 0);
     }
 
     #[test]
@@ -1256,12 +1255,12 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        assert!(can_invoke_skill(&mut ecs, player, get_skill("TestCooldown"), None));
+        assert!(can_invoke_skill(&mut ecs, player, "TestCooldown", None));
         invoke_skill(&mut ecs, player, "TestCooldown", None);
-        assert!(!can_invoke_skill(&mut ecs, player, get_skill("TestCooldown"), None));
+        assert!(!can_invoke_skill(&mut ecs, player, "TestCooldown", None));
         add_ticks(&mut ecs, 100);
         add_ticks(&mut ecs, 100);
-        assert!(can_invoke_skill(&mut ecs, player, get_skill("TestCooldown"), None));
+        assert!(can_invoke_skill(&mut ecs, player, "TestCooldown", None));
     }
 
     #[test]
@@ -1269,12 +1268,12 @@ mod tests {
         let mut ecs = create_test_state().with_character(2, 2, 100).with_map().build();
         let player = find_at(&ecs, 2, 2);
 
-        assert!(!can_invoke_skill(&mut ecs, player, get_skill("TestCooldownStartSpent"), None));
+        assert!(!can_invoke_skill(&mut ecs, player, "TestCooldownStartSpent", None));
         add_ticks(&mut ecs, 100);
         add_ticks(&mut ecs, 100);
-        assert!(can_invoke_skill(&mut ecs, player, get_skill("TestCooldownStartSpent"), None));
+        assert!(can_invoke_skill(&mut ecs, player, "TestCooldownStartSpent", None));
         invoke_skill(&mut ecs, player, "TestCooldownStartSpent", None);
-        assert!(!can_invoke_skill(&mut ecs, player, get_skill("TestCooldownStartSpent"), None));
+        assert!(!can_invoke_skill(&mut ecs, player, "TestCooldownStartSpent", None));
     }
 
     #[test]
