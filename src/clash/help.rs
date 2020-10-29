@@ -666,10 +666,11 @@ mod tests {
     use super::*;
     use crate::after_image::font_test_helpers::*;
     use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
+    use crate::clash::new_game;
 
     fn check_links(link: &str, font: &Font) {
         let mut ecs = create_world();
-        super::new_game::create_random_battle(&mut ecs, ProgressionState::init_empty());
+        super::new_game::create_random_battle(&mut ecs, new_game::new_game_intermission_state());
         let help = HelpInfo::find(&ecs, link);
         assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
         for chunk in help.text {

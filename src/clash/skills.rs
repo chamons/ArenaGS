@@ -89,8 +89,8 @@ impl SkillResourceComponent {
 
 #[derive(Clone)]
 pub struct SkillInfo {
-    pub name: &'static str,
-    pub image: Option<&'static str>,
+    pub name: String,
+    pub image: Option<String>,
     pub target: TargetType,
     pub effect: SkillEffect,
     pub range: Option<u32>,
@@ -106,21 +106,14 @@ pub struct SkillInfo {
 
 #[allow(dead_code)]
 impl SkillInfo {
-    pub fn init(name: &'static str, image: Option<&'static str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
+    pub fn init(name: &str, image: Option<&str>, target: TargetType, effect: SkillEffect) -> SkillInfo {
         SkillInfo::init_with_distance(name, image, target, effect, None, false)
     }
 
-    pub fn init_with_distance(
-        name: &'static str,
-        image: Option<&'static str>,
-        target: TargetType,
-        effect: SkillEffect,
-        range: Option<u32>,
-        must_be_clear: bool,
-    ) -> SkillInfo {
+    pub fn init_with_distance(name: &str, image: Option<&str>, target: TargetType, effect: SkillEffect, range: Option<u32>, must_be_clear: bool) -> SkillInfo {
         SkillInfo {
-            name,
-            image,
+            name: name.to_string(),
+            image: image.map(|i| i.to_string()),
             target,
             effect,
             range,
@@ -381,7 +374,7 @@ pub fn invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option
 
     gain_adrenaline(ecs, invoker, &skill);
 
-    process_skill(ecs, invoker, &skill.effect, target, skill.name);
+    process_skill(ecs, invoker, &skill.effect, target, &skill.name);
 }
 
 fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target: Option<Point>, skill_name: &str) {
