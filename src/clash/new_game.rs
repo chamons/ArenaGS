@@ -91,8 +91,7 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     ecs.insert(EquipmentResource::init_with(&content::gunslinger::get_equipment()));
 
     let player_position = find_placement(&ecs, 1, 1);
-    spawner::player(ecs, player_position);
-    super::content::gunslinger::gunslinger_skills(&mut skills);
+    progression::embattle::create_player(ecs, &mut skills, player_position);
 
     match kind {
         BattleKind::SimpleGolem => {
