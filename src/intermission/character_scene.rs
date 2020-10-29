@@ -12,7 +12,6 @@ use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::ProgressionComponent;
 use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
@@ -28,7 +27,6 @@ impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
-        let progression = &ecs.read_resource::<ProgressionComponent>().state.clone();
         Ok(CharacterScene {
             next_fight: Rc::clone(&next_fight),
             continue_button: Button::text(
@@ -46,14 +44,8 @@ impl CharacterScene {
                 render_context,
                 text_renderer,
                 vec![
-                    TabInfo::init(
-                        "Skill Tree",
-                        Box::new(SkillTreeView::init(render_context, text_renderer, &progression)?),
-                        |_| true,
-                    ),
-                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &progression)?), |_| {
-                        true
-                    }),
+                    TabInfo::init("Skill Tree", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?), |_| true),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?), |_| true),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),

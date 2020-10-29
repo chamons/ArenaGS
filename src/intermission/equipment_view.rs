@@ -205,8 +205,8 @@ pub struct EquipmentView {
 }
 
 impl EquipmentView {
-    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, progression: &ProgressionState) -> BoxResult<EquipmentView> {
-        let tree = SkillTree::init(&get_tree(&progression.weapon));
+    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<EquipmentView> {
+        let tree = SkillTree::init(&get_tree(ecs));
         let ui = Rc::new(IconCache::init(
             &render_context,
             IconLoader::init_ui(),
@@ -241,15 +241,16 @@ impl EquipmentView {
                 None,
                 Some(Box::new(move || *should_sort.borrow_mut() = true)),
             )?,
-            slots: EquipmentView::create_slots(progression, &ui),
+            slots: EquipmentView::create_slots(ecs, &ui),
             ui,
             max_z_order: 1,
         };
         Ok(view)
     }
 
-    fn create_slots(progression: &ProgressionState, ui: &Rc<IconCache>) -> Vec<EquipmentSlotView> {
+    fn create_slots(ecs: &World, ui: &Rc<IconCache>) -> Vec<EquipmentSlotView> {
         let mut slots = vec![];
+        let progression = &ecs.read_resource::<ProgressionComponent>().state;
 
         for kind in &[
             EquipmentKinds::Weapon,

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::iter;
 
 use serde::{Deserialize, Serialize};
@@ -135,6 +136,48 @@ impl Equipment {
 
     pub fn has(&self, name: &str) -> bool {
         self.find(name).is_some()
+    }
+}
+
+#[derive(Clone)] // NotConvertSaveload
+pub struct EquipmentResource {
+    pub equipment: HashMap<String, EquipmentItem>,
+}
+
+#[allow(dead_code)]
+impl EquipmentResource {
+    pub fn init() -> EquipmentResource {
+        EquipmentResource { equipment: HashMap::new() }
+    }
+
+    pub fn init_with(items: &[EquipmentItem]) -> EquipmentResource {
+        EquipmentResource {
+            equipment: items.iter().map(|e| (e.name.to_string(), e.clone())).collect(),
+        }
+    }
+
+    pub fn contains(&self, name: &str) -> bool {
+        self.equipment.contains_key(name)
+    }
+
+    pub fn get(&self, name: &str) -> EquipmentItem {
+        self.equipment[name].clone()
+    }
+
+    pub fn add(&mut self, equipment: EquipmentItem) {
+        self.equipment.insert(equipment.name.to_string(), equipment);
+    }
+}
+
+use specs::prelude::*;
+
+pub trait EquipmentLookup {
+    fn get_equipment(&self, name: &str) -> EquipmentItem;
+}
+
+impl EquipmentLookup for World {
+    fn get_equipment(&self, name: &str) -> EquipmentItem {
+        self.read_resource::<EquipmentResource>().get(name)
     }
 }
 
