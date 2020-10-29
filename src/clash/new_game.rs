@@ -60,7 +60,8 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
-pub fn random_new_world(ecs: &mut World, progression: ProgressionState) {
+pub fn create_random_battle(ecs: &mut World, progression_world: World) {
+    let progression = progression_world.read_resource::<ProgressionComponent>().state.clone();
     let (kind, difficulty) = match progression.phase {
         0 => (BattleKind::SimpleGolem, 0),
         1 => (BattleKind::Bird, 0),
@@ -121,4 +122,22 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
             spawner::elementalist(ecs, enemy_position, difficulty);
         }
     }
+}
+
+pub fn new_game_intermission_state() -> World {
+    let mut base_state = World::new();
+    base_state.insert(ProgressionComponent::init(ProgressionState::init_empty()));
+
+    create_intermission_state(&base_state)
+}
+
+pub fn create_intermission_state(battle_state: &World) -> World {
+    let mut ecs = World::new();
+    ecs.insert(crate::props::MousePositionComponent::init());
+    ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
+
+    // TEMP
+    ecs.insert(init_skills());
+
+    ecs
 }

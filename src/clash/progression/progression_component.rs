@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use super::Equipment;
-use crate::props::MousePositionComponent;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::*;
@@ -44,14 +43,4 @@ impl ProgressionState {
             equipment,
         }
     }
-}
-
-pub fn wrap_progression(state: &ProgressionState) -> World {
-    let mut world = World::new();
-    // Just to make UI work easier
-    world.insert(MousePositionComponent::init());
-    world.insert(ProgressionComponent::init(state.clone()));
-    // TODO - Get SkillsResource here somehow!??!
-
-    world
 }

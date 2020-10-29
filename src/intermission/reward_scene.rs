@@ -3,24 +3,24 @@ use std::rc::Rc;
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
+use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 
 pub struct RewardScene {
     interacted: bool,
-    progression: ProgressionState,
     text_renderer: Rc<TextRenderer>,
+    ecs: World,
 }
 
 impl RewardScene {
-    pub fn init(_render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<RewardScene> {
+    pub fn init(_render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<RewardScene> {
         Ok(RewardScene {
             interacted: false,
-            progression,
             text_renderer: Rc::clone(text_renderer),
+            ecs,
         })
     }
 }
@@ -51,9 +51,9 @@ impl Scene for RewardScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         if self.interacted {
-            StageDirection::ShowCharacter(wrap_progression(&self.progression))
+            StageDirection::ShowCharacter(std::mem::replace(&mut self.ecs, World::new()))
         } else {
             StageDirection::Continue
         }

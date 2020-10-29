@@ -12,7 +12,7 @@ use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionComponent, ProgressionState};
+use crate::clash::ProgressionComponent;
 use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
@@ -25,10 +25,10 @@ pub struct CharacterScene {
 }
 
 impl CharacterScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
-        let ecs = wrap_progression(&progression);
+        let progression = &ecs.read_resource::<ProgressionComponent>().state.clone();
         Ok(CharacterScene {
             next_fight: Rc::clone(&next_fight),
             continue_button: Button::text(
@@ -102,9 +102,9 @@ impl Scene for CharacterScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         if *self.next_fight.borrow() {
-            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionComponent>().state))
+            StageDirection::NewRound(std::mem::replace(&mut self.ecs, World::new()))
         } else {
             StageDirection::Continue
         }

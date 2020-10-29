@@ -34,17 +34,17 @@ pub fn set_map_background(ecs: &mut World) {
         .build();
 }
 
-fn setup_game(progression: ProgressionState) -> World {
+fn setup_game(progression_world: World) -> World {
     let mut ecs = create_world();
     add_ui_extension(&mut ecs);
-    new_game::random_new_world(&mut ecs, progression);
+    new_game::create_random_battle(&mut ecs, progression_world);
     set_map_background(&mut ecs);
     ecs
 }
 
 impl BattleScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<BattleScene> {
-        let ecs = setup_game(progression);
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression_world: World) -> BoxResult<BattleScene> {
+        let ecs = setup_game(progression_world);
 
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
@@ -92,7 +92,7 @@ impl BattleScene {
                     }
                 }
                 Keycode::N => {
-                    self.ecs = setup_game(ProgressionState::init_empty());
+                    self.ecs = setup_game(new_game::new_game_intermission_state());
                 }
                 Keycode::S => saveload::save_to_disk(&mut self.ecs),
                 Keycode::L => {
@@ -264,7 +264,7 @@ impl Scene for BattleScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         battle_stage_direction(&self.ecs)
     }
 }
@@ -296,7 +296,7 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
         ecs.write_resource::<ProgressionComponent>().state.phase += 1;
-        return StageDirection::BattleEnemyDefeated(wrap_progression(&ecs.read_resource::<ProgressionComponent>().state));
+        return StageDirection::BattleEnemyDefeated(new_game::create_intermission_state(&ecs));
     }
     StageDirection::Continue
 }

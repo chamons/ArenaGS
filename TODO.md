@@ -1,3 +1,7 @@
 
 - Remove static strings in skillinfo
-- Fix crash in help on intermission scenes due to lack of skills
+- Only insert enemy skills when fighting that specific enemy
+- Add all equipment like SkillsResource
+- Remove existing gunslinger skills
+- Based upon Progression Component generate a set of skills
+- THen do same for player stats
