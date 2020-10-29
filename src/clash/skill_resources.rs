@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{SkillEffect, SkillInfo, TargetType};
+use super::SkillInfo;
 
 #[derive(Clone)] // NotConvertSaveload
 pub struct SkillsResource {
@@ -27,19 +27,6 @@ impl SkillsResource {
     pub fn add(&mut self, skill: SkillInfo) {
         self.skills.insert(skill.name.to_string(), skill);
     }
-}
-
-pub fn init_skills() -> SkillsResource {
-    let mut m = SkillsResource::init();
-
-    super::content::gunslinger::gunslinger_skills(&mut m);
-    super::content::bird::bird_skills(&mut m);
-    super::content::elementalist::elementalist_skills(&mut m);
-    super::content::tutorial::golem_skills(&mut m);
-
-    m.add(SkillInfo::init_with_distance("Dash", Some("SpellBookPage09_39.png"), TargetType::Tile, SkillEffect::Move, Some(3), true).with_exhaustion(50.0));
-
-    m
 }
 
 use specs::prelude::*;

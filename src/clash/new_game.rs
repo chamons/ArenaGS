@@ -77,8 +77,7 @@ pub fn create_random_battle(ecs: &mut World, progression_world: World) {
 }
 
 fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKind, difficulty: u32) {
-    // TEMP
-    ecs.insert(init_skills());
+    let mut skills = SkillsResource::init();
 
     if progression.phase == 0 {
         ecs.log("Welcome to ArenaGS!");
@@ -92,15 +91,18 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
 
     let player_position = find_placement(&ecs, 1, 1);
     spawner::player(ecs, player_position);
+    super::content::gunslinger::gunslinger_skills(&mut skills);
 
     match kind {
         BattleKind::SimpleGolem => {
             let enemy_position = find_placement(&ecs, 1, 1);
             spawner::simple_golem(ecs, enemy_position);
+            super::content::tutorial::golem_skills(&mut skills);
         }
         BattleKind::Bird => {
             let enemy_position = find_placement(&ecs, 2, 2);
             spawner::bird_monster(ecs, enemy_position, difficulty);
+            super::content::bird::bird_skills(&mut skills);
         }
         BattleKind::Elementalist => {
             use crate::clash::content::elementalist::ElementalKind;
@@ -120,8 +122,11 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
             }
             let enemy_position = find_placement(&ecs, 1, 1);
             spawner::elementalist(ecs, enemy_position, difficulty);
+            super::content::elementalist::elementalist_skills(&mut skills);
         }
     }
+
+    ecs.insert(skills);
 }
 
 pub fn new_game_intermission_state() -> World {
@@ -136,8 +141,10 @@ pub fn create_intermission_state(battle_state: &World) -> World {
     ecs.insert(crate::props::MousePositionComponent::init());
     ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
 
-    // TEMP
-    ecs.insert(init_skills());
+    // TODO - Still wrong, should be calculated based on current equipped and reset when changed
+    let mut m = SkillsResource::init();
+    super::content::gunslinger::gunslinger_skills(&mut m);
+    ecs.insert(m);
 
     ecs
 }
