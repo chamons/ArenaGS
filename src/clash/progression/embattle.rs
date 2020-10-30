@@ -11,11 +11,24 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
     gunslinger::gunslinger_skills(skills);
 }
 
-/*
-UnlocksAbilityMode(String),
-ModifiesSkillRange(i32, String),
-ModifiesSkillStrength(i32, String),
-*/
+fn collect_attack_modes<F>(ecs: &World, get: F) -> Vec<String>
+where
+    F: Fn(&str) -> String,
+{
+    let mut modes = vec![];
+    modes.push(get("Default"));
+    for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
+        if let Some(e) = e {
+            for effect in e.effect {
+                match effect {
+                    EquipmentEffect::UnlocksAbilityMode(kind) => modes.push(kind),
+                    _ => {}
+                }
+            }
+        }
+    }
+    modes
+}
 
 fn collect_attack_skills<F>(ecs: &World, skills: &mut SkillsResource, get: F)
 where
@@ -24,6 +37,12 @@ where
     let mut attacks = vec![];
     let mut weapon_range = 0;
     let mut weapon_strength = 0;
+
+    let mut skill_range = HashMap::new();
+    let mut add_skill_range = |kind: String, delta: i32| *skill_range.entry(kind).or_insert(0) += delta;
+
+    let mut skill_damage = HashMap::new();
+    let mut add_skill_damage = |kind: String, delta: i32| *skill_damage.entry(kind).or_insert(0) += delta;
 
     for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
         if let Some(e) = e {
@@ -34,6 +53,8 @@ where
                     }
                     EquipmentEffect::ModifiesWeaponRange(delta) => weapon_range += delta,
                     EquipmentEffect::ModifiesWeaponStrength(delta) => weapon_strength += delta,
+                    EquipmentEffect::ModifiesSkillRange(delta, skill) => add_skill_range(skill, delta),
+                    EquipmentEffect::ModifiesSkillStrength(delta, skill) => add_skill_damage(skill, delta),
                     _ => {}
                 }
             }
@@ -45,9 +66,9 @@ where
     }
 
     for mut a in attacks {
-        a.range = a.range.map(|r| (r as i32 + weapon_range) as u32);
+        a.range = a.range.map(|r| ((r as i32 + weapon_range + skill_range.get(&a.name).unwrap_or(&0)) as u32));
 
-        let new_damage = |damage: Damage| Damage::init((damage.dice() as i32 + weapon_strength) as u32);
+        let new_damage = |damage: Damage| Damage::init((damage.dice() as i32 + weapon_strength + skill_damage.get(&a.name).unwrap_or(&0)) as u32);
         a.effect = match a.effect {
             SkillEffect::RangedAttack(damage, kind) => SkillEffect::RangedAttack(new_damage(damage), kind),
             SkillEffect::MeleeAttack(damage, kind) => SkillEffect::MeleeAttack(new_damage(damage), kind),
@@ -262,5 +283,73 @@ mod tests {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
             _ => panic!(),
         }
+    }
+
+    #[test]
+    fn attack_skills_skill_range() {
+        let ecs = create_test_state(&[eq(
+            "a",
+            EquipmentKinds::Weapon,
+            &[
+                EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string()),
+                EquipmentEffect::ModifiesSkillRange(-1, "Triple Shot".to_string()),
+            ],
+            0,
+        )]);
+
+        let mut skills = SkillsResource::init();
+        collect_attack_skills(&ecs, &mut skills, |name| match name {
+            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+            _ => panic!(),
+        });
+        assert_eq!(1, skills.skills.len());
+        assert_eq!(Some(4), skills.get("Triple Shot").range);
+    }
+
+    #[test]
+    fn attack_skills_skill_damage() {
+        let ecs = create_test_state(&[eq(
+            "a",
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::ModifiesSkillStrength(1, "Basic Attack".to_string())],
+            0,
+        )]);
+
+        let mut skills = SkillsResource::init();
+        collect_attack_skills(&ecs, &mut skills, |name| match name {
+            "Default" => SkillInfo::init_with_distance(
+                "Basic Attack",
+                None,
+                TargetType::Any,
+                SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+                Some(5),
+                true,
+            ),
+            _ => panic!(),
+        });
+        assert_eq!(1, skills.skills.len());
+        match skills.get("Basic Attack").effect {
+            SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn attack_modes() {
+        let ecs = create_test_state(&[eq(
+            "a",
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityMode("Inferno Ammo".to_string())],
+            0,
+        )]);
+
+        let modes = collect_attack_modes(&ecs, |name| match name {
+            "Default" => "Magnum Ammo".to_string(),
+            "Inferno Ammo" => "Inferno Ammo".to_string(),
+            _ => panic!(),
+        });
+        assert_eq!(2, modes.len());
+        assert_eq!("Magnum Ammo", modes[0]);
+        assert_eq!("Inferno Ammo", modes[1]);
     }
 }
