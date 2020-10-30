@@ -11,6 +11,33 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
     gunslinger::gunslinger_skills(skills);
 }
 
+fn collect_attack_skills<F>(ecs: &World, skills: &mut SkillsResource, get: F)
+where
+    F: Fn(&str) -> SkillInfo,
+{
+    let mut attack_count = 0;
+
+    for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
+        if let Some(e) = e {
+            for effect in e.effect {
+                match effect {
+                    EquipmentEffect::UnlocksAbilityClass(kind) => {
+                        attack_count += 1;
+                        let mut base = get(&kind);
+                        skills.add(base);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    if attack_count == 0 {
+        let mut base = get("Default");
+        skills.add(base);
+    }
+}
+
 fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
     let mut armor = 0;
     let mut dodge = 0;
@@ -136,5 +163,36 @@ mod tests {
         let (kind, delta) = resources[0];
         assert_eq!(AmmoKind::Bullets, kind);
         assert_eq!(-2, delta);
+    }
+
+    #[test]
+    fn attack_skills_default() {
+        let ecs = create_test_state(&[]);
+
+        let mut skills = SkillsResource::init();
+        collect_attack_skills(&ecs, &mut skills, |name| match name {
+            "Default" => SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None),
+            _ => panic!(),
+        });
+        assert_eq!(1, skills.skills.len());
+        assert_eq!("Basic Attack", skills.get("Basic Attack").name);
+    }
+
+    #[test]
+    fn attack_skills_skill_unlock() {
+        let ecs = create_test_state(&[eq(
+            "a",
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+            0,
+        )]);
+
+        let mut skills = SkillsResource::init();
+        collect_attack_skills(&ecs, &mut skills, |name| match name {
+            "Triple Shot" => SkillInfo::init("Triple Shot", None, TargetType::Any, SkillEffect::None),
+            _ => panic!(),
+        });
+        assert_eq!(1, skills.skills.len());
+        assert_eq!("Triple Shot", skills.get("Triple Shot").name);
     }
 }
