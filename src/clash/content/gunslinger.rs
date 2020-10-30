@@ -50,20 +50,20 @@ pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
 
 pub fn get_equipment() -> Vec<EquipmentItem> {
     vec![
-        EquipmentItem::init("First", Some("ar_b_04.png"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Second", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Third", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Fourth", Some("ar_b_04.PNG"), EquipmentKinds::Mastery),
-        EquipmentItem::init("1", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("2", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("3", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("4", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("5", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("6", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("7", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("A", Some("book_13_b.png"), EquipmentKinds::Accessory),
-        EquipmentItem::init("B", Some("book_13_b.png"), EquipmentKinds::Accessory),
-        EquipmentItem::init("C", Some("book_13_b.png"), EquipmentKinds::Accessory),
+        EquipmentItem::init("First", Some("ar_b_04.png"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
+        EquipmentItem::init("Second", Some("ar_b_04.PNG"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
+        EquipmentItem::init("Third", Some("ar_b_04.PNG"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
+        EquipmentItem::init("Fourth", Some("ar_b_04.PNG"), EquipmentKinds::Mastery, &[EquipmentEffect::None]),
+        EquipmentItem::init("1", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("2", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("3", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("4", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("5", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("6", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("7", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
+        EquipmentItem::init("A", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
+        EquipmentItem::init("B", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
+        EquipmentItem::init("C", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
     ]
 }
 
