@@ -6,9 +6,20 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
+
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
+    // Need to modify this to take defense mods and resource mods
     spawner::player(ecs, player_position);
+
+    // This needs to completely go and have callback
     gunslinger::gunslinger_skills(skills);
+
+    // Need something for attack modes
+
+    // Get rid of gunslinger::get_weapon_skills
+
+    // Make attune ammo rotate past what we don't have
+    // Don't add it if we have only one kind
 }
 
 fn collect_attack_modes<F>(ecs: &World, get: F) -> Vec<String>
@@ -139,9 +150,10 @@ fn collect_resource_modifier(ecs: &World) -> Vec<(AmmoKind, i32)> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::*;
     use super::*;
 
-    fn create_test_state(equip: &[(EquipmentKinds, EquipmentItem, usize)]) -> World {
+    fn equip_test_state(equip: &[(EquipmentKinds, EquipmentItem, usize)]) -> World {
         let mut ecs = World::new();
         let mut state = ProgressionState::init_empty();
         state.equipment = Equipment::init(4, 4, 4, 4);
@@ -158,7 +170,7 @@ mod tests {
 
     #[test]
     fn defense_modifiers() {
-        let ecs = create_test_state(&[
+        let ecs = equip_test_state(&[
             eq(
                 "a",
                 EquipmentKinds::Armor,
@@ -188,7 +200,7 @@ mod tests {
 
     #[test]
     fn resource_modifiers() {
-        let ecs = create_test_state(&[
+        let ecs = equip_test_state(&[
             eq(
                 "a",
                 EquipmentKinds::Weapon,
@@ -212,7 +224,7 @@ mod tests {
 
     #[test]
     fn attack_skills_default() {
-        let ecs = create_test_state(&[]);
+        let ecs = equip_test_state(&[]);
 
         let mut skills = SkillsResource::init();
         collect_attack_skills(&ecs, &mut skills, |name| match name {
@@ -225,7 +237,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_unlock() {
-        let ecs = create_test_state(&[eq(
+        let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
@@ -243,7 +255,7 @@ mod tests {
 
     #[test]
     fn attack_skills_weapon_range() {
-        let ecs = create_test_state(&[eq(
+        let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
             &[
@@ -264,7 +276,7 @@ mod tests {
 
     #[test]
     fn attack_skills_weapon_damage() {
-        let ecs = create_test_state(&[eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
+        let ecs = equip_test_state(&[eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
         let mut skills = SkillsResource::init();
         collect_attack_skills(&ecs, &mut skills, |name| match name {
@@ -287,7 +299,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_range() {
-        let ecs = create_test_state(&[eq(
+        let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
             &[
@@ -308,7 +320,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_damage() {
-        let ecs = create_test_state(&[eq(
+        let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::ModifiesSkillStrength(1, "Basic Attack".to_string())],
@@ -336,7 +348,7 @@ mod tests {
 
     #[test]
     fn attack_modes() {
-        let ecs = create_test_state(&[eq(
+        let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::UnlocksAbilityMode("Inferno Ammo".to_string())],
@@ -351,5 +363,14 @@ mod tests {
         assert_eq!(2, modes.len());
         assert_eq!("Magnum Ammo", modes[0]);
         assert_eq!("Inferno Ammo", modes[1]);
+    }
+
+    #[test]
+    fn gunslinger_smoke() {
+        let mut ecs = create_test_state().with_map().build();)
+        let mut skills = SkillsResource::init();
+        create_player(&mut ecs, &mut skills, Point::init(0, 0));
+        assert_eq!(1, skills.skills.len());
+        assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
     }
 }
