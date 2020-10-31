@@ -672,7 +672,7 @@ mod tests {
         let mut ecs = create_world();
         super::new_game::create_random_battle(&mut ecs, new_game::new_game_intermission_state());
         let help = HelpInfo::find(&ecs, link);
-        assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
+        assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")), format!("Missing Link: {}", link));
         for chunk in help.text {
             let layout = layout_text(&chunk, font, LayoutRequest::init(0, 0, 500, 0)).unwrap();
             for l in layout.chunks {
