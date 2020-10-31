@@ -143,7 +143,7 @@ pub fn create_intermission_state(battle_state: &World) -> World {
 
     // TODO - Still wrong, should be calculated based on current equipped and reset when changed
     let mut m = SkillsResource::init();
-    super::content::gunslinger::gunslinger_skills(&mut m);
+    super::embattle::add_player_skills(&mut ecs, &mut m);
     ecs.insert(m);
 
     ecs

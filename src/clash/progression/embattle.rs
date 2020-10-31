@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter::Iterator;
 
 use specs::prelude::*;
 
@@ -6,20 +7,52 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
+pub fn add_player_skills(ecs: &mut World, skills: &mut SkillsResource) -> Vec<SkillInfo> {
+    let mut attack_skills = collect_attack_skills(ecs, skills, gunslinger::gunslinger_attack_skill_base);
+
+    let base_skills = gunslinger::gunslinger_base_abilities();
+    for base in gunslinger::gunslinger_base_abilities() {
+        skills.add(base);
+    }
+    attack_skills.extend(base_skills);
+    attack_skills
+}
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
     // Need to modify this to take defense mods and resource mods
-    spawner::player(ecs, player_position);
 
-    // This needs to completely go and have callback
-    gunslinger::gunslinger_skills(skills);
+    let mut resources = gunslinger::gunslinger_base_resources();
+    for delta in collect_resource_modifier(ecs) {
+        let i = resources
+            .iter()
+            .position(|r| r.0 == delta.0)
+            .expect(&format!("Unable to find base resource {:?}", delta.0));
+        resources[i].1 = (resources[i].1 as i32 + delta.1) as u32;
+        if resources[i].2 > 0 {
+            resources[i].2 = (resources[i].2 as i32 + delta.1) as u32;
+        }
+    }
+
+    let (armor, dodge, absorb, health) = collect_defense_modifier(ecs);
+    let defenses = DefenseComponent::init(Defenses::init(1 + armor as u32, dodge as u32, absorb as u32, 20 + health as u32));
+
+    let player = spawner::player(ecs, player_position, SkillResourceComponent::init(&resources[..]).with_focus(1.0), defenses);
 
     // Need something for attack modes
-
-    // Get rid of gunslinger::get_weapon_skills
-
     // Make attune ammo rotate past what we don't have
     // Don't add it if we have only one kind
+    {
+        let attack_modes = collect_attack_modes(ecs, gunslinger::gunslinger_modes);
+
+        let player_skills = add_player_skills(ecs, skills);
+        let mut skill_components = ecs.write_storage::<SkillsComponent>();
+        let skill_list = &mut skill_components.grab_mut(player).skills;
+        for s in player_skills {
+            skill_list.push(s.name.to_string());
+        }
+    }
+
+    gunslinger::gunslinger_final_setup(ecs, player);
 }
 
 fn collect_attack_modes<F>(ecs: &World, get: F) -> Vec<String>
@@ -41,11 +74,11 @@ where
     modes
 }
 
-fn collect_attack_skills<F>(ecs: &World, skills: &mut SkillsResource, get: F)
+fn collect_attack_skills<F>(ecs: &World, skills: &mut SkillsResource, get: F) -> Vec<SkillInfo>
 where
     F: Fn(&str) -> SkillInfo,
 {
-    let mut attacks = vec![];
+    let mut base_attacks = vec![];
     let mut weapon_range = 0;
     let mut weapon_strength = 0;
 
@@ -60,7 +93,7 @@ where
             for effect in e.effect {
                 match effect {
                     EquipmentEffect::UnlocksAbilityClass(kind) => {
-                        attacks.push(get(&kind));
+                        base_attacks.push(get(&kind));
                     }
                     EquipmentEffect::ModifiesWeaponRange(delta) => weapon_range += delta,
                     EquipmentEffect::ModifiesWeaponStrength(delta) => weapon_strength += delta,
@@ -72,11 +105,12 @@ where
         }
     }
 
-    if attacks.len() == 0 {
-        attacks.push(get("Default"));
+    if base_attacks.len() == 0 {
+        base_attacks.push(get("Default"));
     }
 
-    for mut a in attacks {
+    let mut final_attack = vec![];
+    for mut a in base_attacks {
         a.range = a.range.map(|r| ((r as i32 + weapon_range + skill_range.get(&a.name).unwrap_or(&0)) as u32));
 
         let new_damage = |damage: Damage| Damage::init((damage.dice() as i32 + weapon_strength + skill_damage.get(&a.name).unwrap_or(&0)) as u32);
@@ -99,8 +133,11 @@ where
             | SkillEffect::SpawnReplace(_)
             | SkillEffect::Sequence(_, _) => a.effect,
         };
-        skills.add(a);
+        skills.add(a.clone());
+        final_attack.push(a);
     }
+
+    final_attack
 }
 
 fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
@@ -367,10 +404,29 @@ mod tests {
 
     #[test]
     fn gunslinger_smoke() {
-        let mut ecs = create_test_state().with_map().build();)
+        let mut ecs = create_test_state().with_map().build();
+        let mut state = ProgressionState::init_empty();
+        state.equipment = Equipment::init(4, 4, 4, 4);
+        state.equipment.add(
+            EquipmentKinds::Weapon,
+            EquipmentItem::init(
+                "A",
+                None,
+                EquipmentKinds::Weapon,
+                &[EquipmentEffect::ModifiesResourceTotal(-1, "Bullets".to_string())],
+            ),
+            0,
+        );
+        ecs.insert(ProgressionComponent::init(state));
+
         let mut skills = SkillsResource::init();
         create_player(&mut ecs, &mut skills, Point::init(0, 0));
         assert_eq!(1, skills.skills.len());
         assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
+        let player = find_player(&ecs);
+        assert_eq!(
+            5,
+            *ecs.read_storage::<SkillResourceComponent>().grab(player).ammo.get(&AmmoKind::Bullets).unwrap()
+        );
     }
 }
