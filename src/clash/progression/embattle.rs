@@ -172,7 +172,7 @@ mod tests {
 
     fn equip_test_state(equip: &[(EquipmentKinds, EquipmentItem, usize)]) -> World {
         let mut ecs = World::new();
-        let mut state = ProgressionState::init_empty();
+        let mut state = ProgressionState::init_gunslinger();
         state.equipment = Equipment::init(4, 4, 4, 4);
         for (kind, item, index) in equip {
             state.equipment.add(*kind, item.clone(), *index);
@@ -391,7 +391,7 @@ mod tests {
     #[test]
     fn gunslinger_smoke() {
         let mut ecs = create_test_state().with_map().build();
-        let mut state = ProgressionState::init_empty();
+        let mut state = ProgressionState::init_gunslinger();
         state.equipment = Equipment::init(4, 4, 4, 4);
         state.equipment.add(
             EquipmentKinds::Weapon,

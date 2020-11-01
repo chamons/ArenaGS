@@ -131,7 +131,7 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
 
 pub fn new_game_intermission_state() -> World {
     let mut base_state = World::new();
-    base_state.insert(ProgressionComponent::init(ProgressionState::init_empty()));
+    base_state.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
 
     create_intermission_state(&base_state)
 }

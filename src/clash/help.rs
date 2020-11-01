@@ -378,12 +378,11 @@ impl HelpInfo {
                     "Abilities:",
                     ""
                 ];
-                // FIXME
-                // text.extend(get_weapon_skills (TargetAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
-                // return HelpInfo::text_header(
-                //     "Magnum Bullets",
-                //     text
-                // )
+                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Magnum Bullets",
+                    text
+                )
             },
             "Ignite Bullets" => {
                 use super::content::gunslinger::*;
@@ -395,12 +394,11 @@ impl HelpInfo {
                     ""
                 ];
 
-                // FIXME
-                // text.extend(get_weapon_skills (TargetAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
-                // return HelpInfo::text_header(
-                //     "Ignite Bullets",
-                //     text
-                // )
+                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Ignite Bullets",
+                    text
+                )
             },
             "Cyclone Bullets" => {
                 use super::content::gunslinger::*;
@@ -412,12 +410,11 @@ impl HelpInfo {
                     ""
             ];
 
-                // FIXME
-                // text.extend(get_weapon_skills (TargetAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
-                // return HelpInfo::text_header(
-                //     "Cyclone Bullets",
-                //     text
-                // )
+                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
+                return HelpInfo::text_header(
+                    "Cyclone Bullets",
+                    text
+                )
             },
             "Static Charge" => return HelpInfo::text_header("Static Charge", vec_of_strings![
                 "Some abilities charge their targets with high levels of electric charge.",

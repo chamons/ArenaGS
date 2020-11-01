@@ -32,7 +32,7 @@ impl StateBuilder {
     }
 
     pub fn with_gunslinger(&mut self, x: u32, y: u32) -> &mut Self {
-        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_empty()));
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
         let mut resources = (*self.ecs.read_resource::<SkillsResource>()).clone();
         super::embattle::create_player(&mut self.ecs, &mut resources, Point::init(x, y));
         // Overwrite existing
@@ -46,7 +46,7 @@ impl StateBuilder {
     }
 
     pub fn with_progression(&mut self) -> &mut Self {
-        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_empty()));
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
         self
     }
 
