@@ -14,39 +14,32 @@ pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
     }
 
     vec![
-        SkillTreeNode::init(equipment.get("First"), skill_pos(0, 6), 10, &[]),
-        SkillTreeNode::init(equipment.get("Second"), skill_pos(1, 6), 10, &["First"]),
-        SkillTreeNode::init(equipment.get("Third"), skill_pos(2, 5), 10, &["Second"]),
-        SkillTreeNode::init(equipment.get("Fourth"), skill_pos(2, 7), 10, &["Second"]),
-        SkillTreeNode::init(equipment.get("1"), skill_pos(0, 1), 10, &[]),
-        SkillTreeNode::init(equipment.get("2"), skill_pos(1, 1), 10, &["1"]),
-        SkillTreeNode::init(equipment.get("3"), skill_pos(2, 1), 10, &["2"]),
-        SkillTreeNode::init(equipment.get("4"), skill_pos(3, 1), 10, &["3"]),
-        SkillTreeNode::init(equipment.get("5"), skill_pos(4, 1), 10, &["4"]),
-        SkillTreeNode::init(equipment.get("6"), skill_pos(5, 1), 10, &["5"]),
-        SkillTreeNode::init(equipment.get("7"), skill_pos(6, 1), 10, &["6"]),
-        SkillTreeNode::init(equipment.get("A"), skill_pos(0, 10), 10, &[]),
-        SkillTreeNode::init(equipment.get("B"), skill_pos(0, 12), 10, &[]),
-        SkillTreeNode::init(equipment.get("C"), skill_pos(1, 11), 10, &["A", "B"]),
+        SkillTreeNode::init(equipment.get("Adjustable Sight"), skill_pos(0, 6), 0, &[]),
+        SkillTreeNode::init(equipment.get("Recoil Spring"), skill_pos(1, 6), 0, &["Adjustable Sight"]),
+        SkillTreeNode::init(equipment.get("Stippled Grip"), skill_pos(2, 5), 0, &["Recoil Spring"]),
     ]
 }
 
 pub fn get_equipment() -> Vec<EquipmentItem> {
     vec![
-        EquipmentItem::init("First", Some("ar_b_04.png"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
-        EquipmentItem::init("Second", Some("ar_b_04.PNG"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
-        EquipmentItem::init("Third", Some("ar_b_04.PNG"), EquipmentKinds::Weapon, &[EquipmentEffect::None]),
-        EquipmentItem::init("Fourth", Some("ar_b_04.PNG"), EquipmentKinds::Mastery, &[EquipmentEffect::None]),
-        EquipmentItem::init("1", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("2", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("3", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("4", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("5", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("6", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("7", Some("artifact_12_b.png"), EquipmentKinds::Armor, &[EquipmentEffect::None]),
-        EquipmentItem::init("A", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
-        EquipmentItem::init("B", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
-        EquipmentItem::init("C", Some("book_13_b.png"), EquipmentKinds::Accessory, &[EquipmentEffect::None]),
+        EquipmentItem::init(
+            "Adjustable Sight",
+            Some("gun_06_b.PNG"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
+        ),
+        EquipmentItem::init(
+            "Recoil Spring",
+            Some("SpellBook06_22.png"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+        ),
+        EquipmentItem::init(
+            "Stippled Grip",
+            Some("SpellBook03_10.png"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
+        ),
     ]
 }
 
@@ -157,7 +150,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
         "Default" | "Snap Shot" => {
             return SkillInfo::init_with_distance(
                 "Snap Shot",
-                Some("gun_06_b.PNG"),
+                Some("gun_08_b.PNG"),
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(Damage::init(4), BoltKind::Bullet),
                 Some(7),

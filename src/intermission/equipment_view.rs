@@ -87,7 +87,7 @@ impl View for CardView {
             self.frame.y() + 75,
             CARD_WIDTH,
             canvas,
-            FontSize::Bold,
+            FontSize::Small,
             FontColor::Brown,
         )?;
 
