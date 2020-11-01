@@ -49,7 +49,7 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
     ]
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum GunslingerAmmo {
     Magnum,
     Ignite,
@@ -116,12 +116,14 @@ pub fn get_weapon_skills(ecs: &World, player: Entity, ammo: GunslingerAmmo) -> V
         let name = match ammo {
             GunslingerAmmo::Magnum => template_name, // The template name is the magnum name
             GunslingerAmmo::Ignite => match template_name.as_str() {
+                "Snap Shot" => "Spark Shot",
                 "Aimed Shot" => "Explosive Blast",
                 "Triple Shot" => "Dragon's Breath",
                 "Quick Shot" => "Hot Hands",
                 _ => panic!("Unknown template {}", template_name),
             },
             GunslingerAmmo::Cyclone => match template_name.as_str() {
+                "Snap Shot" => "Airburst Shot",
                 "Aimed Shot" => "Air Lance",
                 "Triple Shot" => "Tornado Shot",
                 "Quick Shot" => "Lightning Speed",
@@ -137,7 +139,7 @@ pub fn get_weapon_skills(ecs: &World, player: Entity, ammo: GunslingerAmmo) -> V
 
 pub fn get_base_skill(name: &str) -> SkillInfo {
     match name {
-        "Default" => {
+        "Default" | "Snap Shot" => {
             return SkillInfo::init_with_distance(
                 "Snap Shot",
                 Some("gun_06_b.PNG"),
@@ -193,28 +195,34 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
 }
 
 fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
-    // If we're a magnum skill, just return the template
-    match name {
-        "Aimed Shot" | "Triple Shot" | "Quick Shot" => return get_base_skill(name),
-        _ => {}
-    }
-
-    // Figure out what class of skill we are, and what to base off of
-    let (base_name, image) = match name {
-        "Explosive Blast" => ("Aimed Shot", "SpellBook01_37.png"),
-        "Dragon's Breath" => ("Triple Shot", "r_16.png"),
-        "Hot Hands" => ("Quick Shot", "SpellBook01_15.png"),
-
-        "Air Lance" => ("Aimed Shot", "SpellBook06_46.png"),
-        "Tornado Shot" => ("Triple Shot", "SpellBookPage09_66.png"),
-        "Lightning Speed" => ("Quick Shot", "SpellBookPage09_39.png"),
-        _ => panic!("Unknown concrete skill {}", name),
+    let base_name = match ammo {
+        GunslingerAmmo::Magnum => match name {
+            "Snap Shot" => {
+                return get_base_skill("Default");
+            }
+            _ => {
+                return get_base_skill(name);
+            }
+        },
+        GunslingerAmmo::Ignite => match name {
+            "Spark Shot" => "Snap Shot",
+            "Explosive Blast" => "Aimed Shot",
+            "Dragon's Breath" => "Triple Shot",
+            "Hot Hands" => "Quick Shot",
+            _ => panic!("Unknown concrete skill {}", name),
+        },
+        GunslingerAmmo::Cyclone => match name {
+            "Airburst Shot" => "Snap Shot",
+            "Air Lance" => "Aimed Shot",
+            "Tornado Shot" => "Triple Shot",
+            "Lightning Speed" => "Quick Shot",
+            _ => panic!("Unknown concrete skill {}", name),
+        },
     };
 
     // Start with that base
     let mut skill = get_base_skill(base_name);
     skill.name = name.to_string();
-    skill.image = Some(image.to_string());
 
     let get_damage = |e: &SkillEffect| match e {
         SkillEffect::RangedAttack(damage, _) => damage.dice(),
@@ -228,7 +236,16 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
     };
 
     match name {
+        "Spark Shot" => {
+            skill.image = Some("gun_01_b.png".to_string());
+            skill.range = skill.range.map(|r| r + 1);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
+                BoltKind::FireBullet,
+            );
+        }
         "Explosive Blast" => {
+            skill.image = Some("SpellBook01_37.png".to_string());
             skill.range = skill.range.map(|r| r + 1);
             skill.effect = SkillEffect::RangedAttack(
                 Damage::init(get_damage(&skill.effect) - 1)
@@ -238,6 +255,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             );
         }
         "Dragon's Breath" => {
+            skill.image = Some("r_16.png".to_string());
             skill.range = skill.range.map(|r| r + 2);
             skill.effect = SkillEffect::RangedAttack(
                 Damage::init(get_damage(&skill.effect) - 1)
@@ -247,13 +265,23 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             );
         }
         "Hot Hands" => {
+            skill.image = Some("SpellBook01_15.png".to_string());
             skill.effect = SkillEffect::MoveAndShoot(
                 Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
                 get_range(&skill.effect),
                 BoltKind::FireBullet,
             );
         }
+        "Airburst Shot" => {
+            skill.image = Some("gun_01_b.png".to_string());
+            skill.range = skill.range.map(|r| r + 2);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                BoltKind::FireBullet,
+            );
+        }
         "Air Lance" => {
+            skill.image = Some("SpellBook06_46.png".to_string());
             skill.range = skill.range.map(|r| r + 3);
             skill.effect = SkillEffect::RangedAttack(
                 Damage::init(get_damage(&skill.effect) - 2).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
@@ -261,6 +289,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             );
         }
         "Tornado Shot" => {
+            skill.image = Some("SpellBookPage09_66.png".to_string());
             skill.range = skill.range.map(|r| r + 2);
             skill.effect = SkillEffect::RangedAttack(
                 Damage::init(get_damage(&skill.effect) - 1)
@@ -270,6 +299,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             );
         }
         "Lightning Speed" => {
+            skill.image = Some("SpellBookPage09_39.png".to_string());
             skill.effect = SkillEffect::MoveAndShoot(
                 Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
                 get_range(&skill.effect).map(|r| r + 1),
@@ -303,7 +333,7 @@ pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
 }
 
 pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>, skills: &mut SkillsResource) {
-    let modes: Vec<GunslingerAmmo> = modes
+    let mut modes: Vec<GunslingerAmmo> = modes
         .iter()
         .map(|m| match m.as_str() {
             "Magnum" => GunslingerAmmo::Magnum,
@@ -312,6 +342,10 @@ pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>,
             _ => panic!("Unknown gunslinger mode {}", m),
         })
         .collect();
+
+    if !modes.contains(&GunslingerAmmo::Magnum) {
+        modes.insert(0, GunslingerAmmo::Magnum);
+    }
 
     ecs.shovel(player, GunslingerComponent::init(&modes[..]));
 
@@ -334,15 +368,6 @@ pub fn add_active_skills(ecs: &mut World, player: Entity) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn gunslinger_starts_correctly() {
-        let ecs = create_test_state().with_gunslinger(2, 2).build();
-        let player = find_at(&ecs, 2, 2);
-
-        assert!(ecs.has_status(player, StatusKind::Magnum));
-        assert_eq!(5, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
-    }
 
     #[test]
     fn rotate_ammo_reloads_as_well() {
@@ -377,12 +402,12 @@ mod tests {
     fn rotate_ammo_has_sets_correct_skills() {
         let mut ecs = create_test_state().with_gunslinger(2, 2).build();
         let player = find_at(&ecs, 2, 2);
-        assert_eq!("Aimed Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
         rotate_ammo(&mut ecs, player);
-        assert_eq!("Explosive Blast", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Spark Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
         rotate_ammo(&mut ecs, player);
-        assert_eq!("Air Lance", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Airburst Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
     }
 }

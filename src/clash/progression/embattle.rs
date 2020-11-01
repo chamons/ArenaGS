@@ -8,8 +8,8 @@ use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
-    let (armor, dodge, absorb, health) = collect_defense_modifier(ecs);
-    let defenses = DefenseComponent::init(Defenses::init(1 + armor as u32, dodge as u32, absorb as u32, 20 + health as u32));
+    let (dodge, armor, absorb, health) = collect_defense_modifier(ecs);
+    let defenses = DefenseComponent::init(Defenses::init(1 + dodge as u32, armor as u32, absorb as u32, 20 + health as u32));
 
     let resources = get_player_resources(ecs);
 
@@ -21,7 +21,7 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
 
     gunslinger::process_attack_modes(ecs, player, collect_attack_modes(ecs), skills);
 
-    gunslinger::add_active_skills(ecs, player);
+    gunslinger::add_active_skills(ecs, player)
 }
 
 fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
@@ -120,8 +120,8 @@ where
 }
 
 fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
-    let mut armor = 0;
     let mut dodge = 0;
+    let mut armor = 0;
     let mut absorb = 0;
     let mut health = 0;
 
@@ -129,8 +129,8 @@ fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
         if let Some(e) = e {
             for effect in e.effect {
                 match effect {
-                    EquipmentEffect::ModifiesArmor(delta) => armor += delta,
                     EquipmentEffect::ModifiesDodge(delta) => dodge += delta,
+                    EquipmentEffect::ModifiesArmor(delta) => armor += delta,
                     EquipmentEffect::ModifiesAbsorb(delta) => absorb += delta,
                     EquipmentEffect::ModifiesMaxHealth(delta) => health += delta,
                     _ => {}
@@ -138,7 +138,7 @@ fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
             }
         }
     }
-    (armor, dodge, absorb, health)
+    (dodge, armor, absorb, health)
 }
 
 fn collect_resource_modifier(ecs: &World) -> Vec<(AmmoKind, i32)> {
@@ -207,9 +207,9 @@ mod tests {
                 3,
             ),
         ]);
-        let (armor, dodge, absorb, life) = collect_defense_modifier(&ecs);
-        assert_eq!(1, armor);
+        let (dodge, armor, absorb, life) = collect_defense_modifier(&ecs);
         assert_eq!(2, dodge);
+        assert_eq!(1, armor);
         assert_eq!(3, absorb);
         assert_eq!(4, life);
     }
@@ -361,14 +361,13 @@ mod tests {
         let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
-            &[EquipmentEffect::UnlocksAbilityMode("Inferno Ammo".to_string())],
+            &[EquipmentEffect::UnlocksAbilityMode("Inferno".to_string())],
             0,
         )]);
 
         let modes = collect_attack_modes(&ecs);
-        assert_eq!(2, modes.len());
-        assert_eq!("Magnum Ammo", modes[0]);
-        assert_eq!("Inferno Ammo", modes[1]);
+        assert_eq!(1, modes.len());
+        assert_eq!("Inferno", modes[0]);
     }
 
     #[test]
@@ -396,7 +395,7 @@ mod tests {
 
         let mut skills = SkillsResource::init();
         create_player(&mut ecs, &mut skills, Point::init(0, 0));
-        assert_eq!(1, skills.skills.len());
+        assert_eq!(3, skills.skills.len());
         assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
         let player = find_player(&ecs);
         assert_eq!(
@@ -404,21 +403,51 @@ mod tests {
             *ecs.read_storage::<SkillResourceComponent>().grab(player).ammo.get(&AmmoKind::Bullets).unwrap()
         );
 
+        assert_eq!(1, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
         assert_eq!(1, ecs.get_defenses(player).armor);
 
         // Now equip an ability class unlock and create anew to change abilities
-        let mut state = ecs.write_resource::<ProgressionComponent>().state.clone();
-        state.equipment.add(
-            EquipmentKinds::Weapon,
-            EquipmentItem::init("C", None, EquipmentKinds::Weapon, &[EquipmentEffect::UnlocksAbilityClass("Aimed".to_string())]),
-            0,
-        );
+        {
+            let mut state = ecs.write_resource::<ProgressionComponent>().state.clone();
+            state.equipment.add(
+                EquipmentKinds::Weapon,
+                EquipmentItem::init(
+                    "C",
+                    None,
+                    EquipmentKinds::Weapon,
+                    &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
+                ),
+                1,
+            );
 
-        let mut ecs = create_test_state().with_map().build();
-        ecs.insert(ProgressionComponent::init(state));
+            let mut ecs = create_test_state().with_map().build();
+            ecs.insert(ProgressionComponent::init(state));
 
-        create_player(&mut ecs, &mut skills, Point::init(0, 0));
-        assert_eq!(1, skills.skills.len());
-        assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
+            create_player(&mut ecs, &mut skills, Point::init(0, 0));
+            assert_eq!(4, skills.skills.len());
+            assert_eq!(1, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
+            assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
+        }
+
+        // Now equip an ability mode unlock and create anew to change abilities
+        {
+            let mut state = ecs.write_resource::<ProgressionComponent>().state.clone();
+            state.equipment.add(
+                EquipmentKinds::Accessory,
+                EquipmentItem::init(
+                    "D",
+                    None,
+                    EquipmentKinds::Accessory,
+                    &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
+                ),
+                0,
+            );
+
+            let mut ecs = create_test_state().with_map().build();
+            ecs.insert(ProgressionComponent::init(state));
+
+            create_player(&mut ecs, &mut skills, Point::init(0, 0));
+            assert_eq!(2, ecs.read_storage::<GunslingerComponent>().grab(player).ammo_types.len());
+        }
     }
 }
