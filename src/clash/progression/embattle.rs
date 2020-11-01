@@ -7,6 +7,16 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
+pub fn load_equipment_for_help(_ecs: &World, equip: &mut EquipmentResource) {
+    for e in content::gunslinger::get_equipment() {
+        equip.add(e);
+    }
+}
+
+pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
+    gunslinger::instance_skills(ecs, None, skills);
+}
+
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
     let (dodge, armor, absorb, health) = collect_defense_modifier(ecs);
     let defenses = DefenseComponent::init(Defenses::init(1 + dodge as u32, armor as u32, absorb as u32, 20 + health as u32));
@@ -413,7 +423,6 @@ mod tests {
 
         let mut skills = SkillsResource::init();
         create_player(&mut ecs, &mut skills, Point::init(0, 0));
-        assert_eq!(3, skills.skills.len());
         assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
         let player = find_player(&ecs);
         assert_eq!(
@@ -442,7 +451,6 @@ mod tests {
             ecs.insert(ProgressionComponent::init(state));
 
             create_player(&mut ecs, &mut skills, Point::init(0, 0));
-            assert_eq!(4, skills.skills.len());
             assert_eq!(1, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
             assert_eq!("Quick Shot", skills.skills.get("Quick Shot").unwrap().name);
         }

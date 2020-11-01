@@ -4,6 +4,7 @@ use specs::prelude::*;
 use super::*;
 use crate::after_image::LayoutChunkIcon;
 use crate::atlas::prelude::*;
+use crate::vec_of_strings;
 
 pub enum HelpHeader {
     None,
@@ -14,10 +15,6 @@ pub enum HelpHeader {
 pub struct HelpInfo {
     pub header: HelpHeader,
     pub text: Vec<String>,
-}
-
-macro_rules! vec_of_strings {
-    ($($x:expr),*) => (vec![$($x.to_string()),*]);
 }
 
 impl HelpInfo {
@@ -378,7 +375,7 @@ impl HelpInfo {
                     "Abilities:",
                     ""
                 ];
-                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Magnum Bullets",
                     text
@@ -394,7 +391,7 @@ impl HelpInfo {
                     ""
                 ];
 
-                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Ignite Bullets",
                     text
@@ -410,7 +407,7 @@ impl HelpInfo {
                     ""
             ];
 
-                text.extend(get_weapon_skills (ecs, find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Cyclone Bullets",
                     text
@@ -668,9 +665,7 @@ mod tests {
     use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
     use crate::clash::new_game;
 
-    fn check_links(link: &str, font: &Font) {
-        let mut ecs = create_world();
-        super::new_game::create_random_battle(&mut ecs, new_game::new_game_intermission_state());
+    fn check_links(ecs: &World, link: &str, font: &Font) {
         let help = HelpInfo::find(&ecs, link);
         assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")), format!("Missing Link: {}", link));
         for chunk in help.text {
@@ -678,7 +673,7 @@ mod tests {
             for l in layout.chunks {
                 match l.value {
                     LayoutChunkValue::Link(new_link) => {
-                        check_links(&new_link, font);
+                        check_links(ecs, &new_link, font);
                     }
                     _ => {}
                 }
@@ -687,10 +682,24 @@ mod tests {
     }
 
     #[test]
-    fn help_has_no_unresolved_links() {
+    fn battle_help_has_no_unresolved_links() {
         if !has_test_font() {
             return;
         }
-        check_links("Top Level Help", &get_test_font());
+
+        let mut ecs = create_world();
+        super::new_game::create_random_battle(&mut ecs, new_game::new_game_intermission_state());
+
+        check_links(&ecs, "Top Level Help", &get_test_font());
+    }
+
+    #[test]
+    fn intermission_help_has_no_unresolved_links() {
+        if !has_test_font() {
+            return;
+        }
+
+        let ecs = new_game::new_game_intermission_state();
+        check_links(&ecs, "Top Level Help", &get_test_font());
     }
 }

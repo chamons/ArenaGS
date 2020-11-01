@@ -4,6 +4,7 @@ use specs::prelude::*;
 use super::super::progression::SkillTreeNode;
 use super::super::*;
 use crate::atlas::prelude::*;
+use crate::vec_of_strings;
 
 pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
     fn skill_pos(x: u32, y: u32) -> Point {
@@ -103,8 +104,8 @@ pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
         GunslingerAmmo::Cyclone => (GunslingerAmmo::Cyclone, GunslingerAmmo::Magnum),
     };
 
-    remove_skills(ecs, invoker, get_weapon_skills(ecs, invoker, current_ammo));
-    add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, invoker, next_ammo));
+    remove_skills(ecs, invoker, get_weapon_skills(ecs, Some(invoker), current_ammo));
+    add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, Some(invoker), next_ammo));
     set_current_weapon_trait(ecs, invoker, next_ammo);
 
     reload(ecs, invoker, AmmoKind::Bullets, None);
@@ -114,23 +115,29 @@ pub fn default_attack_replacement() -> &'static str {
     "Quick Shot"
 }
 
-pub fn get_weapon_skills(ecs: &World, player: Entity, ammo: GunslingerAmmo) -> Vec<String> {
+pub fn get_weapon_skills(ecs: &World, player: Option<Entity>, ammo: GunslingerAmmo) -> Vec<String> {
     let mut skills = vec![];
-    for template_name in &ecs.read_storage::<SkillsComponent>().grab(player).templates {
+    let templates = if let Some(player) = player {
+        ecs.read_storage::<SkillsComponent>().grab(player).templates.clone()
+    } else {
+        get_all_bases()
+    };
+
+    for template_name in templates {
         let name = match ammo {
             GunslingerAmmo::Magnum => template_name, // The template name is the magnum name
             GunslingerAmmo::Ignite => match template_name.as_str() {
-                "Snap Shot" => "Spark Shot",
-                "Aimed Shot" => "Explosive Blast",
-                "Triple Shot" => "Dragon's Breath",
-                "Quick Shot" => "Hot Hands",
+                "Snap Shot" => "Spark Shot".to_string(),
+                "Aimed Shot" => "Explosive Blast".to_string(),
+                "Triple Shot" => "Dragon's Breath".to_string(),
+                "Quick Shot" => "Hot Hands".to_string(),
                 _ => panic!("Unknown template {}", template_name),
             },
             GunslingerAmmo::Cyclone => match template_name.as_str() {
-                "Snap Shot" => "Airburst Shot",
-                "Aimed Shot" => "Air Lance",
-                "Triple Shot" => "Tornado Shot",
-                "Quick Shot" => "Lightning Speed",
+                "Snap Shot" => "Airburst Shot".to_string(),
+                "Aimed Shot" => "Air Lance".to_string(),
+                "Triple Shot" => "Tornado Shot".to_string(),
+                "Quick Shot" => "Lightning Speed".to_string(),
                 _ => panic!("Unknown template {}", template_name),
             },
         };
@@ -139,6 +146,10 @@ pub fn get_weapon_skills(ecs: &World, player: Entity, ammo: GunslingerAmmo) -> V
     }
 
     skills
+}
+
+fn get_all_bases() -> Vec<String> {
+    vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
 }
 
 pub fn get_base_skill(name: &str) -> SkillInfo {
@@ -348,9 +359,15 @@ pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>,
 
     ecs.shovel(player, GunslingerComponent::init(&modes[..]));
 
-    for m in modes {
-        for s in get_weapon_skills(ecs, player, m) {
-            skills.add(get_concrete_skill(&s, m));
+    instance_skills(ecs, Some(player), skills);
+}
+
+pub fn instance_skills(ecs: &World, player: Option<Entity>, skills: &mut SkillsResource) {
+    // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
+    // since you can reach them via help
+    for m in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
+        for s in get_weapon_skills(ecs, player, *m) {
+            skills.add(get_concrete_skill(&s, *m));
         }
     }
 }
@@ -358,7 +375,7 @@ pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>,
 pub fn add_active_skills(ecs: &mut World, player: Entity) {
     set_current_weapon_trait(ecs, player, GunslingerAmmo::Magnum);
 
-    add_skills_to_front(ecs, player, get_weapon_skills(ecs, player, GunslingerAmmo::Magnum));
+    add_skills_to_front(ecs, player, get_weapon_skills(ecs, Some(player), GunslingerAmmo::Magnum));
     if ecs.read_storage::<GunslingerComponent>().grab(player).ammo_types.len() > 1 {
         ecs.write_storage::<SkillsComponent>().grab_mut(player).skills.push("Swap Ammo".to_string());
     }

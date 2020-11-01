@@ -74,3 +74,8 @@ mod skill_resources;
 pub use skill_resources::*;
 
 pub mod new_game;
+
+#[macro_export]
+macro_rules! vec_of_strings {
+    ($($x:expr),*) => (vec![$($x.to_string()),*]);
+}

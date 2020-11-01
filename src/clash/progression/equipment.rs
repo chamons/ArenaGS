@@ -183,6 +183,10 @@ impl EquipmentResource {
         }
     }
 
+    pub fn init_from(equipment: HashMap<String, EquipmentItem>) -> EquipmentResource {
+        EquipmentResource { equipment }
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         self.equipment.contains_key(name)
     }

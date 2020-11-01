@@ -138,8 +138,22 @@ pub fn new_game_intermission_state() -> World {
 
 pub fn create_intermission_state(battle_state: &World) -> World {
     let mut ecs = World::new();
-    ecs.insert(crate::props::MousePositionComponent::init());
     ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
+
+    // To make UI easier
+    ecs.insert(crate::props::MousePositionComponent::init());
+    // So we can query if one exists
+    ecs.register::<PlayerComponent>();
+
+    // Load all skills & equipment for help
+    // If we are move to a game round these will be overwritten
+    let mut skills = SkillsResource::init();
+    super::embattle::load_skills_for_help(&ecs, &mut skills);
+    ecs.insert(skills);
+
+    let mut equips = EquipmentResource::init();
+    super::embattle::load_equipment_for_help(&ecs, &mut equips);
+    ecs.insert(equips);
 
     ecs
 }
