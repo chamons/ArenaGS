@@ -85,7 +85,8 @@ where
         }
     }
 
-    if base_attacks.len() == 0 {
+    let default_attack_replacement = gunslinger::default_attack_replacement();
+    if !base_attacks.iter().any(|a| a.name == default_attack_replacement) {
         base_attacks.push(get("Default"));
     }
 
@@ -255,16 +256,16 @@ mod tests {
         let ecs = equip_test_state(&[eq(
             "a",
             EquipmentKinds::Weapon,
-            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+            &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
             0,
         )]);
 
         let skills = collect_attack_skills(&ecs, |name| match name {
-            "Triple Shot" => SkillInfo::init("Triple Shot", None, TargetType::Any, SkillEffect::None),
+            "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
             _ => panic!(),
         });
         assert_eq!(1, skills.len());
-        assert_eq!("Triple Shot", skills[0].name);
+        assert_eq!("Quick Shot", skills[0].name);
     }
 
     #[test]
@@ -273,14 +274,14 @@ mod tests {
             "a",
             EquipmentKinds::Weapon,
             &[
-                EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string()),
+                EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string()),
                 EquipmentEffect::ModifiesWeaponRange(-1),
             ],
             0,
         )]);
 
         let skills = collect_attack_skills(&ecs, |name| match name {
-            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
         assert_eq!(1, skills.len());
@@ -315,18 +316,35 @@ mod tests {
             "a",
             EquipmentKinds::Weapon,
             &[
-                EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string()),
-                EquipmentEffect::ModifiesSkillRange(-1, "Triple Shot".to_string()),
+                EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string()),
+                EquipmentEffect::ModifiesSkillRange(-1, "Quick Shot".to_string()),
             ],
             0,
         )]);
 
         let skills = collect_attack_skills(&ecs, |name| match name {
-            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
         assert_eq!(1, skills.len());
         assert_eq!(Some(4), skills[0].range);
+    }
+
+    #[test]
+    fn attack_skills_additional_unlock() {
+        let ecs = equip_test_state(&[eq(
+            "a",
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+            0,
+        )]);
+
+        let skills = collect_attack_skills(&ecs, |name| match name {
+            "Default" => SkillInfo::init_with_distance("Snap Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+            _ => panic!(),
+        });
+        assert_eq!(2, skills.len());
     }
 
     #[test]
@@ -415,7 +433,7 @@ mod tests {
                     "C",
                     None,
                     EquipmentKinds::Weapon,
-                    &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
+                    &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
                 ),
                 1,
             );
@@ -426,7 +444,7 @@ mod tests {
             create_player(&mut ecs, &mut skills, Point::init(0, 0));
             assert_eq!(4, skills.skills.len());
             assert_eq!(1, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
-            assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
+            assert_eq!("Quick Shot", skills.skills.get("Quick Shot").unwrap().name);
         }
 
         // Now equip an ability mode unlock and create anew to change abilities

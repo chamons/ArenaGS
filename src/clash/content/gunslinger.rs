@@ -110,6 +110,10 @@ pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
     reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
+pub fn default_attack_replacement() -> &'static str {
+    "Quick Shot"
+}
+
 pub fn get_weapon_skills(ecs: &World, player: Entity, ammo: GunslingerAmmo) -> Vec<String> {
     let mut skills = vec![];
     for template_name in &ecs.read_storage::<SkillsComponent>().grab(player).templates {
@@ -196,14 +200,9 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
 
 fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
     let base_name = match ammo {
-        GunslingerAmmo::Magnum => match name {
-            "Snap Shot" => {
-                return get_base_skill("Default");
-            }
-            _ => {
-                return get_base_skill(name);
-            }
-        },
+        GunslingerAmmo::Magnum => {
+            return get_base_skill(name);
+        }
         GunslingerAmmo::Ignite => match name {
             "Spark Shot" => "Snap Shot",
             "Explosive Blast" => "Aimed Shot",

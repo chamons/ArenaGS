@@ -1,5 +1,3 @@
-- Based upon Progression Component generate a set of skills
-- THen do same for player stats
 - Make Snap shot always unless we have move & shoot
 
 - Fix help to generate something to make help happy based upon current selections
