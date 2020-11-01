@@ -141,10 +141,5 @@ pub fn create_intermission_state(battle_state: &World) -> World {
     ecs.insert(crate::props::MousePositionComponent::init());
     ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
 
-    // TODO - Still wrong, should be calculated based on current equipped and reset when changed
-    let mut m = SkillsResource::init();
-    super::embattle::add_player_skills(&mut ecs, &mut m);
-    ecs.insert(m);
-
     ecs
 }

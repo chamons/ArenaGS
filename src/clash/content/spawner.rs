@@ -18,7 +18,7 @@ pub fn player(ecs: &mut World, position: Point, resources: SkillResourceComponen
         .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
-        .with(SkillsComponent::init(&[]))
+        .with(SkillsComponent::init(&[], &[]))
         .with(TimeComponent::init(0))
         .with(resources)
         .marked::<SimpleMarker<ToSerialize>>()

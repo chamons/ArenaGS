@@ -7,21 +7,25 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
-pub fn add_player_skills(ecs: &mut World, skills: &mut SkillsResource) -> Vec<SkillInfo> {
-    let mut attack_skills = collect_attack_skills(ecs, skills, gunslinger::gunslinger_attack_skill_base);
+pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
+    let (armor, dodge, absorb, health) = collect_defense_modifier(ecs);
+    let defenses = DefenseComponent::init(Defenses::init(1 + armor as u32, dodge as u32, absorb as u32, 20 + health as u32));
 
-    let base_skills = gunslinger::gunslinger_base_abilities();
-    for base in gunslinger::gunslinger_base_abilities() {
-        skills.add(base);
-    }
-    attack_skills.extend(base_skills);
-    attack_skills
+    let resources = get_player_resources(ecs);
+
+    let player = spawner::player(ecs, player_position, SkillResourceComponent::init(&resources[..]).with_focus(1.0), defenses);
+
+    let templates = collect_attack_skills(ecs, gunslinger::get_base_skill);
+    ecs.write_component::<SkillsComponent>().grab_mut(player).templates = templates.iter().map(|t| t.name.to_string()).collect();
+    gunslinger::add_base_abilities(skills);
+
+    gunslinger::process_attack_modes(ecs, player, collect_attack_modes(ecs), skills);
+
+    gunslinger::add_active_skills(ecs, player);
 }
 
-pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
-    // Need to modify this to take defense mods and resource mods
-
-    let mut resources = gunslinger::gunslinger_base_resources();
+fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
+    let mut resources = gunslinger::base_resources();
     for delta in collect_resource_modifier(ecs) {
         let i = resources
             .iter()
@@ -32,35 +36,11 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
             resources[i].2 = (resources[i].2 as i32 + delta.1) as u32;
         }
     }
-
-    let (armor, dodge, absorb, health) = collect_defense_modifier(ecs);
-    let defenses = DefenseComponent::init(Defenses::init(1 + armor as u32, dodge as u32, absorb as u32, 20 + health as u32));
-
-    let player = spawner::player(ecs, player_position, SkillResourceComponent::init(&resources[..]).with_focus(1.0), defenses);
-
-    // Need something for attack modes
-    // Make attune ammo rotate past what we don't have
-    // Don't add it if we have only one kind
-    {
-        let attack_modes = collect_attack_modes(ecs, gunslinger::gunslinger_modes);
-
-        let player_skills = add_player_skills(ecs, skills);
-        let mut skill_components = ecs.write_storage::<SkillsComponent>();
-        let skill_list = &mut skill_components.grab_mut(player).skills;
-        for s in player_skills {
-            skill_list.push(s.name.to_string());
-        }
-    }
-
-    gunslinger::gunslinger_final_setup(ecs, player);
+    resources
 }
 
-fn collect_attack_modes<F>(ecs: &World, get: F) -> Vec<String>
-where
-    F: Fn(&str) -> String,
-{
+fn collect_attack_modes(ecs: &World) -> Vec<String> {
     let mut modes = vec![];
-    modes.push(get("Default"));
     for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
         if let Some(e) = e {
             for effect in e.effect {
@@ -74,7 +54,7 @@ where
     modes
 }
 
-fn collect_attack_skills<F>(ecs: &World, skills: &mut SkillsResource, get: F) -> Vec<SkillInfo>
+fn collect_attack_skills<F>(ecs: &World, get: F) -> Vec<SkillInfo>
 where
     F: Fn(&str) -> SkillInfo,
 {
@@ -109,7 +89,7 @@ where
         base_attacks.push(get("Default"));
     }
 
-    let mut final_attack = vec![];
+    let mut final_attacks = vec![];
     for mut a in base_attacks {
         a.range = a.range.map(|r| ((r as i32 + weapon_range + skill_range.get(&a.name).unwrap_or(&0)) as u32));
 
@@ -133,11 +113,10 @@ where
             | SkillEffect::SpawnReplace(_)
             | SkillEffect::Sequence(_, _) => a.effect,
         };
-        skills.add(a.clone());
-        final_attack.push(a);
+        final_attacks.push(a);
     }
 
-    final_attack
+    final_attacks
 }
 
 fn collect_defense_modifier(ecs: &World) -> (i32, i32, i32, i32) {
@@ -263,13 +242,12 @@ mod tests {
     fn attack_skills_default() {
         let ecs = equip_test_state(&[]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Default" => SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        assert_eq!("Basic Attack", skills.get("Basic Attack").name);
+        assert_eq!(1, skills.len());
+        assert_eq!("Basic Attack", skills[0].name);
     }
 
     #[test]
@@ -281,13 +259,12 @@ mod tests {
             0,
         )]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Triple Shot" => SkillInfo::init("Triple Shot", None, TargetType::Any, SkillEffect::None),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        assert_eq!("Triple Shot", skills.get("Triple Shot").name);
+        assert_eq!(1, skills.len());
+        assert_eq!("Triple Shot", skills[0].name);
     }
 
     #[test]
@@ -302,21 +279,19 @@ mod tests {
             0,
         )]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        assert_eq!(Some(4), skills.get("Triple Shot").range);
+        assert_eq!(1, skills.len());
+        assert_eq!(Some(4), skills[0].range);
     }
 
     #[test]
     fn attack_skills_weapon_damage() {
         let ecs = equip_test_state(&[eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Default" => SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
@@ -327,8 +302,8 @@ mod tests {
             ),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        match skills.get("Basic Attack").effect {
+        assert_eq!(1, skills.len());
+        match skills[0].effect {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
             _ => panic!(),
         }
@@ -346,13 +321,12 @@ mod tests {
             0,
         )]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        assert_eq!(Some(4), skills.get("Triple Shot").range);
+        assert_eq!(1, skills.len());
+        assert_eq!(Some(4), skills[0].range);
     }
 
     #[test]
@@ -364,8 +338,7 @@ mod tests {
             0,
         )]);
 
-        let mut skills = SkillsResource::init();
-        collect_attack_skills(&ecs, &mut skills, |name| match name {
+        let skills = collect_attack_skills(&ecs, |name| match name {
             "Default" => SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
@@ -376,8 +349,8 @@ mod tests {
             ),
             _ => panic!(),
         });
-        assert_eq!(1, skills.skills.len());
-        match skills.get("Basic Attack").effect {
+        assert_eq!(1, skills.len());
+        match skills[0].effect {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
             _ => panic!(),
         }
@@ -392,11 +365,7 @@ mod tests {
             0,
         )]);
 
-        let modes = collect_attack_modes(&ecs, |name| match name {
-            "Default" => "Magnum Ammo".to_string(),
-            "Inferno Ammo" => "Inferno Ammo".to_string(),
-            _ => panic!(),
-        });
+        let modes = collect_attack_modes(&ecs);
         assert_eq!(2, modes.len());
         assert_eq!("Magnum Ammo", modes[0]);
         assert_eq!("Inferno Ammo", modes[1]);
@@ -417,6 +386,12 @@ mod tests {
             ),
             0,
         );
+        state.equipment.add(
+            EquipmentKinds::Armor,
+            EquipmentItem::init("B", None, EquipmentKinds::Armor, &[EquipmentEffect::ModifiesArmor(1)]),
+            0,
+        );
+
         ecs.insert(ProgressionComponent::init(state));
 
         let mut skills = SkillsResource::init();
@@ -428,5 +403,22 @@ mod tests {
             5,
             *ecs.read_storage::<SkillResourceComponent>().grab(player).ammo.get(&AmmoKind::Bullets).unwrap()
         );
+
+        assert_eq!(1, ecs.get_defenses(player).armor);
+
+        // Now equip an ability class unlock and create anew to change abilities
+        let mut state = ecs.write_resource::<ProgressionComponent>().state.clone();
+        state.equipment.add(
+            EquipmentKinds::Weapon,
+            EquipmentItem::init("C", None, EquipmentKinds::Weapon, &[EquipmentEffect::UnlocksAbilityClass("Aimed".to_string())]),
+            0,
+        );
+
+        let mut ecs = create_test_state().with_map().build();
+        ecs.insert(ProgressionComponent::init(state));
+
+        create_player(&mut ecs, &mut skills, Point::init(0, 0));
+        assert_eq!(1, skills.skills.len());
+        assert_eq!("Snap Shot", skills.skills.get("Snap Shot").unwrap().name);
     }
 }
