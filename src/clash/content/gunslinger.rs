@@ -26,18 +26,21 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
             "Adjustable Sight",
             Some("gun_06_b.PNG"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
         ),
         EquipmentItem::init(
             "Recoil Spring",
             Some("SpellBook06_22.png"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
         ),
         EquipmentItem::init(
             "Stippled Grip",
             Some("SpellBook03_10.png"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
         ),
     ]

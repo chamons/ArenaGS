@@ -2,6 +2,13 @@ use std::collections::HashMap;
 use std::iter;
 
 use serde::{Deserialize, Serialize};
+#[derive(Hash, Deserialize, Serialize, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum EquipmentRarity {
+    Standard,
+    Common,
+    Uncommon,
+    Rare,
+}
 
 #[derive(Hash, Deserialize, Serialize, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EquipmentKinds {
@@ -42,15 +49,17 @@ pub struct EquipmentItem {
     pub image: Option<String>,
     pub kind: EquipmentKinds,
     pub effect: Vec<EquipmentEffect>,
+    pub rarity: EquipmentRarity,
 }
 
 impl EquipmentItem {
-    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds, effect: &[EquipmentEffect]) -> EquipmentItem {
+    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds, rarity: EquipmentRarity, effect: &[EquipmentEffect]) -> EquipmentItem {
         EquipmentItem {
             name: name.to_string(),
             image: image.map(|i| i.to_string()),
             kind,
             effect: effect.to_vec(),
+            rarity,
         }
     }
 }
@@ -217,7 +226,7 @@ mod tests {
     use super::*;
 
     fn eq(name: &str) -> EquipmentItem {
-        EquipmentItem::init(name, None, EquipmentKinds::Weapon, &[EquipmentEffect::None])
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon, EquipmentRarity::Common, &[EquipmentEffect::None])
     }
 
     #[test]
