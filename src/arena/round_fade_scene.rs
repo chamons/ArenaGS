@@ -5,26 +5,26 @@ use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::Texture;
+use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 
 pub struct RoundFadeScene {
     background: Texture,
     presentation_frame: u64,
     interacted: bool,
-    progression: ProgressionState,
+    ecs: World,
 }
 
 impl RoundFadeScene {
-    pub fn init(background: Texture, progression: ProgressionState) -> RoundFadeScene {
+    pub fn init(background: Texture, ecs: World) -> RoundFadeScene {
         RoundFadeScene {
             background,
             presentation_frame: std::u64::MAX,
             interacted: false,
-            progression,
+            ecs,
         }
     }
 
@@ -80,9 +80,9 @@ impl Scene for RoundFadeScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         if self.interacted {
-            StageDirection::ShowRewards(wrap_progression(&self.progression))
+            StageDirection::ShowRewards(std::mem::replace(&mut self.ecs, World::new()))
         } else {
             StageDirection::Continue
         }

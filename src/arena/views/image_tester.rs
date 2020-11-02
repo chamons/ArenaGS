@@ -85,7 +85,7 @@ impl Scene for ImageTesterScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         StageDirection::Continue
     }
 }

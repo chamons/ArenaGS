@@ -139,12 +139,14 @@ impl FieldComponent {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct SkillsComponent {
     pub skills: Vec<String>,
+    pub templates: Vec<String>,
 }
 
 impl SkillsComponent {
-    pub fn init(skills: &[&'static str]) -> SkillsComponent {
+    pub fn init(skills: &[&'static str], templates: &[&'static str]) -> SkillsComponent {
         SkillsComponent {
             skills: skills.iter().map(|x| x.to_string()).collect(),
+            templates: templates.iter().map(|x| x.to_string()).collect(),
         }
     }
 }
@@ -324,6 +326,20 @@ impl DurationComponent {
     }
 }
 
+use super::content::gunslinger::GunslingerAmmo;
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct GunslingerComponent {
+    pub ammo_types: Vec<GunslingerAmmo>,
+}
+
+impl GunslingerComponent {
+    pub fn init(ammo_types: &[GunslingerAmmo]) -> GunslingerComponent {
+        GunslingerComponent {
+            ammo_types: ammo_types.to_vec(),
+        }
+    }
+}
+
 #[cfg(test)]
 pub trait TestInfo {
     fn get_test_data(&self, name: &str) -> u32;
@@ -372,6 +388,7 @@ pub fn create_world() -> World {
     ecs.register::<SkipRenderComponent>();
     ecs.register::<FieldCastComponent>();
     ecs.register::<DurationComponent>();
+    ecs.register::<GunslingerComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers

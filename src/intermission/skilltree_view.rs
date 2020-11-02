@@ -8,7 +8,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, ProgressionComponent, ProgressionState, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{CharacterWeaponKind, EquipmentResource, ProgressionComponent, SkillNodeStatus, SkillTree, SkillTreeNode};
 use crate::props::{HitTestResult, View};
 
 pub struct SkillTreeView {
@@ -21,9 +21,10 @@ pub struct SkillTreeView {
 pub const SKILL_NODE_SIZE: u32 = 48;
 pub const SKILL_BORDER: u32 = 2;
 
-pub fn get_tree(kind: &CharacterWeaponKind) -> Vec<SkillTreeNode> {
-    match kind {
-        CharacterWeaponKind::Gunslinger => crate::clash::content::gunslinger::get_skill_tree(),
+pub fn get_tree(ecs: &World) -> Vec<SkillTreeNode> {
+    let equipment = &ecs.read_resource::<EquipmentResource>();
+    match ecs.read_resource::<ProgressionComponent>().state.weapon {
+        CharacterWeaponKind::Gunslinger => crate::clash::content::gunslinger::get_skill_tree(equipment),
     }
 }
 
@@ -33,8 +34,8 @@ pub fn get_tree_icons(render_context: &RenderContext, tree: &SkillTree) -> BoxRe
 }
 
 impl SkillTreeView {
-    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, progression: &ProgressionState) -> BoxResult<SkillTreeView> {
-        let tree = SkillTree::init(&get_tree(&progression.weapon));
+    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<SkillTreeView> {
+        let tree = SkillTree::init(&get_tree(ecs));
 
         Ok(SkillTreeView {
             icons: get_tree_icons(render_context, &tree)?,

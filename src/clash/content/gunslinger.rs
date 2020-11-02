@@ -1,86 +1,56 @@
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use std::collections::HashMap;
 
 use super::super::progression::SkillTreeNode;
 use super::super::*;
 use crate::atlas::prelude::*;
-use crate::sequence;
+use crate::vec_of_strings;
 
-pub fn setup_gunslinger(ecs: &mut World, invoker: Entity) {
-    ecs.shovel(
-        invoker,
-        SkillResourceComponent::init(&[(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]).with_focus(1.0),
-    );
-
-    add_skills_to_front(ecs, invoker, &get_weapon_skills(TargetAmmo::Magnum));
-    set_weapon_trait(ecs, invoker, TargetAmmo::Magnum);
-}
-
-pub fn get_weapon_skills(ammo: TargetAmmo) -> Vec<&'static str> {
-    match ammo {
-        TargetAmmo::Magnum => vec!["Aimed Shot", "Triple Shot", "Quick Shot", "Blink Shot", "Swap Ammo"],
-        TargetAmmo::Ignite => vec!["Explosive Blast", "Dragon's Breath", "Hot Hands", "Showdown", "Swap Ammo"],
-        TargetAmmo::Cyclone => vec!["Air Lance", "Tornado Shot", "Lightning Speed", "Dive", "Swap Ammo"],
-    }
-}
-
-pub fn get_skill_tree() -> Vec<SkillTreeNode> {
+pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
     fn skill_pos(x: u32, y: u32) -> Point {
         let x = 60 + (100 * x);
         let y = 20 + 50 * y;
         Point::init(x, y)
     }
 
-    let equipment = get_equipment();
-    let get = |n| equipment.get(n).unwrap().clone();
-
     vec![
-        SkillTreeNode::init(get("First"), skill_pos(0, 6), 10, &[]),
-        SkillTreeNode::init(get("Second"), skill_pos(1, 6), 10, &["First"]),
-        SkillTreeNode::init(get("Third"), skill_pos(2, 5), 10, &["Second"]),
-        SkillTreeNode::init(get("Fourth"), skill_pos(2, 7), 10, &["Second"]),
-        SkillTreeNode::init(get("1"), skill_pos(0, 1), 10, &[]),
-        SkillTreeNode::init(get("2"), skill_pos(1, 1), 10, &["1"]),
-        SkillTreeNode::init(get("3"), skill_pos(2, 1), 10, &["2"]),
-        SkillTreeNode::init(get("4"), skill_pos(3, 1), 10, &["3"]),
-        SkillTreeNode::init(get("5"), skill_pos(4, 1), 10, &["4"]),
-        SkillTreeNode::init(get("6"), skill_pos(5, 1), 10, &["5"]),
-        SkillTreeNode::init(get("7"), skill_pos(6, 1), 10, &["6"]),
-        SkillTreeNode::init(get("A"), skill_pos(0, 10), 10, &[]),
-        SkillTreeNode::init(get("B"), skill_pos(0, 12), 10, &[]),
-        SkillTreeNode::init(get("C"), skill_pos(1, 11), 10, &["A", "B"]),
+        SkillTreeNode::init(equipment.get("Adjustable Sight"), skill_pos(0, 6), 0, &[]),
+        SkillTreeNode::init(equipment.get("Recoil Spring"), skill_pos(1, 6), 0, &["Adjustable Sight"]),
+        SkillTreeNode::init(equipment.get("Stippled Grip"), skill_pos(2, 5), 0, &["Recoil Spring"]),
     ]
 }
 
-pub fn get_equipment() -> HashMap<String, EquipmentItem> {
-    let mut equipment = vec![
-        EquipmentItem::init("First", Some("ar_b_04.png"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Second", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Third", Some("ar_b_04.PNG"), EquipmentKinds::Weapon),
-        EquipmentItem::init("Fourth", Some("ar_b_04.PNG"), EquipmentKinds::Mastery),
-        EquipmentItem::init("1", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("2", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("3", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("4", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("5", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("6", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("7", Some("artifact_12_b.png"), EquipmentKinds::Armor),
-        EquipmentItem::init("A", Some("book_13_b.png"), EquipmentKinds::Accessory),
-        EquipmentItem::init("B", Some("book_13_b.png"), EquipmentKinds::Accessory),
-        EquipmentItem::init("C", Some("book_13_b.png"), EquipmentKinds::Accessory),
-    ];
-
-    equipment.drain(0..).map(|e| (e.name.clone(), e)).collect()
+pub fn get_equipment() -> Vec<EquipmentItem> {
+    vec![
+        EquipmentItem::init(
+            "Adjustable Sight",
+            Some("gun_06_b.PNG"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
+        ),
+        EquipmentItem::init(
+            "Recoil Spring",
+            Some("SpellBook06_22.png"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+        ),
+        EquipmentItem::init(
+            "Stippled Grip",
+            Some("SpellBook03_10.png"),
+            EquipmentKinds::Weapon,
+            &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
+        ),
+    ]
 }
 
-#[derive(Copy, Clone)]
-pub enum TargetAmmo {
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub enum GunslingerAmmo {
     Magnum,
     Ignite,
     Cyclone,
 }
 
-fn add_skills_to_front(ecs: &mut World, invoker: Entity, skills_to_add: &[&str]) {
+fn add_skills_to_front(ecs: &mut World, invoker: Entity, skills_to_add: Vec<String>) {
     let mut skills = ecs.write_storage::<SkillsComponent>();
     let skill_list = &mut skills.grab_mut(invoker).skills;
 
@@ -90,7 +60,7 @@ fn add_skills_to_front(ecs: &mut World, invoker: Entity, skills_to_add: &[&str])
     }
 }
 
-fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: &[&str]) {
+fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: Vec<String>) {
     let mut skills = ecs.write_storage::<SkillsComponent>();
     let skill_list = &mut skills.grab_mut(invoker).skills;
 
@@ -99,48 +69,263 @@ fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: &[&str]) {
     }
 }
 
-fn set_weapon_trait(ecs: &mut World, invoker: Entity, ammo: TargetAmmo) {
+fn get_current_weapon_trait(ecs: &mut World, invoker: Entity) -> GunslingerAmmo {
+    if ecs.has_status(invoker, StatusKind::Magnum) {
+        GunslingerAmmo::Magnum
+    } else if ecs.has_status(invoker, StatusKind::Ignite) {
+        GunslingerAmmo::Ignite
+    } else {
+        GunslingerAmmo::Cyclone
+    }
+}
+
+fn set_current_weapon_trait(ecs: &mut World, invoker: Entity, ammo: GunslingerAmmo) {
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Magnum);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Ignite);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Cyclone);
     match ammo {
-        TargetAmmo::Magnum => ecs.add_trait(invoker, StatusKind::Magnum),
-        TargetAmmo::Ignite => ecs.add_trait(invoker, StatusKind::Ignite),
-        TargetAmmo::Cyclone => ecs.add_trait(invoker, StatusKind::Cyclone),
+        GunslingerAmmo::Magnum => ecs.add_trait(invoker, StatusKind::Magnum),
+        GunslingerAmmo::Ignite => ecs.add_trait(invoker, StatusKind::Ignite),
+        GunslingerAmmo::Cyclone => ecs.add_trait(invoker, StatusKind::Cyclone),
     }
 }
 
 pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
-    let (current_ammo, next_ammo) = {
-        if ecs.has_status(invoker, StatusKind::Magnum) {
-            (TargetAmmo::Magnum, TargetAmmo::Ignite)
-        } else if ecs.has_status(invoker, StatusKind::Ignite) {
-            (TargetAmmo::Ignite, TargetAmmo::Cyclone)
-        } else {
-            (TargetAmmo::Cyclone, TargetAmmo::Magnum)
-        }
+    let (current_ammo, next_ammo) = match get_current_weapon_trait(ecs, invoker) {
+        GunslingerAmmo::Magnum => (GunslingerAmmo::Magnum, GunslingerAmmo::Ignite),
+        GunslingerAmmo::Ignite => (GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone),
+        GunslingerAmmo::Cyclone => (GunslingerAmmo::Cyclone, GunslingerAmmo::Magnum),
     };
 
-    remove_skills(ecs, invoker, &get_weapon_skills(current_ammo));
-    add_skills_to_front(ecs, invoker, &get_weapon_skills(next_ammo));
-    set_weapon_trait(ecs, invoker, next_ammo);
+    remove_skills(ecs, invoker, get_weapon_skills(ecs, Some(invoker), current_ammo));
+    add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, Some(invoker), next_ammo));
+    set_current_weapon_trait(ecs, invoker, next_ammo);
 
     reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
-pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    add_aimed_skills(m);
-    add_triple_shot_skills(m);
-    add_move_and_shoot_skills(m);
-    add_utility_skills(m);
+pub fn default_attack_replacement() -> &'static str {
+    "Quick Shot"
+}
 
-    m.add_skill(SkillInfo::init(
+pub fn get_weapon_skills(ecs: &World, player: Option<Entity>, ammo: GunslingerAmmo) -> Vec<String> {
+    let mut skills = vec![];
+    let templates = if let Some(player) = player {
+        ecs.read_storage::<SkillsComponent>().grab(player).templates.clone()
+    } else {
+        get_all_bases()
+    };
+
+    for template_name in templates {
+        let name = match ammo {
+            GunslingerAmmo::Magnum => template_name, // The template name is the magnum name
+            GunslingerAmmo::Ignite => match template_name.as_str() {
+                "Snap Shot" => "Spark Shot".to_string(),
+                "Aimed Shot" => "Explosive Blast".to_string(),
+                "Triple Shot" => "Dragon's Breath".to_string(),
+                "Quick Shot" => "Hot Hands".to_string(),
+                _ => panic!("Unknown template {}", template_name),
+            },
+            GunslingerAmmo::Cyclone => match template_name.as_str() {
+                "Snap Shot" => "Airburst Shot".to_string(),
+                "Aimed Shot" => "Air Lance".to_string(),
+                "Triple Shot" => "Tornado Shot".to_string(),
+                "Quick Shot" => "Lightning Speed".to_string(),
+                _ => panic!("Unknown template {}", template_name),
+            },
+        };
+
+        skills.push(name.to_string());
+    }
+
+    skills
+}
+
+fn get_all_bases() -> Vec<String> {
+    vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
+}
+
+// Syntax here gets ugly otherwise after autoformat
+#[allow(clippy::needless_return)]
+pub fn get_base_skill(name: &str) -> SkillInfo {
+    match name {
+        "Default" | "Snap Shot" => {
+            return SkillInfo::init_with_distance(
+                "Snap Shot",
+                Some("gun_08_b.PNG"),
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(Damage::init(4), BoltKind::Bullet),
+                Some(7),
+                true,
+            )
+            .with_ammo(AmmoKind::Bullets, 1)
+            .with_alternate("Reload");
+        }
+        "Aimed Shot" => {
+            return SkillInfo::init_with_distance(
+                "Aimed Shot",
+                Some("gun_06_b.PNG"),
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(Damage::init(6).with_option(DamageOptions::AIMED_SHOT), BoltKind::Bullet),
+                Some(6),
+                true,
+            )
+            .with_ammo(AmmoKind::Bullets, 1)
+            .with_focus_use(0.5)
+            .with_alternate("Reload");
+        }
+        "Triple Shot" => {
+            return SkillInfo::init_with_distance(
+                "Triple Shot",
+                Some("SpellBook06_22.png"),
+                TargetType::Enemy,
+                SkillEffect::RangedAttack(Damage::init(4).with_option(DamageOptions::TRIPLE_SHOT), BoltKind::Bullet),
+                Some(4),
+                true,
+            )
+            .with_ammo(AmmoKind::Bullets, 3)
+            .with_alternate("Reload");
+        }
+        "Quick Shot" => {
+            return SkillInfo::init_with_distance(
+                "Quick Shot",
+                Some("SpellBook03_10.png"),
+                TargetType::Tile,
+                SkillEffect::MoveAndShoot(Damage::init(4), Some(5), BoltKind::Bullet),
+                Some(1),
+                true,
+            )
+            .with_ammo(AmmoKind::Bullets, 1)
+            .with_exhaustion(40.0)
+            .with_alternate("Reload");
+        }
+
+        _ => panic!("Unknown gunslinger attack {}", name),
+    }
+}
+
+fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
+    let base_name = match ammo {
+        GunslingerAmmo::Magnum => {
+            return get_base_skill(name);
+        }
+        GunslingerAmmo::Ignite => match name {
+            "Spark Shot" => "Snap Shot",
+            "Explosive Blast" => "Aimed Shot",
+            "Dragon's Breath" => "Triple Shot",
+            "Hot Hands" => "Quick Shot",
+            _ => panic!("Unknown concrete skill {}", name),
+        },
+        GunslingerAmmo::Cyclone => match name {
+            "Airburst Shot" => "Snap Shot",
+            "Air Lance" => "Aimed Shot",
+            "Tornado Shot" => "Triple Shot",
+            "Lightning Speed" => "Quick Shot",
+            _ => panic!("Unknown concrete skill {}", name),
+        },
+    };
+
+    // Start with that base
+    let mut skill = get_base_skill(base_name);
+    skill.name = name.to_string();
+
+    let get_damage = |e: &SkillEffect| match e {
+        SkillEffect::RangedAttack(damage, _) => damage.dice(),
+        SkillEffect::MoveAndShoot(damage, _, _) => damage.dice(),
+        _ => panic!("get_concrete_skill processing damage of attack: {}", name),
+    };
+
+    let get_range = |e: &SkillEffect| match e {
+        SkillEffect::MoveAndShoot(_, range, _) => *range,
+        _ => panic!("get_concrete_skill processing range of attack: {}", name),
+    };
+
+    match name {
+        "Spark Shot" => {
+            skill.image = Some("gun_01_b.png".to_string());
+            skill.range = skill.range.map(|r| r + 1);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
+                BoltKind::FireBullet,
+            );
+        }
+        "Explosive Blast" => {
+            skill.image = Some("SpellBook01_37.png".to_string());
+            skill.range = skill.range.map(|r| r + 1);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1)
+                    .with_option(DamageOptions::RAISE_TEMPERATURE)
+                    .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
+                BoltKind::FireBullet,
+            );
+        }
+        "Dragon's Breath" => {
+            skill.image = Some("r_16.png".to_string());
+            skill.range = skill.range.map(|r| r + 2);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1)
+                    .with_option(DamageOptions::TRIPLE_SHOT)
+                    .with_option(DamageOptions::RAISE_TEMPERATURE),
+                BoltKind::FireBullet,
+            );
+        }
+        "Hot Hands" => {
+            skill.image = Some("SpellBook01_15.png".to_string());
+            skill.effect = SkillEffect::MoveAndShoot(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
+                get_range(&skill.effect),
+                BoltKind::FireBullet,
+            );
+        }
+        "Airburst Shot" => {
+            skill.image = Some("gun_01_b.png".to_string());
+            skill.range = skill.range.map(|r| r + 2);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                BoltKind::FireBullet,
+            );
+        }
+        "Air Lance" => {
+            skill.image = Some("SpellBook06_46.png".to_string());
+            skill.range = skill.range.map(|r| r + 3);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 2).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+                BoltKind::AirBullet,
+            );
+        }
+        "Tornado Shot" => {
+            skill.image = Some("SpellBookPage09_66.png".to_string());
+            skill.range = skill.range.map(|r| r + 2);
+            skill.effect = SkillEffect::RangedAttack(
+                Damage::init(get_damage(&skill.effect) - 1)
+                    .with_option(DamageOptions::TRIPLE_SHOT)
+                    .with_option(DamageOptions::CONSUMES_CHARGE_DMG),
+                BoltKind::AirBullet,
+            );
+        }
+        "Lightning Speed" => {
+            skill.image = Some("SpellBookPage09_39.png".to_string());
+            skill.effect = SkillEffect::MoveAndShoot(
+                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                get_range(&skill.effect).map(|r| r + 1),
+                BoltKind::AirBullet,
+            );
+        }
+        _ => {}
+    }
+
+    skill
+}
+
+pub fn add_base_abilities(skills: &mut SkillsResource) {
+    skills.add(SkillInfo::init(
         "Reload",
         Some("b_45.png"),
         TargetType::None,
         SkillEffect::Reload(AmmoKind::Bullets),
     ));
-    m.add_skill(SkillInfo::init(
+
+    skills.add(SkillInfo::init(
         "Swap Ammo",
         Some("b_28.png"),
         TargetType::None,
@@ -148,223 +333,47 @@ pub fn gunslinger_skills(m: &mut HashMap<&'static str, SkillInfo>) {
     ));
 }
 
-fn add_aimed_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    const AIMED_SHOT_BASE_RANGE: u32 = 7;
-    const AIMED_SHOT_BASE_STRENGTH: u32 = 5;
-
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Aimed Shot",
-            Some("gun_06_b.PNG"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::AIMED_SHOT),
-                BoltKind::Bullet,
-            ),
-            Some(AIMED_SHOT_BASE_RANGE - 1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
-        .with_alternate("Reload"),
-    );
-
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Explosive Blast",
-            Some("SpellBook01_37.png"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH)
-                    .with_option(DamageOptions::RAISE_TEMPERATURE)
-                    .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
-                BoltKind::FireBullet,
-            ),
-            Some(AIMED_SHOT_BASE_RANGE),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
-        .with_alternate("Reload"),
-    );
-
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Air Lance",
-            Some("SpellBook06_46.png"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(AIMED_SHOT_BASE_STRENGTH - 1).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
-                BoltKind::AirBullet,
-            ),
-            Some(AIMED_SHOT_BASE_RANGE + 2),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_focus_use(0.5)
-        .with_alternate("Reload"),
-    );
+pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
+    vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
 }
 
-fn add_triple_shot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    const TRIPLE_SHOT_BASE_RANGE: u32 = 5;
-    const TRIPLE_SHOT_BASE_STRENGTH: u32 = 3;
+pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>, skills: &mut SkillsResource) {
+    let mut modes: Vec<GunslingerAmmo> = modes
+        .iter()
+        .map(|m| match m.as_str() {
+            "Magnum" => GunslingerAmmo::Magnum,
+            "Ignite" => GunslingerAmmo::Ignite,
+            "Cyclone" => GunslingerAmmo::Cyclone,
+            _ => panic!("Unknown gunslinger mode {}", m),
+        })
+        .collect();
 
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Triple Shot",
-            Some("SpellBook06_22.png"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(TRIPLE_SHOT_BASE_STRENGTH + 1).with_option(DamageOptions::TRIPLE_SHOT),
-                BoltKind::Bullet,
-            ),
-            Some(TRIPLE_SHOT_BASE_RANGE - 1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 3)
-        .with_alternate("Reload"),
-    );
+    if !modes.contains(&GunslingerAmmo::Magnum) {
+        modes.insert(0, GunslingerAmmo::Magnum);
+    }
 
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Dragon's Breath",
-            Some("r_16.png"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(TRIPLE_SHOT_BASE_STRENGTH)
-                    .with_option(DamageOptions::TRIPLE_SHOT)
-                    .with_option(DamageOptions::RAISE_TEMPERATURE),
-                BoltKind::FireBullet,
-            ),
-            Some(TRIPLE_SHOT_BASE_RANGE + 1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 3)
-        .with_alternate("Reload"),
-    );
+    ecs.shovel(player, GunslingerComponent::init(&modes[..]));
 
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Tornado Shot",
-            Some("SpellBookPage09_66.png"),
-            TargetType::Enemy,
-            SkillEffect::RangedAttack(
-                Damage::init(TRIPLE_SHOT_BASE_RANGE)
-                    .with_option(DamageOptions::TRIPLE_SHOT)
-                    .with_option(DamageOptions::CONSUMES_CHARGE_DMG),
-                BoltKind::AirBullet,
-            ),
-            Some(TRIPLE_SHOT_BASE_RANGE + 1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 3)
-        .with_alternate("Reload"),
-    );
+    instance_skills(ecs, Some(player), skills);
 }
 
-fn add_move_and_shoot_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    const MOVE_AND_SHOOT_BASE_RANGE: u32 = 5;
-    const MOVE_AND_SHOOT_BASE_STRENGTH: u32 = 3;
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Quick Shot",
-            Some("SpellBook03_10.png"),
-            TargetType::Tile,
-            SkillEffect::MoveAndShoot(
-                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH + 1),
-                Some(MOVE_AND_SHOOT_BASE_RANGE),
-                BoltKind::Bullet,
-            ),
-            Some(1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(40.0)
-        .with_alternate("Reload"),
-    );
-
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Hot Hands",
-            Some("SpellBook01_15.png"),
-            TargetType::Tile,
-            SkillEffect::MoveAndShoot(
-                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH).with_option(DamageOptions::RAISE_TEMPERATURE),
-                Some(MOVE_AND_SHOOT_BASE_RANGE),
-                BoltKind::Bullet,
-            ),
-            Some(1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(40.0)
-        .with_alternate("Reload"),
-    );
-
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Lightning Speed",
-            Some("SpellBookPage09_39.png"),
-            TargetType::Tile,
-            SkillEffect::MoveAndShoot(
-                Damage::init(MOVE_AND_SHOOT_BASE_STRENGTH).with_option(DamageOptions::ADD_CHARGE_STATUS),
-                Some(MOVE_AND_SHOOT_BASE_RANGE + 1),
-                BoltKind::Bullet,
-            ),
-            Some(1),
-            true,
-        )
-        .with_ammo(AmmoKind::Bullets, 1)
-        .with_exhaustion(40.0)
-        .with_alternate("Reload"),
-    );
+pub fn instance_skills(ecs: &World, player: Option<Entity>, skills: &mut SkillsResource) {
+    // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
+    // since you can reach them via help
+    for m in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
+        for s in get_weapon_skills(ecs, player, *m) {
+            skills.add(get_concrete_skill(&s, *m));
+        }
+    }
 }
 
-fn add_utility_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Blink Shot",
-            Some("SpellBook06_118.png"),
-            TargetType::Enemy,
-            sequence!(
-                SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet),
-                SkillEffect::Buff(StatusKind::Aimed, 300)
-            ),
-            Some(7),
-            true,
-        )
-        .with_no_time()
-        .with_ammo(AmmoKind::Adrenaline, 50),
-    );
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Showdown",
-            Some("SpellBook03_54.png"),
-            TargetType::Enemy,
-            sequence!(
-                SkillEffect::Buff(StatusKind::Aimed, 300),
-                sequence!(
-                    SkillEffect::Buff(StatusKind::Armored, 300),
-                    SkillEffect::RangedAttack(Damage::init(5), BoltKind::Bullet)
-                )
-            ),
-            Some(3),
-            true,
-        )
-        .with_ammo(AmmoKind::Adrenaline, 50),
-    );
-    m.add_skill(
-        SkillInfo::init_with_distance(
-            "Dive",
-            Some("SpellBook08_121.png"),
-            TargetType::Tile,
-            sequence!(SkillEffect::Buff(StatusKind::Armored, 300), SkillEffect::Move),
-            Some(3),
-            true,
-        )
-        .with_ammo(AmmoKind::Adrenaline, 50),
-    );
+pub fn add_active_skills(ecs: &mut World, player: Entity) {
+    set_current_weapon_trait(ecs, player, GunslingerAmmo::Magnum);
+
+    add_skills_to_front(ecs, player, get_weapon_skills(ecs, Some(player), GunslingerAmmo::Magnum));
+    if ecs.read_storage::<GunslingerComponent>().grab(player).ammo_types.len() > 1 {
+        ecs.write_storage::<SkillsComponent>().grab_mut(player).skills.push("Swap Ammo".to_string());
+    }
 }
 
 #[cfg(test)]
@@ -372,20 +381,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn gunslinger_starts_correctly() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).build();
-        let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, player);
-
-        assert!(ecs.has_status(player, StatusKind::Magnum));
-        assert_eq!(5, ecs.read_storage::<SkillsComponent>().grab(player).skills.len());
-    }
-
-    #[test]
     fn rotate_ammo_reloads_as_well() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, player);
 
         *ecs.write_storage::<SkillResourceComponent>()
             .grab_mut(player)
@@ -400,9 +398,8 @@ mod tests {
 
     #[test]
     fn rotate_ammo_has_correct_buff() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, player);
         assert!(ecs.has_status(player, StatusKind::Magnum));
 
         rotate_ammo(&mut ecs, player);
@@ -414,15 +411,14 @@ mod tests {
 
     #[test]
     fn rotate_ammo_has_sets_correct_skills() {
-        let mut ecs = create_test_state().with_character(2, 2, 100).build();
+        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
         let player = find_at(&ecs, 2, 2);
-        setup_gunslinger(&mut ecs, player);
-        assert_eq!("Aimed Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
         rotate_ammo(&mut ecs, player);
-        assert_eq!("Explosive Blast", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Spark Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 
         rotate_ammo(&mut ecs, player);
-        assert_eq!("Air Lance", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        assert_eq!("Airburst Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
     }
 }

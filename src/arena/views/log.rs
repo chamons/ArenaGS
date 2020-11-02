@@ -9,7 +9,7 @@ use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{EventKind, LogComponent, LogDirection, LOG_COUNT};
-use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, TextHitTester, View};
+use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, RenderTextOptions, TextHitTester, View};
 
 pub struct LogView {
     position: SDLPoint,
@@ -81,10 +81,10 @@ impl LogView {
                     &layout,
                     canvas,
                     &self.text,
-                    Some(&self.icons),
-                    FontColor::Black,
-                    line_y_offset,
-                    true,
+                    RenderTextOptions::init(FontColor::Black)
+                        .with_icons(&self.icons)
+                        .with_offset(line_y_offset)
+                        .with_underline_links(true),
                     |rect, result| {
                         hit_test.add(rect, result);
                     },

@@ -31,13 +31,22 @@ impl StateBuilder {
         self
     }
 
+    pub fn with_gunslinger(&mut self, x: u32, y: u32) -> &mut Self {
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
+        let mut resources = (*self.ecs.read_resource::<SkillsResource>()).clone();
+        super::embattle::create_player(&mut self.ecs, &mut resources, Point::init(x, y));
+        // Overwrite existing
+        self.ecs.insert(resources);
+        self
+    }
+
     pub fn with_map(&mut self) -> &mut Self {
         self.ecs.insert(MapComponent::init(Map::init_empty()));
         self
     }
 
     pub fn with_progression(&mut self) -> &mut Self {
-        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_empty()));
+        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
         self
     }
 
@@ -47,7 +56,10 @@ impl StateBuilder {
 }
 
 pub fn create_test_state() -> StateBuilder {
-    StateBuilder { ecs: create_world() }
+    let mut ecs = create_world();
+    ecs.insert(super::content::test::get_test_skills());
+
+    StateBuilder { ecs }
 }
 
 pub fn find_at(ecs: &World, x: u32, y: u32) -> Entity {
@@ -100,7 +112,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
         .with(SkillPowerComponent::init(0))
         .with(TemperatureComponent::init(Temperature::init()))
         .with(SkillResourceComponent::init(&[]))
-        .with(SkillsComponent::init(&[]))
+        .with(SkillsComponent::init(&[], &[]))
         .with(StatusComponent::init())
         .marked::<SimpleMarker<ToSerialize>>()
         .build()

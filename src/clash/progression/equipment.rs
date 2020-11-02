@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::iter;
 
 use serde::{Deserialize, Serialize};
@@ -9,20 +10,47 @@ pub enum EquipmentKinds {
     Accessory,
     Mastery,
 }
+#[derive(Hash, PartialEq, Eq, Deserialize, Serialize, Clone, Debug)]
+pub enum EquipmentEffect {
+    None,
+    // Example: Triple Shot on Gunslinger
+    UnlocksAbilityClass(String),
+    // Example: AmmoType Inferno
+    UnlocksAbilityMode(String),
+    // Applies range of every weapon skill
+    ModifiesWeaponRange(i32),
+    // Applies range of one specific class of skill
+    ModifiesSkillRange(i32, String),
+    // Applies strength of every weapon skill
+    ModifiesWeaponStrength(i32),
+    // Applies strength of one specific class of skill
+    ModifiesSkillStrength(i32, String),
+    // Example: -1 max bullets
+    ModifiesResourceTotal(i32, String),
+    ModifiesArmor(i32),
+    ModifiesDodge(i32),
+    ModifiesAbsorb(i32),
+    ModifiesMaxHealth(i32),
+    // Part of https://github.com/chamons/ArenaGS/issues/249 when we do damage types
+    // ModifiesResistance (i32, String)
+    // ModifiesSkillElement (String, String)
+}
 
 #[derive(Hash, PartialEq, Eq, Deserialize, Serialize, Clone, Debug)]
 pub struct EquipmentItem {
     pub name: String,
     pub image: Option<String>,
     pub kind: EquipmentKinds,
+    pub effect: Vec<EquipmentEffect>,
 }
 
 impl EquipmentItem {
-    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds) -> EquipmentItem {
+    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds, effect: &[EquipmentEffect]) -> EquipmentItem {
         EquipmentItem {
             name: name.to_string(),
             image: image.map(|i| i.to_string()),
             kind,
+            effect: effect.to_vec(),
         }
     }
 }
@@ -138,12 +166,58 @@ impl Equipment {
     }
 }
 
+#[derive(Clone)] // NotConvertSaveload
+pub struct EquipmentResource {
+    pub equipment: HashMap<String, EquipmentItem>,
+}
+
+#[allow(dead_code)]
+impl EquipmentResource {
+    pub fn init() -> EquipmentResource {
+        EquipmentResource { equipment: HashMap::new() }
+    }
+
+    pub fn init_with(items: &[EquipmentItem]) -> EquipmentResource {
+        EquipmentResource {
+            equipment: items.iter().map(|e| (e.name.to_string(), e.clone())).collect(),
+        }
+    }
+
+    pub fn init_from(equipment: HashMap<String, EquipmentItem>) -> EquipmentResource {
+        EquipmentResource { equipment }
+    }
+
+    pub fn contains(&self, name: &str) -> bool {
+        self.equipment.contains_key(name)
+    }
+
+    pub fn get(&self, name: &str) -> EquipmentItem {
+        self.equipment[name].clone()
+    }
+
+    pub fn add(&mut self, equipment: EquipmentItem) {
+        self.equipment.insert(equipment.name.to_string(), equipment);
+    }
+}
+
+use specs::prelude::*;
+
+pub trait EquipmentLookup {
+    fn get_equipment(&self, name: &str) -> EquipmentItem;
+}
+
+impl EquipmentLookup for World {
+    fn get_equipment(&self, name: &str) -> EquipmentItem {
+        self.read_resource::<EquipmentResource>().get(name)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn eq(name: &str) -> EquipmentItem {
-        EquipmentItem::init(name, None, EquipmentKinds::Weapon)
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon, &[EquipmentEffect::None])
     }
 
     #[test]

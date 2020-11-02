@@ -10,6 +10,15 @@ pub fn find_player(ecs: &World) -> Entity {
     entity
 }
 
+pub fn maybe_find_player(ecs: &World) -> Option<Entity> {
+    let players = ecs.read_storage::<PlayerComponent>();
+    if (&players).join().count() > 0 {
+        Some(find_player(ecs))
+    } else {
+        None
+    }
+}
+
 pub fn find_enemies(ecs: &World) -> Vec<Entity> {
     let entities = ecs.read_resource::<specs::world::EntitiesRes>();
     let is_characters = ecs.read_storage::<IsCharacterComponent>();

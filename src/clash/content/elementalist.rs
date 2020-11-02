@@ -1,8 +1,6 @@
 // The ai macros can add "unnecessary" returns occationally
 #![allow(clippy::needless_return)]
 
-use std::collections::HashMap;
-
 use rand::prelude::*;
 use specs::prelude::*;
 
@@ -14,8 +12,8 @@ const TIDAL_SURGE_SIZE: u32 = 2;
 const HEALING_MIST_RANGE: u32 = 5;
 const MAGMA_ERUPTION_RANGE: u32 = 7;
 
-pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
-    m.add_skill(
+pub fn elementalist_skills(m: &mut SkillsResource) {
+    m.add(
         SkillInfo::init_with_distance(
             "Tidal Surge",
             None,
@@ -27,7 +25,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_cooldown(200),
     );
 
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Ice Shard",
         None,
         TargetType::Player,
@@ -36,7 +34,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Healing Mist",
         None,
         TargetType::Any,
@@ -45,7 +43,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Magma Eruption",
             None,
@@ -60,7 +58,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_cooldown(200),
     );
 
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Lava Bolt",
         None,
         TargetType::Player,
@@ -69,7 +67,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Lightning Surge",
         None,
         TargetType::Player,
@@ -78,7 +76,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         false,
     ));
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Hailstone",
             None,
@@ -90,7 +88,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_cooldown(200),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Earthen Rage",
             None,
@@ -102,7 +100,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_cooldown(400),
     );
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Rock Slide",
             None,
@@ -114,7 +112,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_cooldown(300),
     );
 
-    m.add_skill(SkillInfo::init_with_distance(
+    m.add(SkillInfo::init_with_distance(
         "Pummel",
         None,
         TargetType::Player,
@@ -122,7 +120,7 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         Some(1),
         false,
     ));
-    m.add_skill(
+    m.add(
         SkillInfo::init(
             "Summon Elemental (Water)",
             None,
@@ -131,13 +129,9 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         )
         .with_ammo(AmmoKind::Charge, 60),
     );
-    m.add_skill(
-        SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60),
-    );
-    m.add_skill(
-        SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60),
-    );
-    m.add_skill(
+    m.add(SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60));
+    m.add(SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60));
+    m.add(
         SkillInfo::init(
             "Summon Elemental (Earth)",
             None,
@@ -147,21 +141,21 @@ pub fn elementalist_skills(m: &mut HashMap<&'static str, SkillInfo>) {
         .with_ammo(AmmoKind::Charge, 60),
     );
 
-    m.add_skill(SkillInfo::init(
+    m.add(SkillInfo::init(
         "Frost Armor",
         None,
         TargetType::None,
         sequence!(SkillEffect::Buff(StatusKind::Armored, 2000), SkillEffect::ReloadSome(AmmoKind::Charge, 5)),
     ));
 
-    m.add_skill(SkillInfo::init(
+    m.add(SkillInfo::init(
         "Invoke the Elements",
         None,
         TargetType::None,
         SkillEffect::ReloadSome(AmmoKind::Charge, 10),
     ));
 
-    m.add_skill(
+    m.add(
         SkillInfo::init_with_distance(
             "Call Lightning",
             None,

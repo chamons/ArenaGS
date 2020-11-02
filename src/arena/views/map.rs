@@ -150,7 +150,7 @@ impl MapView {
                 let player = find_player(&ecs);
                 let player_position = ecs.get_position(player);
 
-                let color = if is_good_target(ecs, player, skill, map_position) {
+                let color = if is_good_target(ecs, player, &skill, map_position) {
                     Color::from((196, 196, 0, 140))
                 } else {
                     Color::from((196, 0, 0, 140))
@@ -173,10 +173,10 @@ impl MapView {
 
     fn render_targetting_range(&self, canvas: &mut RenderCanvas, ecs: &World) -> BoxResult<()> {
         if let Some(skill) = get_target_skill(ecs) {
-            if let Some(secondary_skill_range) = skill_secondary_range(skill) {
-                self.draw_secondary_range_for_mouse(canvas, ecs, skill, secondary_skill_range)?;
+            if let Some(secondary_skill_range) = skill_secondary_range(&skill) {
+                self.draw_secondary_range_for_mouse(canvas, ecs, &skill, secondary_skill_range)?;
             } else {
-                self.draw_skill_range_overlap(canvas, ecs, skill)?;
+                self.draw_skill_range_overlap(canvas, ecs, &skill)?;
             }
         }
         Ok(())
@@ -306,11 +306,11 @@ fn should_draw_cursor(ecs: &World) -> bool {
     matches!(state, BattleSceneState::Targeting(_))
 }
 
-fn get_target_skill(ecs: &World) -> Option<&SkillInfo> {
+fn get_target_skill(ecs: &World) -> Option<SkillInfo> {
     let state = battle_actions::read_action_state(ecs);
     match state {
         BattleSceneState::Targeting(source) => match source {
-            BattleTargetSource::Skill(name) => Some(get_skill(&name)),
+            BattleTargetSource::Skill(name) => Some(ecs.get_skill(&name)),
         },
         _ => None,
     }

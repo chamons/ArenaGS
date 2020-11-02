@@ -5,7 +5,6 @@ use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
 use rand::Rng;
 use specs::prelude::*;
-use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 use super::components::*;
 use crate::atlas::get_exe_folder;
@@ -61,7 +60,8 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
-pub fn random_new_world(progression: ProgressionState) -> World {
+pub fn create_random_battle(ecs: &mut World, progression_world: World) {
+    let progression = progression_world.read_resource::<ProgressionComponent>().state.clone();
     let (kind, difficulty) = match progression.phase {
         0 => (BattleKind::SimpleGolem, 0),
         1 => (BattleKind::Bird, 0),
@@ -73,12 +73,11 @@ pub fn random_new_world(progression: ProgressionState) -> World {
         }
     };
 
-    create_battle(progression, kind, difficulty)
+    create_battle(ecs, progression, kind, difficulty);
 }
 
-fn create_battle(progression: ProgressionState, kind: BattleKind, difficulty: u32) -> World {
-    let mut ecs = create_world();
-    add_ui_extension(&mut ecs);
+fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKind, difficulty: u32) {
+    let mut skills = SkillsResource::init();
 
     if progression.phase == 0 {
         ecs.log("Welcome to ArenaGS!");
@@ -89,18 +88,21 @@ fn create_battle(progression: ProgressionState, kind: BattleKind, difficulty: u3
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
+    ecs.insert(EquipmentResource::init_with(&content::gunslinger::get_equipment()));
 
     let player_position = find_placement(&ecs, 1, 1);
-    spawner::player(&mut ecs, player_position);
+    progression::embattle::create_player(ecs, &mut skills, player_position);
 
     match kind {
         BattleKind::SimpleGolem => {
             let enemy_position = find_placement(&ecs, 1, 1);
-            spawner::simple_golem(&mut ecs, enemy_position);
+            spawner::simple_golem(ecs, enemy_position);
+            super::content::tutorial::golem_skills(&mut skills);
         }
         BattleKind::Bird => {
             let enemy_position = find_placement(&ecs, 2, 2);
-            spawner::bird_monster(&mut ecs, enemy_position, difficulty);
+            spawner::bird_monster(ecs, enemy_position, difficulty);
+            super::content::bird::bird_skills(&mut skills);
         }
         BattleKind::Elementalist => {
             use crate::clash::content::elementalist::ElementalKind;
@@ -112,28 +114,46 @@ fn create_battle(progression: ProgressionState, kind: BattleKind, difficulty: u3
 
                 let enemy_position = find_placement(&ecs, 1, 1);
                 match elements.pop().unwrap() {
-                    ElementalKind::Water => spawner::water_elemental(&mut ecs, enemy_position, difficulty),
-                    ElementalKind::Fire => spawner::fire_elemental(&mut ecs, enemy_position, difficulty),
-                    ElementalKind::Wind => spawner::wind_elemental(&mut ecs, enemy_position, difficulty),
-                    ElementalKind::Earth => spawner::earth_elemental(&mut ecs, enemy_position, difficulty),
+                    ElementalKind::Water => spawner::water_elemental(ecs, enemy_position, difficulty),
+                    ElementalKind::Fire => spawner::fire_elemental(ecs, enemy_position, difficulty),
+                    ElementalKind::Wind => spawner::wind_elemental(ecs, enemy_position, difficulty),
+                    ElementalKind::Earth => spawner::earth_elemental(ecs, enemy_position, difficulty),
                 }
             }
             let enemy_position = find_placement(&ecs, 1, 1);
-            spawner::elementalist(&mut ecs, enemy_position, difficulty);
+            spawner::elementalist(ecs, enemy_position, difficulty);
+            super::content::elementalist::elementalist_skills(&mut skills);
         }
     }
 
-    map_background(&mut ecs);
-
-    ecs
+    ecs.insert(skills);
 }
 
-pub fn map_background(ecs: &mut World) {
-    ecs.create_entity()
-        .with(RenderComponent::init(RenderInfo::init_with_order(
-            SpriteKinds::BeachBackground,
-            RenderOrder::Background,
-        )))
-        .marked::<SimpleMarker<ToSerialize>>()
-        .build();
+pub fn new_game_intermission_state() -> World {
+    let mut base_state = World::new();
+    base_state.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
+
+    create_intermission_state(&base_state)
+}
+
+pub fn create_intermission_state(battle_state: &World) -> World {
+    let mut ecs = World::new();
+    ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
+
+    // To make UI easier
+    ecs.insert(crate::props::MousePositionComponent::init());
+    // So we can query if one exists
+    ecs.register::<PlayerComponent>();
+
+    // Load all skills & equipment for help
+    // If we are move to a game round these will be overwritten
+    let mut skills = SkillsResource::init();
+    super::embattle::load_skills_for_help(&ecs, &mut skills);
+    ecs.insert(skills);
+
+    let mut equips = EquipmentResource::init();
+    super::embattle::load_equipment_for_help(&ecs, &mut equips);
+    ecs.insert(equips);
+
+    ecs
 }

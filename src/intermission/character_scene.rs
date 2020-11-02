@@ -12,7 +12,6 @@ use super::equipment_view::EquipmentView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionComponent, ProgressionState};
 use crate::conductor::{Scene, StageDirection};
 use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
 
@@ -25,10 +24,9 @@ pub struct CharacterScene {
 }
 
 impl CharacterScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, progression: ProgressionState) -> BoxResult<CharacterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
-
         Ok(CharacterScene {
             next_fight: Rc::clone(&next_fight),
             continue_button: Button::text(
@@ -46,19 +44,13 @@ impl CharacterScene {
                 render_context,
                 text_renderer,
                 vec![
-                    TabInfo::init(
-                        "Skill Tree",
-                        Box::new(SkillTreeView::init(render_context, text_renderer, &progression)?),
-                        |_| true,
-                    ),
-                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &progression)?), |_| {
-                        true
-                    }),
+                    TabInfo::init("Skill Tree", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?), |_| true),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?), |_| true),
                     TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
                 ],
             )?),
-            ecs: wrap_progression(&progression),
-            help: HelpPopup::init(&render_context, Rc::clone(&text_renderer))?,
+            help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,
+            ecs,
         })
     }
 }
@@ -102,9 +94,9 @@ impl Scene for CharacterScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         if *self.next_fight.borrow() {
-            StageDirection::NewRound(wrap_progression(&self.ecs.read_resource::<ProgressionComponent>().state))
+            StageDirection::NewRound(std::mem::replace(&mut self.ecs, World::new()))
         } else {
             StageDirection::Continue
         }

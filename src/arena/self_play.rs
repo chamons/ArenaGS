@@ -29,7 +29,7 @@ pub mod tests {
         let mut wins = 0;
 
         for _ in 0..10000 {
-            let mut ecs = super::super::new_game::random_new_world(0).unwrap();
+            let mut ecs = super::super::new_game::create_random_battle(0).unwrap();
             let mut frame: u64 = 0;
             loop {
                 super::super::battle_scene::battle_tick(&mut ecs, frame);

@@ -1,3 +1,4 @@
+pub mod embattle;
 mod equipment;
 mod progression_component;
 mod skill_tree;

@@ -18,5 +18,5 @@ pub trait Scene {
 
     fn on_quit(&mut self) -> BoxResult<()>;
 
-    fn ask_stage_direction(&self) -> StageDirection;
+    fn ask_stage_direction(&mut self) -> StageDirection;
 }

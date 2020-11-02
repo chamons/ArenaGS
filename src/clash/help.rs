@@ -4,6 +4,7 @@ use specs::prelude::*;
 use super::*;
 use crate::after_image::LayoutChunkIcon;
 use crate::atlas::prelude::*;
+use crate::vec_of_strings;
 
 pub enum HelpHeader {
     None,
@@ -14,10 +15,6 @@ pub enum HelpHeader {
 pub struct HelpInfo {
     pub header: HelpHeader,
     pub text: Vec<String>,
-}
-
-macro_rules! vec_of_strings {
-    ($($x:expr),*) => (vec![$($x.to_string()),*]);
 }
 
 impl HelpInfo {
@@ -192,11 +189,11 @@ impl HelpInfo {
         }
     }
 
-    fn get_skill_help(word: &str) -> HelpInfo {
-        let skill = get_skill(word);
+    fn get_skill_help(ecs: &World, word: &str) -> HelpInfo {
+        let skill = ecs.get_skill(word);
         let header = {
             if let Some(image) = skill.image {
-                HelpHeader::Image(word.to_string(), image.to_string())
+                HelpHeader::Image(word.to_string(), image)
             } else {
                 HelpHeader::Text(word.to_string())
             }
@@ -232,7 +229,7 @@ impl HelpInfo {
         HelpInfo::init(header, details)
     }
 
-    pub fn find(mut word: &str) -> HelpInfo {
+    pub fn find(ecs: &World, mut word: &str) -> HelpInfo {
         word = match word {
             "Burning" | "Frozen" | "temperature" | "ignite" => "Temperature",
             "static charge" => "Static Charge",
@@ -378,7 +375,7 @@ impl HelpInfo {
                     "Abilities:",
                     ""
                 ];
-                text.extend(get_weapon_skills (TargetAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Magnum Bullets",
                     text
@@ -394,7 +391,7 @@ impl HelpInfo {
                     ""
                 ];
 
-                text.extend(get_weapon_skills (TargetAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Ignite Bullets",
                     text
@@ -410,7 +407,7 @@ impl HelpInfo {
                     ""
             ];
 
-                text.extend(get_weapon_skills (TargetAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Cyclone Bullets",
                     text
@@ -490,17 +487,17 @@ impl HelpInfo {
                     ],
                 )
             }
-            "Aimed" => return HelpInfo::find_status(StatusKind::Aimed),
+            "Aimed" => return HelpInfo::find_status(ecs, StatusKind::Aimed),
             _ => {}
         }
-        if is_skill(word) {
-            return HelpInfo::get_skill_help(word);
+        if ecs.read_resource::<SkillsResource>().contains(word) {
+            return HelpInfo::get_skill_help(ecs, word);
         }
 
         HelpInfo::get_error(word)
     }
 
-    pub fn find_status(status: StatusKind) -> HelpInfo {
+    pub fn find_status(ecs: &World, status: StatusKind) -> HelpInfo {
         match status {
             StatusKind::Burning => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
@@ -516,10 +513,10 @@ impl HelpInfo {
                     TEMPERATURE_FREEZE_POINT
                 )],
             ),
-            StatusKind::Magnum => HelpInfo::find("Magnum Bullets"),
-            StatusKind::Ignite => HelpInfo::find("Ignite Bullets"),
-            StatusKind::Cyclone => HelpInfo::find("Cyclone Bullets"),
-            StatusKind::StaticCharge => HelpInfo::find("Static Charge"),
+            StatusKind::Magnum => HelpInfo::find(ecs, "Magnum Bullets"),
+            StatusKind::Ignite => HelpInfo::find(ecs, "Ignite Bullets"),
+            StatusKind::Cyclone => HelpInfo::find(ecs, "Cyclone Bullets"),
+            StatusKind::StaticCharge => HelpInfo::find(ecs, "Static Charge"),
             StatusKind::Aimed => HelpInfo::text_header(
                 HelpInfo::get_status_effect_name(status),
                 vec![format!(
@@ -666,16 +663,17 @@ mod tests {
     use super::*;
     use crate::after_image::font_test_helpers::*;
     use crate::after_image::{layout_text, Font, LayoutChunkValue, LayoutRequest};
+    use crate::clash::new_game;
 
-    fn check_links(link: &str, font: &Font) {
-        let help = HelpInfo::find(link);
-        assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")));
+    fn check_links(ecs: &World, link: &str, font: &Font) {
+        let help = HelpInfo::find(&ecs, link);
+        assert!(!help.text.iter().any(|t| t.contains("Internal Help Error")), format!("Missing Link: {}", link));
         for chunk in help.text {
             let layout = layout_text(&chunk, font, LayoutRequest::init(0, 0, 500, 0)).unwrap();
             for l in layout.chunks {
                 match l.value {
                     LayoutChunkValue::Link(new_link) => {
-                        check_links(&new_link, font);
+                        check_links(ecs, &new_link, font);
                     }
                     _ => {}
                 }
@@ -684,10 +682,24 @@ mod tests {
     }
 
     #[test]
-    fn help_has_no_unresolved_links() {
+    fn battle_help_has_no_unresolved_links() {
         if !has_test_font() {
             return;
         }
-        check_links("Top Level Help", &get_test_font());
+
+        let mut ecs = create_world();
+        super::new_game::create_random_battle(&mut ecs, new_game::new_game_intermission_state());
+
+        check_links(&ecs, "Top Level Help", &get_test_font());
+    }
+
+    #[test]
+    fn intermission_help_has_no_unresolved_links() {
+        if !has_test_font() {
+            return;
+        }
+
+        let ecs = new_game::new_game_intermission_state();
+        check_links(&ecs, "Top Level Help", &get_test_font());
     }
 }

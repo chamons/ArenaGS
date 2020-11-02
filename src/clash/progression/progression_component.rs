@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use super::Equipment;
-use crate::props::MousePositionComponent;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 use specs_derive::*;
@@ -31,8 +30,8 @@ pub struct ProgressionState {
 }
 
 impl ProgressionState {
-    pub fn init_empty() -> ProgressionState {
-        ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init_empty())
+    pub fn init_gunslinger() -> ProgressionState {
+        ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init(3, 2, 2, 1))
     }
 
     pub fn init(phase: u32, experience: u32, skills: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
@@ -44,13 +43,4 @@ impl ProgressionState {
             equipment,
         }
     }
-}
-
-pub fn wrap_progression(state: &ProgressionState) -> World {
-    let mut world = World::new();
-    // Just to make UI work easier
-    world.insert(MousePositionComponent::init());
-    world.insert(ProgressionComponent::init(state.clone()));
-
-    world
 }

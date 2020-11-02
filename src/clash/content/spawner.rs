@@ -7,25 +7,25 @@ use crate::clash::*;
 // All non-test create_entity() call should live here
 // so we make sure they are marked with ToSerialize
 
-pub fn player(ecs: &mut World, position: Point) {
+pub fn player(ecs: &mut World, position: Point, resources: SkillResourceComponent, defenses: DefenseComponent) -> Entity {
     let player = ecs
         .create_entity()
         .with(PositionComponent::init(SizedPoint::init(position.x, position.y)))
         .with(IsCharacterComponent::init())
         .with(NamedComponent::init("Player"))
-        .with(DefenseComponent::init(Defenses::init(2, 0, 0, 20)))
+        .with(defenses)
         .with(SkillPowerComponent::init(0))
         .with(TemperatureComponent::init(Temperature::init()))
         .with(StatusComponent::init())
         .with(PlayerComponent::init())
-        .with(SkillsComponent::init(&[]))
+        .with(SkillsComponent::init(&[], &[]))
         .with(TimeComponent::init(0))
+        .with(resources)
         .marked::<SimpleMarker<ToSerialize>>()
         .build();
 
-    content::gunslinger::setup_gunslinger(ecs, player);
-
     ecs.raise_event(EventKind::Creation(SpawnKind::Player), Some(player));
+    player
 }
 
 #[allow(clippy::too_many_arguments)]

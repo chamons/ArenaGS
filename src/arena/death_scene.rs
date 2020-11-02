@@ -10,7 +10,7 @@ use sdl2::render::Texture;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{wrap_progression, ProgressionState};
+use crate::clash::new_game;
 use crate::conductor::{Scene, StageDirection};
 
 pub struct DeathScene {
@@ -114,9 +114,9 @@ impl Scene for DeathScene {
         Ok(())
     }
 
-    fn ask_stage_direction(&self) -> StageDirection {
+    fn ask_stage_direction(&mut self) -> StageDirection {
         if self.interacted {
-            StageDirection::NewRound(wrap_progression(&ProgressionState::init_empty()))
+            StageDirection::NewRound(new_game::new_game_intermission_state())
         } else {
             StageDirection::Continue
         }

@@ -10,8 +10,8 @@ use specs::prelude::*;
 use super::{render_text_layout, TextHitTester};
 use crate::after_image::*;
 use crate::atlas::prelude::*;
-use crate::clash::{all_skill_image_filesnames, find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo};
-use crate::props::{HitTestResult, View};
+use crate::clash::{find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo, SkillsResource};
+use crate::props::{HitTestResult, RenderTextOptions, View};
 
 enum HelpPopupSize {
     Unknown,
@@ -43,7 +43,9 @@ pub struct HelpPopup {
 }
 
 impl HelpPopup {
-    pub fn init(render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
+    pub fn init(ecs: &World, render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
+        let skills = ecs.read_resource::<SkillsResource>();
+
         Ok(HelpPopup {
             state: HelpPopupState::None,
             text_renderer,
@@ -60,7 +62,7 @@ impl HelpPopup {
                 ],
             )?,
             symbols: IconCache::init(render_context, IconLoader::init_symbols(), &["plain-dagger.png"])?,
-            icons: IconCache::init(render_context, IconLoader::init_icons(), &all_skill_image_filesnames())?,
+            icons: IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?,
             size: HelpPopupSize::Unknown,
             help: None,
         })
@@ -68,13 +70,13 @@ impl HelpPopup {
 
     fn lookup_hittest(result: &HitTestResult, ecs: &World) -> Option<HelpInfo> {
         match result {
-            HitTestResult::Text(text) => Some(HelpInfo::find(&text)),
+            HitTestResult::Text(text) => Some(HelpInfo::find(ecs, &text)),
             HitTestResult::Icon(icon) => Some(HelpInfo::find_icon(*icon)),
             HitTestResult::Enemy(point) => Some(HelpInfo::find_entity(ecs, find_entity_at_location(ecs, *point).unwrap())),
             HitTestResult::Field(point) => Some(HelpInfo::find_field(ecs, find_field_at_location(ecs, &SizedPoint::from(*point)).unwrap())),
             HitTestResult::Orb(point) => Some(HelpInfo::find_orb(ecs, find_entity_at_location(ecs, *point).unwrap())),
-            HitTestResult::Skill(name) => Some(HelpInfo::find(&name)),
-            HitTestResult::Status(status) => Some(HelpInfo::find_status(*status)),
+            HitTestResult::Skill(name) => Some(HelpInfo::find(ecs, &name)),
+            HitTestResult::Status(status) => Some(HelpInfo::find_status(ecs, *status)),
             _ => None,
         }
     }
@@ -394,10 +396,9 @@ impl View for HelpPopup {
                     &layout,
                     canvas,
                     &self.text_renderer,
-                    Some(&self.symbols),
-                    FontColor::White,
-                    0,
-                    underline_links,
+                    RenderTextOptions::init(FontColor::White)
+                        .with_icons(&self.symbols)
+                        .with_underline_links(underline_links),
                     |rect, result| self.note_hit_area(rect, result),
                 )?;
             }

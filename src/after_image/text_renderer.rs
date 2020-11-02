@@ -141,6 +141,7 @@ impl TextRenderer {
             let mut cache = self.cache.borrow_mut();
             let texture = cache.get(&self, canvas, size, color, text)?;
             let TextureQuery { width, .. } = texture.query();
+            assert!(text_render_width > width, "Text too long to render: {}", text);
             (text_render_width - width) / 2
         };
 
