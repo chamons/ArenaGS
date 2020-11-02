@@ -17,3 +17,17 @@ pub fn get_random_items(ecs: &World, player: Entity, requests: Vec<(EquipmentRar
 
     vec![]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selects_items() {}
+
+    #[test]
+    fn downgrades_when_too_few() {}
+
+    #[test]
+    fn too_few_total_items() {}
+}
