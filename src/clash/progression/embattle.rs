@@ -190,28 +190,23 @@ mod tests {
         ecs.insert(ProgressionComponent::init(state));
         ecs
     }
-
-    fn eq(name: &str, kind: EquipmentKinds, effect: &[EquipmentEffect], index: usize) -> (EquipmentKinds, EquipmentItem, usize) {
-        (kind, EquipmentItem::init(name, None, kind, effect), index)
-    }
-
     #[test]
     fn defense_modifiers() {
         let ecs = equip_test_state(&[
-            eq(
+            test_eq(
                 "a",
                 EquipmentKinds::Armor,
                 &[EquipmentEffect::ModifiesArmor(1), EquipmentEffect::ModifiesDodge(1)],
                 0,
             ),
-            eq("b", EquipmentKinds::Armor, &[EquipmentEffect::ModifiesDodge(1)], 1),
-            eq(
+            test_eq("b", EquipmentKinds::Armor, &[EquipmentEffect::ModifiesDodge(1)], 1),
+            test_eq(
                 "c",
                 EquipmentKinds::Armor,
                 &[EquipmentEffect::ModifiesAbsorb(2), EquipmentEffect::ModifiesMaxHealth(2)],
                 2,
             ),
-            eq(
+            test_eq(
                 "d",
                 EquipmentKinds::Armor,
                 &[EquipmentEffect::ModifiesAbsorb(1), EquipmentEffect::ModifiesMaxHealth(2)],
@@ -228,13 +223,13 @@ mod tests {
     #[test]
     fn resource_modifiers() {
         let ecs = equip_test_state(&[
-            eq(
+            test_eq(
                 "a",
                 EquipmentKinds::Weapon,
                 &[EquipmentEffect::ModifiesResourceTotal(-1, "Bullets".to_string())],
                 0,
             ),
-            eq(
+            test_eq(
                 "b",
                 EquipmentKinds::Weapon,
                 &[EquipmentEffect::ModifiesResourceTotal(-1, "Bullets".to_string())],
@@ -263,7 +258,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_unlock() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
@@ -280,7 +275,7 @@ mod tests {
 
     #[test]
     fn attack_skills_weapon_range() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[
@@ -300,7 +295,7 @@ mod tests {
 
     #[test]
     fn attack_skills_weapon_damage() {
-        let ecs = equip_test_state(&[eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
+        let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
         let skills = collect_attack_skills(&ecs, |name| match name {
             "Default" => SkillInfo::init_with_distance(
@@ -322,7 +317,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_range() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[
@@ -342,7 +337,7 @@ mod tests {
 
     #[test]
     fn attack_skills_additional_unlock() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
@@ -359,7 +354,7 @@ mod tests {
 
     #[test]
     fn attack_skills_skill_damage() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::ModifiesSkillStrength(1, "Basic Attack".to_string())],
@@ -386,7 +381,7 @@ mod tests {
 
     #[test]
     fn attack_modes() {
-        let ecs = equip_test_state(&[eq(
+        let ecs = equip_test_state(&[test_eq(
             "a",
             EquipmentKinds::Weapon,
             &[EquipmentEffect::UnlocksAbilityMode("Inferno".to_string())],
