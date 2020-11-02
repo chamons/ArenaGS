@@ -11,7 +11,13 @@ pub fn get_random_items(ecs: &World, player: Entity, requests: Vec<(EquipmentRar
 
     let available: Vec<&EquipmentItem> = equipment.all().filter(|e| !progression.state.items.contains(&e.name)).collect();
 
-    // Bucket into rarity
+    let common: Vec<&EquipmentItem> = available.iter().filter(|&e| e.rarity == EquipmentRarity::Common).map(|&e| e).collect();
+    let uncommon: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Uncommon).map(|&e| e).collect();
+    let rare: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Rare).map(|&e| e).collect();
+
+    let mut rare_request_count: u32 = requests.iter().filter(|r| r.0 == EquipmentRarity::Rare).map(|r| r.1).sum();
+    let mut uncommon_request_count: u32 = requests.iter().filter(|r| r.0 == EquipmentRarity::Uncommon).map(|r| r.1).sum();
+    let mut common_request_count: u32 = requests.iter().filter(|r| r.0 == EquipmentRarity::Common).map(|r| r.1).sum();
     // Sort requests by highest rarity first
     // Draw from each bucket, if we run out downgrade to a lower rarity and continue
 
