@@ -88,7 +88,10 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
-    ecs.insert(EquipmentResource::init_with(&content::gunslinger::get_equipment()));
+
+    let mut equipment = content::gunslinger::get_equipment();
+    equipment.append(&mut content::items::get_equipment());
+    ecs.insert(EquipmentResource::init_with(&equipment));
 
     let player_position = find_placement(&ecs, 1, 1);
     progression::embattle::create_player(ecs, &mut skills, player_position);
