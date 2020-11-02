@@ -1,5 +1,6 @@
 pub mod embattle;
 mod equipment;
+pub mod gambler;
 mod progression_component;
 mod skill_tree;
 

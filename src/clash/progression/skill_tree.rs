@@ -56,7 +56,7 @@ impl SkillTree {
         self.nodes
             .values()
             .map(|n| {
-                let status = if state.skills.contains(n.name()) {
+                let status = if state.items.contains(n.name()) {
                     SkillNodeStatus::Selected
                 } else if self.can_select(state, &n.name()) {
                     SkillNodeStatus::Available
@@ -70,14 +70,14 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        !state.skills.contains(node.name()) && node.dependencies.iter().all(|d| state.skills.contains(d)) && node.cost <= state.experience
+        !state.items.contains(node.name()) && node.dependencies.iter().all(|d| state.items.contains(d)) && node.cost <= state.experience
     }
 
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
         if self.can_select(state, name) {
             let node = self.nodes.get(name).unwrap();
 
-            state.skills.insert(name.to_string());
+            state.items.insert(name.to_string());
             state.experience -= node.cost;
         }
     }
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(false, tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
 
-        state.skills.insert("Foo".to_string());
+        state.items.insert("Foo".to_string());
         assert!(!tree.can_select(&state, "Foo"));
         assert!(tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
@@ -167,7 +167,7 @@ mod tests {
 
         tree.select(&mut state, "Foo");
         assert_eq!(2, state.experience);
-        assert!(state.skills.contains("Foo"));
+        assert!(state.items.contains("Foo"));
     }
 
     #[test]

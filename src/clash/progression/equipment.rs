@@ -177,7 +177,7 @@ impl Equipment {
 
 #[derive(Clone)] // NotConvertSaveload
 pub struct EquipmentResource {
-    pub equipment: HashMap<String, EquipmentItem>,
+    equipment: HashMap<String, EquipmentItem>,
 }
 
 #[allow(dead_code)]
@@ -206,6 +206,10 @@ impl EquipmentResource {
 
     pub fn add(&mut self, equipment: EquipmentItem) {
         self.equipment.insert(equipment.name.to_string(), equipment);
+    }
+
+    pub fn all(&self) -> impl Iterator<Item = &EquipmentItem> + '_ {
+        self.equipment.values()
     }
 }
 

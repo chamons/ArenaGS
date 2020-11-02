@@ -285,7 +285,7 @@ impl EquipmentView {
 
     fn create_cards(&self, progression: &ProgressionState) {
         *self.cards.borrow_mut() = progression
-            .skills
+            .items
             .iter()
             .map(|s| {
                 CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, self.tree.get(&s).clone())
@@ -325,7 +325,7 @@ impl EquipmentView {
 
     pub fn check_for_missing_cards(&self, ecs: &World) {
         let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
-        if progression.skills.len() != self.cards.borrow().len() {
+        if progression.items.len() != self.cards.borrow().len() {
             self.create_cards(&progression);
             self.arrange(&progression);
         }

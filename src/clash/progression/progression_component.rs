@@ -24,7 +24,7 @@ pub enum CharacterWeaponKind {
 pub struct ProgressionState {
     pub phase: u32,
     pub experience: u32,
-    pub skills: HashSet<String>,
+    pub items: HashSet<String>,
     pub weapon: CharacterWeaponKind,
     pub equipment: Equipment,
 }
@@ -34,11 +34,11 @@ impl ProgressionState {
         ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init(3, 2, 2, 1))
     }
 
-    pub fn init(phase: u32, experience: u32, skills: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
+    pub fn init(phase: u32, experience: u32, items: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
         ProgressionState {
             phase,
             experience,
-            skills: skills.iter().map(|s| s.to_string()).collect(),
+            items: items.iter().map(|s| s.to_string()).collect(),
             weapon,
             equipment,
         }
