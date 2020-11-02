@@ -14,7 +14,7 @@ use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionComponent, ProgressionState, SkillTree};
-use crate::props::{Button, HitTestResult, MousePositionComponent, View};
+use crate::props::{render_text_layout, Button, HitTestResult, MousePositionComponent, View};
 
 pub struct CardView {
     frame: SDLRect,
@@ -64,10 +64,10 @@ impl View for CardView {
 
         if let Some(image) = &self.equipment.image {
             let image_rect = SDLRect::new(
-                (self.frame.x() + (CARD_WIDTH as i32 / 2) - (SKILL_NODE_SIZE as i32 / 2)) as i32,
+                (self.frame.x() + (CARD_WIDTH as i32 / 2) - (SKILL_NODE_SIZE as i32 / 4)) as i32,
                 self.frame.y() + 20,
-                SKILL_NODE_SIZE,
-                SKILL_NODE_SIZE,
+                SKILL_NODE_SIZE / 2,
+                SKILL_NODE_SIZE / 2,
             );
 
             canvas.set_draw_color(self.border_color());
@@ -81,16 +81,18 @@ impl View for CardView {
             canvas.copy(self.icons.get(&image), None, image_rect)?;
         }
 
-        self.text_renderer.render_text_centered(
+        let layout = self.text_renderer.layout_text(
             &self.equipment.name,
-            self.frame.x(),
-            self.frame.y() + 75,
-            CARD_WIDTH,
-            canvas,
             FontSize::Small,
-            FontColor::Brown,
+            LayoutRequest::init(
+                self.frame.x() as u32 + 12,
+                self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 6,
+                CARD_WIDTH - 24,
+                5,
+            ),
         )?;
 
+        render_text_layout(&layout, canvas, &self.text_renderer, None, FontColor::Brown, 0, false, |_, _| {})?;
         Ok(())
     }
 
@@ -417,7 +419,6 @@ impl View for EquipmentView {
                         assert!(progression.equipment.remove(previous_kind, previous_index));
                     }
                 }
-                println!("{:#?}", progression.equipment);
             }
         }
         self.sort.handle_mouse_move(ecs, x, y, state);
