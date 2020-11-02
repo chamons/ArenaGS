@@ -43,7 +43,7 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
     ]
 }
 
-#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum GunslingerAmmo {
     Magnum,
     Ignite,
@@ -69,7 +69,7 @@ fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: Vec<String>
     }
 }
 
-fn get_current_weapon_trait(ecs: &mut World, invoker: Entity) -> GunslingerAmmo {
+fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
     if ecs.has_status(invoker, StatusKind::Magnum) {
         GunslingerAmmo::Magnum
     } else if ecs.has_status(invoker, StatusKind::Ignite) {
@@ -90,12 +90,32 @@ fn set_current_weapon_trait(ecs: &mut World, invoker: Entity, ammo: GunslingerAm
     }
 }
 
+fn get_next_ammo(ecs: &mut World, invoker: Entity) -> GunslingerAmmo {
+    let mut current = get_current_weapon_trait(ecs, invoker);
+    loop {
+        let next_ammo = match current {
+            GunslingerAmmo::Magnum => GunslingerAmmo::Ignite,
+            GunslingerAmmo::Ignite => GunslingerAmmo::Cyclone,
+            GunslingerAmmo::Cyclone => GunslingerAmmo::Magnum,
+        };
+
+        if ecs.read_storage::<GunslingerComponent>().grab(invoker).ammo_types.contains(&next_ammo) {
+            return next_ammo;
+        } else {
+            current = next_ammo;
+        }
+    }
+}
+
 pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
-    let (current_ammo, next_ammo) = match get_current_weapon_trait(ecs, invoker) {
-        GunslingerAmmo::Magnum => (GunslingerAmmo::Magnum, GunslingerAmmo::Ignite),
-        GunslingerAmmo::Ignite => (GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone),
-        GunslingerAmmo::Cyclone => (GunslingerAmmo::Cyclone, GunslingerAmmo::Magnum),
-    };
+    let current_ammo = get_current_weapon_trait(ecs, invoker);
+    let next_ammo = get_next_ammo(ecs, invoker);
+
+    // The skill should not be available, but make it a no-op beyond reload
+    if current_ammo == next_ammo {
+        reload(ecs, invoker, AmmoKind::Bullets, None);
+        return;
+    }
 
     remove_skills(ecs, invoker, get_weapon_skills(ecs, Some(invoker), current_ammo));
     add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, Some(invoker), next_ammo));
@@ -381,8 +401,72 @@ mod tests {
     use super::*;
 
     #[test]
+    fn rotate_ammo_no_holes() {
+        let mut ecs = create_test_state()
+            .with_gunslinger(
+                2,
+                2,
+                &[test_eq(
+                    "a",
+                    EquipmentKinds::Armor,
+                    &[
+                        EquipmentEffect::UnlocksAbilityMode("Ignite".to_string()),
+                        EquipmentEffect::UnlocksAbilityMode("Cyclone".to_string()),
+                    ],
+                    0,
+                )],
+            )
+            .build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(GunslingerAmmo::Magnum, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        rotate_ammo(&mut ecs, player);
+        assert_eq!(GunslingerAmmo::Ignite, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Spark Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        rotate_ammo(&mut ecs, player);
+        assert_eq!(GunslingerAmmo::Cyclone, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Airburst Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+    }
+
+    #[test]
+    fn rotate_ammo_with_holes() {
+        let mut ecs = create_test_state()
+            .with_gunslinger(
+                2,
+                2,
+                &[test_eq(
+                    "a",
+                    EquipmentKinds::Armor,
+                    &[EquipmentEffect::UnlocksAbilityMode("Cyclone".to_string())],
+                    0,
+                )],
+            )
+            .build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(GunslingerAmmo::Magnum, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        rotate_ammo(&mut ecs, player);
+        assert_eq!(GunslingerAmmo::Cyclone, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Airburst Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+    }
+
+    #[test]
+    fn rotate_ammo_only_one() {
+        let mut ecs = create_test_state().with_gunslinger(2, 2, &[]).build();
+        let player = find_at(&ecs, 2, 2);
+
+        assert_eq!(GunslingerAmmo::Magnum, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+        rotate_ammo(&mut ecs, player);
+        assert_eq!(GunslingerAmmo::Magnum, get_current_weapon_trait(&ecs, player));
+        assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
+    }
+
+    #[test]
     fn rotate_ammo_reloads_as_well() {
-        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
+        let mut ecs = create_test_state().with_gunslinger(2, 2, &[]).build();
         let player = find_at(&ecs, 2, 2);
 
         *ecs.write_storage::<SkillResourceComponent>()
@@ -398,7 +482,21 @@ mod tests {
 
     #[test]
     fn rotate_ammo_has_correct_buff() {
-        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
+        let mut ecs = create_test_state()
+            .with_gunslinger(
+                2,
+                2,
+                &[test_eq(
+                    "a",
+                    EquipmentKinds::Armor,
+                    &[
+                        EquipmentEffect::UnlocksAbilityMode("Ignite".to_string()),
+                        EquipmentEffect::UnlocksAbilityMode("Cyclone".to_string()),
+                    ],
+                    0,
+                )],
+            )
+            .build();
         let player = find_at(&ecs, 2, 2);
         assert!(ecs.has_status(player, StatusKind::Magnum));
 
@@ -411,7 +509,21 @@ mod tests {
 
     #[test]
     fn rotate_ammo_has_sets_correct_skills() {
-        let mut ecs = create_test_state().with_gunslinger(2, 2).build();
+        let mut ecs = create_test_state()
+            .with_gunslinger(
+                2,
+                2,
+                &[test_eq(
+                    "a",
+                    EquipmentKinds::Armor,
+                    &[
+                        EquipmentEffect::UnlocksAbilityMode("Ignite".to_string()),
+                        EquipmentEffect::UnlocksAbilityMode("Cyclone".to_string()),
+                    ],
+                    0,
+                )],
+            )
+            .build();
         let player = find_at(&ecs, 2, 2);
         assert_eq!("Snap Shot", ecs.read_storage::<SkillsComponent>().grab(player).skills[0]);
 

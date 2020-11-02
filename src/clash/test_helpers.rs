@@ -31,12 +31,18 @@ impl StateBuilder {
         self
     }
 
-    pub fn with_gunslinger(&mut self, x: u32, y: u32) -> &mut Self {
-        self.ecs.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
+    pub fn with_gunslinger(&mut self, x: u32, y: u32, equip: &[(EquipmentKinds, EquipmentItem, usize)]) -> &mut Self {
+        let mut state = ProgressionState::init_gunslinger();
+        for (kind, item, index) in equip {
+            state.equipment.add(*kind, item.clone(), *index);
+        }
+        self.ecs.insert(ProgressionComponent::init(state));
+
         let mut resources = (*self.ecs.read_resource::<SkillsResource>()).clone();
         super::embattle::create_player(&mut self.ecs, &mut resources, Point::init(x, y));
         // Overwrite existing
         self.ecs.insert(resources);
+
         self
     }
 
@@ -53,6 +59,10 @@ impl StateBuilder {
     pub fn build(&mut self) -> World {
         std::mem::replace(&mut self.ecs, World::new())
     }
+}
+
+pub fn test_eq(name: &str, kind: EquipmentKinds, effect: &[EquipmentEffect], index: usize) -> (EquipmentKinds, EquipmentItem, usize) {
+    (kind, EquipmentItem::init(name, None, kind, effect), index)
 }
 
 pub fn create_test_state() -> StateBuilder {
