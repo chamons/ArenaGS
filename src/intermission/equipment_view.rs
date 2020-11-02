@@ -85,10 +85,10 @@ impl View for CardView {
             &self.equipment.name,
             FontSize::Small,
             LayoutRequest::init(
-                self.frame.x() as u32 + 12,
-                self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 6,
-                CARD_WIDTH - 24,
-                5,
+                self.frame.x() as u32 + 14,
+                self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 10,
+                CARD_WIDTH - 30,
+                0,
             ),
         )?;
 
@@ -96,7 +96,7 @@ impl View for CardView {
             &layout,
             canvas,
             &self.text_renderer,
-            RenderTextOptions::init(FontColor::Brown).with_centered(Some(CARD_WIDTH - 24)),
+            RenderTextOptions::init(FontColor::Brown).with_centered(Some(CARD_WIDTH - 28)),
             |_, _| {},
         )?;
         Ok(())
