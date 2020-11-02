@@ -8,7 +8,7 @@ use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{find_enemies, find_player, summarize_character};
-use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, TextHitTester, View};
+use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, RenderTextOptions, TextHitTester, View};
 
 pub struct InfoBarView {
     position: SDLPoint,
@@ -58,7 +58,7 @@ impl InfoBarView {
             FontSize::Small,
             LayoutRequest::init(self.position.x as u32 + 4, self.position.y as u32 + *offset as u32, 210, 2),
         )?;
-        render_text_layout(&layout, canvas, &self.text, None, FontColor::Black, 0, false, |rect, result| {
+        render_text_layout(&layout, canvas, &self.text, RenderTextOptions::init(FontColor::Black), |rect, result| {
             hit_test.add(rect, result);
         })?;
 

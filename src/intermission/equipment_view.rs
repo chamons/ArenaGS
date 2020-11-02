@@ -14,7 +14,7 @@ use super::skilltree_view::{get_tree, get_tree_icons, SKILL_NODE_SIZE};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionComponent, ProgressionState, SkillTree};
-use crate::props::{render_text_layout, Button, HitTestResult, MousePositionComponent, View};
+use crate::props::{render_text_layout, Button, HitTestResult, MousePositionComponent, RenderTextOptions, View};
 
 pub struct CardView {
     frame: SDLRect,
@@ -92,7 +92,13 @@ impl View for CardView {
             ),
         )?;
 
-        render_text_layout(&layout, canvas, &self.text_renderer, None, FontColor::Brown, 0, false, |_, _| {})?;
+        render_text_layout(
+            &layout,
+            canvas,
+            &self.text_renderer,
+            RenderTextOptions::init(FontColor::Brown).with_centered(Some(CARD_WIDTH - 24)),
+            |_, _| {},
+        )?;
         Ok(())
     }
 

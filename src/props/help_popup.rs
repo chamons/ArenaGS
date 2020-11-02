@@ -11,7 +11,7 @@ use super::{render_text_layout, TextHitTester};
 use crate::after_image::*;
 use crate::atlas::prelude::*;
 use crate::clash::{find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo, SkillsResource};
-use crate::props::{HitTestResult, View};
+use crate::props::{HitTestResult, RenderTextOptions, View};
 
 enum HelpPopupSize {
     Unknown,
@@ -396,10 +396,9 @@ impl View for HelpPopup {
                     &layout,
                     canvas,
                     &self.text_renderer,
-                    Some(&self.symbols),
-                    FontColor::White,
-                    0,
-                    underline_links,
+                    RenderTextOptions::init(FontColor::White)
+                        .with_icons(&self.symbols)
+                        .with_underline_links(underline_links),
                     |rect, result| self.note_hit_area(rect, result),
                 )?;
             }
