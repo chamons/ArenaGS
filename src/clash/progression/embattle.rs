@@ -40,7 +40,7 @@ fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
         let i = resources
             .iter()
             .position(|r| r.0 == delta.0)
-            .expect(&format!("Unable to find base resource {:?}", delta.0));
+            .unwrap_or_else(|| panic!("Unable to find base resource {:?}", delta.0));
         resources[i].1 = (resources[i].1 as i32 + delta.1) as u32;
         if resources[i].2 > 0 {
             resources[i].2 = (resources[i].2 as i32 + delta.1) as u32;

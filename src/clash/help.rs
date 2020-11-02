@@ -193,7 +193,7 @@ impl HelpInfo {
         let skill = ecs.get_skill(word);
         let header = {
             if let Some(image) = skill.image {
-                HelpHeader::Image(word.to_string(), image.to_string())
+                HelpHeader::Image(word.to_string(), image)
             } else {
                 HelpHeader::Text(word.to_string())
             }

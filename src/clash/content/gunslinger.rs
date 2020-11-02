@@ -145,6 +145,8 @@ fn get_all_bases() -> Vec<String> {
     vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
 }
 
+// Syntax here gets ugly otherwise after autoformat
+#[allow(clippy::needless_return)]
 pub fn get_base_skill(name: &str) -> SkillInfo {
     match name {
         "Default" | "Snap Shot" => {
@@ -234,7 +236,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
     };
 
     let get_range = |e: &SkillEffect| match e {
-        SkillEffect::MoveAndShoot(_, range, _) => range.clone(),
+        SkillEffect::MoveAndShoot(_, range, _) => *range,
         _ => panic!("get_concrete_skill processing range of attack: {}", name),
     };
 
@@ -312,7 +314,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
         _ => {}
     }
 
-    return skill;
+    skill
 }
 
 pub fn add_base_abilities(skills: &mut SkillsResource) {
