@@ -1,9 +1,34 @@
 use std::cmp;
+use std::collections::HashMap;
 
 use rand::prelude::*;
 use specs::prelude::*;
 
 use super::super::*;
+
+pub fn get_reward_request(ecs: &World, count: u32) -> Vec<(EquipmentRarity, u32)> {
+    let mut rng = ecs.write_resource::<RandomComponent>();
+    let choices = vec![EquipmentRarity::Common, EquipmentRarity::Uncommon, EquipmentRarity::Rare];
+
+    let mut requests = HashMap::new();
+    let mut add_request = |kind: EquipmentRarity| *requests.entry(kind).or_insert(0) += 1;
+
+    for _ in 0..count {
+        add_request(
+            choices
+                .choose_weighted(&mut rng.rand, |i| match i {
+                    EquipmentRarity::Common => 75,
+                    EquipmentRarity::Uncommon => 15,
+                    EquipmentRarity::Rare => 10,
+                    EquipmentRarity::Standard => 0,
+                })
+                .unwrap()
+                .clone(),
+        );
+    }
+
+    requests.iter().map(|x| (*x.0, *x.1)).collect()
+}
 
 pub fn get_random_items(ecs: &World, requests: Vec<(EquipmentRarity, u32)>) -> Vec<EquipmentItem> {
     let equipment = ecs.read_resource::<EquipmentResource>();
@@ -122,5 +147,14 @@ mod tests {
             assert_eq!(2, chosen.len());
             assert!(chosen.iter().all(|c| c.name != "a"));
         }
+    }
+
+    #[test]
+    fn random_reward() {
+        let mut ecs = World::new();
+        ecs.insert(RandomComponent::init());
+
+        let request = get_reward_request(&ecs, 3);
+        assert_eq!(3, request.iter().map(|r| r.1).sum::<u32>());
     }
 }

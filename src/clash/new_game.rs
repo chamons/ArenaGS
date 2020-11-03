@@ -136,10 +136,10 @@ pub fn new_game_intermission_state() -> World {
     let mut base_state = World::new();
     base_state.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
 
-    create_intermission_state(&base_state)
+    create_intermission_state(&base_state, None)
 }
 
-pub fn create_intermission_state(battle_state: &World) -> World {
+pub fn create_intermission_state(battle_state: &World, reward: Option<RewardsComponent>) -> World {
     let mut ecs = World::new();
     ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
 
