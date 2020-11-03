@@ -23,7 +23,7 @@ pub enum CharacterWeaponKind {
 #[derive(Deserialize, Serialize, Clone)]
 pub struct ProgressionState {
     pub phase: u32,
-    pub experience: u32,
+    pub influence: u32,
     pub items: HashSet<String>,
     pub weapon: CharacterWeaponKind,
     pub equipment: Equipment,
@@ -34,10 +34,10 @@ impl ProgressionState {
         ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init(3, 2, 2, 1))
     }
 
-    pub fn init(phase: u32, experience: u32, items: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
+    pub fn init(phase: u32, influence: u32, items: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {
         ProgressionState {
             phase,
-            experience,
+            influence,
             items: items.iter().map(|s| s.to_string()).collect(),
             weapon,
             equipment,

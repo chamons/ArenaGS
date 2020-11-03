@@ -70,7 +70,7 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        !state.items.contains(node.name()) && node.dependencies.iter().all(|d| state.items.contains(d)) && node.cost <= state.experience
+        !state.items.contains(node.name()) && node.dependencies.iter().all(|d| state.items.contains(d)) && node.cost <= state.influence
     }
 
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
@@ -78,7 +78,7 @@ impl SkillTree {
             let node = self.nodes.get(name).unwrap();
 
             state.items.insert(name.to_string());
-            state.experience -= node.cost;
+            state.influence -= node.cost;
         }
     }
 
@@ -92,8 +92,8 @@ mod tests {
     use super::super::{CharacterWeaponKind, Equipment, EquipmentEffect, EquipmentKinds, EquipmentRarity};
     use super::*;
 
-    fn state_with_deps(experience: u32, deps: &[&str]) -> ProgressionState {
-        ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
+    fn state_with_deps(influence: u32, deps: &[&str]) -> ProgressionState {
+        ProgressionState::init(0, influence, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
     }
 
     fn eq(name: &str) -> EquipmentItem {
@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(false, tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
 
-        state.experience = 5;
+        state.influence = 5;
         assert!(tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bazz"));
         assert_eq!(false, tree.can_select(&state, "Bar"));
@@ -166,7 +166,7 @@ mod tests {
         ]);
 
         tree.select(&mut state, "Foo");
-        assert_eq!(2, state.experience);
+        assert_eq!(2, state.influence);
         assert!(state.items.contains("Foo"));
     }
 
@@ -181,8 +181,8 @@ mod tests {
         ]);
 
         tree.select(&mut state, "Foo");
-        assert_eq!(5, state.experience);
+        assert_eq!(5, state.influence);
         tree.select(&mut state, "Foo");
-        assert_eq!(5, state.experience);
+        assert_eq!(5, state.influence);
     }
 }

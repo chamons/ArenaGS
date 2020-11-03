@@ -76,7 +76,7 @@ impl View for SkillTreeView {
         let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
 
         self.text_renderer.render_text(
-            &format!("Experience: {}", progression.experience),
+            &format!("Influence: {}", progression.influence),
             770,
             70,
             canvas,

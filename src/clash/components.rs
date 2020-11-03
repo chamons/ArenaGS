@@ -348,9 +348,9 @@ pub struct RewardsComponent {
 }
 
 impl RewardsComponent {
-    pub fn init(&mut self, influence: u32, cards: Vec<String>, cashout_influence: u32) -> RewardsResource {
+    pub fn init(&mut self, influence: u32, cards: Vec<String>, cashout_influence: u32) -> RewardsComponent {
         assert!(3 == cards.len());
-        RewardsResource {
+        RewardsComponent {
             cards: cards.clone(),
             influence,
             cashout_influence,
