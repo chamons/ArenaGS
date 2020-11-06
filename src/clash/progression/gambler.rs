@@ -63,6 +63,8 @@ pub fn get_random_items(ecs: &World, requests: Vec<(EquipmentRarity, u32)>) -> V
     chosen.extend(uncommon.choose_multiple(&mut rng.rand, uncommon_count as usize).map(|&e| e.clone()));
     chosen.extend(common.choose_multiple(&mut rng.rand, common_count as usize).map(|&e| e.clone()));
 
+    // Reverse so rare at end
+    chosen.reverse();
     chosen
 }
 

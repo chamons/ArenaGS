@@ -7,12 +7,6 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
-pub fn load_equipment_for_help(_ecs: &World, equip: &mut EquipmentResource) {
-    for e in content::gunslinger::get_equipment() {
-        equip.add(e);
-    }
-}
-
 pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
     gunslinger::instance_skills(ecs, None, skills);
 }
