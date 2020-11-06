@@ -120,14 +120,16 @@ impl View for CardView {
             crate::clash::EquipmentRarity::Rare => "R",
         };
 
-        self.text_renderer.render_text(
-            rarity,
-            self.frame.x() + card_width as i32 - 22,
-            self.frame.y() + card_width as i32 - 28,
-            canvas,
-            FontSize::Tiny,
-            FontColor::LightBrown,
-        )?;
+        if self.large {
+            self.text_renderer.render_text(
+                rarity,
+                self.frame.x() + card_width as i32 - 22,
+                self.frame.y() + card_width as i32 - 28,
+                canvas,
+                FontSize::Tiny,
+                FontColor::LightBrown,
+            )?;
+        }
         Ok(())
     }
 
