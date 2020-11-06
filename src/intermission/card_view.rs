@@ -20,10 +20,14 @@ pub struct CardView {
     pub equipment: EquipmentItem,
     pub grabbed: Option<SDLPoint>,
     pub z_order: u32,
+    large: bool,
 }
 
 pub const CARD_WIDTH: u32 = 110;
+pub const CARD_WIDTH_LARGE: u32 = 160;
+
 pub const CARD_HEIGHT: u32 = 110;
+pub const CARD_HEIGHT_LARGE: u32 = 220;
 
 impl CardView {
     pub fn init(
@@ -32,15 +36,22 @@ impl CardView {
         ui: &Rc<IconCache>,
         icons: &Rc<IconCache>,
         equipment: EquipmentItem,
+        large: bool,
     ) -> BoxResult<CardView> {
         Ok(CardView {
-            frame: SDLRect::new(position.x(), position.y(), CARD_WIDTH, CARD_HEIGHT),
             text_renderer: Rc::clone(&text_renderer),
             ui: Rc::clone(&ui),
             icons: Rc::clone(&icons),
             equipment,
             grabbed: None,
             z_order: 0,
+            large,
+            frame: SDLRect::new(
+                position.x(),
+                position.y(),
+                if large { CARD_WIDTH_LARGE } else { CARD_WIDTH },
+                if large { CARD_HEIGHT_LARGE } else { CARD_HEIGHT },
+            ),
         })
     }
 
@@ -56,11 +67,17 @@ impl CardView {
 
 impl View for CardView {
     fn render(&self, _ecs: &World, canvas: &mut RenderCanvas, _frame: u64) -> BoxResult<()> {
-        canvas.copy(self.ui.get("card_frame.png"), None, self.frame)?;
+        if self.large {
+            canvas.copy(self.ui.get("card_frame_large.png"), None, self.frame)?;
+        } else {
+            canvas.copy(self.ui.get("card_frame.png"), None, self.frame)?;
+        }
+
+        let card_width = if self.large { CARD_WIDTH_LARGE } else { CARD_WIDTH };
 
         if let Some(image) = &self.equipment.image {
             let image_rect = SDLRect::new(
-                (self.frame.x() + (CARD_WIDTH as i32 / 2) - (SKILL_NODE_SIZE as i32 / 4)) as i32,
+                (self.frame.x() + (card_width as i32 / 2) - (SKILL_NODE_SIZE as i32 / 4)) as i32,
                 self.frame.y() + 20,
                 SKILL_NODE_SIZE / 2,
                 SKILL_NODE_SIZE / 2,
@@ -83,7 +100,7 @@ impl View for CardView {
             LayoutRequest::init(
                 self.frame.x() as u32 + 14,
                 self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 10,
-                CARD_WIDTH - 30,
+                card_width - 30,
                 0,
             ),
         )?;
@@ -92,7 +109,7 @@ impl View for CardView {
             &layout,
             canvas,
             &self.text_renderer,
-            RenderTextOptions::init(FontColor::Brown).with_centered(Some(CARD_WIDTH - 28)),
+            RenderTextOptions::init(FontColor::Brown).with_centered(Some(card_width - 28)),
             |_, _| {},
         )?;
 
@@ -105,8 +122,8 @@ impl View for CardView {
 
         self.text_renderer.render_text(
             rarity,
-            self.frame.x() + CARD_WIDTH as i32 - 22,
-            self.frame.y() + CARD_WIDTH as i32 - 28,
+            self.frame.x() + card_width as i32 - 22,
+            self.frame.y() + card_width as i32 - 28,
             canvas,
             FontSize::Tiny,
             FontColor::LightBrown,

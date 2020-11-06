@@ -172,8 +172,15 @@ impl EquipmentView {
             .items
             .iter()
             .map(|s| {
-                CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, self.tree.get(&s).clone())
-                    .expect("Unable to load equipment card")
+                CardView::init(
+                    SDLPoint::new(0, 0),
+                    &self.text_renderer,
+                    &self.ui,
+                    &self.icons,
+                    self.tree.get(&s).clone(),
+                    false,
+                )
+                .expect("Unable to load equipment card")
             })
             .collect();
     }

@@ -36,7 +36,11 @@ impl RewardScene {
 
         let icons: Vec<&String> = items.iter().flat_map(|i| &i.image).collect();
         let icons = Rc::new(IconCache::init(&render_context, IconLoader::init_icons(), &icons[..])?);
-        let ui = Rc::new(IconCache::init(&render_context, IconLoader::init_ui(), &["card_frame.png"])?);
+        let ui = Rc::new(IconCache::init(
+            &render_context,
+            IconLoader::init_ui(),
+            &["card_frame.png", "card_frame_large.png"],
+        )?);
 
         const REWARD_MID: i32 = 1024 / 2;
         const REWARD_GAP: i32 = 200;
@@ -47,7 +51,8 @@ impl RewardScene {
                 .drain(..)
                 .enumerate()
                 .map(|(i, s)| {
-                    CardView::init(SDLPoint::new(left + card_delta * i as i32, 300), text_renderer, &ui, &icons, s).expect("Unable to load equipment card")
+                    CardView::init(SDLPoint::new(left + card_delta * i as i32, 300), text_renderer, &ui, &icons, s, true)
+                        .expect("Unable to load equipment card")
                 })
                 .collect()
         };
