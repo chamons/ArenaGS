@@ -95,6 +95,22 @@ impl View for CardView {
             RenderTextOptions::init(FontColor::Brown).with_centered(Some(CARD_WIDTH - 28)),
             |_, _| {},
         )?;
+
+        let rarity = match self.equipment.rarity {
+            crate::clash::EquipmentRarity::Standard => " ",
+            crate::clash::EquipmentRarity::Common => "C",
+            crate::clash::EquipmentRarity::Uncommon => "U",
+            crate::clash::EquipmentRarity::Rare => "R",
+        };
+
+        self.text_renderer.render_text(
+            rarity,
+            self.frame.x() + CARD_WIDTH as i32 - 22,
+            self.frame.y() + CARD_WIDTH as i32 - 28,
+            canvas,
+            FontSize::Tiny,
+            FontColor::LightBrown,
+        )?;
         Ok(())
     }
 

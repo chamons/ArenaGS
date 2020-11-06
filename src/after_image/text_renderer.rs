@@ -26,6 +26,7 @@ pub enum FontColor {
     Black,
     White,
     Red,
+    LightBrown,
     Brown,
 }
 
@@ -102,6 +103,7 @@ impl TextRenderer {
             FontColor::White => Color::RGB(255, 255, 255),
             FontColor::Red => Color::RGB(255, 0, 0),
             FontColor::Brown => Color::RGB(73, 54, 41),
+            FontColor::LightBrown => Color::RGB(115, 96, 76),
         };
 
         let surface = self.get_font(size).render(text).blended(color).map_err(|e| e.to_string())?;
