@@ -94,13 +94,15 @@ impl View for CardView {
             canvas.copy(self.icons.get(&image), None, image_rect)?;
         }
 
+        const CARD_TEXT_WIDTH_BORDER: u32 = 34;
+
         let layout = self.text_renderer.layout_text(
             &self.equipment.name,
             FontSize::Small,
             LayoutRequest::init(
                 self.frame.x() as u32 + 14,
                 self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 10,
-                card_width - 30,
+                card_width - CARD_TEXT_WIDTH_BORDER,
                 0,
             ),
         )?;
@@ -109,7 +111,7 @@ impl View for CardView {
             &layout,
             canvas,
             &self.text_renderer,
-            RenderTextOptions::init(FontColor::Brown).with_centered(Some(card_width - 28)),
+            RenderTextOptions::init(FontColor::Brown).with_centered(Some(card_width - CARD_TEXT_WIDTH_BORDER)),
             |_, _| {},
         )?;
 
@@ -121,6 +123,33 @@ impl View for CardView {
         };
 
         if self.large {
+            let mut y = 30;
+
+            for d in self.equipment.description() {
+                let layout = self.text_renderer.layout_text(
+                    &d,
+                    FontSize::Micro,
+                    LayoutRequest::init(
+                        self.frame.x() as u32 + 14,
+                        self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + y,
+                        card_width - CARD_TEXT_WIDTH_BORDER,
+                        0,
+                    ),
+                )?;
+
+                // This code does not respect the FontSize used in layout, just picking two
+                // Need to extend LayoutRequest to store font and then use it for text
+                render_text_layout(
+                    &layout,
+                    canvas,
+                    &self.text_renderer,
+                    RenderTextOptions::init(FontColor::Brown).with_centered(Some(card_width - CARD_TEXT_WIDTH_BORDER)),
+                    |_, _| {},
+                )?;
+
+                y += layout.line_count * 22;
+            }
+
             self.text_renderer.render_text(
                 rarity,
                 self.frame.x() + card_width as i32 - 22,

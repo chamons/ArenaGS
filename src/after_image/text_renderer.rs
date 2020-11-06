@@ -152,9 +152,12 @@ impl TextRenderer {
         color: FontColor,
     ) -> BoxResult<(u32, u32)> {
         let text_x = {
-            let mut cache = self.cache.borrow_mut();
-            let texture = cache.get(&self, canvas, size, color, text)?;
-            let TextureQuery { width, .. } = texture.query();
+            let width = {
+                let mut cache = self.cache.borrow_mut();
+                let texture = cache.get(&self, canvas, size, color, text)?;
+                let TextureQuery { width, .. } = texture.query();
+                width
+            };
             if width > text_render_width {
                 return self.render_text_centered(text, x, y, text_render_width, canvas, size.smaller(), color);
             }
