@@ -10,7 +10,7 @@ use crate::atlas::get_exe_folder;
 use crate::atlas::prelude::*;
 
 #[allow(dead_code)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum FontSize {
     Micro,
     VeryTiny,
@@ -19,6 +19,18 @@ pub enum FontSize {
     SmallUnderline,
     Large,
     Bold,
+}
+
+impl FontSize {
+    pub fn smaller(&self) -> FontSize {
+        match self {
+            FontSize::Micro | FontSize::SmallUnderline | FontSize::Bold => panic!("FontSize {:?} does not have smaller version", self),
+            FontSize::Large => FontSize::Small,
+            FontSize::Small => FontSize::Tiny,
+            FontSize::Tiny => FontSize::VeryTiny,
+            FontSize::VeryTiny => FontSize::Micro,
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -143,7 +155,9 @@ impl TextRenderer {
             let mut cache = self.cache.borrow_mut();
             let texture = cache.get(&self, canvas, size, color, text)?;
             let TextureQuery { width, .. } = texture.query();
-            assert!(text_render_width > width, "Text too long to render: {}", text);
+            if width > text_render_width {
+                return self.render_text_centered(text, x, y, text_render_width, canvas, size.smaller(), color);
+            }
             (text_render_width - width) / 2
         };
 
