@@ -1,4 +1,2 @@
 - Selection of card shows border around it.
-- Button to accept, only active if highlighted option
-- Add 4th button to cash out an make it an option
 - Actually apply result

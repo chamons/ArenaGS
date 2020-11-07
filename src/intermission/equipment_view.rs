@@ -179,6 +179,7 @@ impl EquipmentView {
                     &self.icons,
                     self.tree.get(&s).clone(),
                     false,
+                    true,
                 )
                 .expect("Unable to load equipment card")
             })

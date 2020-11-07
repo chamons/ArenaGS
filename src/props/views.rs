@@ -138,9 +138,9 @@ impl View for Button {
                 text_frame.render(ecs, canvas, frame)?;
                 text_renderer.render_text_centered(
                     text,
-                    self.frame.x(),
+                    self.frame.x() + 2,
                     self.frame.y() + 10,
-                    text_frame.frame_size().0,
+                    text_frame.frame_size().0 - 4,
                     canvas,
                     FontSize::Bold,
                     if self.active { FontColor::White } else { FontColor::Brown },

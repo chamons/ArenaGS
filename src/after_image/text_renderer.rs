@@ -24,7 +24,8 @@ pub enum FontSize {
 impl FontSize {
     pub fn smaller(&self) -> FontSize {
         match self {
-            FontSize::Micro | FontSize::SmallUnderline | FontSize::Bold => panic!("FontSize {:?} does not have smaller version", self),
+            FontSize::Micro | FontSize::SmallUnderline => panic!("FontSize {:?} does not have smaller version", self),
+            FontSize::Bold => FontSize::Small,
             FontSize::Large => FontSize::Small,
             FontSize::Small => FontSize::Tiny,
             FontSize::Tiny => FontSize::VeryTiny,

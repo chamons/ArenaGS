@@ -21,6 +21,7 @@ pub struct CardView {
     pub grabbed: Option<SDLPoint>,
     pub z_order: u32,
     large: bool,
+    can_move: bool,
 }
 
 pub const CARD_WIDTH: u32 = 110;
@@ -37,6 +38,7 @@ impl CardView {
         icons: &Rc<IconCache>,
         equipment: EquipmentItem,
         large: bool,
+        can_move: bool,
     ) -> BoxResult<CardView> {
         Ok(CardView {
             text_renderer: Rc::clone(&text_renderer),
@@ -52,6 +54,7 @@ impl CardView {
                 if large { CARD_WIDTH_LARGE } else { CARD_WIDTH },
                 if large { CARD_HEIGHT_LARGE } else { CARD_HEIGHT },
             ),
+            can_move,
         })
     }
 
@@ -175,11 +178,13 @@ impl View for CardView {
     }
 
     fn handle_mouse_move(&mut self, _ecs: &World, x: i32, y: i32, state: MouseState) {
-        if let Some(origin) = self.grabbed {
-            if state.left() {
-                self.frame = SDLRect::new(x - origin.x(), y - origin.y(), CARD_WIDTH, CARD_HEIGHT);
-            } else {
-                self.grabbed = None;
+        if self.can_move {
+            if let Some(origin) = self.grabbed {
+                if state.left() {
+                    self.frame = SDLRect::new(x - origin.x(), y - origin.y(), CARD_WIDTH, CARD_HEIGHT);
+                } else {
+                    self.grabbed = None;
+                }
             }
         }
     }
