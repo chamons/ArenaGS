@@ -74,13 +74,13 @@ impl EquipmentItem {
         {
             match e {
                 EquipmentEffect::None => {}
-                EquipmentEffect::UnlocksAbilityClass(kind) => description.push(format!("Unlocks {} skill.", kind)),
-                EquipmentEffect::UnlocksAbilityMode(kind) => description.push(format!("Unlocks {} based abilities.", kind)),
+                EquipmentEffect::UnlocksAbilityClass(kind) => description.push(format!("Unlocks {}.", kind)),
+                EquipmentEffect::UnlocksAbilityMode(kind) => description.push(format!("Unlocks {} abilities.", kind)),
                 EquipmentEffect::ModifiesWeaponRange(range) => description.push(format!("Weapon Range: {}", range)),
                 EquipmentEffect::ModifiesSkillRange(range, kind) => description.push(format!("{} Range: {}.", kind, range)),
                 EquipmentEffect::ModifiesWeaponStrength(amount) => description.push(format!("Weapon Strength: {}.", amount)),
                 EquipmentEffect::ModifiesSkillStrength(amount, kind) => description.push(format!("{} Strength: {}.", kind, amount)),
-                EquipmentEffect::ModifiesResourceTotal(amount, kind) => description.push(format!("Maximum {} Resource: {}.", kind, amount)),
+                EquipmentEffect::ModifiesResourceTotal(amount, kind) => description.push(format!("Maximum {}: {}.", kind, amount)),
                 EquipmentEffect::ModifiesDodge(amount) => description.push(format!("Dodge: {}.", amount)),
                 EquipmentEffect::ModifiesArmor(amount) => description.push(format!("Armor: {}.", amount)),
                 EquipmentEffect::ModifiesAbsorb(amount) => description.push(format!("Absorb: {}.", amount)),

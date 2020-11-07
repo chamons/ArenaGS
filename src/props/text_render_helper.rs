@@ -10,6 +10,7 @@ pub struct RenderTextOptions<'a> {
     y_offset: i32,
     underline_links: bool,
     centered: Option<u32>,
+    font_size: FontSize,
 }
 
 impl<'a> RenderTextOptions<'a> {
@@ -20,6 +21,7 @@ impl<'a> RenderTextOptions<'a> {
             y_offset: 0,
             underline_links: false,
             centered: None,
+            font_size: FontSize::Small,
         }
     }
 
@@ -35,6 +37,11 @@ impl<'a> RenderTextOptions<'a> {
 
     pub fn with_underline_links(mut self, underline_links: bool) -> RenderTextOptions<'a> {
         self.underline_links = underline_links;
+        self
+    }
+
+    pub fn with_font_size(mut self, font_size: FontSize) -> RenderTextOptions<'a> {
+        self.font_size = font_size;
         self
     }
 
@@ -56,9 +63,9 @@ pub fn render_text_layout<'a>(
         match &chunk.value {
             LayoutChunkValue::String(s) => {
                 let (size, y_font_offset) = if chunk.attributes.contains(LayoutChunkAttributes::SMALLER_TEXT) {
-                    (FontSize::VeryTiny, 2)
+                    (options.font_size.smaller(), 2)
                 } else {
-                    (FontSize::Small, 0)
+                    (options.font_size, 0)
                 };
 
                 if let Some(width) = options.centered {

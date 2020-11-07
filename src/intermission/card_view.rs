@@ -74,6 +74,7 @@ impl View for CardView {
         }
 
         let card_width = if self.large { CARD_WIDTH_LARGE } else { CARD_WIDTH };
+        let card_height = if self.large { CARD_HEIGHT_LARGE } else { CARD_HEIGHT };
 
         if let Some(image) = &self.equipment.image {
             let image_rect = SDLRect::new(
@@ -94,13 +95,13 @@ impl View for CardView {
             canvas.copy(self.icons.get(&image), None, image_rect)?;
         }
 
-        const CARD_TEXT_WIDTH_BORDER: u32 = 34;
+        const CARD_TEXT_WIDTH_BORDER: u32 = 38;
 
         let layout = self.text_renderer.layout_text(
             &self.equipment.name,
             FontSize::Small,
             LayoutRequest::init(
-                self.frame.x() as u32 + 14,
+                self.frame.x() as u32 + 18,
                 self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + 10,
                 card_width - CARD_TEXT_WIDTH_BORDER,
                 0,
@@ -123,27 +124,27 @@ impl View for CardView {
         };
 
         if self.large {
-            let mut y = 30;
+            let mut y = 50;
 
             for d in self.equipment.description() {
                 let layout = self.text_renderer.layout_text(
                     &d,
-                    FontSize::Micro,
+                    FontSize::Tiny,
                     LayoutRequest::init(
-                        self.frame.x() as u32 + 14,
+                        self.frame.x() as u32 + 18,
                         self.frame.y() as u32 + SKILL_NODE_SIZE / 2 + 20 + y,
                         card_width - CARD_TEXT_WIDTH_BORDER,
                         0,
                     ),
                 )?;
 
-                // This code does not respect the FontSize used in layout, just picking two
-                // Need to extend LayoutRequest to store font and then use it for text
                 render_text_layout(
                     &layout,
                     canvas,
                     &self.text_renderer,
-                    RenderTextOptions::init(FontColor::Brown).with_centered(Some(card_width - CARD_TEXT_WIDTH_BORDER)),
+                    RenderTextOptions::init(FontColor::Brown)
+                        .with_centered(Some(card_width - CARD_TEXT_WIDTH_BORDER))
+                        .with_font_size(FontSize::Tiny),
                     |_, _| {},
                 )?;
 
@@ -152,8 +153,8 @@ impl View for CardView {
 
             self.text_renderer.render_text(
                 rarity,
-                self.frame.x() + card_width as i32 - 22,
-                self.frame.y() + card_width as i32 - 28,
+                self.frame.x() + card_width as i32 - 27,
+                self.frame.y() + card_height as i32 - 28,
                 canvas,
                 FontSize::Tiny,
                 FontColor::LightBrown,
