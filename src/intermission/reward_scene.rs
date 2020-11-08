@@ -10,7 +10,7 @@ use specs::prelude::*;
 use super::card_view::{CardView, CARD_WIDTH};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{EquipmentItem, EquipmentResource, RewardsComponent};
+use crate::clash::{EquipmentItem, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::conductor::{Scene, StageDirection};
 use crate::enclose;
 use crate::props::{Button, View};
@@ -19,6 +19,7 @@ pub struct RewardScene {
     text_renderer: Rc<TextRenderer>,
     ecs: World,
     reward: RewardsComponent,
+    ui: Rc<IconCache>,
     cards: Vec<CardView>,
     accept_button: Button,
     cash_out_button: Button,
@@ -44,7 +45,12 @@ impl RewardScene {
         let ui = Rc::new(IconCache::init(
             &render_context,
             IconLoader::init_ui(),
-            &["card_frame.png", "card_frame_large.png"],
+            &[
+                "card_frame.png",
+                "card_frame_large.png",
+                "card_frame_large_selection.png",
+                "button_frame_full_selection.png",
+            ],
         )?);
 
         const REWARD_MID: i32 = 1024 / 2;
@@ -56,7 +62,7 @@ impl RewardScene {
                 .drain(..)
                 .enumerate()
                 .map(|(i, s)| {
-                    CardView::init(SDLPoint::new(left + card_delta * i as i32, 300), text_renderer, &ui, &icons, s, true, false)
+                    CardView::init(SDLPoint::new(left + card_delta * i as i32, 200), text_renderer, &ui, &icons, s, true, false)
                         .expect("Unable to load equipment card")
                 })
                 .collect()
@@ -65,7 +71,7 @@ impl RewardScene {
         let chosen = Rc::new(RefCell::new(false));
         let selection = Rc::new(RefCell::new(None));
         let accept_button = Button::text(
-            SDLPoint::new(875, 585),
+            SDLPoint::new(840, 585),
             "Accept",
             &render_context,
             text_renderer,
@@ -76,19 +82,17 @@ impl RewardScene {
         )?;
         let cash_out_button = Button::text(
             SDLPoint::new(475, 625),
-            "Pass (+10 Influence)",
+            &format!("Pass (+{} Influence)", reward.cashout_influence),
             &render_context,
             text_renderer,
             true,
             true,
             None,
-            Some(Box::new(enclose! { (selection, chosen) move || {
-                *selection.borrow_mut() = Some(3);
-                *chosen.borrow_mut() = true;
-            }})),
+            Some(Box::new(enclose! { (selection) move || *selection.borrow_mut() = Some(3)})),
         )?;
         Ok(RewardScene {
             text_renderer: Rc::clone(text_renderer),
+            ui,
             ecs,
             reward,
             cards,
@@ -97,6 +101,17 @@ impl RewardScene {
             selection: Rc::clone(&selection),
             chosen: Rc::clone(&chosen),
         })
+    }
+
+    fn apply_selection(&mut self) {
+        let selection = self.selection.borrow().unwrap();
+        let progression = &mut self.ecs.write_resource::<ProgressionComponent>();
+        progression.state.influence += self.reward.influence;
+        if selection < 3 {
+            progression.state.items.insert(self.cards[selection as usize].equipment.name.to_string());
+        } else {
+            progression.state.influence += self.reward.cashout_influence;
+        }
     }
 }
 
@@ -119,13 +134,39 @@ impl Scene for RewardScene {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
 
-        self.text_renderer.render_text("Reward", 50, 50, canvas, FontSize::Large, FontColor::White)?;
+        if let Some(selection) = *self.selection.borrow() {
+            let (mut selection_frame, image) = if selection < 3 {
+                (self.cards[selection as usize].frame, "card_frame_large_selection.png")
+            } else {
+                (self.cash_out_button.frame, "button_frame_full_selection.png")
+            };
+            selection_frame.offset(-2, -2);
+            selection_frame.set_width(selection_frame.width() + 4);
+            selection_frame.set_height(selection_frame.height() + 4);
+            canvas.copy(self.ui.get(image), None, selection_frame)?;
+        }
 
         for c in &self.cards {
             c.render(&self.ecs, canvas, frame)?;
         }
 
+        let mut current_influence = self.reward.influence;
+        if let Some(selection) = *self.selection.borrow() {
+            if selection == 3 {
+                current_influence += self.reward.cashout_influence;
+            }
+        }
+        self.text_renderer.render_text(
+            &format!("Influence Reward: {}", current_influence),
+            840,
+            550,
+            canvas,
+            FontSize::Bold,
+            FontColor::White,
+        )?;
+
         self.accept_button.render(&self.ecs, canvas, frame)?;
+
         self.cash_out_button.render(&self.ecs, canvas, frame)?;
 
         canvas.present();
@@ -141,6 +182,7 @@ impl Scene for RewardScene {
 
     fn ask_stage_direction(&mut self) -> StageDirection {
         if *self.chosen.borrow() {
+            self.apply_selection();
             StageDirection::ShowCharacter(std::mem::replace(&mut self.ecs, World::new()))
         } else {
             StageDirection::Continue

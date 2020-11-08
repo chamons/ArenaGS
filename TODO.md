@@ -1,2 +1,0 @@
-- Selection of card shows border around it.
-- Actually apply result

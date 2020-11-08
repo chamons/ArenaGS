@@ -10,10 +10,9 @@ use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::card_view::{CardView, CARD_HEIGHT, CARD_WIDTH};
-use super::skilltree_view::{get_tree, get_tree_icons};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{EquipmentItem, EquipmentKinds, ProgressionComponent, ProgressionState, SkillTree};
+use crate::clash::{EquipmentItem, EquipmentKinds, EquipmentResource, ProgressionComponent, ProgressionState};
 use crate::props::{Button, HitTestResult, MousePositionComponent, View};
 
 pub struct EquipmentSlotView {
@@ -85,7 +84,6 @@ impl View for EquipmentSlotView {
 
 pub struct EquipmentView {
     should_sort: Rc<RefCell<bool>>,
-    tree: SkillTree,
     ui: Rc<IconCache>,
     icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
@@ -98,7 +96,6 @@ pub struct EquipmentView {
 
 impl EquipmentView {
     pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<EquipmentView> {
-        let tree = SkillTree::init(&get_tree(ecs));
         let ui = Rc::new(IconCache::init(
             &render_context,
             IconLoader::init_ui(),
@@ -116,9 +113,11 @@ impl EquipmentView {
         )?);
         let should_sort = Rc::new(RefCell::new(false));
 
+        let equipment = ecs.read_resource::<EquipmentResource>();
+        let images: Vec<&String> = equipment.all().flat_map(|e| &e.image).collect();
+        let icons = Rc::new(IconCache::init(&render_context, IconLoader::init_icons(), &images[..])?);
         let view = EquipmentView {
-            icons: Rc::new(get_tree_icons(render_context, &tree)?),
-            tree,
+            icons,
             text_renderer: Rc::clone(text_renderer),
             cards: RefCell::new(vec![]),
             should_sort: Rc::clone(&should_sort),
@@ -167,21 +166,13 @@ impl EquipmentView {
         }
     }
 
-    fn create_cards(&self, progression: &ProgressionState) {
+    fn create_cards(&self, progression: &ProgressionState, equipment: &EquipmentResource) {
         *self.cards.borrow_mut() = progression
             .items
             .iter()
             .map(|s| {
-                CardView::init(
-                    SDLPoint::new(0, 0),
-                    &self.text_renderer,
-                    &self.ui,
-                    &self.icons,
-                    self.tree.get(&s).clone(),
-                    false,
-                    true,
-                )
-                .expect("Unable to load equipment card")
+                CardView::init(SDLPoint::new(0, 0), &self.text_renderer, &self.ui, &self.icons, equipment.get(&s), false, true)
+                    .expect("Unable to load equipment card")
             })
             .collect();
     }
@@ -217,8 +208,10 @@ impl EquipmentView {
 
     pub fn check_for_missing_cards(&self, ecs: &World) {
         let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
+        let equipment = ecs.read_resource::<EquipmentResource>();
+
         if progression.items.len() != self.cards.borrow().len() {
-            self.create_cards(&progression);
+            self.create_cards(&progression, &equipment);
             self.arrange(&progression);
         }
     }

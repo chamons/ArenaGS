@@ -81,10 +81,6 @@ impl SkillTree {
             state.influence -= node.cost;
         }
     }
-
-    pub fn get(&self, name: &str) -> &EquipmentItem {
-        &self.nodes.get(name).unwrap().item
-    }
 }
 
 #[cfg(test)]

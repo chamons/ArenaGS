@@ -88,7 +88,7 @@ pub type EnabledHandler = Box<dyn Fn(&World) -> bool>;
 pub type ButtonHandler = Box<dyn Fn()>;
 
 pub struct Button {
-    frame: SDLRect,
+    pub frame: SDLRect,
     kind: ButtonKind,
     enabled: Option<Box<EnabledHandler>>,
     handler: Option<Box<ButtonHandler>>,
