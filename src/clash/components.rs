@@ -351,7 +351,7 @@ impl RewardsComponent {
     pub fn init(influence: u32, cards: Vec<String>, cashout_influence: u32) -> RewardsComponent {
         assert!(3 == cards.len());
         RewardsComponent {
-            cards: cards.clone(),
+            cards,
             influence,
             cashout_influence,
         }

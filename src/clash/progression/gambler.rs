@@ -15,7 +15,7 @@ pub fn get_reward_request(ecs: &World, count: u32) -> Vec<(EquipmentRarity, u32)
 
     for _ in 0..count {
         add_request(
-            choices
+            *choices
                 .choose_weighted(&mut rng.rand, |i| match i {
                     EquipmentRarity::Common => 75,
                     EquipmentRarity::Uncommon => 15,
@@ -23,7 +23,6 @@ pub fn get_reward_request(ecs: &World, count: u32) -> Vec<(EquipmentRarity, u32)
                     EquipmentRarity::Standard => 0,
                 })
                 .unwrap()
-                .clone(),
         );
     }
 
@@ -36,9 +35,9 @@ pub fn get_random_items(ecs: &World, requests: Vec<(EquipmentRarity, u32)>) -> V
 
     let available: Vec<&EquipmentItem> = equipment.all().filter(|e| !progression.state.items.contains(&e.name)).collect();
 
-    let rare: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Rare).map(|&e| e).collect();
-    let uncommon: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Uncommon).map(|&e| e).collect();
-    let common: Vec<&EquipmentItem> = available.iter().filter(|&e| e.rarity == EquipmentRarity::Common).map(|&e| e).collect();
+    let rare: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Rare).copied().collect();
+    let uncommon: Vec<&EquipmentItem> = available.iter().filter(|e| e.rarity == EquipmentRarity::Uncommon).copied().collect();
+    let common: Vec<&EquipmentItem> = available.iter().filter(|&e| e.rarity == EquipmentRarity::Common).copied().collect();
 
     let rare_request_count: u32 = requests.iter().filter(|r| r.0 == EquipmentRarity::Rare).map(|r| r.1).sum();
     let mut uncommon_request_count: u32 = requests.iter().filter(|r| r.0 == EquipmentRarity::Uncommon).map(|r| r.1).sum();

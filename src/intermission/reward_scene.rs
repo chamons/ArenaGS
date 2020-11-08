@@ -37,7 +37,7 @@ impl RewardScene {
         };
         let mut items: Vec<EquipmentItem> = {
             let equipment = &ecs.read_resource::<EquipmentResource>();
-            reward.cards.iter().map(|c| equipment.get(&c).clone()).collect()
+            reward.cards.iter().map(|c| equipment.get(&c)).collect()
         };
 
         let icons: Vec<&String> = items.iter().flat_map(|i| &i.image).collect();
