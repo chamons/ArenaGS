@@ -50,6 +50,7 @@ impl RewardScene {
                 "card_frame_large.png",
                 "card_frame_large_selection.png",
                 "button_frame_full_selection.png",
+                "reward_background.png",
             ],
         )?);
 
@@ -71,7 +72,7 @@ impl RewardScene {
         let chosen = Rc::new(RefCell::new(false));
         let selection = Rc::new(RefCell::new(None));
         let accept_button = Button::text(
-            SDLPoint::new(840, 585),
+            SDLPoint::new(780, 585),
             "Accept",
             &render_context,
             text_renderer,
@@ -133,6 +134,7 @@ impl Scene for RewardScene {
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         canvas.set_draw_color(Color::from((0, 0, 0)));
         canvas.clear();
+        canvas.copy(self.ui.get("reward_background.png"), None, None)?;
 
         if let Some(selection) = *self.selection.borrow() {
             let (mut selection_frame, image) = if selection < 3 {
@@ -158,7 +160,7 @@ impl Scene for RewardScene {
         }
         self.text_renderer.render_text(
             &format!("Influence Reward: {}", current_influence),
-            840,
+            780,
             550,
             canvas,
             FontSize::Bold,

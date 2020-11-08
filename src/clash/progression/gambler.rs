@@ -22,7 +22,7 @@ pub fn get_reward_request(ecs: &World, count: u32) -> Vec<(EquipmentRarity, u32)
                     EquipmentRarity::Rare => 10,
                     EquipmentRarity::Standard => 0,
                 })
-                .unwrap()
+                .unwrap(),
         );
     }
 
