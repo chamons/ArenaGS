@@ -76,6 +76,12 @@ pub fn create_random_battle(ecs: &mut World, progression_world: World) {
     create_battle(ecs, progression, kind, difficulty);
 }
 
+pub fn load_equipment() -> Vec<EquipmentItem> {
+    let mut equipment = content::gunslinger::get_equipment();
+    equipment.append(&mut content::items::get_equipment());
+    equipment
+}
+
 fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKind, difficulty: u32) {
     let mut skills = SkillsResource::init();
 
@@ -88,7 +94,8 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
-    ecs.insert(EquipmentResource::init_with(&content::gunslinger::get_equipment()));
+
+    ecs.insert(EquipmentResource::init_with(&load_equipment()));
 
     let player_position = find_placement(&ecs, 1, 1);
     progression::embattle::create_player(ecs, &mut skills, player_position);
@@ -133,12 +140,20 @@ pub fn new_game_intermission_state() -> World {
     let mut base_state = World::new();
     base_state.insert(ProgressionComponent::init(ProgressionState::init_gunslinger()));
 
-    create_intermission_state(&base_state)
+    create_intermission_state(&base_state, None)
 }
 
-pub fn create_intermission_state(battle_state: &World) -> World {
+pub fn create_intermission_state(battle_state: &World, reward: Option<RewardsComponent>) -> World {
     let mut ecs = World::new();
     ecs.insert(ProgressionComponent::init(battle_state.read_resource::<ProgressionComponent>().state.clone()));
+
+    // We use an entity with just a reward (if we have one) since
+    // entities are serialized and resources are reloaded and
+    // we want to save our rewards if you quit mid choice
+    ecs.register::<RewardsComponent>();
+    if let Some(reward) = reward {
+        ecs.create_entity().with(reward).build();
+    };
 
     // To make UI easier
     ecs.insert(crate::props::MousePositionComponent::init());
@@ -151,9 +166,7 @@ pub fn create_intermission_state(battle_state: &World) -> World {
     super::embattle::load_skills_for_help(&ecs, &mut skills);
     ecs.insert(skills);
 
-    let mut equips = EquipmentResource::init();
-    super::embattle::load_equipment_for_help(&ecs, &mut equips);
-    ecs.insert(equips);
+    ecs.insert(EquipmentResource::init_with(&load_equipment()));
 
     ecs
 }

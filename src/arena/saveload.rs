@@ -109,6 +109,7 @@ fn save<T: Write>(ecs: &mut World, writer: &mut T) {
         BattleSceneStateComponent,
         DurationComponent,
         GunslingerComponent,
+        RewardsComponent,
         SerializationHelper
     );
 }
@@ -166,6 +167,7 @@ fn load(data: String) -> BoxResult<World> {
             BattleSceneStateComponent,
             DurationComponent,
             GunslingerComponent,
+            RewardsComponent,
             SerializationHelper
         );
     }

@@ -1,5 +1,8 @@
 {
     "cSpell.ignoreWords": [
+        "cashout",
+        "cashout influence",
+        "chronowatch",
         "cooldown",
         "deps",
         "elementalist",
@@ -8,10 +11,13 @@
         "fullscreen type",
         "gameplay",
         "hittester",
+        "influence",
         "infobar",
+        "itertools",
         "keymod",
         "knockback",
         "lifebar",
+        "regen",
         "rgba",
         "rustc",
         "sdl",
@@ -19,6 +25,7 @@
         "skilltree",
         "skilltree view",
         "type",
-        "view"
+        "view",
+        "wellworn"
     ]
 }

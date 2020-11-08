@@ -62,7 +62,7 @@ impl StateBuilder {
 }
 
 pub fn test_eq(name: &str, kind: EquipmentKinds, effect: &[EquipmentEffect], index: usize) -> (EquipmentKinds, EquipmentItem, usize) {
-    (kind, EquipmentItem::init(name, None, kind, effect), index)
+    (kind, EquipmentItem::init(name, None, kind, EquipmentRarity::Common, effect), index)
 }
 
 pub fn create_test_state() -> StateBuilder {

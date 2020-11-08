@@ -7,12 +7,6 @@ use crate::atlas::prelude::*;
 use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
-pub fn load_equipment_for_help(_ecs: &World, equip: &mut EquipmentResource) {
-    for e in content::gunslinger::get_equipment() {
-        equip.add(e);
-    }
-}
-
 pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
     gunslinger::instance_skills(ecs, None, skills);
 }
@@ -404,13 +398,14 @@ mod tests {
                 "A",
                 None,
                 EquipmentKinds::Weapon,
+                EquipmentRarity::Common,
                 &[EquipmentEffect::ModifiesResourceTotal(-1, "Bullets".to_string())],
             ),
             0,
         );
         state.equipment.add(
             EquipmentKinds::Armor,
-            EquipmentItem::init("B", None, EquipmentKinds::Armor, &[EquipmentEffect::ModifiesArmor(1)]),
+            EquipmentItem::init("B", None, EquipmentKinds::Armor, EquipmentRarity::Common, &[EquipmentEffect::ModifiesArmor(1)]),
             0,
         );
 
@@ -437,6 +432,7 @@ mod tests {
                     "C",
                     None,
                     EquipmentKinds::Weapon,
+                    EquipmentRarity::Common,
                     &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
                 ),
                 1,
@@ -459,6 +455,7 @@ mod tests {
                     "D",
                     None,
                     EquipmentKinds::Accessory,
+                    EquipmentRarity::Common,
                     &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
                 ),
                 0,

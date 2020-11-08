@@ -340,6 +340,24 @@ impl GunslingerComponent {
     }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct RewardsComponent {
+    pub cards: Vec<String>,
+    pub influence: u32,
+    pub cashout_influence: u32,
+}
+
+impl RewardsComponent {
+    pub fn init(influence: u32, cards: Vec<String>, cashout_influence: u32) -> RewardsComponent {
+        assert!(3 == cards.len());
+        RewardsComponent {
+            cards,
+            influence,
+            cashout_influence,
+        }
+    }
+}
+
 #[cfg(test)]
 pub trait TestInfo {
     fn get_test_data(&self, name: &str) -> u32;
@@ -389,6 +407,7 @@ pub fn create_world() -> World {
     ecs.register::<FieldCastComponent>();
     ecs.register::<DurationComponent>();
     ecs.register::<GunslingerComponent>();
+    ecs.register::<RewardsComponent>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers

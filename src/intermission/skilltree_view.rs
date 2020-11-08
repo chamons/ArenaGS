@@ -76,7 +76,7 @@ impl View for SkillTreeView {
         let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
 
         self.text_renderer.render_text(
-            &format!("Experience: {}", progression.experience),
+            &format!("Influence: {}", progression.influence),
             770,
             70,
             canvas,
@@ -122,7 +122,7 @@ impl View for SkillTreeView {
             let left = all.iter().map(|a| &a.0).find(|a| a.name() == &d.0).unwrap();
             let right = all.iter().map(|a| &a.0).find(|a| a.name() == &d.1).unwrap();
 
-            if progression.skills.contains(&d.0) {
+            if progression.items.contains(&d.0) {
                 canvas.set_draw_color(Color::from((218, 218, 218)));
             } else {
                 canvas.set_draw_color(Color::from((45, 45, 45)));

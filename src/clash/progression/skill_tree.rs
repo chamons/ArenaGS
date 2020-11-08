@@ -56,7 +56,7 @@ impl SkillTree {
         self.nodes
             .values()
             .map(|n| {
-                let status = if state.skills.contains(n.name()) {
+                let status = if state.items.contains(n.name()) {
                     SkillNodeStatus::Selected
                 } else if self.can_select(state, &n.name()) {
                     SkillNodeStatus::Available
@@ -70,34 +70,30 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        !state.skills.contains(node.name()) && node.dependencies.iter().all(|d| state.skills.contains(d)) && node.cost <= state.experience
+        !state.items.contains(node.name()) && node.dependencies.iter().all(|d| state.items.contains(d)) && node.cost <= state.influence
     }
 
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
         if self.can_select(state, name) {
             let node = self.nodes.get(name).unwrap();
 
-            state.skills.insert(name.to_string());
-            state.experience -= node.cost;
+            state.items.insert(name.to_string());
+            state.influence -= node.cost;
         }
-    }
-
-    pub fn get(&self, name: &str) -> &EquipmentItem {
-        &self.nodes.get(name).unwrap().item
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{CharacterWeaponKind, Equipment, EquipmentEffect, EquipmentKinds};
+    use super::super::{CharacterWeaponKind, Equipment, EquipmentEffect, EquipmentKinds, EquipmentRarity};
     use super::*;
 
-    fn state_with_deps(experience: u32, deps: &[&str]) -> ProgressionState {
-        ProgressionState::init(0, experience, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
+    fn state_with_deps(influence: u32, deps: &[&str]) -> ProgressionState {
+        ProgressionState::init(0, influence, deps, CharacterWeaponKind::Gunslinger, Equipment::init_empty())
     }
 
     fn eq(name: &str) -> EquipmentItem {
-        EquipmentItem::init(name, None, EquipmentKinds::Weapon, &[EquipmentEffect::None])
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon, EquipmentRarity::Common, &[EquipmentEffect::None])
     }
 
     #[test]
@@ -128,7 +124,7 @@ mod tests {
         assert_eq!(false, tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
 
-        state.skills.insert("Foo".to_string());
+        state.items.insert("Foo".to_string());
         assert!(!tree.can_select(&state, "Foo"));
         assert!(tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
@@ -148,7 +144,7 @@ mod tests {
         assert_eq!(false, tree.can_select(&state, "Bar"));
         assert_eq!(false, tree.can_select(&state, "Buzz"));
 
-        state.experience = 5;
+        state.influence = 5;
         assert!(tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bazz"));
         assert_eq!(false, tree.can_select(&state, "Bar"));
@@ -166,8 +162,8 @@ mod tests {
         ]);
 
         tree.select(&mut state, "Foo");
-        assert_eq!(2, state.experience);
-        assert!(state.skills.contains("Foo"));
+        assert_eq!(2, state.influence);
+        assert!(state.items.contains("Foo"));
     }
 
     #[test]
@@ -181,8 +177,8 @@ mod tests {
         ]);
 
         tree.select(&mut state, "Foo");
-        assert_eq!(5, state.experience);
+        assert_eq!(5, state.influence);
         tree.select(&mut state, "Foo");
-        assert_eq!(5, state.experience);
+        assert_eq!(5, state.influence);
     }
 }

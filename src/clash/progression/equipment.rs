@@ -2,6 +2,13 @@ use std::collections::HashMap;
 use std::iter;
 
 use serde::{Deserialize, Serialize};
+#[derive(Hash, Deserialize, Serialize, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum EquipmentRarity {
+    Standard,
+    Common,
+    Uncommon,
+    Rare,
+}
 
 #[derive(Hash, Deserialize, Serialize, Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EquipmentKinds {
@@ -27,8 +34,8 @@ pub enum EquipmentEffect {
     ModifiesSkillStrength(i32, String),
     // Example: -1 max bullets
     ModifiesResourceTotal(i32, String),
-    ModifiesArmor(i32),
     ModifiesDodge(i32),
+    ModifiesArmor(i32),
     ModifiesAbsorb(i32),
     ModifiesMaxHealth(i32),
     // Part of https://github.com/chamons/ArenaGS/issues/249 when we do damage types
@@ -42,16 +49,45 @@ pub struct EquipmentItem {
     pub image: Option<String>,
     pub kind: EquipmentKinds,
     pub effect: Vec<EquipmentEffect>,
+    pub rarity: EquipmentRarity,
 }
 
 impl EquipmentItem {
-    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds, effect: &[EquipmentEffect]) -> EquipmentItem {
+    pub fn init(name: &str, image: Option<&str>, kind: EquipmentKinds, rarity: EquipmentRarity, effect: &[EquipmentEffect]) -> EquipmentItem {
         EquipmentItem {
             name: name.to_string(),
             image: image.map(|i| i.to_string()),
             kind,
             effect: effect.to_vec(),
+            rarity,
         }
+    }
+
+    pub fn description(&self) -> Vec<String> {
+        let mut description = vec![];
+        for e in &[
+            EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string()),
+            EquipmentEffect::ModifiesResourceTotal(-2, "Bullets".to_string()),
+            EquipmentEffect::ModifiesArmor(1),
+        ]
+        /*self.effect*/
+        {
+            match e {
+                EquipmentEffect::None => {}
+                EquipmentEffect::UnlocksAbilityClass(kind) => description.push(format!("Unlocks {}.", kind)),
+                EquipmentEffect::UnlocksAbilityMode(kind) => description.push(format!("Unlocks {} abilities.", kind)),
+                EquipmentEffect::ModifiesWeaponRange(range) => description.push(format!("Weapon Range: {}", range)),
+                EquipmentEffect::ModifiesSkillRange(range, kind) => description.push(format!("{} Range: {}.", kind, range)),
+                EquipmentEffect::ModifiesWeaponStrength(amount) => description.push(format!("Weapon Strength: {}.", amount)),
+                EquipmentEffect::ModifiesSkillStrength(amount, kind) => description.push(format!("{} Strength: {}.", kind, amount)),
+                EquipmentEffect::ModifiesResourceTotal(amount, kind) => description.push(format!("Maximum {}: {}.", kind, amount)),
+                EquipmentEffect::ModifiesDodge(amount) => description.push(format!("Dodge: {}.", amount)),
+                EquipmentEffect::ModifiesArmor(amount) => description.push(format!("Armor: {}.", amount)),
+                EquipmentEffect::ModifiesAbsorb(amount) => description.push(format!("Absorb: {}.", amount)),
+                EquipmentEffect::ModifiesMaxHealth(amount) => description.push(format!("Health: {}.", amount)),
+            }
+        }
+        description
     }
 }
 
@@ -168,7 +204,7 @@ impl Equipment {
 
 #[derive(Clone)] // NotConvertSaveload
 pub struct EquipmentResource {
-    pub equipment: HashMap<String, EquipmentItem>,
+    equipment: HashMap<String, EquipmentItem>,
 }
 
 #[allow(dead_code)]
@@ -198,6 +234,10 @@ impl EquipmentResource {
     pub fn add(&mut self, equipment: EquipmentItem) {
         self.equipment.insert(equipment.name.to_string(), equipment);
     }
+
+    pub fn all(&self) -> impl Iterator<Item = &EquipmentItem> + '_ {
+        self.equipment.values()
+    }
 }
 
 use specs::prelude::*;
@@ -217,7 +257,7 @@ mod tests {
     use super::*;
 
     fn eq(name: &str) -> EquipmentItem {
-        EquipmentItem::init(name, None, EquipmentKinds::Weapon, &[EquipmentEffect::None])
+        EquipmentItem::init(name, None, EquipmentKinds::Weapon, EquipmentRarity::Common, &[EquipmentEffect::None])
     }
 
     #[test]

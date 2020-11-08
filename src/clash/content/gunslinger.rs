@@ -26,20 +26,41 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
             "Adjustable Sight",
             Some("gun_06_b.PNG"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
         ),
         EquipmentItem::init(
             "Recoil Spring",
             Some("SpellBook06_22.png"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
         ),
         EquipmentItem::init(
             "Stippled Grip",
             Some("SpellBook03_10.png"),
             EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
         ),
+        // More skill damage for gun effects. -3 ammo
+        EquipmentItem::init(
+            "Oversized Chamber",
+            Some("gun_12_b.PNG"),
+            EquipmentKinds::Weapon,
+            EquipmentRarity::Uncommon,
+            &[],
+        ),
+        // summon a shadow that shoots a few times
+        EquipmentItem::init(
+            "Gunslinger's Regret",
+            Some("artifact_01_b.PNG"),
+            EquipmentKinds::Accessory,
+            EquipmentRarity::Uncommon,
+            &[],
+        ),
+        // Rotate ammo every shot but reloads after every shot and slightly more skill damage
+        EquipmentItem::init("Luck of the Draw", Some("book_01_b.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
     ]
 }
 

@@ -284,6 +284,14 @@ pub fn battle_tick(ecs: &mut World, frame: u64) {
     }
 }
 
+fn generate_rewards(ecs: &World) -> RewardsComponent {
+    let items = gambler::get_random_items(ecs, gambler::get_reward_request(ecs, 3))
+        .iter()
+        .map(|e| e.name.clone())
+        .collect();
+    RewardsComponent::init(10, items, 10)
+}
+
 pub fn battle_stage_direction(ecs: &World) -> StageDirection {
     if ecs.try_fetch::<PlayerDeadComponent>().is_some() {
         return StageDirection::BattlePlayerDeath("This is where detailed death info goes".to_string());
@@ -296,7 +304,7 @@ pub fn battle_stage_direction(ecs: &World) -> StageDirection {
     let non_player_character_count = (&entities, &character_infos, (&player).maybe()).join().filter(|(_, _, p)| p.is_none()).count();
     if non_player_character_count == 0 {
         ecs.write_resource::<ProgressionComponent>().state.phase += 1;
-        return StageDirection::BattleEnemyDefeated(new_game::create_intermission_state(&ecs));
+        return StageDirection::BattleEnemyDefeated(new_game::create_intermission_state(&ecs, Some(generate_rewards(ecs))));
     }
     StageDirection::Continue
 }
