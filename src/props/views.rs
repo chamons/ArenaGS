@@ -91,11 +91,18 @@ pub struct Button {
     active: bool,
 }
 
-pub type ButtonQuery = Box<dyn Fn() -> bool>;
+#[derive(Eq, PartialEq)]
+pub enum ButtonEnabledState {
+    Shown,
+    Ghosted,
+    Hide,
+}
+
+pub type ButtonEnabled = Box<dyn Fn() -> ButtonEnabledState>;
 pub type ButtonHandler = Box<dyn Fn()>;
 
 pub struct ButtonDelegate {
-    enabled: Option<ButtonQuery>,
+    enabled: Option<ButtonEnabled>,
     handler: Option<ButtonHandler>,
 }
 
@@ -104,7 +111,7 @@ impl ButtonDelegate {
         ButtonDelegate { enabled: None, handler: None }
     }
 
-    pub fn enabled(mut self, enabled: ButtonQuery) -> ButtonDelegate {
+    pub fn enabled(mut self, enabled: ButtonEnabled) -> ButtonDelegate {
         self.enabled = Some(enabled);
         self
     }
@@ -114,8 +121,8 @@ impl ButtonDelegate {
         self
     }
 
-    pub fn is_enabled(&self) -> bool {
-        self.enabled.as_ref().map_or(true, |e| (e)())
+    pub fn enabled_state(&self) -> ButtonEnabledState {
+        self.enabled.as_ref().map_or(ButtonEnabledState::Shown, |e| (e)())
     }
 }
 
@@ -152,29 +159,37 @@ impl Button {
 
 impl View for Button {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
-        if self.delegate.is_enabled() {
-            match &self.kind {
-                ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
-                ButtonKind::Text(text, text_frame, text_renderer) => {
-                    text_frame.render(ecs, canvas, frame)?;
-                    text_renderer.render_text_centered(
-                        text,
-                        self.frame.x() + 2,
-                        self.frame.y() + 10,
-                        text_frame.frame_size().0 - 4,
-                        canvas,
-                        FontSize::Bold,
-                        if self.active { FontColor::White } else { FontColor::Brown },
-                    )?;
-                }
-            };
+        let enable_state = self.delegate.enabled_state();
+        if enable_state == ButtonEnabledState::Hide {
+            return Ok(());
         }
+
+        match &self.kind {
+            ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
+            ButtonKind::Text(text, text_frame, text_renderer) => {
+                text_frame.render(ecs, canvas, frame)?;
+                text_renderer.render_text_centered(
+                    text,
+                    self.frame.x() + 2,
+                    self.frame.y() + 10,
+                    text_frame.frame_size().0 - 4,
+                    canvas,
+                    FontSize::Bold,
+                    if self.active { FontColor::White } else { FontColor::Brown },
+                )?;
+
+                if enable_state == ButtonEnabledState::Ghosted {
+                    canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
+                    canvas.fill_rect(self.frame)?;
+                }
+            }
+        };
 
         Ok(())
     }
 
     fn handle_mouse_click(&mut self, _ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
-        if !self.delegate.is_enabled() {
+        if self.delegate.enabled_state() == ButtonEnabledState::Hide {
             return;
         }
 
@@ -190,6 +205,10 @@ impl View for Button {
     }
 
     fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if self.delegate.enabled_state() == ButtonEnabledState::Hide {
+            return None;
+        }
+
         if self.frame.contains_point(SDLPoint::new(x, y)) {
             Some(HitTestResult::Button)
         } else {
