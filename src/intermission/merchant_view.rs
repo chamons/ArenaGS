@@ -25,21 +25,34 @@ pub struct MerchantView {
 impl MerchantView {
     pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<MerchantView> {
         let reward = get_reward(ecs);
-        let items = gambler::get_merchant_items(ecs);
+        let mut items = gambler::get_merchant_items(ecs);
         let icons = icons_for_items(render_context, &items)?;
 
         let ui = Rc::new(IconCache::init(
             &render_context,
             IconLoader::init_ui(),
-            &[
-                "card_frame_large.png",
-                "card_frame_large_selection.png",
-                "button_frame_full_selection.png",
-                "reward_background.png",
-            ],
+            &["card_frame_large.png", "card_frame_large_selection.png", "button_frame_full_selection.png"],
         )?);
 
-        let cards = vec![];
+        let cards = {
+            items
+                .drain(..)
+                .enumerate()
+                .map(|(i, s)| {
+                    CardView::init(
+                        SDLPoint::new(100 + ((i % 4) * 200) as i32, 100 + ((i / 4) * 275) as i32),
+                        text_renderer,
+                        &ui,
+                        &icons,
+                        s,
+                        true,
+                        false,
+                    )
+                    .expect("Unable to load merchant card")
+                })
+                .collect()
+        };
+
         let selection = Rc::new(RefCell::new(None));
         let accept_button = Button::text(
             SDLPoint::new(780, 585),
@@ -66,6 +79,10 @@ impl MerchantView {
 
 impl View for MerchantView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        for c in &self.cards {
+            c.render(ecs, canvas, frame)?;
+        }
+
         Ok(())
     }
 

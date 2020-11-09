@@ -30,7 +30,10 @@ pub fn get_reward_request(ecs: &World, count: u32) -> Vec<(EquipmentRarity, u32)
 }
 
 pub fn get_merchant_items(ecs: &World) -> Vec<EquipmentItem> {
-    vec![]
+    get_random_items(
+        ecs,
+        vec![(EquipmentRarity::Rare, 1), (EquipmentRarity::Uncommon, 2), (EquipmentRarity::Common, 5)],
+    )
 }
 
 pub fn get_random_items(ecs: &World, requests: Vec<(EquipmentRarity, u32)>) -> Vec<EquipmentItem> {
