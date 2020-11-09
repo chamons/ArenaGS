@@ -13,7 +13,7 @@ use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{Button, EmptyView, HelpPopup, TabInfo, TabView, View};
+use crate::props::{Button, ButtonDelegate, EmptyView, HelpPopup, TabInfo, TabView, View};
 
 pub struct CharacterScene {
     next_fight: Rc<RefCell<bool>>,
@@ -36,17 +36,17 @@ impl CharacterScene {
                 text_renderer,
                 true,
                 true,
-                None,
-                Some(Box::new(move || *next_fight.borrow_mut() = true)),
+                ButtonDelegate::init().handler(Box::new(move || *next_fight.borrow_mut() = true)),
             )?,
             tab: Box::from(TabView::init(
                 SDLPoint::new(0, 0),
                 render_context,
                 text_renderer,
                 vec![
-                    TabInfo::init("Skill Tree", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?), |_| true),
-                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?), |_| true),
-                    TabInfo::init("Store", Box::new(EmptyView::init()?), |_| true),
+                    TabInfo::init("Profession", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?)),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
+                    TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
+                    TabInfo::init("Next Battle", Box::new(EmptyView::init()?)),
                 ],
             )?),
             help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,

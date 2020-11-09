@@ -13,7 +13,7 @@ use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::conductor::{Scene, StageDirection};
 use crate::enclose;
-use crate::props::{Button, View};
+use crate::props::{Button, ButtonDelegate, View};
 
 pub struct RewardScene {
     text_renderer: Rc<TextRenderer>,
@@ -78,8 +78,9 @@ impl RewardScene {
             text_renderer,
             true,
             true,
-            Some(Box::new(enclose! { (selection) move |_| selection.borrow().is_some() })),
-            Some(Box::new(enclose! { (chosen) move || *chosen.borrow_mut() = true })),
+            ButtonDelegate::init()
+                .enabled(Box::new(enclose! { (selection) move || selection.borrow().is_some() }))
+                .handler(Box::new(enclose! { (chosen) move || *chosen.borrow_mut() = true })),
         )?;
         let cash_out_button = Button::text(
             SDLPoint::new(475, 625),
@@ -88,8 +89,7 @@ impl RewardScene {
             text_renderer,
             true,
             true,
-            None,
-            Some(Box::new(enclose! { (selection) move || *selection.borrow_mut() = Some(3)})),
+            ButtonDelegate::init().handler(Box::new(enclose! { (selection) move || *selection.borrow_mut() = Some(3)})),
         )?;
         Ok(RewardScene {
             text_renderer: Rc::clone(text_renderer),

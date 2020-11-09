@@ -84,30 +84,52 @@ pub enum ButtonKind {
     Text(String, Frame, Rc<TextRenderer>),
 }
 
-pub type EnabledHandler = Box<dyn Fn(&World) -> bool>;
-pub type ButtonHandler = Box<dyn Fn()>;
-
 pub struct Button {
     pub frame: SDLRect,
     kind: ButtonKind,
-    enabled: Option<Box<EnabledHandler>>,
-    handler: Option<Box<ButtonHandler>>,
+    delegate: ButtonDelegate,
     active: bool,
+}
+
+pub type ButtonQuery = Box<dyn Fn() -> bool>;
+pub type ButtonHandler = Box<dyn Fn()>;
+
+pub struct ButtonDelegate {
+    enabled: Option<ButtonQuery>,
+    handler: Option<ButtonHandler>,
+}
+
+impl ButtonDelegate {
+    pub fn init() -> ButtonDelegate {
+        ButtonDelegate { enabled: None, handler: None }
+    }
+
+    pub fn enabled(mut self, enabled: ButtonQuery) -> ButtonDelegate {
+        self.enabled = Some(enabled);
+        self
+    }
+
+    pub fn handler(mut self, handler: ButtonHandler) -> ButtonDelegate {
+        self.handler = Some(handler);
+        self
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.enabled.as_ref().map_or(true, |e| (e)())
+    }
 }
 
 impl Button {
     #[allow(dead_code)]
-    pub fn image(frame: SDLRect, image: Texture, enabled: Option<EnabledHandler>, handler: Option<ButtonHandler>) -> BoxResult<Button> {
+    pub fn image(frame: SDLRect, image: Texture, delegate: ButtonDelegate) -> BoxResult<Button> {
         Ok(Button {
             frame,
             kind: ButtonKind::Image(image),
-            enabled: enabled.map(Box::new),
-            handler: handler.map(Box::new),
             active: false,
+            delegate,
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn text(
         corner: SDLPoint,
         text: &str,
@@ -115,58 +137,51 @@ impl Button {
         text_renderer: &Rc<TextRenderer>,
         full_frame: bool,
         active: bool,
-        enabled: Option<EnabledHandler>,
-        handler: Option<ButtonHandler>,
+        delegate: ButtonDelegate,
     ) -> BoxResult<Button> {
         let text_frame = Frame::init(corner, render_context, if full_frame { FrameKind::ButtonFull } else { FrameKind::Button })?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
             kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
-            enabled: enabled.map(Box::new),
-            handler: handler.map(Box::new),
             active,
+            delegate,
         })
     }
 }
 
 impl View for Button {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
-        match &self.kind {
-            ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
-            ButtonKind::Text(text, text_frame, text_renderer) => {
-                text_frame.render(ecs, canvas, frame)?;
-                text_renderer.render_text_centered(
-                    text,
-                    self.frame.x() + 2,
-                    self.frame.y() + 10,
-                    text_frame.frame_size().0 - 4,
-                    canvas,
-                    FontSize::Bold,
-                    if self.active { FontColor::White } else { FontColor::Brown },
-                )?;
-            }
-        };
-
-        if !self.enabled.as_ref().map_or(true, |e| (e)(ecs)) {
-            canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
-            canvas.fill_rect(self.frame)?;
+        if self.delegate.is_enabled() {
+            match &self.kind {
+                ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
+                ButtonKind::Text(text, text_frame, text_renderer) => {
+                    text_frame.render(ecs, canvas, frame)?;
+                    text_renderer.render_text_centered(
+                        text,
+                        self.frame.x() + 2,
+                        self.frame.y() + 10,
+                        text_frame.frame_size().0 - 4,
+                        canvas,
+                        FontSize::Bold,
+                        if self.active { FontColor::White } else { FontColor::Brown },
+                    )?;
+                }
+            };
         }
 
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, _ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+        if !self.delegate.is_enabled() {
+            return;
+        }
+
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if self.frame.contains_point(SDLPoint::new(x, y)) {
-                    if let Some(enabled) = &self.enabled {
-                        if !(enabled)(ecs) {
-                            return;
-                        }
-                    }
-
-                    if let Some(handler) = &self.handler {
+                    if let Some(handler) = &self.delegate.handler {
                         (handler)();
                     }
                 }
@@ -185,17 +200,12 @@ impl View for Button {
 
 pub struct TabInfo {
     text: String,
-    enabled: EnabledHandler,
     view: Box<dyn View>,
 }
 
 impl TabInfo {
-    pub fn init(text: &str, view: Box<dyn View>, enabled: impl Fn(&World) -> bool + 'static) -> TabInfo {
-        TabInfo {
-            text: text.to_string(),
-            view,
-            enabled: Box::new(enabled),
-        }
+    pub fn init(text: &str, view: Box<dyn View>) -> TabInfo {
+        TabInfo { text: text.to_string(), view }
     }
 }
 pub struct TabView {
@@ -224,8 +234,7 @@ impl TabView {
                     text_renderer,
                     false,
                     i == 0,
-                    Some(Box::new(b.enabled)),
-                    None,
+                    ButtonDelegate::init(),
                 )
                 .expect("Unable to create TabView button");
                 (button, b.view)

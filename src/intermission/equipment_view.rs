@@ -13,7 +13,7 @@ use super::card_view::{CardView, CARD_HEIGHT, CARD_WIDTH};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds, EquipmentResource, ProgressionComponent, ProgressionState};
-use crate::props::{Button, HitTestResult, MousePositionComponent, View};
+use crate::props::{Button, ButtonDelegate, HitTestResult, MousePositionComponent, View};
 
 pub struct EquipmentSlotView {
     frame: SDLRect,
@@ -129,8 +129,7 @@ impl EquipmentView {
                 text_renderer,
                 true,
                 true,
-                None,
-                Some(Box::new(move || *should_sort.borrow_mut() = true)),
+                ButtonDelegate::init().handler(Box::new(move || *should_sort.borrow_mut() = true)),
             )?,
             slots: EquipmentView::create_slots(ecs, &ui),
             ui,
