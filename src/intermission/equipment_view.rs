@@ -129,7 +129,7 @@ impl EquipmentView {
                 text_renderer,
                 true,
                 true,
-                ButtonDelegate::init().handler(Box::new(move || *should_sort.borrow_mut() = true)),
+                ButtonDelegate::init().handler(Box::new(move |_| *should_sort.borrow_mut() = true)),
             )?,
             slots: EquipmentView::create_slots(ecs, &ui),
             ui,
@@ -255,7 +255,7 @@ impl View for EquipmentView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         for c in self.cards.borrow_mut().iter_mut().rev() {
             c.handle_mouse_click(ecs, x, y, button);
             if c.grabbed.is_some() {

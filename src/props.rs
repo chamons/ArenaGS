@@ -29,7 +29,7 @@ pub trait View {
     fn hit_test(&self, _ecs: &World, _x: i32, _y: i32) -> Option<HitTestResult> {
         None
     }
-    fn handle_mouse_click(&mut self, _ecs: &World, _x: i32, _y: i32, _button: Option<MouseButton>) {}
+    fn handle_mouse_click(&mut self, _ecs: &mut World, _x: i32, _y: i32, _button: Option<MouseButton>) {}
 
     fn handle_mouse_move(&mut self, _ecs: &World, _x: i32, _y: i32, _state: MouseState) {}
 }

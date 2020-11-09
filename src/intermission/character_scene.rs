@@ -9,6 +9,7 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::equipment_view::EquipmentView;
+use super::merchant_view::MerchantView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -36,7 +37,7 @@ impl CharacterScene {
                 text_renderer,
                 true,
                 true,
-                ButtonDelegate::init().handler(Box::new(move || *next_fight.borrow_mut() = true)),
+                ButtonDelegate::init().handler(Box::new(move |_| *next_fight.borrow_mut() = true)),
             )?,
             tab: Box::from(TabView::init(
                 SDLPoint::new(0, 0),
@@ -61,12 +62,12 @@ impl Scene for CharacterScene {
     }
 
     fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
-        if self.help.handle_mouse_event(&self.ecs, x, y, button, slice::from_ref(&self.tab)) {
+        if self.help.handle_mouse_event(&mut self.ecs, x, y, button, slice::from_ref(&self.tab)) {
             return;
         }
 
-        self.tab.handle_mouse_click(&self.ecs, x, y, button);
-        self.continue_button.handle_mouse_click(&self.ecs, x, y, button);
+        self.tab.handle_mouse_click(&mut self.ecs, x, y, button);
+        self.continue_button.handle_mouse_click(&mut self.ecs, x, y, button);
     }
 
     fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {

@@ -27,26 +27,31 @@ pub struct RewardScene {
     chosen: Rc<RefCell<bool>>,
 }
 
+pub fn get_reward(ecs: &World) -> RewardsComponent {
+    let rewards = ecs.read_storage::<RewardsComponent>();
+    (&rewards).join().next().unwrap().clone()
+}
+
+pub fn icons_for_items(render_context: &RenderContext, items: &Vec<EquipmentItem>) -> BoxResult<Rc<IconCache>> {
+    let icons: Vec<&String> = items.iter().flat_map(|i| &i.image).collect();
+    Ok(Rc::new(IconCache::init(&render_context, IconLoader::init_icons(), &icons[..])?))
+}
+
 impl RewardScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<RewardScene> {
         let render_context = render_context_holder.borrow();
 
-        let reward = {
-            let rewards = ecs.read_storage::<RewardsComponent>();
-            (&rewards).join().next().unwrap().clone()
-        };
+        let reward = get_reward(&ecs);
         let mut items: Vec<EquipmentItem> = {
             let equipment = &ecs.read_resource::<EquipmentResource>();
             reward.cards.iter().map(|c| equipment.get(&c)).collect()
         };
 
-        let icons: Vec<&String> = items.iter().flat_map(|i| &i.image).collect();
-        let icons = Rc::new(IconCache::init(&render_context, IconLoader::init_icons(), &icons[..])?);
+        let icons = icons_for_items(&render_context, &items)?;
         let ui = Rc::new(IconCache::init(
             &render_context,
             IconLoader::init_ui(),
             &[
-                "card_frame.png",
                 "card_frame_large.png",
                 "card_frame_large_selection.png",
                 "button_frame_full_selection.png",
@@ -86,7 +91,7 @@ impl RewardScene {
                         ButtonEnabledState::Hide
                     }
                 }))
-                .handler(Box::new(enclose! { (chosen) move || *chosen.borrow_mut() = true })),
+                .handler(Box::new(enclose! { (chosen) move |_| *chosen.borrow_mut() = true })),
         )?;
 
         let cash_out_button = Button::text(
@@ -96,7 +101,7 @@ impl RewardScene {
             text_renderer,
             true,
             true,
-            ButtonDelegate::init().handler(Box::new(enclose! { (selection) move || *selection.borrow_mut() = Some(3)})),
+            ButtonDelegate::init().handler(Box::new(enclose! { (selection) move |_| *selection.borrow_mut() = Some(3)})),
         )?;
         Ok(RewardScene {
             text_renderer: Rc::clone(text_renderer),
@@ -128,14 +133,14 @@ impl Scene for RewardScene {
 
     fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
         for (i, c) in &mut self.cards.iter_mut().enumerate() {
-            c.handle_mouse_click(&self.ecs, x, y, button);
+            c.handle_mouse_click(&mut self.ecs, x, y, button);
             if c.grabbed.is_some() {
                 c.grabbed = None;
                 *self.selection.borrow_mut() = Some(i as u32);
             }
         }
-        self.accept_button.handle_mouse_click(&self.ecs, x, y, button);
-        self.cash_out_button.handle_mouse_click(&self.ecs, x, y, button);
+        self.accept_button.handle_mouse_click(&mut self.ecs, x, y, button);
+        self.cash_out_button.handle_mouse_click(&mut self.ecs, x, y, button);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {

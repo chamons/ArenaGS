@@ -217,7 +217,7 @@ impl Scene for BattleScene {
     }
 
     fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
-        if self.help.handle_mouse_event(&self.ecs, x, y, button, &self.views) {
+        if self.help.handle_mouse_event(&mut self.ecs, x, y, button, &self.views) {
             return;
         }
 

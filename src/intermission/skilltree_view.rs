@@ -154,7 +154,7 @@ impl View for SkillTreeView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if let Some(hit) = self.find_node_at(ecs, x, y) {

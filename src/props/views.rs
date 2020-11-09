@@ -99,7 +99,7 @@ pub enum ButtonEnabledState {
 }
 
 pub type ButtonEnabled = Box<dyn Fn() -> ButtonEnabledState>;
-pub type ButtonHandler = Box<dyn Fn()>;
+pub type ButtonHandler = Box<dyn Fn(&mut World)>;
 
 pub struct ButtonDelegate {
     enabled: Option<ButtonEnabled>,
@@ -188,7 +188,7 @@ impl View for Button {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, _ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         if self.delegate.enabled_state() == ButtonEnabledState::Hide {
             return;
         }
@@ -197,7 +197,7 @@ impl View for Button {
             if button == MouseButton::Left {
                 if self.frame.contains_point(SDLPoint::new(x, y)) {
                     if let Some(handler) = &self.delegate.handler {
-                        (handler)();
+                        (handler)(ecs);
                     }
                 }
             }
@@ -278,7 +278,7 @@ impl View for TabView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
