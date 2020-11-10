@@ -5,6 +5,7 @@ use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::card_view::{CardView, CARD_WIDTH};
@@ -128,6 +129,15 @@ impl RewardScene {
     }
 }
 
+pub fn draw_selection_frame(canvas: &mut RenderCanvas, icons: &IconCache, mut selection_frame: SDLRect, image: &str) -> BoxResult<()> {
+    selection_frame.offset(-2, -2);
+    selection_frame.set_width(selection_frame.width() + 4);
+    selection_frame.set_height(selection_frame.height() + 4);
+    canvas.copy(icons.get(image), None, selection_frame)?;
+
+    Ok(())
+}
+
 impl Scene for RewardScene {
     fn handle_key(&mut self, _keycode: Keycode, _keymod: Mod) {}
 
@@ -149,15 +159,12 @@ impl Scene for RewardScene {
         canvas.copy(self.ui.get("reward_background.png"), None, None)?;
 
         if let Some(selection) = *self.selection.borrow() {
-            let (mut selection_frame, image) = if selection < 3 {
+            let (selection_frame, image) = if selection < 3 {
                 (self.cards[selection as usize].frame, "card_frame_large_selection.png")
             } else {
                 (self.cash_out_button.frame, "button_frame_full_selection.png")
             };
-            selection_frame.offset(-2, -2);
-            selection_frame.set_width(selection_frame.width() + 4);
-            selection_frame.set_height(selection_frame.height() + 4);
-            canvas.copy(self.ui.get(image), None, selection_frame)?;
+            draw_selection_frame(canvas, &self.ui, selection_frame, image)?;
         }
 
         for c in &self.cards {

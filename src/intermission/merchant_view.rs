@@ -6,7 +6,7 @@ use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
 use super::card_view::{CardView, CARD_WIDTH};
-use super::reward_scene::{get_reward, icons_for_items};
+use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{gambler, EquipmentItem, EquipmentResource, RewardsComponent};
@@ -79,14 +79,29 @@ impl MerchantView {
 
 impl View for MerchantView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        if let Some(selection) = *self.selection.borrow() {
+            draw_selection_frame(canvas, &self.ui, self.cards[selection as usize].frame, "card_frame_large_selection.png")?;
+        }
+
         for c in &self.cards {
             c.render(ecs, canvas, frame)?;
         }
 
+        self.accept_button.render(&ecs, canvas, frame)?;
+
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {}
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
+        for (i, c) in &mut self.cards.iter_mut().enumerate() {
+            c.handle_mouse_click(ecs, x, y, button);
+            if c.grabbed.is_some() {
+                c.grabbed = None;
+                *self.selection.borrow_mut() = Some(i as u32);
+            }
+        }
+        self.accept_button.handle_mouse_click(ecs, x, y, button);
+    }
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {}
 
