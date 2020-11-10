@@ -10,6 +10,7 @@ use specs::prelude::*;
 
 use super::equipment_view::EquipmentView;
 use super::merchant_view::MerchantView;
+use super::next_battle_view::NextBattleView;
 use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -19,7 +20,6 @@ use crate::props::{Button, ButtonDelegate, EmptyView, HelpPopup, TabInfo, TabVie
 pub struct CharacterScene {
     next_fight: Rc<RefCell<bool>>,
     tab: Box<dyn View>,
-    continue_button: Button,
     ecs: World,
     help: HelpPopup,
 }
@@ -28,17 +28,8 @@ impl CharacterScene {
     pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
+
         Ok(CharacterScene {
-            next_fight: Rc::clone(&next_fight),
-            continue_button: Button::text(
-                SDLPoint::new(800, 650),
-                "Next Fight",
-                render_context,
-                text_renderer,
-                true,
-                true,
-                ButtonDelegate::init().handler(Box::new(move |_| *next_fight.borrow_mut() = true)),
-            )?,
             tab: Box::from(TabView::init(
                 SDLPoint::new(0, 0),
                 render_context,
@@ -47,11 +38,12 @@ impl CharacterScene {
                     TabInfo::init("Profession", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
-                    TabInfo::init("Next Battle", Box::new(EmptyView::init()?)),
+                    TabInfo::init("Next Battle", Box::new(NextBattleView::init(render_context, text_renderer, &next_fight)?)),
                 ],
             )?),
             help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,
             ecs,
+            next_fight,
         })
     }
 }
@@ -67,13 +59,11 @@ impl Scene for CharacterScene {
         }
 
         self.tab.handle_mouse_click(&mut self.ecs, x, y, button);
-        self.continue_button.handle_mouse_click(&mut self.ecs, x, y, button);
     }
 
     fn handle_mouse_move(&mut self, x: i32, y: i32, state: MouseState) {
         self.help.handle_mouse_move(&self.ecs, x, y, state);
         self.tab.handle_mouse_move(&self.ecs, x, y, state);
-        self.continue_button.handle_mouse_move(&self.ecs, x, y, state);
     }
 
     fn render(&mut self, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
@@ -81,7 +71,6 @@ impl Scene for CharacterScene {
         canvas.clear();
 
         self.tab.render(&self.ecs, canvas, frame)?;
-        self.continue_button.render(&self.ecs, canvas, frame)?;
         self.help.render(&self.ecs, canvas, frame)?;
 
         canvas.present();

@@ -55,7 +55,7 @@ impl MerchantView {
 
         let selection = Rc::new(RefCell::new(None));
         let accept_button = Button::text(
-            SDLPoint::new(780, 585),
+            SDLPoint::new(800, 650),
             "Purchase",
             &render_context,
             text_renderer,

@@ -123,7 +123,7 @@ impl EquipmentView {
             should_sort: Rc::clone(&should_sort),
             needs_z_reorder: RefCell::new(false),
             sort: Button::text(
-                SDLPoint::new(650, 650),
+                SDLPoint::new(800, 650),
                 "Sort",
                 render_context,
                 text_renderer,

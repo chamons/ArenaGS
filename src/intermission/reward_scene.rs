@@ -78,7 +78,7 @@ impl RewardScene {
         let chosen = Rc::new(RefCell::new(false));
         let selection = Rc::new(RefCell::new(None));
         let accept_button = Button::text(
-            SDLPoint::new(780, 585),
+            SDLPoint::new(800, 650),
             "Accept",
             &render_context,
             text_renderer,
