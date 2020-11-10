@@ -3,13 +3,14 @@ use std::rc::Rc;
 
 use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
 use super::card_view::{CardView, CARD_WIDTH};
 use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{gambler, EquipmentItem, EquipmentResource, RewardsComponent};
+use crate::clash::{gambler, EquipmentItem, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 
@@ -40,7 +41,7 @@ impl MerchantView {
                 .enumerate()
                 .map(|(i, s)| {
                     CardView::init(
-                        SDLPoint::new(100 + ((i % 4) * 200) as i32, 100 + ((i / 4) * 275) as i32),
+                        SDLPoint::new(120 + ((i % 4) * 200) as i32, 90 + ((i / 4) * 275) as i32),
                         text_renderer,
                         &ui,
                         &icons,
@@ -85,9 +86,36 @@ impl View for MerchantView {
 
         for c in &self.cards {
             c.render(ecs, canvas, frame)?;
+
+            let cost = match c.equipment.rarity {
+                EquipmentRarity::Standard => panic!("Standard should never be found in merchant"),
+                EquipmentRarity::Common => 20,
+                EquipmentRarity::Uncommon => 50,
+                EquipmentRarity::Rare => 100,
+            };
+
+            self.text_renderer.render_text_centered(
+                &format!("{} Influence", cost),
+                c.frame.x(),
+                c.frame.y() - 20,
+                c.frame.width(),
+                canvas,
+                FontSize::Bold,
+                FontColor::Brown,
+            )?;
         }
 
         self.accept_button.render(&ecs, canvas, frame)?;
+
+        let progression = &(*ecs.read_resource::<ProgressionComponent>()).state;
+        self.text_renderer.render_text(
+            &format!("Current Influence: {}", progression.influence),
+            780,
+            615,
+            canvas,
+            FontSize::Bold,
+            FontColor::Brown,
+        )?;
 
         Ok(())
     }

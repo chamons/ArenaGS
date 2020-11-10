@@ -179,11 +179,11 @@ impl Scene for RewardScene {
         }
         self.text_renderer.render_text(
             &format!("Influence Reward: {}", current_influence),
-            780,
-            550,
+            785,
+            615,
             canvas,
             FontSize::Bold,
-            FontColor::White,
+            FontColor::Brown,
         )?;
 
         self.accept_button.render(&self.ecs, canvas, frame)?;
