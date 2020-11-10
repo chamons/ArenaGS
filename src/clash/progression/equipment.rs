@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter;
 
 use serde::{Deserialize, Serialize};
@@ -65,13 +65,7 @@ impl EquipmentItem {
 
     pub fn description(&self) -> Vec<String> {
         let mut description = vec![];
-        for e in &[
-            EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string()),
-            EquipmentEffect::ModifiesResourceTotal(-2, "Bullets".to_string()),
-            EquipmentEffect::ModifiesArmor(1),
-        ]
-        /*self.effect*/
-        {
+        for e in &self.effect {
             match e {
                 EquipmentEffect::None => {}
                 EquipmentEffect::UnlocksAbilityClass(kind) => description.push(format!("Unlocks {}.", kind)),
@@ -97,6 +91,7 @@ pub struct Equipment {
     armor: Vec<Option<EquipmentItem>>,
     accessory: Vec<Option<EquipmentItem>>,
     mastery: Vec<Option<EquipmentItem>>,
+    store_extensions: HashSet<EquipmentItem>,
 }
 
 #[allow(dead_code)]
@@ -111,6 +106,7 @@ impl Equipment {
             armor: iter::repeat(None).take(armor_slots as usize).collect(),
             accessory: iter::repeat(None).take(accessory_slots as usize).collect(),
             mastery: iter::repeat(None).take(mastery_slots as usize).collect(),
+            store_extensions: HashSet::new(),
         }
     }
 
@@ -200,6 +196,8 @@ impl Equipment {
     pub fn has(&self, name: &str) -> bool {
         self.find(name).is_some()
     }
+
+    pub fn extend(&mut self, kind: EquipmentKinds, store: bool) {}
 }
 
 #[derive(Clone)] // NotConvertSaveload
@@ -343,4 +341,11 @@ mod tests {
         assert!(equipment.has("Armor2"));
         assert_eq!(false, equipment.has("Foo"));
     }
+
+    #[test]
+    fn extend() {}
+
+    fn extend_store_only_once() {}
+
+    fn has_store_extension() {}
 }

@@ -1,0 +1,6 @@
+- Finish sales tests
+- Move merchant_view to use sales
+- Add equipment extension in model
+- Add special skill nodes to do
+- Add single use extension for each kind
+- Clippy and PR
