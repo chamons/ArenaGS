@@ -85,7 +85,7 @@ impl RewardScene {
             true,
             true,
             ButtonDelegate::init()
-                .enabled(Box::new(enclose! { (selection) move ||
+                .enabled(Box::new(enclose! { (selection) move |_|
                     if selection.borrow().is_some() {
                         ButtonEnabledState::Shown
                     } else {

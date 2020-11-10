@@ -67,17 +67,21 @@ impl MerchantView {
             ButtonDelegate::init()
                 .handler(Box::new(move |_| {}))
                 .enabled(Box::new(
-                    enclose! { (selection) move || if selection.borrow().is_some() { ButtonEnabledState::Shown } else { ButtonEnabledState::Ghosted} },
+                    enclose! { (cards, selection) move |ecs| if can_purchase_selection(ecs, &selection, &cards.borrow()) { ButtonEnabledState::Shown } else { ButtonEnabledState::Ghosted} },
                 ))
                 .handler(Box::new(enclose! { (cards, selection) move |ecs| {
-                    let selection_index = selection.borrow().unwrap();
-                    let selection_name = cards.borrow_mut()[selection_index as usize].as_ref().unwrap().equipment.name.to_string();
+                    let mut cards = cards.borrow_mut();
+                    if can_purchase_selection (ecs, &selection, &cards) {
+                        let selection_index = selection.borrow().unwrap();
+                        let selection_equip = &cards[selection_index as usize].as_ref().unwrap().equipment;
 
-                    let progression = &mut ecs.write_resource::<ProgressionComponent>();
-                    progression.state.items.insert(selection_name);
+                        let progression = &mut ecs.write_resource::<ProgressionComponent>();
+                        progression.state.items.insert(selection_equip.name.to_string());
+                        progression.state.influence -= selection_cost(selection_equip);
 
-                    cards.borrow_mut()[selection_index as usize] = None;
-                    *selection.borrow_mut() = None;
+                        cards[selection_index as usize] = None;
+                        *selection.borrow_mut() = None;
+                    }
                 }})),
         )?;
 
@@ -88,6 +92,25 @@ impl MerchantView {
             accept_button,
             selection: Rc::clone(&selection),
         })
+    }
+}
+
+fn can_purchase_selection(ecs: &World, selection: &Rc<RefCell<Option<u32>>>, cards: &Vec<Option<CardView>>) -> bool {
+    if let Some(selection) = *selection.borrow() {
+        let cost = selection_cost(&cards[selection as usize].as_ref().unwrap().equipment);
+        let influence = (*ecs.read_resource::<ProgressionComponent>()).state.influence;
+        influence >= cost
+    } else {
+        false
+    }
+}
+
+fn selection_cost(equip: &EquipmentItem) -> u32 {
+    match equip.rarity {
+        EquipmentRarity::Standard => panic!("Standard should never be found in merchant"),
+        EquipmentRarity::Common => 20,
+        EquipmentRarity::Uncommon => 50,
+        EquipmentRarity::Rare => 100,
     }
 }
 
@@ -104,15 +127,8 @@ impl View for MerchantView {
         for c in cards.iter().flatten() {
             c.render(ecs, canvas, frame)?;
 
-            let cost = match c.equipment.rarity {
-                EquipmentRarity::Standard => panic!("Standard should never be found in merchant"),
-                EquipmentRarity::Common => 20,
-                EquipmentRarity::Uncommon => 50,
-                EquipmentRarity::Rare => 100,
-            };
-
             self.text_renderer.render_text_centered(
-                &format!("{} Influence", cost),
+                &format!("{} Influence", selection_cost(&c.equipment)),
                 c.frame.x(),
                 c.frame.y() - 20,
                 c.frame.width(),

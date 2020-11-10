@@ -98,7 +98,7 @@ pub enum ButtonEnabledState {
     Hide,
 }
 
-pub type ButtonEnabled = Box<dyn Fn() -> ButtonEnabledState>;
+pub type ButtonEnabled = Box<dyn Fn(&World) -> ButtonEnabledState>;
 pub type ButtonHandler = Box<dyn Fn(&mut World)>;
 
 pub struct ButtonDelegate {
@@ -121,8 +121,8 @@ impl ButtonDelegate {
         self
     }
 
-    pub fn enabled_state(&self) -> ButtonEnabledState {
-        self.enabled.as_ref().map_or(ButtonEnabledState::Shown, |e| (e)())
+    pub fn enabled_state(&self, ecs: &World) -> ButtonEnabledState {
+        self.enabled.as_ref().map_or(ButtonEnabledState::Shown, |e| (e)(ecs))
     }
 }
 
@@ -159,7 +159,7 @@ impl Button {
 
 impl View for Button {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
-        let enable_state = self.delegate.enabled_state();
+        let enable_state = self.delegate.enabled_state(ecs);
         if enable_state == ButtonEnabledState::Hide {
             return Ok(());
         }
@@ -189,7 +189,7 @@ impl View for Button {
     }
 
     fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
-        if self.delegate.enabled_state() == ButtonEnabledState::Hide {
+        if self.delegate.enabled_state(ecs) == ButtonEnabledState::Hide {
             return;
         }
 
@@ -204,8 +204,8 @@ impl View for Button {
         }
     }
 
-    fn hit_test(&self, _ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        if self.delegate.enabled_state() == ButtonEnabledState::Hide {
+    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        if self.delegate.enabled_state(ecs) == ButtonEnabledState::Hide {
             return None;
         }
 
