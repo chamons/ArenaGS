@@ -16,16 +16,14 @@ use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, Vi
 
 pub struct MerchantView {
     text_renderer: Rc<TextRenderer>,
-    reward: RewardsComponent,
     ui: Rc<IconCache>,
-    cards: Vec<CardView>,
+    cards: Rc<RefCell<Vec<Option<CardView>>>>,
     accept_button: Button,
     selection: Rc<RefCell<Option<u32>>>,
 }
 
 impl MerchantView {
     pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<MerchantView> {
-        let reward = get_reward(ecs);
         let mut items = gambler::get_merchant_items(ecs);
         let icons = icons_for_items(render_context, &items)?;
 
@@ -35,23 +33,27 @@ impl MerchantView {
             &["card_frame_large.png", "card_frame_large_selection.png", "button_frame_full_selection.png"],
         )?);
 
-        let cards = {
-            items
-                .drain(..)
-                .enumerate()
-                .map(|(i, s)| {
-                    CardView::init(
-                        SDLPoint::new(120 + ((i % 4) * 200) as i32, 90 + ((i / 4) * 275) as i32),
-                        text_renderer,
-                        &ui,
-                        &icons,
-                        s,
-                        true,
-                        false,
-                    )
-                    .expect("Unable to load merchant card")
-                })
-                .collect()
+        let cards: Rc<RefCell<Vec<Option<CardView>>>> = {
+            Rc::new(RefCell::new(
+                items
+                    .drain(..)
+                    .enumerate()
+                    .map(|(i, s)| {
+                        Some(
+                            CardView::init(
+                                SDLPoint::new(120 + ((i % 4) * 200) as i32, 90 + ((i / 4) * 275) as i32),
+                                text_renderer,
+                                &ui,
+                                &icons,
+                                s,
+                                true,
+                                false,
+                            )
+                            .expect("Unable to load merchant card"),
+                        )
+                    })
+                    .collect(),
+            ))
         };
 
         let selection = Rc::new(RefCell::new(None));
@@ -62,16 +64,27 @@ impl MerchantView {
             text_renderer,
             true,
             true,
-            ButtonDelegate::init().handler(Box::new(move |_| {})).enabled(Box::new(
-                enclose! { (selection) move || if selection.borrow().is_some() { ButtonEnabledState::Shown } else { ButtonEnabledState::Ghosted} },
-            )),
+            ButtonDelegate::init()
+                .handler(Box::new(move |_| {}))
+                .enabled(Box::new(
+                    enclose! { (selection) move || if selection.borrow().is_some() { ButtonEnabledState::Shown } else { ButtonEnabledState::Ghosted} },
+                ))
+                .handler(Box::new(enclose! { (cards, selection) move |ecs| {
+                    let selection_index = selection.borrow().unwrap();
+                    let selection_name = cards.borrow_mut()[selection_index as usize].as_ref().unwrap().equipment.name.to_string();
+
+                    let progression = &mut ecs.write_resource::<ProgressionComponent>();
+                    progression.state.items.insert(selection_name);
+
+                    cards.borrow_mut()[selection_index as usize] = None;
+                    *selection.borrow_mut() = None;
+                }})),
         )?;
 
         Ok(MerchantView {
             text_renderer: Rc::clone(text_renderer),
             ui,
-            reward,
-            cards,
+            cards: Rc::clone(&cards),
             accept_button,
             selection: Rc::clone(&selection),
         })
@@ -80,11 +93,15 @@ impl MerchantView {
 
 impl View for MerchantView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
+        let cards = self.cards.borrow();
+
         if let Some(selection) = *self.selection.borrow() {
-            draw_selection_frame(canvas, &self.ui, self.cards[selection as usize].frame, "card_frame_large_selection.png")?;
+            if let Some(card) = &cards[selection as usize] {
+                draw_selection_frame(canvas, &self.ui, card.frame, "card_frame_large_selection.png")?;
+            }
         }
 
-        for c in &self.cards {
+        for c in cards.iter().flatten() {
             c.render(ecs, canvas, frame)?;
 
             let cost = match c.equipment.rarity {
@@ -121,11 +138,13 @@ impl View for MerchantView {
     }
 
     fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
-        for (i, c) in &mut self.cards.iter_mut().enumerate() {
-            c.handle_mouse_click(ecs, x, y, button);
-            if c.grabbed.is_some() {
-                c.grabbed = None;
-                *self.selection.borrow_mut() = Some(i as u32);
+        for (i, c) in self.cards.borrow_mut().iter_mut().enumerate() {
+            if let Some(c) = c {
+                c.handle_mouse_click(ecs, x, y, button);
+                if c.grabbed.is_some() {
+                    c.grabbed = None;
+                    *self.selection.borrow_mut() = Some(i as u32);
+                }
             }
         }
         self.accept_button.handle_mouse_click(ecs, x, y, button);
