@@ -10,7 +10,7 @@ use super::card_view::{CardView, CARD_WIDTH};
 use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{gambler, EquipmentItem, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
+use crate::clash::{gambler, sales, EquipmentItem, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 
@@ -66,21 +66,29 @@ impl MerchantView {
             true,
             ButtonDelegate::init()
                 .handler(Box::new(move |_| {}))
-                .enabled(Box::new(
-                    enclose! { (cards, selection) move |ecs| if can_purchase_selection(ecs, &selection, &cards.borrow()) { ButtonEnabledState::Shown } else { ButtonEnabledState::Ghosted} },
-                ))
+                .enabled(Box::new(enclose! { (cards, selection) move |ecs| {
+                    let cards = cards.borrow();
+
+                    if let Some(selection_index) = *selection.borrow() {
+                        let progression = &mut ecs.write_resource::<ProgressionComponent>();
+                        let selection_equip = &cards[selection_index as usize].as_ref().unwrap().equipment;
+                        if sales::can_purchase_selection (&progression, &selection_equip) {
+                            return ButtonEnabledState::Shown;
+                        }
+                    }
+                    ButtonEnabledState::Ghosted
+                }}))
                 .handler(Box::new(enclose! { (cards, selection) move |ecs| {
                     let mut cards = cards.borrow_mut();
-                    if can_purchase_selection (ecs, &selection, &cards) {
-                        let selection_index = selection.borrow().unwrap();
+                    let mut selection = selection.borrow_mut();
+                    if let Some(selection_index) = *selection {
+                        let mut progression = &mut ecs.write_resource::<ProgressionComponent>();
                         let selection_equip = &cards[selection_index as usize].as_ref().unwrap().equipment;
-
-                        let progression = &mut ecs.write_resource::<ProgressionComponent>();
-                        progression.state.items.insert(selection_equip.name.to_string());
-                        progression.state.influence -= selection_cost(selection_equip);
-
-                        cards[selection_index as usize] = None;
-                        *selection.borrow_mut() = None;
+                        if sales::can_purchase_selection (&progression, &selection_equip) {
+                            sales::purchase_selection(&mut progression, &selection_equip);
+                            cards[selection_index as usize] = None;
+                            *selection = None;
+                        }
                     }
                 }})),
         )?;
@@ -92,25 +100,6 @@ impl MerchantView {
             accept_button,
             selection: Rc::clone(&selection),
         })
-    }
-}
-
-fn can_purchase_selection(ecs: &World, selection: &Rc<RefCell<Option<u32>>>, cards: &Vec<Option<CardView>>) -> bool {
-    if let Some(selection) = *selection.borrow() {
-        let cost = selection_cost(&cards[selection as usize].as_ref().unwrap().equipment);
-        let influence = (*ecs.read_resource::<ProgressionComponent>()).state.influence;
-        influence >= cost
-    } else {
-        false
-    }
-}
-
-fn selection_cost(equip: &EquipmentItem) -> u32 {
-    match equip.rarity {
-        EquipmentRarity::Standard => panic!("Standard should never be found in merchant"),
-        EquipmentRarity::Common => 20,
-        EquipmentRarity::Uncommon => 50,
-        EquipmentRarity::Rare => 100,
     }
 }
 
@@ -128,7 +117,7 @@ impl View for MerchantView {
             c.render(ecs, canvas, frame)?;
 
             self.text_renderer.render_text_centered(
-                &format!("{} Influence", selection_cost(&c.equipment)),
+                &format!("{} Influence", sales::selection_cost(&c.equipment)),
                 c.frame.x(),
                 c.frame.y() - 20,
                 c.frame.width(),

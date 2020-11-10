@@ -1,8 +1,6 @@
-use specs::prelude::*;
+use crate::clash::{CharacterWeaponKind, Equipment, EquipmentItem, EquipmentRarity, ProgressionComponent, ProgressionState};
 
-use crate::clash::{EquipmentItem, EquipmentRarity, ProgressionComponent};
-
-fn selection_cost(equip: &EquipmentItem) -> u32 {
+pub fn selection_cost(equip: &EquipmentItem) -> u32 {
     match equip.rarity {
         EquipmentRarity::Standard => panic!("Standard should never be found in merchant"),
         EquipmentRarity::Common => 20,
@@ -11,22 +9,16 @@ fn selection_cost(equip: &EquipmentItem) -> u32 {
     }
 }
 
-fn can_purchase_selection<'a>(ecs: &'a World, selection: Option<u32>, get_equipment: &impl Fn(u32) -> &'a EquipmentItem) -> bool {
-    if let Some(selection) = selection {
-        let cost = selection_cost(get_equipment(selection));
-        let influence = (*ecs.read_resource::<ProgressionComponent>()).state.influence;
-        influence >= cost
-    } else {
-        false
-    }
+pub fn can_purchase_selection<'a>(progression: &ProgressionComponent, equipment: &EquipmentItem) -> bool {
+    let cost = selection_cost(equipment);
+    let influence = progression.state.influence;
+    influence >= cost
 }
 
-fn purchase_selection<'a>(ecs: &'a World, selection: Option<u32>, get_equipment: &impl Fn(u32) -> &'a EquipmentItem) {
-    if can_purchase_selection(ecs, selection, get_equipment) {
-        let progression = &mut ecs.write_resource::<ProgressionComponent>();
-        let equip = get_equipment(selection.unwrap());
-        progression.state.items.insert(equip.name.to_string());
-        progression.state.influence -= selection_cost(equip);
+pub fn purchase_selection<'a>(progression: &mut ProgressionComponent, equipment: &EquipmentItem) {
+    if can_purchase_selection(progression, equipment) {
+        progression.state.items.insert(equipment.name.to_string());
+        progression.state.influence -= selection_cost(equipment);
     }
 }
 
@@ -52,8 +44,30 @@ mod tests {
     }
 
     #[test]
-    fn can_purchase() {}
+    fn can_purchase() {
+        let mut progression = ProgressionComponent::init(ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init_empty()));
+        assert_eq!(
+            false,
+            can_purchase_selection(
+                &mut progression,
+                &EquipmentItem::init("a", None, EquipmentKinds::Weapon, EquipmentRarity::Uncommon, &vec![]),
+            )
+        );
+        progression.state.influence = 60;
+        assert!(can_purchase_selection(
+            &mut progression,
+            &EquipmentItem::init("a", None, EquipmentKinds::Weapon, EquipmentRarity::Uncommon, &vec![]),
+        ));
+    }
 
     #[test]
-    fn purchase() {}
+    fn purchase() {
+        let mut progression = ProgressionComponent::init(ProgressionState::init(0, 60, &[], CharacterWeaponKind::Gunslinger, Equipment::init_empty()));
+        purchase_selection(
+            &mut progression,
+            &EquipmentItem::init("a", None, EquipmentKinds::Weapon, EquipmentRarity::Uncommon, &vec![]),
+        );
+        assert!(progression.state.items.contains("a"));
+        assert_eq!(10, progression.state.influence);
+    }
 }
