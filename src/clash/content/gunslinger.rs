@@ -14,9 +14,11 @@ pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
     }
 
     vec![
-        SkillTreeNode::init(equipment.get("Adjustable Sight"), skill_pos(0, 6), 0, &[]),
-        SkillTreeNode::init(equipment.get("Recoil Spring"), skill_pos(1, 6), 0, &["Adjustable Sight"]),
-        SkillTreeNode::init(equipment.get("Stippled Grip"), skill_pos(2, 5), 0, &["Recoil Spring"]),
+        SkillTreeNode::with_equipment(equipment.get("Adjustable Sight"), skill_pos(0, 6), 0, &[]),
+        SkillTreeNode::with_equipment(equipment.get("Recoil Spring"), skill_pos(1, 6), 0, &["Adjustable Sight"]),
+        SkillTreeNode::with_equipment(equipment.get("Stippled Grip"), skill_pos(2, 5), 0, &["Recoil Spring"]),
+        SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 1, skill_pos(0, 8), 0, &[]),
+        SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 2, skill_pos(1, 8), 0, &["Weapon Expansion"]),
     ]
 }
 
