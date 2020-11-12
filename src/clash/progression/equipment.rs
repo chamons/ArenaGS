@@ -91,7 +91,6 @@ pub struct Equipment {
     armor: Vec<Option<EquipmentItem>>,
     accessory: Vec<Option<EquipmentItem>>,
     mastery: Vec<Option<EquipmentItem>>,
-    store_extensions: HashSet<EquipmentKinds>,
 }
 
 #[allow(dead_code)]
@@ -106,7 +105,6 @@ impl Equipment {
             armor: iter::repeat(None).take(armor_slots as usize).collect(),
             accessory: iter::repeat(None).take(accessory_slots as usize).collect(),
             mastery: iter::repeat(None).take(mastery_slots as usize).collect(),
-            store_extensions: HashSet::new(),
         }
     }
 
@@ -197,18 +195,9 @@ impl Equipment {
         self.find(name).is_some()
     }
 
-    pub fn extend(&mut self, kind: EquipmentKinds, from_store: bool) {
-        if !from_store || !self.store_extensions.contains(&kind) {
-            let store = self.get_mut_store(kind);
-            store.resize(store.len() + 1, None);
-            if from_store {
-                self.store_extensions.insert(kind);
-            }
-        }
-    }
-
-    pub fn store_extensions(&self) -> Vec<&EquipmentKinds> {
-        self.store_extensions.iter().collect()
+    pub fn extend(&mut self, kind: EquipmentKinds) {
+        let store = self.get_mut_store(kind);
+        store.resize(store.len() + 1, None);
     }
 }
 
@@ -358,29 +347,9 @@ mod tests {
     fn extend() {
         let mut equipment = Equipment::init(4, 3, 2, 1);
 
-        equipment.extend(EquipmentKinds::Accessory, false);
+        equipment.extend(EquipmentKinds::Accessory);
         assert_eq!(3, equipment.count(EquipmentKinds::Accessory));
-        equipment.extend(EquipmentKinds::Accessory, true);
+        equipment.extend(EquipmentKinds::Accessory);
         assert_eq!(4, equipment.count(EquipmentKinds::Accessory));
-    }
-
-    #[test]
-    fn extend_store_only_once() {
-        let mut equipment = Equipment::init(4, 3, 2, 1);
-
-        equipment.extend(EquipmentKinds::Accessory, true);
-        assert_eq!(3, equipment.count(EquipmentKinds::Accessory));
-        equipment.extend(EquipmentKinds::Accessory, true);
-        assert_eq!(3, equipment.count(EquipmentKinds::Accessory));
-    }
-
-    #[test]
-    fn has_store_extension() {
-        let mut equipment = Equipment::init(4, 3, 2, 1);
-
-        assert_eq!(0, equipment.store_extensions().len());
-        equipment.extend(EquipmentKinds::Accessory, true);
-        assert_eq!(3, equipment.count(EquipmentKinds::Accessory));
-        assert_eq!(1, equipment.store_extensions().len());
     }
 }

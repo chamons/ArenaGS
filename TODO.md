@@ -1,2 +1,0 @@
-- Add single use extension for each kind
-- Clippy and PR

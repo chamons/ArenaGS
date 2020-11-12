@@ -112,6 +112,8 @@ impl SkillTree {
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
         if self.can_select(state, name) {
             let node = self.nodes.get(name).unwrap();
+
+            // We don't use sales APIs here since skill node cost != normal card cost
             state.influence -= node.cost;
 
             match node.contents {
@@ -120,7 +122,7 @@ impl SkillTree {
                 }
                 SkillTreeContents::EquipmentExpansion(kind, _) => {
                     state.equipment_expansions.insert(name.to_string());
-                    state.equipment.extend(kind, false);
+                    state.equipment.extend(kind);
                 }
             }
         }

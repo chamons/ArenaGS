@@ -156,12 +156,11 @@ impl Scene for RewardScene {
         canvas.copy(self.ui.get("reward_background.png"), None, None)?;
 
         if let Some(selection) = *self.selection.borrow() {
-            let (selection_frame, image) = if selection < 3 {
-                (self.cards[selection as usize].frame, "card_frame_large_selection.png")
+            if selection < 3 {
+                draw_selection_frame(canvas, &self.ui, self.cards[selection as usize].frame, "card_frame_large_selection.png")?;
             } else {
-                (self.cash_out_button.frame, "button_frame_full_selection.png")
+                draw_selection_frame(canvas, &self.ui, self.cash_out_button.frame, "button_frame_full_selection.png")?;
             };
-            draw_selection_frame(canvas, &self.ui, selection_frame, image)?;
         }
 
         for c in &self.cards {

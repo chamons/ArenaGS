@@ -1,4 +1,4 @@
-use crate::clash::{CharacterWeaponKind, Equipment, EquipmentItem, EquipmentRarity, ProgressionComponent, ProgressionState};
+use crate::clash::{CharacterWeaponKind, Equipment, EquipmentItem, EquipmentKinds, EquipmentRarity, ProgressionComponent, ProgressionState};
 
 pub fn selection_cost(equip: &EquipmentItem) -> u32 {
     match equip.rarity {
@@ -9,17 +9,27 @@ pub fn selection_cost(equip: &EquipmentItem) -> u32 {
     }
 }
 
-pub fn can_purchase_selection<'a>(progression: &ProgressionComponent, equipment: &EquipmentItem) -> bool {
+pub fn can_purchase_selection(progression: &ProgressionComponent, equipment: &EquipmentItem) -> bool {
     let cost = selection_cost(equipment);
     let influence = progression.state.influence;
     influence >= cost
 }
 
-pub fn purchase_selection<'a>(progression: &mut ProgressionComponent, equipment: &EquipmentItem) {
+pub fn purchase_selection(progression: &mut ProgressionComponent, equipment: &EquipmentItem) {
     if can_purchase_selection(progression, equipment) {
         progression.state.items.insert(equipment.name.to_string());
         progression.state.influence -= selection_cost(equipment);
     }
+}
+
+pub fn can_purchase_expansion(progression: &ProgressionComponent) -> bool {
+    let influence = progression.state.influence;
+    influence >= 100
+}
+
+pub fn purchase_expansion(progression: &mut ProgressionComponent, kind: EquipmentKinds) {
+    progression.state.equipment_expansions.insert(format!("{:#?} Store Expansion", kind));
+    progression.state.equipment.extend(kind);
 }
 
 #[cfg(test)]
