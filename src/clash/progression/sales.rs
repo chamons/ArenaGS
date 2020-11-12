@@ -1,4 +1,4 @@
-use crate::clash::{CharacterWeaponKind, Equipment, EquipmentItem, EquipmentKinds, EquipmentRarity, ProgressionComponent, ProgressionState};
+use crate::clash::{EquipmentItem, EquipmentKinds, EquipmentRarity, ProgressionComponent};
 
 pub fn selection_cost(equip: &EquipmentItem) -> u32 {
     match equip.rarity {

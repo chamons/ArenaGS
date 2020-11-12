@@ -5,13 +5,10 @@ use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
 
-use super::card_view::{CardView, CARD_WIDTH};
-use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{gambler, EquipmentItem, EquipmentResource, RewardsComponent};
 use crate::enclose;
-use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
+use crate::props::{Button, ButtonDelegate, View};
 
 pub struct NextBattleView {
     continue_button: Button,
@@ -43,9 +40,5 @@ impl View for NextBattleView {
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
         self.continue_button.handle_mouse_move(ecs, x, y, state);
-    }
-
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        None
     }
 }

@@ -14,6 +14,7 @@ use crate::props::{HitTestResult, View};
 
 pub struct EmptyView {}
 
+#[allow(dead_code)]
 impl EmptyView {
     pub fn init() -> BoxResult<EmptyView> {
         Ok(EmptyView {})

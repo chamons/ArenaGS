@@ -1,18 +1,17 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use sdl2::mouse::{MouseButton, MouseState};
+use sdl2::mouse::MouseButton;
 use sdl2::rect::Point as SDLPoint;
-use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::card_view::{CardView, CARD_WIDTH};
-use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
+use super::card_view::CardView;
+use super::reward_scene::{draw_selection_frame, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{gambler, sales, EquipmentItem, EquipmentKinds, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
+use crate::clash::{gambler, sales, EquipmentKinds, ProgressionComponent};
 use crate::enclose;
-use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
+use crate::props::{Button, ButtonDelegate, ButtonEnabledState, View};
 
 pub struct MerchantView {
     text_renderer: Rc<TextRenderer>,
@@ -243,9 +242,5 @@ impl View for MerchantView {
         }
 
         self.accept_button.handle_mouse_click(ecs, x, y, button);
-    }
-
-    fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        None
     }
 }

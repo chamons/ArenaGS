@@ -15,7 +15,7 @@ use super::skilltree_view::SkillTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{Button, ButtonDelegate, EmptyView, HelpPopup, TabInfo, TabView, View};
+use crate::props::{HelpPopup, TabInfo, TabView, View};
 
 pub struct CharacterScene {
     next_fight: Rc<RefCell<bool>>,
