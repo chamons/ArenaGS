@@ -5,9 +5,9 @@ use enum_iterator::IntoEnumIterator;
 use sdl2::rect::Point as SDLPoint;
 
 use super::components::*;
-use super::views::TILE_SIZE;
 use crate::after_image::*;
 use crate::atlas::prelude::*;
+use crate::props::TILE_SIZE;
 
 pub struct SpriteLoader {
     sprite_cache: HashMap<u32, Box<dyn Sprite>>,

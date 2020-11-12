@@ -16,7 +16,7 @@ use super::saveload;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{get_skill_name_on_skillbar, hotkey_to_skill_index, HelpPopup, HitTestResult, InfoBarView, MousePositionComponent, SkillBarView, View};
+use crate::props::*;
 
 pub struct BattleScene {
     ecs: World,
@@ -53,7 +53,7 @@ impl BattleScene {
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
-                SDLPoint::new(137, 25 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
+                SDLPoint::new(137, 25 + MAP_CORNER_Y as i32 + TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
             )?),
             Box::from(LogView::init(SDLPoint::new(780, 550), &render_context, Rc::clone(&text_renderer))?),

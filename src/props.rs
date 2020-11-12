@@ -34,6 +34,10 @@ pub trait View {
     fn handle_mouse_move(&mut self, _ecs: &World, _x: i32, _y: i32, _state: MouseState) {}
 }
 
+pub const MAP_CORNER_X: u32 = 50;
+pub const MAP_CORNER_Y: u32 = 50;
+pub const TILE_SIZE: u32 = 48;
+
 mod views;
 pub use views::*;
 

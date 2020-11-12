@@ -4,14 +4,16 @@ use std::rc::Rc;
 use sdl2::mouse::{MouseButton, MouseState};
 use sdl2::rect::Point as SDLPoint;
 use specs::prelude::*;
+use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::enclose;
-use crate::props::{Button, ButtonDelegate, View};
+use crate::props::{Button, ButtonDelegate, SkillBarView, View, MAP_CORNER_Y, TILE_SIZE};
 
 pub struct NextBattleView {
     continue_button: Button,
+    skillbar: SkillBarView,
 }
 
 impl NextBattleView {
@@ -23,7 +25,13 @@ impl NextBattleView {
             text_renderer,
             ButtonDelegate::init().handler(Box::new(enclose! { (next_fight) move |_| *next_fight.borrow_mut() = true })),
         )?;
-        Ok(NextBattleView { continue_button })
+        let skillbar = SkillBarView::init(
+            render_context,
+            &World::new(),
+            SDLPoint::new(137, 25 + MAP_CORNER_Y as i32 + TILE_SIZE as i32 * 13i32),
+            Rc::clone(&text_renderer),
+        )?;
+        Ok(NextBattleView { continue_button, skillbar })
     }
 }
 
