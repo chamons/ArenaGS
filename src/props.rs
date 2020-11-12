@@ -48,3 +48,6 @@ pub use text_render_helper::*;
 
 mod mouse_position;
 pub use mouse_position::*;
+
+mod infobar;
+pub use infobar::*;
