@@ -35,7 +35,7 @@ pub fn purchase_expansion(progression: &mut ProgressionComponent, kind: Equipmen
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::clash::{test_helpers::*, EquipmentEffect, EquipmentItem, EquipmentKinds};
+    use crate::clash::{CharacterWeaponKind, Equipment, EquipmentItem, EquipmentKinds, ProgressionState};
 
     #[test]
     fn get_equip_cost() {
