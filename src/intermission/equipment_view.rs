@@ -13,7 +13,7 @@ use super::card_view::{CardView, CARD_HEIGHT, CARD_WIDTH};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds, EquipmentResource, ProgressionComponent, ProgressionState};
-use crate::props::{Button, HitTestResult, MousePositionComponent, View};
+use crate::props::{Button, ButtonDelegate, HitTestResult, MousePositionComponent, View};
 
 pub struct EquipmentSlotView {
     frame: SDLRect,
@@ -88,7 +88,7 @@ pub struct EquipmentView {
     icons: Rc<IconCache>,
     text_renderer: Rc<TextRenderer>,
     cards: RefCell<Vec<CardView>>,
-    slots: Vec<EquipmentSlotView>,
+    slots: RefCell<Vec<EquipmentSlotView>>,
     sort: Button,
     max_z_order: u32,
     needs_z_reorder: RefCell<bool>,
@@ -123,23 +123,20 @@ impl EquipmentView {
             should_sort: Rc::clone(&should_sort),
             needs_z_reorder: RefCell::new(false),
             sort: Button::text(
-                SDLPoint::new(650, 650),
+                SDLPoint::new(800, 650),
                 "Sort",
                 render_context,
                 text_renderer,
-                true,
-                true,
-                None,
-                Some(Box::new(move || *should_sort.borrow_mut() = true)),
+                ButtonDelegate::init().handler(Box::new(move |_| *should_sort.borrow_mut() = true)),
             )?,
-            slots: EquipmentView::create_slots(ecs, &ui),
+            slots: RefCell::new(vec![]),
             ui,
             max_z_order: 1,
         };
         Ok(view)
     }
 
-    fn create_slots(ecs: &World, ui: &Rc<IconCache>) -> Vec<EquipmentSlotView> {
+    fn create_slots(&self, ecs: &World) {
         let mut slots = vec![];
         let progression = &ecs.read_resource::<ProgressionComponent>().state;
 
@@ -150,11 +147,11 @@ impl EquipmentView {
             EquipmentKinds::Mastery,
         ] {
             for i in 0..progression.equipment.count(*kind) {
-                slots.push(EquipmentSlotView::init(EquipmentView::frame_for_slot(*kind, i as u32), &ui, *kind, i));
+                slots.push(EquipmentSlotView::init(EquipmentView::frame_for_slot(*kind, i as u32), &self.ui, *kind, i));
             }
         }
 
-        slots
+        *self.slots.borrow_mut() = slots;
     }
 
     fn frame_for_slot(kind: EquipmentKinds, i: u32) -> SDLPoint {
@@ -214,10 +211,14 @@ impl EquipmentView {
             self.create_cards(&progression, &equipment);
             self.arrange(&progression);
         }
+        if progression.equipment.all().len() != self.slots.borrow().len() {
+            self.create_slots(ecs);
+            self.arrange(&progression);
+        }
     }
 
-    fn find_slot_at(&self, x: i32, y: i32) -> Option<&EquipmentSlotView> {
-        self.slots.iter().find(|s| s.frame.contains_point(SDLPoint::new(x, y)))
+    fn find_slot_at(x: i32, y: i32, slots: &[EquipmentSlotView]) -> Option<usize> {
+        slots.iter().position(|s| s.frame.contains_point(SDLPoint::new(x, y)))
     }
 }
 
@@ -235,13 +236,14 @@ impl View for EquipmentView {
 
         let grabbed_card_kind = self.cards.borrow().iter().filter(|c| c.grabbed.is_some()).map(|c| c.equipment.kind).next();
         // Slots below cards
-        for s in &self.slots {
+        let slots = self.slots.borrow_mut();
+        for s in slots.iter() {
             if grabbed_card_kind.is_some() && grabbed_card_kind.unwrap() == s.kind {
                 // If we're dragging a card over a slot, set a one render highlighted flag
                 let mouse = ecs.read_resource::<MousePositionComponent>().position;
-                let current_over_slot = self.find_slot_at(mouse.x as i32, mouse.y as i32);
-                if Some((s.kind, s.equipment_offset)) == current_over_slot.map(|c| (c.kind, c.equipment_offset)) {
-                    *s.highlighted.borrow_mut() = true;
+                let current_over_slot = EquipmentView::find_slot_at(mouse.x as i32, mouse.y as i32, &slots);
+                if let Some(current_over_slot) = current_over_slot {
+                    *slots[current_over_slot].highlighted.borrow_mut() = true;
                 }
             }
             s.render(ecs, canvas, frame)?;
@@ -256,7 +258,7 @@ impl View for EquipmentView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         for c in self.cards.borrow_mut().iter_mut().rev() {
             c.handle_mouse_click(ecs, x, y, button);
             if c.grabbed.is_some() {
@@ -279,11 +281,13 @@ impl View for EquipmentView {
             c.handle_mouse_move(ecs, x, y, state);
             if was_grabbed && c.grabbed.is_none() {
                 let was_in_slot = progression.equipment.has(&c.equipment.name);
-                let current_over_slot = self.find_slot_at(x, y);
+                let slots = &self.slots.borrow();
+                let current_over_slot = EquipmentView::find_slot_at(x, y, &slots);
 
                 if !was_in_slot {
                     // Case 1: Not in slot, now over slot - If empty parent else nothing
                     if let Some(current_slot) = current_over_slot {
+                        let current_slot = &slots[current_slot];
                         if progression.equipment.get(current_slot.kind, current_slot.equipment_offset).is_none() && c.equipment.kind == current_slot.kind {
                             assert!(progression.equipment.add(current_slot.kind, c.equipment.clone(), current_slot.equipment_offset));
                             self.arrange_card_into_slot(c, &progression);
@@ -294,6 +298,8 @@ impl View for EquipmentView {
                     let (previous_kind, previous_index) = progression.equipment.find(&c.equipment.name).unwrap();
 
                     if let Some(current_slot) = current_over_slot {
+                        let current_slot = &slots[current_slot];
+
                         if previous_kind == current_slot.kind && previous_index == current_slot.equipment_offset {
                             // Case 2: In slot, over own slot - Rearrange back
                             self.arrange_card_into_slot(c, &progression);

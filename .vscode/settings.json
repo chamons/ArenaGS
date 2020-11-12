@@ -1,5 +1,7 @@
 {
     "cSpell.ignoreWords": [
+        "armorshop",
+        "armorshop mv",
         "cashout",
         "cashout influence",
         "chronowatch",
@@ -17,6 +19,7 @@
         "keymod",
         "knockback",
         "lifebar",
+        "mv",
         "regen",
         "rgba",
         "rustc",

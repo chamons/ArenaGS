@@ -159,6 +159,8 @@ pub fn create_intermission_state(battle_state: &World, reward: Option<RewardsCom
     ecs.insert(crate::props::MousePositionComponent::init());
     // So we can query if one exists
     ecs.register::<PlayerComponent>();
+    // For merchant and other RNG
+    ecs.insert(RandomComponent::init());
 
     // Load all skills & equipment for help
     // If we are move to a game round these will be overwritten

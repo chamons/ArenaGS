@@ -49,6 +49,7 @@ dependencies = [
  "ordered-float",
  "rand 0.7.3",
  "regex",
+ "roman",
  "sdl2",
  "sentry",
  "serde",
@@ -1343,6 +1344,12 @@ dependencies = [
  "web-sys",
  "winreg",
 ]
+
+[[package]]
+name = "roman"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2c543f0c827ae24df93159810fd4bce2d0abe3785bb4c4d68fae3c467d58d9b"
 
 [[package]]
 name = "rustc-demangle"

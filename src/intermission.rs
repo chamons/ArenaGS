@@ -1,6 +1,8 @@
 mod card_view;
 mod character_scene;
 mod equipment_view;
+mod merchant_view;
+mod next_battle_view;
 mod reward_scene;
 mod skilltree_view;
 

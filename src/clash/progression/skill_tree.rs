@@ -1,32 +1,65 @@
 use std::collections::HashMap;
 
-use super::{EquipmentItem, ProgressionState};
+use super::{EquipmentItem, EquipmentKinds, ProgressionState};
 use crate::atlas::prelude::*;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
+pub enum SkillTreeContents {
+    Equipment(EquipmentItem),
+    EquipmentExpansion(EquipmentKinds, u32),
+}
+
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub struct SkillTreeNode {
-    pub item: EquipmentItem,
+    pub contents: SkillTreeContents,
     pub position: Point,
     pub cost: u32,
     pub dependencies: Vec<String>,
 }
 
 impl SkillTreeNode {
-    pub fn init(item: EquipmentItem, position: Point, cost: u32, dependencies: &[&str]) -> SkillTreeNode {
+    pub fn with_equipment(equipment: EquipmentItem, position: Point, cost: u32, dependencies: &[&str]) -> SkillTreeNode {
         SkillTreeNode {
-            item,
+            contents: SkillTreeContents::Equipment(equipment),
             position,
             cost,
             dependencies: dependencies.iter().map(|d| d.to_string()).collect(),
         }
     }
 
-    pub fn name(&self) -> &String {
-        &self.item.name
+    pub fn with_expansion(kind: EquipmentKinds, generation: u32, position: Point, cost: u32, dependencies: &[&str]) -> SkillTreeNode {
+        SkillTreeNode {
+            contents: SkillTreeContents::EquipmentExpansion(kind, generation),
+            position,
+            cost,
+            dependencies: dependencies.iter().map(|d| d.to_string()).collect(),
+        }
     }
 
-    pub fn image(&self) -> &Option<String> {
-        &self.item.image
+    pub fn name(&self) -> String {
+        match &self.contents {
+            SkillTreeContents::Equipment(item) => item.name.to_string(),
+            SkillTreeContents::EquipmentExpansion(kind, generation) => {
+                let suffix = if *generation > 1 {
+                    format!(" {}", roman::to(*generation as i32).unwrap())
+                } else {
+                    "".to_string()
+                };
+                format!("{:#?} Expansion{}", kind, suffix)
+            }
+        }
+    }
+
+    pub fn image(&self) -> Option<String> {
+        match &self.contents {
+            SkillTreeContents::Equipment(item) => item.image.clone(),
+            SkillTreeContents::EquipmentExpansion(kind, _) => match kind {
+                EquipmentKinds::Weapon => Some("SpellBook05_09.png".to_string()),
+                EquipmentKinds::Armor => Some("SpellBook05_10.png".to_string()),
+                EquipmentKinds::Accessory => Some("SpellBook05_59.png".to_string()),
+                EquipmentKinds::Mastery => Some("SpellBook05_38.png".to_string()),
+            },
+        }
     }
 }
 
@@ -44,19 +77,19 @@ pub struct SkillTree {
 impl SkillTree {
     pub fn init(nodes: &[SkillTreeNode]) -> SkillTree {
         SkillTree {
-            nodes: nodes.iter().map(|n| (n.name().clone(), n.clone())).collect(),
+            nodes: nodes.iter().map(|n| (n.name(), n.clone())).collect(),
         }
     }
 
     pub fn icons(&self) -> Vec<String> {
-        self.nodes.values().filter_map(|n| n.image().to_owned()).collect()
+        self.nodes.values().filter_map(|n| n.image()).collect()
     }
 
     pub fn all(&self, state: &ProgressionState) -> Vec<(SkillTreeNode, SkillNodeStatus)> {
         self.nodes
             .values()
             .map(|n| {
-                let status = if state.items.contains(n.name()) {
+                let status = if state.has_unlock(&n.name()) {
                     SkillNodeStatus::Selected
                 } else if self.can_select(state, &n.name()) {
                     SkillNodeStatus::Available
@@ -70,15 +103,28 @@ impl SkillTree {
 
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
-        !state.items.contains(node.name()) && node.dependencies.iter().all(|d| state.items.contains(d)) && node.cost <= state.influence
+        let not_already_selected = !state.has_unlock(&node.name());
+        let dependencies_fulfilled = node.dependencies.iter().all(|d| state.has_unlock(d));
+        let can_afford = node.cost <= state.influence;
+        not_already_selected && dependencies_fulfilled && can_afford
     }
 
     pub fn select(&self, state: &mut ProgressionState, name: &str) {
         if self.can_select(state, name) {
             let node = self.nodes.get(name).unwrap();
 
-            state.items.insert(name.to_string());
+            // We don't use sales APIs here since skill node cost != normal card cost
             state.influence -= node.cost;
+
+            match node.contents {
+                SkillTreeContents::Equipment(_) => {
+                    state.items.insert(name.to_string());
+                }
+                SkillTreeContents::EquipmentExpansion(kind, _) => {
+                    state.equipment_expansions.insert(name.to_string());
+                    state.equipment.extend(kind);
+                }
+            }
         }
     }
 }
@@ -100,10 +146,10 @@ mod tests {
     fn all_has_selected() {
         let state = state_with_deps(0, &["Foo", "Bar"]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init(eq("Moo"), Point::init(0, 0), 100, &[]),
+            SkillTreeNode::with_equipment(eq("Foo"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::with_equipment(eq("Bar"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::with_equipment(eq("Buzz"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::with_equipment(eq("Moo"), Point::init(0, 0), 100, &[]),
         ]);
         let all = tree.all(&state);
         assert_eq!(SkillNodeStatus::Selected, all.iter().find(|&a| a.0.name() == "Foo").unwrap().1);
@@ -116,9 +162,9 @@ mod tests {
     fn can_select_dependencies() {
         let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 0, &[]),
-            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 0, &["Foo"]),
-            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::with_equipment(eq("Foo"), Point::init(0, 0), 0, &[]),
+            SkillTreeNode::with_equipment(eq("Bar"), Point::init(0, 0), 0, &["Foo"]),
+            SkillTreeNode::with_equipment(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
         assert!(tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bar"));
@@ -134,10 +180,10 @@ mod tests {
     fn can_select_cost() {
         let mut state = state_with_deps(0, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::with_equipment(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::with_equipment(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::with_equipment(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::with_equipment(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
         assert_eq!(false, tree.can_select(&state, "Foo"));
         assert_eq!(false, tree.can_select(&state, "Bazz"));
@@ -155,10 +201,10 @@ mod tests {
     fn select() {
         let mut state = state_with_deps(7, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::with_equipment(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::with_equipment(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::with_equipment(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::with_equipment(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
 
         tree.select(&mut state, "Foo");
@@ -170,15 +216,49 @@ mod tests {
     fn select_already_selected() {
         let mut state = state_with_deps(10, &[]);
         let tree = SkillTree::init(&[
-            SkillTreeNode::init(eq("Foo"), Point::init(0, 0), 5, &[]),
-            SkillTreeNode::init(eq("Bazz"), Point::init(0, 0), 10, &[]),
-            SkillTreeNode::init(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
-            SkillTreeNode::init(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
+            SkillTreeNode::with_equipment(eq("Foo"), Point::init(0, 0), 5, &[]),
+            SkillTreeNode::with_equipment(eq("Bazz"), Point::init(0, 0), 10, &[]),
+            SkillTreeNode::with_equipment(eq("Bar"), Point::init(0, 0), 5, &["Foo"]),
+            SkillTreeNode::with_equipment(eq("Buzz"), Point::init(0, 0), 0, &["Bar"]),
         ]);
 
         tree.select(&mut state, "Foo");
         assert_eq!(5, state.influence);
         tree.select(&mut state, "Foo");
         assert_eq!(5, state.influence);
+    }
+
+    #[test]
+    fn select_expansion() {
+        let mut state = state_with_deps(10, &[]);
+        let tree = SkillTree::init(&[
+            SkillTreeNode::with_expansion(EquipmentKinds::Armor, 1, Point::init(0, 0), 5, &[]),
+            SkillTreeNode::with_equipment(eq("Bazz"), Point::init(0, 0), 5, &["Armor Expansion"]),
+        ]);
+
+        tree.select(&mut state, "Armor Expansion");
+        assert_eq!(1, state.equipment.count(EquipmentKinds::Armor));
+        assert!(tree.can_select(&state, "Bazz"));
+    }
+
+    #[test]
+    fn select_multiple_expansions() {
+        let mut state = state_with_deps(15, &[]);
+        let tree = SkillTree::init(&[
+            SkillTreeNode::with_expansion(EquipmentKinds::Armor, 1, Point::init(0, 0), 5, &[]),
+            SkillTreeNode::with_expansion(EquipmentKinds::Armor, 2, Point::init(0, 0), 5, &["Armor Expansion"]),
+            SkillTreeNode::with_expansion(EquipmentKinds::Armor, 3, Point::init(0, 0), 5, &["Armor Expansion II"]),
+        ]);
+
+        tree.select(&mut state, "Armor Expansion");
+        assert_eq!(1, state.equipment.count(EquipmentKinds::Armor));
+        assert!(tree.can_select(&state, "Armor Expansion II"));
+
+        tree.select(&mut state, "Armor Expansion II");
+        assert_eq!(2, state.equipment.count(EquipmentKinds::Armor));
+        assert!(tree.can_select(&state, "Armor Expansion III"));
+
+        tree.select(&mut state, "Armor Expansion III");
+        assert_eq!(3, state.equipment.count(EquipmentKinds::Armor));
     }
 }

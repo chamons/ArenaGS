@@ -166,7 +166,7 @@ impl View for CardView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, _ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, _ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if self.frame.contains_point(SDLPoint::new(x, y)) {

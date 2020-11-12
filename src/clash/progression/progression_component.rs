@@ -25,6 +25,7 @@ pub struct ProgressionState {
     pub phase: u32,
     pub influence: u32,
     pub items: HashSet<String>,
+    pub equipment_expansions: HashSet<String>,
     pub weapon: CharacterWeaponKind,
     pub equipment: Equipment,
 }
@@ -39,8 +40,13 @@ impl ProgressionState {
             phase,
             influence,
             items: items.iter().map(|s| s.to_string()).collect(),
+            equipment_expansions: HashSet::new(),
             weapon,
             equipment,
         }
+    }
+
+    pub fn has_unlock(&self, name: &str) -> bool {
+        self.items.contains(name) || self.equipment_expansions.contains(name)
     }
 }

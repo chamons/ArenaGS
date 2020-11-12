@@ -119,8 +119,8 @@ impl View for SkillTreeView {
         }
 
         for d in dependencies {
-            let left = all.iter().map(|a| &a.0).find(|a| a.name() == &d.0).unwrap();
-            let right = all.iter().map(|a| &a.0).find(|a| a.name() == &d.1).unwrap();
+            let left = all.iter().map(|a| &a.0).find(|a| a.name() == d.0).unwrap();
+            let right = all.iter().map(|a| &a.0).find(|a| a.name() == d.1).unwrap();
 
             if progression.items.contains(&d.0) {
                 canvas.set_draw_color(Color::from((218, 218, 218)));
@@ -154,7 +154,7 @@ impl View for SkillTreeView {
         Ok(())
     }
 
-    fn handle_mouse_click(&mut self, ecs: &World, x: i32, y: i32, button: Option<MouseButton>) {
+    fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
         if let Some(button) = button {
             if button == MouseButton::Left {
                 if let Some(hit) = self.find_node_at(ecs, x, y) {
@@ -167,7 +167,7 @@ impl View for SkillTreeView {
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(hit) = self.find_node_at(ecs, x, y) {
-            Some(HitTestResult::Skill(hit.name().to_string()))
+            Some(HitTestResult::Skill(hit.name()))
         } else {
             None
         }

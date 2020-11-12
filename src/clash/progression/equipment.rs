@@ -65,13 +65,7 @@ impl EquipmentItem {
 
     pub fn description(&self) -> Vec<String> {
         let mut description = vec![];
-        for e in &[
-            EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string()),
-            EquipmentEffect::ModifiesResourceTotal(-2, "Bullets".to_string()),
-            EquipmentEffect::ModifiesArmor(1),
-        ]
-        /*self.effect*/
-        {
+        for e in &self.effect {
             match e {
                 EquipmentEffect::None => {}
                 EquipmentEffect::UnlocksAbilityClass(kind) => description.push(format!("Unlocks {}.", kind)),
@@ -199,6 +193,11 @@ impl Equipment {
 
     pub fn has(&self, name: &str) -> bool {
         self.find(name).is_some()
+    }
+
+    pub fn extend(&mut self, kind: EquipmentKinds) {
+        let store = self.get_mut_store(kind);
+        store.resize(store.len() + 1, None);
     }
 }
 
@@ -342,5 +341,15 @@ mod tests {
         assert!(equipment.has("Weapon"));
         assert!(equipment.has("Armor2"));
         assert_eq!(false, equipment.has("Foo"));
+    }
+
+    #[test]
+    fn extend() {
+        let mut equipment = Equipment::init(4, 3, 2, 1);
+
+        equipment.extend(EquipmentKinds::Accessory);
+        assert_eq!(3, equipment.count(EquipmentKinds::Accessory));
+        equipment.extend(EquipmentKinds::Accessory);
+        assert_eq!(4, equipment.count(EquipmentKinds::Accessory));
     }
 }
