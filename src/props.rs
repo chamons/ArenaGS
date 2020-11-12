@@ -51,3 +51,6 @@ pub use mouse_position::*;
 
 mod infobar;
 pub use infobar::*;
+
+mod skillbar;
+pub use skillbar::*;

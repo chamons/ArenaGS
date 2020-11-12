@@ -16,7 +16,7 @@ use super::saveload;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{HelpPopup, HitTestResult, InfoBarView, MousePositionComponent, View};
+use crate::props::{get_skill_name_on_skillbar, hotkey_to_skill_index, HelpPopup, HitTestResult, InfoBarView, MousePositionComponent, SkillBarView, View};
 
 pub struct BattleScene {
     ecs: World,
@@ -71,7 +71,7 @@ impl BattleScene {
 
     fn handle_default_key(&mut self, keycode: Keycode) {
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+            if let Some(name) = get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name))
             }
         }
@@ -115,7 +115,7 @@ impl BattleScene {
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+            if let Some(name) = get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name));
             }
         }
