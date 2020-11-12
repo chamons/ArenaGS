@@ -81,7 +81,7 @@ impl View for Frame {
 #[allow(dead_code)]
 pub enum ButtonKind {
     Image(Texture),
-    Text(String, Frame, Rc<TextRenderer>),
+    Text(String, Frame, Rc<TextRenderer>, FontSize),
 }
 
 pub struct Button {
@@ -132,25 +132,35 @@ impl Button {
         Ok(Button {
             frame,
             kind: ButtonKind::Image(image),
-            active: false,
+            active: true,
             delegate,
         })
     }
 
-    pub fn text(
+    pub fn text(corner: SDLPoint, text: &str, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, delegate: ButtonDelegate) -> BoxResult<Button> {
+        let text_frame = Frame::init(corner, render_context, FrameKind::ButtonFull)?;
+        let text_size = text_frame.frame_size();
+        Ok(Button {
+            frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
+            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
+            active: true,
+            delegate,
+        })
+    }
+
+    pub fn tab(
         corner: SDLPoint,
         text: &str,
         render_context: &RenderContext,
         text_renderer: &Rc<TextRenderer>,
-        full_frame: bool,
         active: bool,
         delegate: ButtonDelegate,
     ) -> BoxResult<Button> {
-        let text_frame = Frame::init(corner, render_context, if full_frame { FrameKind::ButtonFull } else { FrameKind::Button })?;
+        let text_frame = Frame::init(corner, render_context, FrameKind::Button)?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
-            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer)),
+            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
             active,
             delegate,
         })
@@ -166,15 +176,15 @@ impl View for Button {
 
         match &self.kind {
             ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
-            ButtonKind::Text(text, text_frame, text_renderer) => {
+            ButtonKind::Text(text, text_frame, text_renderer, font_size) => {
                 text_frame.render(ecs, canvas, frame)?;
                 text_renderer.render_text_centered(
                     text,
-                    self.frame.x() + 2,
+                    self.frame.x() + 8,
                     self.frame.y() + 10,
-                    text_frame.frame_size().0 - 4,
+                    text_frame.frame_size().0 - 16,
                     canvas,
-                    FontSize::Bold,
+                    *font_size,
                     if self.active { FontColor::White } else { FontColor::Brown },
                 )?;
 
@@ -246,12 +256,11 @@ impl TabView {
             .drain(0..)
             .enumerate()
             .map(|(i, b)| {
-                let button = Button::text(
+                let button = Button::tab(
                     SDLPoint::new(corner.x() + (tab_button_start + button_width * i as i32), corner.y()),
                     &b.text,
                     render_context,
                     text_renderer,
-                    false,
                     i == 0,
                     ButtonDelegate::init(),
                 )

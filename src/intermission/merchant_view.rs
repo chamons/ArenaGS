@@ -62,10 +62,7 @@ impl MerchantView {
             "Purchase",
             &render_context,
             text_renderer,
-            true,
-            true,
             ButtonDelegate::init()
-                .handler(Box::new(move |_| {}))
                 .enabled(Box::new(enclose! { (cards, selection) move |ecs| {
                     let cards = cards.borrow();
 

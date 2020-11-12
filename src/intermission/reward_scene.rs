@@ -82,8 +82,6 @@ impl RewardScene {
             "Accept",
             &render_context,
             text_renderer,
-            true,
-            true,
             ButtonDelegate::init()
                 .enabled(Box::new(enclose! { (selection) move |_|
                     if selection.borrow().is_some() {
@@ -100,8 +98,6 @@ impl RewardScene {
             &format!("Pass (+{} Influence)", reward.cashout_influence),
             &render_context,
             text_renderer,
-            true,
-            true,
             ButtonDelegate::init().handler(Box::new(enclose! { (selection) move |_| *selection.borrow_mut() = Some(3)})),
         )?;
         Ok(RewardScene {

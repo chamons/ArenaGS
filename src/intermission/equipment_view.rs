@@ -127,8 +127,6 @@ impl EquipmentView {
                 "Sort",
                 render_context,
                 text_renderer,
-                true,
-                true,
                 ButtonDelegate::init().handler(Box::new(move |_| *should_sort.borrow_mut() = true)),
             )?,
             slots: RefCell::new(vec![]),

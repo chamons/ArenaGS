@@ -24,8 +24,6 @@ impl NextBattleView {
             "Next Fight",
             render_context,
             text_renderer,
-            true,
-            true,
             ButtonDelegate::init().handler(Box::new(enclose! { (next_fight) move |_| *next_fight.borrow_mut() = true })),
         )?;
         Ok(NextBattleView { continue_button })
