@@ -78,17 +78,14 @@ impl View for Frame {
     }
 }
 
-#[allow(dead_code)]
-pub enum ButtonKind {
-    Image(Texture),
-    Text(String, Frame, Rc<TextRenderer>, FontSize),
-}
-
 pub struct Button {
     pub frame: SDLRect,
-    kind: ButtonKind,
     delegate: ButtonDelegate,
     active: bool,
+    text: String,
+    text_frame: Frame,
+    text_renderer: Rc<TextRenderer>,
+    font_size: FontSize,
 }
 
 #[derive(Eq, PartialEq)]
@@ -127,22 +124,15 @@ impl ButtonDelegate {
 }
 
 impl Button {
-    #[allow(dead_code)]
-    pub fn image(frame: SDLRect, image: Texture, delegate: ButtonDelegate) -> BoxResult<Button> {
-        Ok(Button {
-            frame,
-            kind: ButtonKind::Image(image),
-            active: true,
-            delegate,
-        })
-    }
-
     pub fn text(corner: SDLPoint, text: &str, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, delegate: ButtonDelegate) -> BoxResult<Button> {
         let text_frame = Frame::init(corner, render_context, FrameKind::ButtonFull)?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
-            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
+            text: text.to_string(),
+            text_frame,
+            text_renderer: Rc::clone(text_renderer),
+            font_size: FontSize::Bold,
             active: true,
             delegate,
         })
@@ -160,10 +150,18 @@ impl Button {
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
-            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
+            text: text.to_string(),
+            text_frame,
+            text_renderer: Rc::clone(text_renderer),
+            font_size: FontSize::Bold,
             active,
             delegate,
         })
+    }
+
+    pub fn with_size(mut self, font_size: FontSize) -> Button {
+        self.font_size = font_size;
+        self
     }
 }
 
@@ -174,26 +172,27 @@ impl View for Button {
             return Ok(());
         }
 
-        match &self.kind {
-            ButtonKind::Image(background) => canvas.copy(&background, None, self.frame)?,
-            ButtonKind::Text(text, text_frame, text_renderer, font_size) => {
-                text_frame.render(ecs, canvas, frame)?;
-                text_renderer.render_text_centered(
-                    text,
-                    self.frame.x() + 8,
-                    self.frame.y() + 10,
-                    text_frame.frame_size().0 - 16,
-                    canvas,
-                    *font_size,
-                    if self.active { FontColor::White } else { FontColor::Brown },
-                )?;
+        self.text_frame.render(ecs, canvas, frame)?;
 
-                if enable_state == ButtonEnabledState::Ghosted {
-                    canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
-                    canvas.fill_rect(self.frame)?;
-                }
-            }
+        let text_y_offset = match self.font_size {
+            FontSize::Bold => 10,
+            _ => 13,
         };
+
+        self.text_renderer.render_text_centered(
+            &self.text,
+            self.frame.x() + 8,
+            self.frame.y() + text_y_offset,
+            self.text_frame.frame_size().0 - 16,
+            canvas,
+            self.font_size,
+            if self.active { FontColor::White } else { FontColor::Brown },
+        )?;
+
+        if enable_state == ButtonEnabledState::Ghosted {
+            canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
+            canvas.fill_rect(self.frame)?;
+        }
 
         Ok(())
     }

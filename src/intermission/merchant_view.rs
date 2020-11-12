@@ -10,7 +10,7 @@ use super::card_view::{CardView, CARD_WIDTH};
 use super::reward_scene::{draw_selection_frame, get_reward, icons_for_items};
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{gambler, sales, EquipmentItem, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
+use crate::clash::{gambler, sales, EquipmentItem, EquipmentKinds, EquipmentRarity, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 
@@ -18,6 +18,7 @@ pub struct MerchantView {
     text_renderer: Rc<TextRenderer>,
     ui: Rc<IconCache>,
     cards: Rc<RefCell<Vec<Option<CardView>>>>,
+    equipment_expand_buttons: Rc<RefCell<Vec<Button>>>,
     accept_button: Button,
     selection: Rc<RefCell<Option<u32>>>,
 }
@@ -90,12 +91,38 @@ impl MerchantView {
                 }})),
         )?;
 
+        let mut equipment_expand_buttons = vec![];
+        let progression = &mut ecs.read_resource::<ProgressionComponent>();
+        for (i, kind) in vec![
+            EquipmentKinds::Weapon,
+            EquipmentKinds::Armor,
+            EquipmentKinds::Accessory,
+            EquipmentKinds::Mastery,
+        ]
+        .iter()
+        .filter(|k| !progression.state.equipment_expansions.contains(&format!("{:#?} Store Expansion", k)))
+        .enumerate()
+        {
+            equipment_expand_buttons.push(
+                Button::text(
+                    SDLPoint::new(50 + 155 * i as i32, 655),
+                    &format!("+1 {:#?} Slot", kind),
+                    render_context,
+                    text_renderer,
+                    ButtonDelegate::init(),
+                )?
+                .with_size(FontSize::Small),
+            )
+        }
+        let equipment_expand_buttons = Rc::new(RefCell::new(equipment_expand_buttons));
+
         Ok(MerchantView {
             text_renderer: Rc::clone(text_renderer),
             ui,
             cards: Rc::clone(&cards),
             accept_button,
             selection: Rc::clone(&selection),
+            equipment_expand_buttons,
         })
     }
 }
@@ -118,6 +145,20 @@ impl View for MerchantView {
                 c.frame.x(),
                 c.frame.y() - 20,
                 c.frame.width(),
+                canvas,
+                FontSize::Bold,
+                FontColor::Brown,
+            )?;
+        }
+
+        for b in self.equipment_expand_buttons.borrow().iter() {
+            b.render(ecs, canvas, frame)?;
+
+            self.text_renderer.render_text_centered(
+                &format!("100 Influence"),
+                b.frame.x(),
+                b.frame.y() - 20,
+                b.frame.width(),
                 canvas,
                 FontSize::Bold,
                 FontColor::Brown,

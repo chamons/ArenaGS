@@ -1,3 +1,2 @@
-- Add special skill nodes to do
 - Add single use extension for each kind
 - Clippy and PR

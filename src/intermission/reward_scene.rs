@@ -99,7 +99,8 @@ impl RewardScene {
             &render_context,
             text_renderer,
             ButtonDelegate::init().handler(Box::new(enclose! { (selection) move |_| *selection.borrow_mut() = Some(3)})),
-        )?;
+        )?
+        .with_size(FontSize::Small);
         Ok(RewardScene {
             text_renderer: Rc::clone(text_renderer),
             ui,
