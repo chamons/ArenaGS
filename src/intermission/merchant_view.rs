@@ -201,7 +201,7 @@ impl View for MerchantView {
             b.render(ecs, canvas, frame)?;
 
             self.text_renderer.render_text_centered(
-                &format!("100 Influence"),
+                "100 Influence",
                 b.frame.x(),
                 b.frame.y() - 20,
                 b.frame.width(),

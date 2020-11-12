@@ -217,7 +217,7 @@ impl EquipmentView {
         }
     }
 
-    fn find_slot_at(x: i32, y: i32, slots: &Vec<EquipmentSlotView>) -> Option<usize> {
+    fn find_slot_at(x: i32, y: i32, slots: &[EquipmentSlotView]) -> Option<usize> {
         slots.iter().position(|s| s.frame.contains_point(SDLPoint::new(x, y)))
     }
 }

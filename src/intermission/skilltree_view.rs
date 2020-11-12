@@ -167,7 +167,7 @@ impl View for SkillTreeView {
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
         if let Some(hit) = self.find_node_at(ecs, x, y) {
-            Some(HitTestResult::Skill(hit.name().to_string()))
+            Some(HitTestResult::Skill(hit.name()))
         } else {
             None
         }

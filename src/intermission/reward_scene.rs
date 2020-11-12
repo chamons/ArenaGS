@@ -33,7 +33,7 @@ pub fn get_reward(ecs: &World) -> RewardsComponent {
     (&rewards).join().next().unwrap().clone()
 }
 
-pub fn icons_for_items(render_context: &RenderContext, items: &Vec<EquipmentItem>) -> BoxResult<Rc<IconCache>> {
+pub fn icons_for_items(render_context: &RenderContext, items: &[EquipmentItem]) -> BoxResult<Rc<IconCache>> {
     let icons: Vec<&String> = items.iter().flat_map(|i| &i.image).collect();
     Ok(Rc::new(IconCache::init(&render_context, IconLoader::init_icons(), &icons[..])?))
 }

@@ -77,12 +77,12 @@ pub struct SkillTree {
 impl SkillTree {
     pub fn init(nodes: &[SkillTreeNode]) -> SkillTree {
         SkillTree {
-            nodes: nodes.iter().map(|n| (n.name().clone(), n.clone())).collect(),
+            nodes: nodes.iter().map(|n| (n.name(), n.clone())).collect(),
         }
     }
 
     pub fn icons(&self) -> Vec<String> {
-        self.nodes.values().filter_map(|n| n.image().to_owned()).collect()
+        self.nodes.values().filter_map(|n| n.image()).collect()
     }
 
     pub fn all(&self, state: &ProgressionState) -> Vec<(SkillTreeNode, SkillNodeStatus)> {
