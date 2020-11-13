@@ -252,7 +252,7 @@ impl TabView {
         let tab_view_height = canvas_height as i32 - (corner.y() * 2);
         let tab_view_width = canvas_width as i32 - (corner.x() * 2);
         let tab_button_start = (tab_view_width - tab_button_total_width) / 2;
-        let tabs: Vec<(Button, Box<dyn View>)> = tabs
+        let mut tabs: Vec<(Button, Box<dyn View>)> = tabs
             .drain(0..)
             .enumerate()
             .map(|(i, b)| {
@@ -268,6 +268,7 @@ impl TabView {
                 (button, b.view)
             })
             .collect();
+        tabs[0].1.on_tab_swap();
         Ok(TabView {
             frame: SDLRect::new(corner.x(), corner.y(), tab_view_width as u32, tab_view_height as u32),
             background: IconLoader::init_ui().get(render_context, "tab_background.png")?,
@@ -295,6 +296,7 @@ impl View for TabView {
                     self.tabs[*self.index.borrow()].0.active = false;
                     *self.index.borrow_mut() = index;
                     self.tabs[index].0.active = true;
+                    self.tabs[index].1.on_tab_swap();
                 }
             }
         }

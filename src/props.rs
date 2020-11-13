@@ -32,6 +32,9 @@ pub trait View {
     fn handle_mouse_click(&mut self, _ecs: &mut World, _x: i32, _y: i32, _button: Option<MouseButton>) {}
 
     fn handle_mouse_move(&mut self, _ecs: &World, _x: i32, _y: i32, _state: MouseState) {}
+
+    // This is a cludge, we should either have full lifecycle or none, not one hard coded tab specific
+    fn on_tab_swap(&mut self) {}
 }
 
 mod views;
