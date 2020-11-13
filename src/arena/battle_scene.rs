@@ -49,7 +49,7 @@ impl BattleScene {
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(&render_context)?),
-            Box::from(InfoBarView::init(SDLPoint::new(780, 20), &render_context, Rc::clone(&text_renderer))?),
+            Box::from(InfoBarView::init(SDLPoint::new(780, 20), &render_context, Rc::clone(&text_renderer), false)?),
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,

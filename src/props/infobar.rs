@@ -15,15 +15,17 @@ pub struct InfoBarView {
     text: Rc<TextRenderer>,
     frame: Frame,
     hit_tester: RefCell<TextHitTester>,
+    equipment_view: bool,
 }
 
 impl InfoBarView {
-    pub fn init(position: SDLPoint, render_context: &RenderContext, text: Rc<TextRenderer>) -> BoxResult<InfoBarView> {
+    pub fn init(position: SDLPoint, render_context: &RenderContext, text: Rc<TextRenderer>, equipment_view: bool) -> BoxResult<InfoBarView> {
         Ok(InfoBarView {
             position,
             text,
             frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 20), render_context, FrameKind::InfoBar)?,
             hit_tester: RefCell::new(TextHitTester::init()),
+            equipment_view,
         })
     }
 
@@ -32,10 +34,12 @@ impl InfoBarView {
         self.render_character(canvas, ecs, find_player(&ecs), &mut offset, false)?;
         offset += 40;
 
-        for e in find_enemies(&ecs) {
-            self.small_text(canvas, "Enemy:", &mut offset)?;
-            self.render_character(canvas, ecs, e, &mut offset, true)?;
-            offset += 20;
+        if !self.equipment_view {
+            for e in find_enemies(&ecs) {
+                self.small_text(canvas, "Enemy:", &mut offset)?;
+                self.render_character(canvas, ecs, e, &mut offset, true)?;
+                offset += 20;
+            }
         }
         Ok(())
     }
@@ -74,7 +78,10 @@ impl View for InfoBarView {
             hit_test.clear();
         }
 
-        self.frame.render(ecs, canvas, frame)?;
+        if !self.equipment_view {
+            self.frame.render(ecs, canvas, frame)?;
+        }
+
         self.render_character_info(ecs, canvas)?;
 
         Ok(())

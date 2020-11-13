@@ -1,3 +1,4 @@
-- Add was just shown proc to views or some other way to know we should create a new world for combat display
-- Get toolbar and infobar to display in combat view
+- Clean up layout location
+- Add buttons to swap ammo kind
+- Get help overlay working here
 - PR

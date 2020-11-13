@@ -30,7 +30,7 @@ impl NextBattleView {
         )?;
         let preview_world = NextBattleView::generate_preview_world(ecs);
         let skillbar = SkillBarView::init(render_context, &preview_world, SDLPoint::new(137, 700), Rc::clone(&text_renderer), true)?;
-        let infobar = InfoBarView::init(SDLPoint::new(780, 20), render_context, Rc::clone(&text_renderer))?;
+        let infobar = InfoBarView::init(SDLPoint::new(750, 100), render_context, Rc::clone(&text_renderer), true)?;
         Ok(NextBattleView {
             continue_button,
             preview_world: RefCell::new(preview_world),
