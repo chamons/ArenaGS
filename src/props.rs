@@ -6,6 +6,12 @@ use crate::after_image::{LayoutChunkIcon, RenderCanvas};
 use crate::atlas::prelude::*;
 use crate::clash::StatusKind;
 
+pub const CARD_WIDTH: u32 = 110;
+pub const CARD_HEIGHT: u32 = 110;
+
+pub const CARD_WIDTH_LARGE: u32 = 160;
+pub const CARD_HEIGHT_LARGE: u32 = 220;
+
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Debug)]
 pub enum HitTestResult {

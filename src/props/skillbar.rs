@@ -21,11 +21,11 @@ const ICON_SIZE: i32 = 48;
 const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
-    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>, force_load_all: bool) -> BoxResult<SkillBarView> {
+    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>, equipment_mode: bool) -> BoxResult<SkillBarView> {
         let skills = ecs.read_resource::<SkillsResource>();
 
         let mut views = Vec::with_capacity(10);
-        let cache = Rc::new(if force_load_all {
+        let cache = Rc::new(if equipment_mode {
             IconCache::init(render_context, IconLoader::init_icons(), &IconLoader::all_icons())?
         } else {
             IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?
@@ -46,6 +46,7 @@ impl SkillBarView {
                 i,
                 &cache,
                 ui.get(render_context, "skillbar_frame.png")?,
+                equipment_mode,
             )?;
             views.push(view);
         }
@@ -92,6 +93,7 @@ pub struct SkillBarItemView {
     hotkey: ((u32, u32), Texture),
     hotkey_inactive: ((u32, u32), Texture),
     frame: Texture,
+    show_all_squares: bool,
 }
 type HotKeyRenderInfo = ((u32, u32), Texture);
 
@@ -103,6 +105,7 @@ impl SkillBarItemView {
         index: usize,
         icons: &Rc<IconCache>,
         frame: Texture,
+        equipment_mode: bool,
     ) -> BoxResult<SkillBarItemView> {
         let rect = SDLRect::new(position.x, position.y, 48, 48);
 
@@ -120,6 +123,7 @@ impl SkillBarItemView {
             hotkey: ((hotkey_query.width, hotkey_query.height), hotkey),
             hotkey_inactive: ((hotkey_inactive_query.width, hotkey_inactive_query.height), hotkey_inactive),
             frame,
+            show_all_squares: equipment_mode,
         })
     }
 
@@ -136,7 +140,11 @@ impl SkillBarItemView {
                 _ => Some((&self.hotkey_inactive, self.icons.get(&skill.image.unwrap()), true)),
             }
         } else {
-            None
+            if self.show_all_squares {
+                Some((&self.hotkey, self.icons.get("void.png"), false))
+            } else {
+                None
+            }
         }
     }
 }

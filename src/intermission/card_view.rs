@@ -10,7 +10,7 @@ use super::skilltree_view::SKILL_NODE_SIZE;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds};
-use crate::props::{render_text_layout, HitTestResult, RenderTextOptions, View};
+use crate::props::*;
 
 pub struct CardView {
     pub frame: SDLRect,
@@ -23,12 +23,6 @@ pub struct CardView {
     large: bool,
     can_move: bool,
 }
-
-pub const CARD_WIDTH: u32 = 110;
-pub const CARD_WIDTH_LARGE: u32 = 160;
-
-pub const CARD_HEIGHT: u32 = 110;
-pub const CARD_HEIGHT_LARGE: u32 = 220;
 
 impl CardView {
     pub fn init(

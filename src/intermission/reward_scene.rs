@@ -8,13 +8,13 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::card_view::{CardView, CARD_WIDTH};
+use super::card_view::CardView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentResource, ProgressionComponent, RewardsComponent};
 use crate::conductor::{Scene, StageDirection};
 use crate::enclose;
-use crate::props::{Button, ButtonDelegate, ButtonEnabledState, View};
+use crate::props::{Button, ButtonDelegate, ButtonEnabledState, View, CARD_WIDTH};
 
 pub struct RewardScene {
     text_renderer: Rc<TextRenderer>,

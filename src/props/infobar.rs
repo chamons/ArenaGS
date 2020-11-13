@@ -2,30 +2,48 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sdl2::rect::Point as SDLPoint;
+use sdl2::rect::Rect as SDLRect;
+use sdl2::render::Texture;
 use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::after_image::LayoutRequest;
 use crate::atlas::prelude::*;
 use crate::clash::{find_enemies, find_player, summarize_character};
-use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, RenderTextOptions, TextHitTester, View};
+use crate::props::{render_text_layout, Frame, FrameKind, HitTestResult, RenderTextOptions, TextHitTester, View, CARD_HEIGHT_LARGE, CARD_WIDTH_LARGE};
+
+#[derive(is_enum_variant)]
+enum InfoBarFormat {
+    Sidebar(Frame),
+    Card(Texture, SDLRect),
+}
 
 pub struct InfoBarView {
     position: SDLPoint,
     text: Rc<TextRenderer>,
-    frame: Frame,
     hit_tester: RefCell<TextHitTester>,
-    equipment_view: bool,
+    format: InfoBarFormat,
 }
 
 impl InfoBarView {
-    pub fn init(position: SDLPoint, render_context: &RenderContext, text: Rc<TextRenderer>, equipment_view: bool) -> BoxResult<InfoBarView> {
+    pub fn init(position: SDLPoint, render_context: &RenderContext, text: Rc<TextRenderer>, card_view: bool) -> BoxResult<InfoBarView> {
+        let format = if !card_view {
+            InfoBarFormat::Sidebar(Frame::init(
+                SDLPoint::new(position.x() - 27, position.y() - 20),
+                render_context,
+                FrameKind::InfoBar,
+            )?)
+        } else {
+            InfoBarFormat::Card(
+                IconLoader::init_ui().get(render_context, "card_frame_large.png")?,
+                SDLRect::new(position.x() - 27, position.y() - 20, CARD_WIDTH_LARGE, CARD_HEIGHT_LARGE),
+            )
+        };
         Ok(InfoBarView {
             position,
             text,
-            frame: Frame::init(SDLPoint::new(position.x() - 27, position.y() - 20), render_context, FrameKind::InfoBar)?,
+            format,
             hit_tester: RefCell::new(TextHitTester::init()),
-            equipment_view,
         })
     }
 
@@ -34,7 +52,7 @@ impl InfoBarView {
         self.render_character(canvas, ecs, find_player(&ecs), &mut offset, false)?;
         offset += 40;
 
-        if !self.equipment_view {
+        if self.format.is_sidebar() {
             for e in find_enemies(&ecs) {
                 self.small_text(canvas, "Enemy:", &mut offset)?;
                 self.render_character(canvas, ecs, e, &mut offset, true)?;
@@ -45,7 +63,9 @@ impl InfoBarView {
     }
 
     fn render_character(&self, canvas: &mut RenderCanvas, ecs: &World, entity: Entity, offset: &mut i32, show_status_effect: bool) -> BoxResult<()> {
-        summarize_character(ecs, entity, show_status_effect, true, |t| self.small_text(canvas, t, offset).unwrap());
+        summarize_character(ecs, entity, show_status_effect, self.format.is_sidebar(), |t| {
+            self.small_text(canvas, t, offset).unwrap()
+        });
         Ok(())
     }
 
@@ -57,16 +77,17 @@ impl InfoBarView {
             return Ok(());
         }
 
+        let x_offset = if self.format.is_sidebar() { 4 } else { -6 };
         let layout = self.text.layout_text(
             &text,
             FontSize::Small,
-            LayoutRequest::init(self.position.x as u32 + 4, self.position.y as u32 + *offset as u32, 210, 2),
+            LayoutRequest::init((self.position.x + x_offset) as u32, self.position.y as u32 + *offset as u32, 210, 2),
         )?;
         render_text_layout(&layout, canvas, &self.text, RenderTextOptions::init(FontColor::Black), |rect, result| {
             hit_test.add(rect, result);
         })?;
 
-        *offset += 20;
+        *offset += if self.format.is_sidebar() { 20 } else { 25 };
         Ok(())
     }
 }
@@ -78,8 +99,9 @@ impl View for InfoBarView {
             hit_test.clear();
         }
 
-        if !self.equipment_view {
-            self.frame.render(ecs, canvas, frame)?;
+        match &self.format {
+            InfoBarFormat::Sidebar(sidebar_frame) => sidebar_frame.render(ecs, canvas, frame)?,
+            InfoBarFormat::Card(card, rect) => canvas.copy(&card, None, *rect)?,
         }
 
         self.render_character_info(ecs, canvas)?;
