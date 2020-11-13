@@ -21,14 +21,19 @@ const ICON_SIZE: i32 = 48;
 const MAX_ICON_COUNT: i32 = 10;
 
 impl SkillBarView {
-    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>) -> BoxResult<SkillBarView> {
+    pub fn init(render_context: &RenderContext, ecs: &World, position: SDLPoint, text: Rc<TextRenderer>, force_load_all: bool) -> BoxResult<SkillBarView> {
         let skills = ecs.read_resource::<SkillsResource>();
 
         let mut views = Vec::with_capacity(10);
-        let cache = Rc::new(IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?);
+        let cache = Rc::new(if force_load_all {
+            IconCache::init(render_context, IconLoader::init_icons(), &IconLoader::all_icons())?
+        } else {
+            IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?
+        });
+
         let ui = IconLoader::init_ui();
 
-        for i in 0..get_skill_count(ecs) {
+        for i in 0..10 {
             let position = SDLPoint::new(
                 get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
                 position.y + BORDER_WIDTH + 1,

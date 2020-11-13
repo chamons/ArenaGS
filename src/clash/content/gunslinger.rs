@@ -33,7 +33,7 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
         ),
         EquipmentItem::init(
             "Recoil Spring",
-            Some("SpellBook06_22.png"),
+            Some("SpellBook06_22.PNG"),
             EquipmentKinds::Weapon,
             EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
@@ -220,7 +220,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
         "Triple Shot" => {
             return SkillInfo::init_with_distance(
                 "Triple Shot",
-                Some("SpellBook06_22.png"),
+                Some("SpellBook06_22.PNG"),
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(Damage::init(4).with_option(DamageOptions::TRIPLE_SHOT), BoltKind::Bullet),
                 Some(4),

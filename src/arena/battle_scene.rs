@@ -55,6 +55,7 @@ impl BattleScene {
                 &ecs,
                 SDLPoint::new(137, 25 + MAP_CORNER_Y as i32 + TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
+                false,
             )?),
             Box::from(LogView::init(SDLPoint::new(780, 550), &render_context, Rc::clone(&text_renderer))?),
             Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
