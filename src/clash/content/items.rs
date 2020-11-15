@@ -10,13 +10,13 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
 fn get_armor() -> Vec<EquipmentItem> {
     vec![
         // Move in straight line
-        EquipmentItem::init("Jump Boots", Some("boot_b_01.PNG"), EquipmentKinds::Armor, EquipmentRarity::Common, &[]),
+        EquipmentItem::init("Jump Boots", Some("boot_b_01.png"), EquipmentKinds::Armor, EquipmentRarity::Common, &[]),
         // Absorb at start of battle
-        EquipmentItem::init("Shield Pin", Some("rune_04_b.PNG"), EquipmentKinds::Armor, EquipmentRarity::Common, &[]),
+        EquipmentItem::init("Shield Pin", Some("rune_04_b.png"), EquipmentKinds::Armor, EquipmentRarity::Common, &[]),
         // 1 turn free action dodge CD + exhaustion
         EquipmentItem::init("Wellworn Boots", Some("boot_b_07.png"), EquipmentKinds::Armor, EquipmentRarity::Common, &[]),
         // Warp + 2 turn dodge
-        EquipmentItem::init("Cloak of shadows", Some("cl_b_01.PNG"), EquipmentKinds::Armor, EquipmentRarity::Uncommon, &[]),
+        EquipmentItem::init("Cloak of shadows", Some("cl_b_01.png"), EquipmentKinds::Armor, EquipmentRarity::Uncommon, &[]),
         // Ranged attack that has CD
         EquipmentItem::init("Blast Gloves", Some("gl_b_04.png"), EquipmentKinds::Armor, EquipmentRarity::Uncommon, &[]),
     ]
@@ -25,9 +25,9 @@ fn get_armor() -> Vec<EquipmentItem> {
 fn get_accessories() -> Vec<EquipmentItem> {
     vec![
         // Regen for duration
-        EquipmentItem::init("Troll's Blood", Some("ptn_b_01.PNG"), EquipmentKinds::Accessory, EquipmentRarity::Common, &[]),
+        EquipmentItem::init("Troll's Blood", Some("ptn_b_01.png"), EquipmentKinds::Accessory, EquipmentRarity::Common, &[]),
         // Short range blink
-        EquipmentItem::init("Warp Stone", Some("rune_06_b.PNG"), EquipmentKinds::Accessory, EquipmentRarity::Common, &[]),
+        EquipmentItem::init("Warp Stone", Some("rune_06_b.png"), EquipmentKinds::Accessory, EquipmentRarity::Common, &[]),
         // Armor for duration pot
         EquipmentItem::init(
             "Adamantine Skin",
@@ -55,7 +55,7 @@ fn get_accessories() -> Vec<EquipmentItem> {
         // Free action
         EquipmentItem::init("Chronowatch", Some("en_craft_2.png"), EquipmentKinds::Accessory, EquipmentRarity::Rare, &[]),
         // Teleport in line and attack first in line with piercing damage, CD
-        EquipmentItem::init("Blink Dagger", Some("kn_b_02.PNG"), EquipmentKinds::Accessory, EquipmentRarity::Rare, &[]),
+        EquipmentItem::init("Blink Dagger", Some("kn_b_02.png"), EquipmentKinds::Accessory, EquipmentRarity::Rare, &[]),
     ]
 }
 
@@ -72,6 +72,6 @@ fn get_masteries() -> Vec<EquipmentItem> {
         // Replace all health but 1 to absorb. Armor set to zero. Trickle regen
         EquipmentItem::init("Fool's Reward", Some("coins_b_03.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
         // Convert all dodge to armor. Improves skill damage but no regen
-        EquipmentItem::init("The Final Crusade", Some("arm_b_08.PNG"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
+        EquipmentItem::init("The Final Crusade", Some("arm_b_08.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
     ]
 }

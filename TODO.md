@@ -1,4 +1,3 @@
-- Clean up layout location
 - Add buttons to swap ammo kind
 - Get help overlay working here
 - PR

@@ -89,7 +89,7 @@ fn find_filenames(filenames: &mut Vec<String>, location: &str) -> BoxResult<()> 
         if path.is_dir() {
             find_filenames(filenames, &Path::new(location).join(path).stringify())?;
         } else {
-            filenames.push(path.file_name().unwrap().stringify().to_string());
+            filenames.push(path.file_name().unwrap().stringify().to_ascii_lowercase().to_string());
         }
     }
 
