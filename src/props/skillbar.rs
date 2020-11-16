@@ -33,7 +33,8 @@ impl SkillBarView {
 
         let ui = IconLoader::init_ui();
 
-        for i in 0..10 {
+        let skill_count = if equipment_mode { 10 } else { get_skill_count(ecs) };
+        for i in 0..skill_count {
             let position = SDLPoint::new(
                 get_skillbar_offset(ecs, position) + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH) * i as i32,
                 position.y + BORDER_WIDTH + 1,
