@@ -100,7 +100,7 @@ fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: Vec<String>
     }
 }
 
-fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
+pub fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
     if ecs.has_status(invoker, StatusKind::Magnum) {
         GunslingerAmmo::Magnum
     } else if ecs.has_status(invoker, StatusKind::Ignite) {
@@ -172,6 +172,12 @@ pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
         reload(ecs, invoker, AmmoKind::Bullets, None);
         return;
     }
+
+    set_ammo_to(ecs, invoker, next_ammo);
+}
+
+pub fn set_ammo_to(ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) {
+    let current_ammo = get_current_weapon_trait(ecs, invoker);
 
     remove_skills(ecs, invoker, get_weapon_skills(ecs, Some(invoker), current_ammo));
     add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, Some(invoker), next_ammo));

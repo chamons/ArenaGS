@@ -16,6 +16,7 @@ impl IconCache {
         IconCache::init_with_alpha(render_context, loader, names, None)
     }
 
+    // We force lower case here for now - https://github.com/chamons/ArenaGS/issues/263
     pub fn init_with_alpha<T: AsRef<str>>(render_context: &RenderContext, loader: IconLoader, names: &[T], alpha: Option<u8>) -> BoxResult<IconCache> {
         let mut cache = HashMap::new();
         for n in names {
