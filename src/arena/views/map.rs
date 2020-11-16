@@ -13,15 +13,15 @@ use crate::atlas::prelude::*;
 use crate::clash::*;
 use crate::props::{Frame, FrameKind, HitTestResult, View};
 
-pub const MAP_CORNER_X: u32 = 50;
-pub const MAP_CORNER_Y: u32 = 50;
-pub const TILE_SIZE: u32 = 48;
-
 pub struct MapView {
     sprites: SpriteLoader,
     overlay: CharacterOverlay,
     frame: Frame,
 }
+
+pub const MAP_CORNER_X: u32 = 50;
+pub const MAP_CORNER_Y: u32 = 50;
+pub const TILE_SIZE: u32 = 48;
 
 fn get_render_frame(animation: Option<&AnimationComponent>, frame: u64) -> u64 {
     if let Some(animation_component) = animation {
