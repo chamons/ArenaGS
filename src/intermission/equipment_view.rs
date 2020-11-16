@@ -9,11 +9,11 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::card_view::{CardView, CARD_HEIGHT, CARD_WIDTH};
+use super::card_view::CardView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds, EquipmentResource, ProgressionComponent, ProgressionState};
-use crate::props::{Button, ButtonDelegate, HitTestResult, MousePositionComponent, View};
+use crate::props::{Button, ButtonDelegate, HitTestResult, MousePositionComponent, View, CARD_HEIGHT, CARD_WIDTH};
 
 pub struct EquipmentSlotView {
     frame: SDLRect,

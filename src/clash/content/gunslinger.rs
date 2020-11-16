@@ -19,6 +19,7 @@ pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
         SkillTreeNode::with_equipment(equipment.get("Stippled Grip"), skill_pos(2, 5), 0, &["Recoil Spring"]),
         SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 1, skill_pos(0, 8), 0, &[]),
         SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 2, skill_pos(1, 8), 0, &["Weapon Expansion"]),
+        SkillTreeNode::with_equipment(equipment.get("Ignite Ammo"), skill_pos(0, 4), 0, &[]),
     ]
 }
 
@@ -26,7 +27,7 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
     vec![
         EquipmentItem::init(
             "Adjustable Sight",
-            Some("gun_06_b.PNG"),
+            Some("gun_06_b.png"),
             EquipmentKinds::Weapon,
             EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
@@ -45,10 +46,17 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
             EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
         ),
+        EquipmentItem::init(
+            "Ignite Ammo",
+            Some("b_31_1.png"),
+            EquipmentKinds::Weapon,
+            EquipmentRarity::Standard,
+            &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
+        ),
         // More skill damage for gun effects. -3 ammo
         EquipmentItem::init(
             "Oversized Chamber",
-            Some("gun_12_b.PNG"),
+            Some("gun_12_b.png"),
             EquipmentKinds::Weapon,
             EquipmentRarity::Uncommon,
             &[],
@@ -56,7 +64,7 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
         // summon a shadow that shoots a few times
         EquipmentItem::init(
             "Gunslinger's Regret",
-            Some("artifact_01_b.PNG"),
+            Some("artifact_01_b.png"),
             EquipmentKinds::Accessory,
             EquipmentRarity::Uncommon,
             &[],
@@ -92,7 +100,7 @@ fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: Vec<String>
     }
 }
 
-fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
+pub fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
     if ecs.has_status(invoker, StatusKind::Magnum) {
         GunslingerAmmo::Magnum
     } else if ecs.has_status(invoker, StatusKind::Ignite) {
@@ -100,6 +108,27 @@ fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
     } else {
         GunslingerAmmo::Cyclone
     }
+}
+
+pub fn get_image_for_status(kind: StatusKind) -> &'static str {
+    match kind {
+        StatusKind::Ignite => "b_31_1.png",
+        StatusKind::Cyclone => "b_40_02.png",
+        StatusKind::Magnum => "b_30.png",
+        _ => panic!("Unknown status {:?} in get_image_for_status", kind),
+    }
+}
+
+pub fn get_image_for_kind(ammo: GunslingerAmmo) -> &'static str {
+    match ammo {
+        GunslingerAmmo::Ignite => "b_31_1.png",
+        GunslingerAmmo::Cyclone => "b_40_02.png",
+        GunslingerAmmo::Magnum => "b_30.png",
+    }
+}
+
+pub fn get_all_trait_images() -> Vec<&'static str> {
+    vec!["b_31_1.png", "b_40_02.png", "b_30.png"]
 }
 
 fn set_current_weapon_trait(ecs: &mut World, invoker: Entity, ammo: GunslingerAmmo) {
@@ -111,6 +140,10 @@ fn set_current_weapon_trait(ecs: &mut World, invoker: Entity, ammo: GunslingerAm
         GunslingerAmmo::Ignite => ecs.add_trait(invoker, StatusKind::Ignite),
         GunslingerAmmo::Cyclone => ecs.add_trait(invoker, StatusKind::Cyclone),
     }
+}
+
+pub fn get_equipped_ammos(ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo> {
+    ecs.read_storage::<GunslingerComponent>().grab(invoker).ammo_types.to_vec()
 }
 
 fn get_next_ammo(ecs: &mut World, invoker: Entity) -> GunslingerAmmo {
@@ -139,6 +172,12 @@ pub fn rotate_ammo(ecs: &mut World, invoker: Entity) {
         reload(ecs, invoker, AmmoKind::Bullets, None);
         return;
     }
+
+    set_ammo_to(ecs, invoker, next_ammo);
+}
+
+pub fn set_ammo_to(ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) {
+    let current_ammo = get_current_weapon_trait(ecs, invoker);
 
     remove_skills(ecs, invoker, get_weapon_skills(ecs, Some(invoker), current_ammo));
     add_skills_to_front(ecs, invoker, get_weapon_skills(ecs, Some(invoker), next_ammo));
@@ -195,7 +234,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
         "Default" | "Snap Shot" => {
             return SkillInfo::init_with_distance(
                 "Snap Shot",
-                Some("gun_08_b.PNG"),
+                Some("gun_08_b.png"),
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(Damage::init(4), BoltKind::Bullet),
                 Some(7),
@@ -207,7 +246,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
         "Aimed Shot" => {
             return SkillInfo::init_with_distance(
                 "Aimed Shot",
-                Some("gun_06_b.PNG"),
+                Some("gun_06_b.png"),
                 TargetType::Enemy,
                 SkillEffect::RangedAttack(Damage::init(6).with_option(DamageOptions::AIMED_SHOT), BoltKind::Bullet),
                 Some(6),

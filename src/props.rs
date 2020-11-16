@@ -6,6 +6,12 @@ use crate::after_image::{LayoutChunkIcon, RenderCanvas};
 use crate::atlas::prelude::*;
 use crate::clash::StatusKind;
 
+pub const CARD_WIDTH: u32 = 110;
+pub const CARD_HEIGHT: u32 = 110;
+
+pub const CARD_WIDTH_LARGE: u32 = 160;
+pub const CARD_HEIGHT_LARGE: u32 = 220;
+
 #[allow(dead_code)]
 #[derive(is_enum_variant, Clone, Debug)]
 pub enum HitTestResult {
@@ -32,6 +38,9 @@ pub trait View {
     fn handle_mouse_click(&mut self, _ecs: &mut World, _x: i32, _y: i32, _button: Option<MouseButton>) {}
 
     fn handle_mouse_move(&mut self, _ecs: &World, _x: i32, _y: i32, _state: MouseState) {}
+
+    // This is a cludge, we should either have full lifecycle or none, not one hard coded tab specific
+    fn on_tab_swap(&mut self) {}
 }
 
 mod views;
@@ -48,3 +57,9 @@ pub use text_render_helper::*;
 
 mod mouse_position;
 pub use mouse_position::*;
+
+mod infobar;
+pub use infobar::*;
+
+mod skillbar;
+pub use skillbar::*;

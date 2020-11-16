@@ -106,13 +106,11 @@ pub fn get_icon_name_for_status(kind: StatusKind) -> &'static str {
     match kind {
         StatusKind::Burning => "SpellBook08_130.png",
         StatusKind::Frozen => "SpellBook08_111.png",
-        StatusKind::Ignite => "b_31_1.png",
-        StatusKind::Cyclone => "b_40_02.png",
-        StatusKind::Magnum => "b_30.png",
         StatusKind::StaticCharge => "SpellBook06_89.png",
         StatusKind::Aimed => "SpellBook08_83.png",
         StatusKind::Armored => "SpellBook08_122.png",
         StatusKind::Regen => "SpellBook08_73.png",
+        StatusKind::Ignite | StatusKind::Cyclone | StatusKind::Magnum => crate::clash::content::gunslinger::get_image_for_status(kind),
         StatusKind::Flying | StatusKind::RegenTick => "",
         #[cfg(test)]
         _ => "",

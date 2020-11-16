@@ -10,7 +10,7 @@ use crate::atlas::get_exe_folder;
 use crate::atlas::prelude::*;
 
 // IconLoader lazily loads on first access. This means consumers must
-// all get all all relevant images outside of a render loop (else we die)
+// all get all relevant images outside of a render loop (else we die)
 pub struct IconLoader {
     images: HashMap<String, String>,
 }
@@ -56,6 +56,13 @@ impl IconLoader {
             Err(Box::from(format!("Unable to load image {}", name)))
         }
     }
+
+    pub fn all_icons() -> Vec<String> {
+        let folder = Path::new(&get_exe_folder()).join("icons").join("game_icons").stringify_owned();
+        let mut filenames = vec![];
+        find_filenames(&mut filenames, &folder).expect("Unable to load icon filenames");
+        filenames
+    }
 }
 
 fn find_images(images: &mut HashMap<String, String>, location: &str) -> BoxResult<()> {
@@ -72,5 +79,19 @@ fn find_images(images: &mut HashMap<String, String>, location: &str) -> BoxResul
             images.insert(name.to_string(), path.stringify_owned());
         }
     }
+    Ok(())
+}
+
+fn find_filenames(filenames: &mut Vec<String>, location: &str) -> BoxResult<()> {
+    let entries = fs::read_dir(location)?;
+    for entry in entries {
+        let path = entry?.path();
+        if path.is_dir() {
+            find_filenames(filenames, &Path::new(location).join(path).stringify())?;
+        } else {
+            filenames.push(path.file_name().unwrap().stringify().to_ascii_lowercase().to_string());
+        }
+    }
+
     Ok(())
 }

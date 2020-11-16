@@ -79,14 +79,16 @@ impl View for Frame {
     }
 }
 
+pub enum ButtonKind {
+    Image(Rc<Texture>, Rc<Texture>),
+    Text(String, Frame, Rc<TextRenderer>, FontSize),
+}
+
 pub struct Button {
     pub frame: SDLRect,
     delegate: ButtonDelegate,
     active: bool,
-    text: String,
-    text_frame: Frame,
-    text_renderer: Rc<TextRenderer>,
-    font_size: FontSize,
+    kind: ButtonKind,
 }
 
 #[derive(Eq, PartialEq)]
@@ -119,21 +121,27 @@ impl ButtonDelegate {
         self
     }
 
-    pub fn enabled_state(&self, ecs: &World) -> ButtonEnabledState {
+    pub fn is_enabled(&self, ecs: &World) -> ButtonEnabledState {
         self.enabled.as_ref().map_or(ButtonEnabledState::Shown, |e| (e)(ecs))
     }
 }
 
 impl Button {
+    pub fn image(frame: SDLRect, image: &Rc<Texture>, image_frame: &Rc<Texture>, delegate: ButtonDelegate) -> BoxResult<Button> {
+        Ok(Button {
+            frame,
+            kind: ButtonKind::Image(Rc::clone(&image), Rc::clone(&image_frame)),
+            delegate,
+            active: true,
+        })
+    }
+
     pub fn text(corner: SDLPoint, text: &str, render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, delegate: ButtonDelegate) -> BoxResult<Button> {
         let text_frame = Frame::init(corner, render_context, FrameKind::ButtonFull)?;
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
-            text: text.to_string(),
-            text_frame,
-            text_renderer: Rc::clone(text_renderer),
-            font_size: FontSize::Bold,
+            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
             active: true,
             delegate,
         })
@@ -151,44 +159,52 @@ impl Button {
         let text_size = text_frame.frame_size();
         Ok(Button {
             frame: SDLRect::new(corner.x(), corner.y(), text_size.0, text_size.1),
-            text: text.to_string(),
-            text_frame,
-            text_renderer: Rc::clone(text_renderer),
-            font_size: FontSize::Bold,
+            kind: ButtonKind::Text(text.to_string(), text_frame, Rc::clone(text_renderer), FontSize::Bold),
             active,
             delegate,
         })
     }
 
     pub fn with_size(mut self, font_size: FontSize) -> Button {
-        self.font_size = font_size;
+        match &mut self.kind {
+            ButtonKind::Image(_, _) => panic!("Button images don't have font size"),
+            ButtonKind::Text(_, _, _, size) => *size = font_size,
+        }
         self
     }
 }
 
 impl View for Button {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
-        let enable_state = self.delegate.enabled_state(ecs);
+        let enable_state = self.delegate.is_enabled(ecs);
         if enable_state == ButtonEnabledState::Hide {
             return Ok(());
         }
 
-        self.text_frame.render(ecs, canvas, frame)?;
+        match &self.kind {
+            ButtonKind::Text(text, text_frame, text_renderer, font_size) => {
+                text_frame.render(ecs, canvas, frame)?;
 
-        let text_y_offset = match self.font_size {
-            FontSize::Bold => 10,
-            _ => 13,
-        };
+                let text_y_offset = match font_size {
+                    FontSize::Bold => 10,
+                    _ => 13,
+                };
 
-        self.text_renderer.render_text_centered(
-            &self.text,
-            self.frame.x() + 8,
-            self.frame.y() + text_y_offset,
-            self.text_frame.frame_size().0 - 16,
-            canvas,
-            self.font_size,
-            if self.active { FontColor::White } else { FontColor::Brown },
-        )?;
+                text_renderer.render_text_centered(
+                    &text,
+                    self.frame.x() + 8,
+                    self.frame.y() + text_y_offset,
+                    text_frame.frame_size().0 - 16,
+                    canvas,
+                    *font_size,
+                    if self.active { FontColor::White } else { FontColor::Brown },
+                )?;
+            }
+            ButtonKind::Image(image, image_frame) => {
+                canvas.copy(image_frame, None, SDLRect::new(self.frame.x() - 2, self.frame.y() - 2, 52, 52))?;
+                canvas.copy(image, None, self.frame)?;
+            }
+        }
 
         if enable_state == ButtonEnabledState::Ghosted {
             canvas.set_draw_color(Color::RGBA(12, 12, 12, 196));
@@ -199,7 +215,7 @@ impl View for Button {
     }
 
     fn handle_mouse_click(&mut self, ecs: &mut World, x: i32, y: i32, button: Option<MouseButton>) {
-        if self.delegate.enabled_state(ecs) == ButtonEnabledState::Hide {
+        if self.delegate.is_enabled(ecs) == ButtonEnabledState::Hide {
             return;
         }
 
@@ -215,7 +231,7 @@ impl View for Button {
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        if self.delegate.enabled_state(ecs) == ButtonEnabledState::Hide {
+        if self.delegate.is_enabled(ecs) == ButtonEnabledState::Hide {
             return None;
         }
 
@@ -252,7 +268,7 @@ impl TabView {
         let tab_view_height = canvas_height as i32 - (corner.y() * 2);
         let tab_view_width = canvas_width as i32 - (corner.x() * 2);
         let tab_button_start = (tab_view_width - tab_button_total_width) / 2;
-        let tabs: Vec<(Button, Box<dyn View>)> = tabs
+        let mut tabs: Vec<(Button, Box<dyn View>)> = tabs
             .drain(0..)
             .enumerate()
             .map(|(i, b)| {
@@ -268,6 +284,7 @@ impl TabView {
                 (button, b.view)
             })
             .collect();
+        tabs[0].1.on_tab_swap();
         Ok(TabView {
             frame: SDLRect::new(corner.x(), corner.y(), tab_view_width as u32, tab_view_height as u32),
             background: IconLoader::init_ui().get(render_context, "tab_background.png")?,
@@ -295,6 +312,7 @@ impl View for TabView {
                     self.tabs[*self.index.borrow()].0.active = false;
                     *self.index.borrow_mut() = index;
                     self.tabs[index].0.active = true;
+                    self.tabs[index].1.on_tab_swap();
                 }
             }
         }

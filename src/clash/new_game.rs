@@ -60,6 +60,13 @@ impl Distribution<BattleKind> for Standard {
     }
 }
 
+pub fn create_equipment_preview_battle(progression_world: &World) -> World {
+    let progression = progression_world.read_resource::<ProgressionComponent>().state.clone();
+    let mut ecs = create_world();
+    create_battle(&mut ecs, progression, BattleKind::SimpleGolem, 0);
+    ecs
+}
+
 pub fn create_random_battle(ecs: &mut World, progression_world: World) {
     let progression = progression_world.read_resource::<ProgressionComponent>().state.clone();
     let (kind, difficulty) = match progression.phase {

@@ -16,7 +16,7 @@ use super::saveload;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
-use crate::props::{HelpPopup, HitTestResult, MousePositionComponent, View};
+use crate::props::*;
 
 pub struct BattleScene {
     ecs: World,
@@ -49,12 +49,13 @@ impl BattleScene {
         let render_context = &render_context_holder.borrow();
         let mut views: Vec<Box<dyn View>> = vec![
             Box::from(MapView::init(&render_context)?),
-            Box::from(InfoBarView::init(SDLPoint::new(780, 20), &render_context, Rc::clone(&text_renderer))?),
+            Box::from(InfoBarView::init(SDLPoint::new(780, 20), &render_context, Rc::clone(&text_renderer), false)?),
             Box::from(SkillBarView::init(
                 render_context,
                 &ecs,
-                SDLPoint::new(137, 25 + super::views::MAP_CORNER_Y as i32 + super::views::TILE_SIZE as i32 * 13i32),
+                SDLPoint::new(137, 25 + MAP_CORNER_Y as i32 + TILE_SIZE as i32 * 13i32),
                 Rc::clone(&text_renderer),
+                false,
             )?),
             Box::from(LogView::init(SDLPoint::new(780, 550), &render_context, Rc::clone(&text_renderer))?),
             Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
@@ -71,7 +72,7 @@ impl BattleScene {
 
     fn handle_default_key(&mut self, keycode: Keycode) {
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+            if let Some(name) = get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name))
             }
         }
@@ -115,7 +116,7 @@ impl BattleScene {
 
         // If they select a skill, start a new target session just like
         if let Some(i) = is_keystroke_skill(keycode) {
-            if let Some(name) = super::views::get_skill_name_on_skillbar(&self.ecs, i as usize) {
+            if let Some(name) = get_skill_name_on_skillbar(&self.ecs, i as usize) {
                 battle_actions::request_action(&mut self.ecs, super::BattleActionRequest::SelectSkill(name));
             }
         }

@@ -38,7 +38,7 @@ impl CharacterScene {
                     TabInfo::init("Profession", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
-                    TabInfo::init("Next Battle", Box::new(NextBattleView::init(render_context, text_renderer, &next_fight)?)),
+                    TabInfo::init("Next Battle", Box::new(NextBattleView::init(render_context, text_renderer, &ecs, &next_fight)?)),
                 ],
             )?),
             help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,
