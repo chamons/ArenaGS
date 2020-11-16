@@ -60,7 +60,7 @@ impl RewardScene {
             ],
         )?);
 
-        const REWARD_MID: i32 = 1024 / 2;
+        const REWARD_MID: i32 = SCREEN_WIDTH as i32 / 2;
         const REWARD_GAP: i32 = 200;
         let left = REWARD_MID - ((3 * CARD_WIDTH as i32) / 2) - REWARD_GAP;
         let card_delta = CARD_WIDTH as i32 + REWARD_GAP;

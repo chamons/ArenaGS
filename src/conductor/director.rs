@@ -104,7 +104,7 @@ impl<'a> Director<'a> {
                 let mut render_context = render_context.borrow_mut();
 
                 let (fullscreen_request, (width, height)) = match render_context.canvas.window().fullscreen_state() {
-                    FullscreenType::Desktop | FullscreenType::True => (FullscreenType::Off, (1024, 768)),
+                    FullscreenType::Desktop | FullscreenType::True => (FullscreenType::Off, (SCREEN_WIDTH, SCREEN_HEIGHT)),
                     FullscreenType::Off => (FullscreenType::True, (1366, 768)),
                 };
 

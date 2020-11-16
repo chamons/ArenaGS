@@ -1,5 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
+use super::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use sdl2::image::{self, InitFlag};
 use sdl2::rect::Rect as SDLRect;
 use sdl2::render::BlendMode;
@@ -35,7 +36,7 @@ impl RenderContext {
         let _image_context = image::init(InitFlag::PNG | InitFlag::JPG)?;
 
         let window = video_subsystem
-            .window("Arena GS", 1024, 768)
+            .window("Arena GS", SCREEN_WIDTH, SCREEN_HEIGHT)
             .position_centered()
             .build()
             .expect("Could not initialize video subsystem");
@@ -48,8 +49,8 @@ impl RenderContext {
             .build()
             .expect("Could not make a canvas");
         canvas.set_blend_mode(BlendMode::Blend);
-        canvas.set_logical_size(1024, 768).expect("Could not set logical size");
-        canvas.set_clip_rect(SDLRect::new(0, 0, 1024, 768));
+        canvas.set_logical_size(SCREEN_WIDTH, SCREEN_HEIGHT).expect("Could not set logical size");
+        canvas.set_clip_rect(SDLRect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
 
         let event_pump = sdl_context.event_pump()?;
         let keyboard_util = sdl_context.keyboard();
