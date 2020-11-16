@@ -13,7 +13,7 @@ use crate::clash::{CharacterWeaponKind, EquipmentResource, ProgressionComponent,
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 
-pub struct SkillTreeView {
+pub struct ProfessionTreeView {
     icons: IconCache,
     ui: IconCache,
     tree: Rc<SkillTree>,
@@ -37,8 +37,8 @@ pub fn get_tree_icons(render_context: &RenderContext, tree: &SkillTree) -> BoxRe
     Ok(IconCache::init(&render_context, IconLoader::init_icons(), &tree_icons[..])?)
 }
 
-impl SkillTreeView {
-    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<SkillTreeView> {
+impl ProfessionTreeView {
+    pub fn init(render_context: &RenderContext, text_renderer: &Rc<TextRenderer>, ecs: &World) -> BoxResult<ProfessionTreeView> {
         let tree = Rc::new(SkillTree::init(&get_tree(ecs)));
 
         let selection: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
@@ -51,7 +51,7 @@ impl SkillTreeView {
                 .enabled(Box::new(enclose! { (selection, tree) move |ecs| {
                     let selection = selection.borrow_mut();
                     if let Some(selection) = (*selection).as_ref() {
-                        if SkillTreeView::can_apply_selection(ecs, &tree, &selection) {
+                        if ProfessionTreeView::can_apply_selection(ecs, &tree, &selection) {
                             ButtonEnabledState::Shown
                         }
                         else {
@@ -64,14 +64,14 @@ impl SkillTreeView {
                 }}))
                 .handler(Box::new(enclose! { (selection, tree) move |ecs| {
                     let mut selection = selection.borrow_mut();
-                    if SkillTreeView::can_apply_selection(ecs, &tree, selection.as_ref().unwrap()) {
-                        SkillTreeView::apply_selection(ecs, &tree, selection.as_ref().unwrap());
+                    if ProfessionTreeView::can_apply_selection(ecs, &tree, selection.as_ref().unwrap()) {
+                        ProfessionTreeView::apply_selection(ecs, &tree, selection.as_ref().unwrap());
                         *selection = None;
                     }
                 }})),
         )?;
 
-        Ok(SkillTreeView {
+        Ok(ProfessionTreeView {
             icons: get_tree_icons(render_context, &tree)?,
             ui: IconCache::init(
                 &render_context,
@@ -113,7 +113,7 @@ impl SkillTreeView {
     }
 }
 
-impl View for SkillTreeView {
+impl View for ProfessionTreeView {
     fn render(&self, ecs: &World, canvas: &mut RenderCanvas, frame: u64) -> BoxResult<()> {
         let mut dependencies = vec![];
 

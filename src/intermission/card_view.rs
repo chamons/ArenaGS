@@ -6,7 +6,7 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::skilltree_view::SKILL_NODE_SIZE;
+use super::profession_tree::SKILL_NODE_SIZE;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds};
