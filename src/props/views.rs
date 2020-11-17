@@ -292,6 +292,18 @@ impl TabView {
             index: RefCell::new(0),
         })
     }
+
+    pub fn current_tab_button_mut(&mut self) -> &mut Button {
+        &mut self.tabs[*self.index.borrow()].0
+    }
+
+    pub fn current_tab(&self) -> &Box<dyn View> {
+        &self.tabs[*self.index.borrow()].1
+    }
+
+    pub fn current_tab_mut(&mut self) -> &mut Box<dyn View> {
+        &mut self.tabs[*self.index.borrow()].1
+    }
 }
 
 impl View for TabView {
@@ -300,7 +312,7 @@ impl View for TabView {
         for (b, _) in &self.tabs {
             b.render(ecs, canvas, frame)?;
         }
-        self.tabs[*self.index.borrow()].1.render(ecs, canvas, frame)?;
+        self.current_tab().render(ecs, canvas, frame)?;
         Ok(())
     }
 
@@ -309,22 +321,22 @@ impl View for TabView {
             if button == MouseButton::Left {
                 let tab_hit = self.tabs.iter().enumerate().filter_map(|(i, (b, _))| b.hit_test(ecs, x, y).map(|_| i)).next();
                 if let Some(index) = tab_hit {
-                    self.tabs[*self.index.borrow()].0.active = false;
+                    self.current_tab_button_mut().active = false;
                     *self.index.borrow_mut() = index;
                     self.tabs[index].0.active = true;
                     self.tabs[index].1.on_tab_swap();
                 }
             }
         }
-        self.tabs[*self.index.borrow()].1.handle_mouse_click(ecs, x, y, button);
+        self.current_tab_mut().handle_mouse_click(ecs, x, y, button);
     }
 
     fn handle_mouse_move(&mut self, ecs: &World, x: i32, y: i32, state: MouseState) {
-        self.tabs[*self.index.borrow()].1.handle_mouse_move(ecs, x, y, state);
+        self.current_tab_mut().handle_mouse_move(ecs, x, y, state);
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
+        self.current_tab().hit_test(ecs, x, y)
     }
 }
 

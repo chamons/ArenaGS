@@ -165,4 +165,8 @@ impl View for NextBattleView {
 
         None
     }
+
+    fn custom_help_context(&self) -> Option<&RefCell<World>> {
+        Some(&self.preview_world)
+    }
 }

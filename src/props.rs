@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use specs::prelude::*;
 
 use sdl2::mouse::{MouseButton, MouseState};
@@ -41,6 +43,12 @@ pub trait View {
 
     // This is a cludge, we should either have full lifecycle or none, not one hard coded tab specific
     fn on_tab_swap(&mut self) {}
+
+    // Another cludge, in rare cases we can't use the "global" ecs to display help because we're previewing
+    // some unique state within a tab. This let's us register for that unique special case behavior
+    fn custom_help_context(&self) -> Option<&RefCell<World>> {
+        None
+    }
 }
 
 mod views;

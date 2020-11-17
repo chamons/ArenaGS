@@ -225,7 +225,19 @@ impl HelpInfo {
             details.push("Requires no time to use.".to_string())
         }
 
-        // pub effect: SkillEffect,
+        HelpInfo::init(header, details)
+    }
+
+    fn get_equipment_help(ecs: &World, word: &str) -> HelpInfo {
+        let equipment = ecs.read_resource::<EquipmentResource>().get(word);
+        let header = {
+            if let Some(image) = &equipment.image {
+                HelpHeader::Image(word.to_string(), image.to_string())
+            } else {
+                HelpHeader::Text(word.to_string())
+            }
+        };
+        let details = equipment.description();
         HelpInfo::init(header, details)
     }
 
@@ -365,7 +377,7 @@ impl HelpInfo {
                     ],
                 )
             }
-            "Magnum Bullets" => {
+            "Magnum" | "Magnum Bullets" => {
                 use super::content::gunslinger::*;
                 let mut text =vec_of_strings![
                     "Since they have the highest base strength, Magnum is the to-go choice when facing heavily armored foes.",
@@ -381,7 +393,7 @@ impl HelpInfo {
                     text
                 )
             },
-            "Ignite Bullets" => {
+            "Ignite" | "Ignite Bullets" => {
                 use super::content::gunslinger::*;
                 let mut text = vec_of_strings![
                     "Ignite bullets are relatively accurate to medium-long range, and thought they lack the raw stopping power of Magnum rounds they can ignite enemies in flame.",
@@ -397,7 +409,7 @@ impl HelpInfo {
                     text
                 )
             },
-            "Cyclone Bullets" => {
+            "Cyclone" | "Cyclone Bullets" => {
                 use super::content::gunslinger::*;
                 let mut text = vec_of_strings![
                     "Though lacking some of the raw offensive power of the other ammo, Cyclone bullets provide superb flexibility both in offense and defense",
@@ -405,7 +417,7 @@ impl HelpInfo {
                     "",
                     "Abilities:",
                     ""
-            ];
+                ];
 
                 text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
@@ -492,6 +504,9 @@ impl HelpInfo {
         }
         if ecs.read_resource::<SkillsResource>().contains(word) {
             return HelpInfo::get_skill_help(ecs, word);
+        }
+        if ecs.read_resource::<EquipmentResource>().contains(word) {
+            return HelpInfo::get_equipment_help(ecs, word);
         }
 
         HelpInfo::get_error(word)

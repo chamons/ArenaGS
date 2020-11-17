@@ -54,6 +54,10 @@ impl Scene for CharacterScene {
     }
 
     fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
+        // So a bit of weirdness here - the world state works for everything EXCEPT
+        // the next battle "preview world", since that will have unique skills
+        // we may not have had last battle (the current snapshot)
+        // So ask our current tab view for custom_help_context and use it if provided
         if self.help.handle_mouse_event(&mut self.ecs, x, y, button, slice::from_ref(&self.tab)) {
             return;
         }

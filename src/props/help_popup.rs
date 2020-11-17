@@ -10,7 +10,7 @@ use specs::prelude::*;
 use super::{render_text_layout, TextHitTester};
 use crate::after_image::*;
 use crate::atlas::prelude::*;
-use crate::clash::{find_entity_at_location, find_field_at_location, HelpHeader, HelpInfo, SkillsResource};
+use crate::clash::{find_entity_at_location, find_field_at_location, EquipmentResource, HelpHeader, HelpInfo, SkillsResource};
 use crate::props::{HitTestResult, RenderTextOptions, View};
 
 enum HelpPopupSize {
@@ -45,7 +45,13 @@ pub struct HelpPopup {
 impl HelpPopup {
     pub fn init(ecs: &World, render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
         let skills = ecs.read_resource::<SkillsResource>();
-
+        let equipment = ecs.read_resource::<EquipmentResource>();
+        let images: Vec<&String> = skills
+            .all_skill_image_files()
+            .iter()
+            .chain(equipment.all_skill_image_files().iter())
+            .map(|i| *i)
+            .collect();
         Ok(HelpPopup {
             state: HelpPopupState::None,
             text_renderer,
@@ -62,7 +68,7 @@ impl HelpPopup {
                 ],
             )?,
             symbols: IconCache::init(render_context, IconLoader::init_symbols(), &["plain-dagger.png"])?,
-            icons: IconCache::init(render_context, IconLoader::init_icons(), &skills.all_skill_image_files())?,
+            icons: IconCache::init(render_context, IconLoader::init_icons(), &images)?,
             size: HelpPopupSize::Unknown,
             help: None,
         })
