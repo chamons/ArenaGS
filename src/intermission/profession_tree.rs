@@ -102,12 +102,12 @@ impl ProfessionTreeView {
             .cloned()
     }
 
-    fn can_apply_selection(ecs: &World, tree: &SkillTree, hit: &String) -> bool {
-        let mut progression = &mut ecs.write_resource::<ProgressionComponent>().state;
-        tree.can_select(&mut progression, &hit)
+    fn can_apply_selection(ecs: &World, tree: &SkillTree, hit: &str) -> bool {
+        let progression = &ecs.read_resource::<ProgressionComponent>().state;
+        tree.can_select(&progression, &hit)
     }
 
-    fn apply_selection(ecs: &World, tree: &SkillTree, hit: &String) {
+    fn apply_selection(ecs: &World, tree: &SkillTree, hit: &str) {
         let mut progression = &mut ecs.write_resource::<ProgressionComponent>().state;
         tree.select(&mut progression, &hit);
     }
