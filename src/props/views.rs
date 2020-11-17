@@ -324,7 +324,7 @@ impl View for TabView {
     }
 
     fn hit_test(&self, ecs: &World, x: i32, y: i32) -> Option<HitTestResult> {
-        self.tabs.iter().filter_map(|(_, t)| t.hit_test(ecs, x, y)).next()
+        self.tabs[*self.index.borrow()].1.hit_test(ecs, x, y)
     }
 }
 

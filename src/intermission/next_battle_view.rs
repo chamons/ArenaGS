@@ -11,7 +11,7 @@ use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{content, find_player, new_game, CharacterWeaponKind, ProgressionComponent};
 use crate::enclose;
-use crate::props::{Button, ButtonDelegate, InfoBarView, SkillBarView, View};
+use crate::props::{Button, ButtonDelegate, HitTestResult, InfoBarView, SkillBarView, View};
 
 pub struct NextBattleView {
     continue_button: Button,
@@ -137,5 +137,32 @@ impl View for NextBattleView {
 
     fn on_tab_swap(&mut self) {
         *self.regenerate_world.borrow_mut() = true;
+    }
+
+    fn hit_test(&self, _: &World, x: i32, y: i32) -> Option<HitTestResult> {
+        let preview_world = self.preview_world.borrow();
+        let result = self.skillbar.hit_test(&preview_world, x, y);
+        if result.is_some() {
+            return result;
+        }
+
+        let weapon_button_index = self
+            .weapon_buttons
+            .borrow()
+            .iter()
+            .enumerate()
+            .filter_map(|(i, b)| if b.hit_test(&preview_world, x, y).is_some() { Some(i) } else { None })
+            .next();
+        if let Some(weapon_button_index) = weapon_button_index {
+            let progression = preview_world.read_resource::<ProgressionComponent>();
+            match progression.state.weapon {
+                CharacterWeaponKind::Gunslinger => {
+                    let ammos = content::gunslinger::get_equipped_ammos(&preview_world, find_player(&preview_world));
+                    return Some(HitTestResult::Skill(format!("{:?}", ammos[weapon_button_index])));
+                }
+            }
+        }
+
+        None
     }
 }
