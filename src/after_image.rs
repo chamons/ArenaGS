@@ -26,3 +26,6 @@ pub use text_renderer::*;
 #[cfg(test)]
 pub mod font_test_helpers;
 pub mod prelude;
+
+pub const SCREEN_WIDTH: u32 = 1024;
+pub const SCREEN_HEIGHT: u32 = 768;

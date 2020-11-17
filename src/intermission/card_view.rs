@@ -6,7 +6,7 @@ use sdl2::rect::Point as SDLPoint;
 use sdl2::rect::Rect as SDLRect;
 use specs::prelude::*;
 
-use super::skilltree_view::SKILL_NODE_SIZE;
+use super::profession_tree::SKILL_NODE_SIZE;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::clash::{EquipmentItem, EquipmentKinds};
@@ -175,7 +175,9 @@ impl View for CardView {
         if self.can_move {
             if let Some(origin) = self.grabbed {
                 if state.left() {
-                    self.frame = SDLRect::new(x - origin.x(), y - origin.y(), CARD_WIDTH, CARD_HEIGHT);
+                    let x = in_range(x - origin.x(), (SCREEN_WIDTH - CARD_WIDTH) as i32);
+                    let y = in_range(y - origin.y(), (SCREEN_HEIGHT - CARD_HEIGHT) as i32);
+                    self.frame = SDLRect::new(x, y, CARD_WIDTH, CARD_HEIGHT);
                 } else {
                     self.grabbed = None;
                 }
@@ -189,5 +191,22 @@ impl View for CardView {
         } else {
             None
         }
+    }
+}
+
+fn in_range(x: i32, high: i32) -> i32 {
+    std::cmp::max(std::cmp::min(x, high), 0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stays_in_range() {
+        assert_eq!(0, in_range(-5, 100));
+        assert_eq!(5, in_range(5, 100));
+        assert_eq!(100, in_range(100, 100));
+        assert_eq!(100, in_range(1000, 100));
     }
 }

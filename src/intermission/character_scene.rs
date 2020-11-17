@@ -11,7 +11,7 @@ use specs::prelude::*;
 use super::equipment_view::EquipmentView;
 use super::merchant_view::MerchantView;
 use super::next_battle_view::NextBattleView;
-use super::skilltree_view::SkillTreeView;
+use super::profession_tree::ProfessionTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
 use crate::conductor::{Scene, StageDirection};
@@ -35,7 +35,7 @@ impl CharacterScene {
                 render_context,
                 text_renderer,
                 vec![
-                    TabInfo::init("Profession", Box::new(SkillTreeView::init(render_context, text_renderer, &ecs)?)),
+                    TabInfo::init("Profession", Box::new(ProfessionTreeView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Next Battle", Box::new(NextBattleView::init(render_context, text_renderer, &ecs, &next_fight)?)),

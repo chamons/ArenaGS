@@ -3,8 +3,8 @@ mod character_scene;
 mod equipment_view;
 mod merchant_view;
 mod next_battle_view;
+mod profession_tree;
 mod reward_scene;
-mod skilltree_view;
 
 pub use character_scene::*;
 pub use reward_scene::*;

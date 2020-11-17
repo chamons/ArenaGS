@@ -101,6 +101,10 @@ impl SkillTree {
             .collect()
     }
 
+    pub fn cost(&self, name: &str) -> u32 {
+        self.nodes.get(name).unwrap().cost
+    }
+
     pub fn can_select(&self, state: &ProgressionState, name: &str) -> bool {
         let node = self.nodes.get(name).unwrap();
         let not_already_selected = !state.has_unlock(&node.name());
