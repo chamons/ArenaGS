@@ -237,6 +237,10 @@ impl EquipmentResource {
     pub fn all(&self) -> impl Iterator<Item = &EquipmentItem> + '_ {
         self.equipment.values()
     }
+
+    pub fn all_skill_image_files(&self) -> Vec<String> {
+        self.equipment.values().filter_map(|s| s.image.clone()).collect()
+    }
 }
 
 use specs::prelude::*;

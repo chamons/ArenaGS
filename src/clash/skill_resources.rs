@@ -20,8 +20,8 @@ impl SkillsResource {
         self.skills[name].clone()
     }
 
-    pub fn all_skill_image_files(&self) -> Vec<&String> {
-        self.skills.values().filter_map(|s| s.image.as_ref()).collect()
+    pub fn all_skill_image_files(&self) -> Vec<String> {
+        self.skills.values().filter_map(|s| s.image.clone()).collect()
     }
 
     pub fn add(&mut self, skill: SkillInfo) {

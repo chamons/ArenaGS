@@ -10,7 +10,7 @@ use specs::prelude::*;
 
 use super::equipment_view::EquipmentView;
 use super::merchant_view::MerchantView;
-use super::next_battle_view::NextBattleView;
+use super::next_battle_view::{NextBattleView, PreviewWorld};
 use super::profession_tree::ProfessionTreeView;
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
@@ -25,7 +25,7 @@ pub struct CharacterScene {
 }
 
 impl CharacterScene {
-    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, ecs: World) -> BoxResult<CharacterScene> {
+    pub fn init(render_context_holder: &RenderContextHolder, text_renderer: &Rc<TextRenderer>, mut ecs: World) -> BoxResult<CharacterScene> {
         let render_context = &render_context_holder.borrow();
         let next_fight = Rc::new(RefCell::new(false));
 
@@ -38,10 +38,13 @@ impl CharacterScene {
                     TabInfo::init("Profession", Box::new(ProfessionTreeView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
-                    TabInfo::init("Next Battle", Box::new(NextBattleView::init(render_context, text_renderer, &ecs, &next_fight)?)),
+                    TabInfo::init(
+                        "Next Battle",
+                        Box::new(NextBattleView::init(render_context, text_renderer, &mut ecs, &next_fight)?),
+                    ),
                 ],
             )?),
-            help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?,
+            help: HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer), true)?,
             ecs,
             next_fight,
         })
@@ -54,7 +57,17 @@ impl Scene for CharacterScene {
     }
 
     fn handle_mouse_click(&mut self, x: i32, y: i32, button: Option<MouseButton>) {
-        if self.help.handle_mouse_event(&mut self.ecs, x, y, button, slice::from_ref(&self.tab)) {
+        // So a bit of weirdness here - the world state works for everything EXCEPT
+        // the next battle "preview world", since that will have unique skills
+        // we may not have had last battle (the current snapshot)
+        // So ask our ecs to see if it has an "PreviewWorld" and if so, use it
+        let help_processed = if self.ecs.has_value::<PreviewWorld>() {
+            let preview_world = &mut self.ecs.write_resource::<PreviewWorld>().preview_world;
+            self.help.handle_mouse_event(preview_world, x, y, button, slice::from_ref(&self.tab))
+        } else {
+            self.help.handle_mouse_event(&mut self.ecs, x, y, button, slice::from_ref(&self.tab))
+        };
+        if help_processed {
             return;
         }
 
