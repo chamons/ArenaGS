@@ -238,8 +238,8 @@ impl EquipmentResource {
         self.equipment.values()
     }
 
-    pub fn all_skill_image_files(&self) -> Vec<&String> {
-        self.equipment.values().filter_map(|s| s.image.as_ref()).collect()
+    pub fn all_skill_image_files(&self) -> Vec<String> {
+        self.equipment.values().filter_map(|s| s.image.clone()).collect()
     }
 }
 

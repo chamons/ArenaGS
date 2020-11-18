@@ -43,15 +43,16 @@ pub struct HelpPopup {
 }
 
 impl HelpPopup {
-    pub fn init(ecs: &World, render_context: &RenderContext, text_renderer: Rc<TextRenderer>) -> BoxResult<HelpPopup> {
+    pub fn init(ecs: &World, render_context: &RenderContext, text_renderer: Rc<TextRenderer>, equipment_mode: bool) -> BoxResult<HelpPopup> {
         let skills = ecs.read_resource::<SkillsResource>();
         let equipment = ecs.read_resource::<EquipmentResource>();
-        let images: Vec<&String> = skills
-            .all_skill_image_files()
-            .iter()
-            .chain(equipment.all_skill_image_files().iter())
-            .map(|i| *i)
-            .collect();
+        let images: Vec<String> = if equipment_mode {
+            IconLoader::all_icons()
+        } else {
+            let mut icons = skills.all_skill_image_files();
+            icons.extend(equipment.all_skill_image_files());
+            icons
+        };
         Ok(HelpPopup {
             state: HelpPopupState::None,
             text_renderer,

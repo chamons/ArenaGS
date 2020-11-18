@@ -61,7 +61,7 @@ impl BattleScene {
             Box::from(StatusBarView::init(&render_context, SDLPoint::new(24, 24))?),
         ];
 
-        let help = HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer))?;
+        let help = HelpPopup::init(&ecs, &render_context, Rc::clone(&text_renderer), false)?;
 
         if cfg!(debug_assertions) {
             views.push(Box::from(DebugView::init(SDLPoint::new(20, 20), Rc::clone(&text_renderer))?));
