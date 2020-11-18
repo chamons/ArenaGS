@@ -151,7 +151,7 @@ impl View for NextBattleView {
             let mut preview_world_component = outside_world.write_resource::<PreviewWorld>();
             preview_world_component.preview_world = NextBattleView::generate_preview_world(outside_world);
             *self.weapon_buttons.borrow_mut() =
-                NextBattleView::get_weapon_specific_buttons(&mut preview_world_component.preview_world, &self.weapon_images, &self.weapon_frame);
+                NextBattleView::get_weapon_specific_buttons(&preview_world_component.preview_world, &self.weapon_images, &self.weapon_frame);
         }
         let preview_world = &outside_world.read_resource::<PreviewWorld>().preview_world;
 
