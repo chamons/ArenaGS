@@ -358,12 +358,56 @@ impl HelpInfo {
                     ],
                 );
             }
-
+            "Equipment" => {
+                return HelpInfo::text_header("Equipment", vec_of_strings![
+                    "Characters enter the Arena with a single attack skill and base stats based upon the weapon of choice. To gain power and flexibility they must acquire and ready equipment.",
+                    "",
+                    "Equipment comes in many forms:",
+                    "- Weapon parts such as gun handles and spell glyphs.",
+                    "- Armor mods like boots, cloaks, pins and vests.",
+                    "- Accessory items such as potions, charms, and all sorts of trinkets.",
+                    "- Masteries such as lost techniques, cutting edge science, and arcane pacts which bend the rules of your class.",
+                    "",
+                    "Equipment is gained in three ways:",
+                    "- After battle one of three items is offered as reward (or skipped for additional [[Influence]]).",
+                    "- [[Influence]] can be spent on the Profession tree to unlock items based upon the chosen weapon.",
+                    "- [[Influence]] can also be spent at the Merchant who sells a random assortment of items. Every battle she restocks and the prices are high, but there are many rare and exotic items to find.",
+                    "",
+                    "Equipment items fit into a number of [[Equipment Slots]] based upon their matching type on the Equipment tab between fights."
+                ])
+            }
+            "Equipment Slots" => {
+                return HelpInfo::text_header("Equipment Slots", vec_of_strings![
+                    "Characters can only use so many items magic auras conflict, pockets run out, and everything gets too heavy to carry into battle.",
+                    "",
+                    "There are 4 types of equipment slots, one for each [[Equipment]] type, and color coded to match:",
+                    "",
+                    "- Weapon parts are red.",
+                    "- Armor mods are blue.",
+                    "- Accessory items are green.",
+                    "- Masteries are purple.",
+                    "",
+                    "Each profession tree had some nodes to unlock additional slots.",
+                    "",
+                    "The merchant also sells premium gear to unlock one skill of each type, though it doesn't come cheap."
+                ])
+            }
+            "Influence" => {
+                return HelpInfo::text_header("Influence", vec_of_strings![
+                    "Influence is a general measure of a character's prestige, wealth, favors owed, and social connections.",
+                    "",
+                    "Influence is gained from victories in the Arena both from battle's rewards and their rising fame in the world.",
+                    "",
+                    "Influence is primarily spent in the [[Profession]] tree to source better equipment, tinker with gear, and make connections with vendors.",
+                    "",
+                    "Influence can also be liquidated into raw currency and spent at the merchant. The prices are steep, but the selection is unbeatable."
+                ])
+            }
             "Gunslinger" => {
                 return HelpInfo::text_header(
                     "Gunslinger",
                     vec_of_strings![
-                        "Flashpowder is the explosive marriage of fire and air, throwing lead at unbelievable speeds. Gunslingers harness this power along with elemental ammunition, to forge their will into the law.",
+                        "Gunpowder is the explosive marriage of fire and air, throwing lead at unbelievable speeds. Gunslingers harness this power along with elemental ammunition, to forge their will into the law.",
                         "",
                         "The gunslinger cycles through three kinds of ammo (Magnum, Ignite, Cyclone).",
                         "",
@@ -598,6 +642,8 @@ fn top_level_topics() -> Vec<&'static str> {
     vec![
         "Getting Started",
         "Damage & Defenses",
+        "Equipment",
+        "Influence",
         "Gunslinger",
         "Resources",
         "Status Effects",
