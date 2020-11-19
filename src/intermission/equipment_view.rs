@@ -237,13 +237,15 @@ impl View for EquipmentView {
         let grabbed_card_kind = self.cards.borrow().iter().filter(|c| c.grabbed.is_some()).map(|c| c.equipment.kind).next();
         // Slots below cards
         let slots = self.slots.borrow_mut();
-        for s in slots.iter() {
+        // If we're dragging a card over a slot, set a one render highlighted flag
+        let mouse = ecs.read_resource::<MousePositionComponent>().position;
+        let current_over_slot = EquipmentView::find_slot_at(mouse.x as i32, mouse.y as i32, &slots);
+        for (i, s) in slots.iter().enumerate() {
             if grabbed_card_kind.is_some() && grabbed_card_kind.unwrap() == s.kind {
-                // If we're dragging a card over a slot, set a one render highlighted flag
-                let mouse = ecs.read_resource::<MousePositionComponent>().position;
-                let current_over_slot = EquipmentView::find_slot_at(mouse.x as i32, mouse.y as i32, &slots);
                 if let Some(current_over_slot) = current_over_slot {
-                    *slots[current_over_slot].highlighted.borrow_mut() = true;
+                    if i == current_over_slot {
+                        *s.highlighted.borrow_mut() = true;
+                    }
                 }
             }
             s.render(ecs, canvas, frame)?;
