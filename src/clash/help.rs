@@ -253,6 +253,12 @@ impl HelpInfo {
             _ => word,
         };
 
+        for kind in &["Weapon", "Armor", "Accessory", "Mastery"] {
+            if word.starts_with(&format!("{} Expansion", kind)) {
+                return HelpInfo::text_header(word, vec_of_strings![format!("Extend the number of {} [[Equipment Slots]] by 1.", kind)]);
+            }
+        }
+
         match word {
             "Top Level Help" => return HelpInfo::text_header("Help", top_level_topics().iter().map(|t| format!("[[{}]]", t)).collect::<Vec<String>>()),
             "Getting Started" => {
