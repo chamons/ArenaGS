@@ -363,7 +363,7 @@ impl HelpInfo {
                 return HelpInfo::text_header(
                     "Gunslinger",
                     vec_of_strings![
-                        "Flashpowder is the explosive marriage of fire and air, throwing lead at unbelievable speeds. Gunslingers harness this power along with elemental ammunition, to forge their will into the law.",
+                        "Gunpowder is the explosive marriage of fire and air, throwing lead at unbelievable speeds. Gunslingers harness this power along with elemental ammunition, to forge their will into the law.",
                         "",
                         "The gunslinger cycles through three kinds of ammo (Magnum, Ignite, Cyclone).",
                         "",
