@@ -17,6 +17,21 @@ bitflags! {
     }
 }
 
+impl DamageElement {
+    pub fn description(&self) -> &'static str {
+        if self.contains(DamageElement::PHYSICAL) {
+            return "Physical";
+        } else if self.contains(DamageElement::FIRE) {
+            return "Fire";
+        } else if self.contains(DamageElement::LIGHTNING) {
+            return "Lightning";
+        } else if self.contains(DamageElement::ICE) {
+            return "Ice";
+        }
+        panic!("Unknown element {:#?}", self)
+    }
+}
+
 bitflags! {
     #[derive(Serialize, Deserialize)]
     pub struct DamageOptions: u32 {

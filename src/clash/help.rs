@@ -693,12 +693,16 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         on_text(&format!("{}: {:.2}", linkify("Armor"), defenses.armor));
     }
 
+    for r in defenses.resistances.all() {
+        on_text(&format!("{} Resistance: {:.2}", r.0.description(), r.1));
+    }
+
     let resources = &ecs.read_storage::<SkillResourceComponent>();
     if let Some(resource) = resources.get(entity) {
-        on_text(&format!("{}: {:.2}", linkify("Exhaustion"), resource.exhaustion));
-
-        on_text(&format!("{}: {:.2}", linkify("Focus"), resource.focus).as_str());
-
+        if entity == find_player(ecs) {
+            on_text(&format!("{}: {:.2}", linkify("Exhaustion"), resource.exhaustion));
+            on_text(&format!("{}: {:.2}", linkify("Focus"), resource.focus).as_str());
+        }
         for kind in AmmoKind::into_enum_iter() {
             match resource.max.get(&kind) {
                 Some(value) => {

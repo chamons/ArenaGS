@@ -35,6 +35,10 @@ impl Resistances {
     pub fn get(&self, kind: DamageElement) -> u32 {
         *self.resistances.get(&kind).unwrap_or(&0)
     }
+
+    pub fn all(&self) -> Vec<(DamageElement, u32)> {
+        self.resistances.iter().map(|r| (*r.0, *r.1)).collect()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]

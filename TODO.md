@@ -1,4 +1,2 @@
-- Add resistances for everything but armor
-- Display them in character dump
 - Display damage types in skill dump
 - Make them actually apply
