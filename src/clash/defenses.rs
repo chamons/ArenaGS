@@ -1,10 +1,11 @@
 use std::cmp;
+use std::collections::HashMap;
 
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
-use super::{Damage, DamageOptions, DefenseComponent, EventKind, RolledDamage, Strength};
+use super::{Damage, DamageElement, DamageOptions, DefenseComponent, EventKind, RolledDamage, Strength};
 
 // After applying dodge, divide the damage by the number of DamageElements
 // Apply resistance to that section of damage
@@ -16,10 +17,32 @@ use super::{Damage, DamageOptions, DefenseComponent, EventKind, RolledDamage, St
 // Apply remaining of both
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct Resistances {
+    resistances: HashMap<DamageElement, u32>,
+}
+
+impl Resistances {
+    pub fn empty() -> Resistances {
+        Resistances { resistances: HashMap::new() }
+    }
+
+    pub fn init(resistances: &[(DamageElement, u32)]) -> Resistances {
+        Resistances {
+            resistances: resistances.iter().map(|e| (e.0, e.1)).collect(),
+        }
+    }
+
+    pub fn get(&self, kind: DamageElement) -> u32 {
+        *self.resistances.get(&kind).unwrap_or(&0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
     pub dodge: u32,
     pub max_dodge: u32,
     pub armor: u32,
+    pub resistances: Resistances,
     pub absorb: u32,
     pub health: u32,
     pub max_health: u32,
@@ -35,6 +58,7 @@ impl Defenses {
             absorb,
             health,
             max_health: health,
+            resistances: Resistances::empty(),
         }
     }
 
@@ -46,7 +70,13 @@ impl Defenses {
             absorb: 0,
             health,
             max_health: health,
+            resistances: Resistances::empty(),
         }
+    }
+
+    pub fn with_resistances(mut self, resistances: Resistances) -> Defenses {
+        self.resistances = resistances;
+        self
     }
 
     fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> (u32, u32, u32) {
