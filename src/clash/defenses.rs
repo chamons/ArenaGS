@@ -6,6 +6,15 @@ use specs::prelude::*;
 
 use super::{Damage, DamageOptions, DefenseComponent, EventKind, RolledDamage, Strength};
 
+// After applying dodge, divide the damage by the number of DamageElements
+// Apply resistance to that section of damage
+// Example: Physical + Fire Damage 15
+// Dodge 2, remaining 13
+// 13 / 2 = 6 (round down)
+// Apply any physical defense against 6
+// Apply any fire defense against 6
+// Apply remaining of both
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Defenses {
     pub dodge: u32,
@@ -123,7 +132,7 @@ mod tests {
     fn no_defense_full_damage() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.health > 1);
         assert!(def.health < 5);
@@ -133,7 +142,7 @@ mod tests {
     fn no_defense_overkill_leaves_at_zero() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
-        def.apply_damage(Damage::init(10), &mut rng);
+        def.apply_damage(Damage::init(10, DamageElement::PHYSICAL), &mut rng);
         assert_eq!(0, def.health);
     }
 
@@ -141,7 +150,7 @@ mod tests {
     fn dodge_reduces_damage_up_to_strength() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(3, 0, 0, 10);
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 2 + [2,4] = 4-6 dodge
@@ -154,7 +163,7 @@ mod tests {
     fn extra_dodge_saved_after_roll() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(5, 0, 0, 10);
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
         assert_eq!(1, def.dodge);
     }
 
@@ -170,7 +179,7 @@ mod tests {
     fn armor_reduces_every_hit() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(0, 1, 0, 10);
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 1-2 armor
@@ -183,7 +192,7 @@ mod tests {
     fn additional_armor() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(0, 0, 0, 10);
-        def.apply_damage_with_additional_armor(Damage::init(4), 4, &mut rng);
+        def.apply_damage_with_additional_armor(Damage::init(4, DamageElement::PHYSICAL), 4, &mut rng);
 
         // (2 * 2) + [2,4] = 6-8 damage
         // 4-8 armor
@@ -196,7 +205,7 @@ mod tests {
     fn dodge_used_even_if_armor_would_cover() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(4, 4, 0, 10);
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
         assert_eq!(0, def.dodge);
     }
 
@@ -205,7 +214,7 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::just_health(10);
         def.absorb = 10;
-        def.apply_damage(Damage::init(4), &mut rng);
+        def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         assert!(def.absorb > 1);
         assert!(def.absorb < 5);
@@ -216,7 +225,7 @@ mod tests {
     fn reports_damage_after_mitigation() {
         let mut rng = StdRng::seed_from_u64(42);
         let mut def = Defenses::init(1, 1, 10, 10);
-        let applied_damage = def.apply_damage(Damage::init(4), &mut rng);
+        let applied_damage = def.apply_damage(Damage::init(4, DamageElement::PHYSICAL), &mut rng);
         // (2 * 2) + [2,4] = 6-8 damage
         // Minus 2-4 Dodge/armor
         // 2-6 damage

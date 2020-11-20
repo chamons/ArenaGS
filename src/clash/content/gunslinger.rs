@@ -236,7 +236,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
                 "Snap Shot",
                 Some("gun_08_b.png"),
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(4), BoltKind::Bullet),
+                SkillEffect::RangedAttack(Damage::init(4, DamageElement::PHYSICAL), BoltKind::Bullet),
                 Some(7),
                 true,
             )
@@ -248,7 +248,10 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
                 "Aimed Shot",
                 Some("gun_06_b.png"),
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(6).with_option(DamageOptions::AIMED_SHOT), BoltKind::Bullet),
+                SkillEffect::RangedAttack(
+                    Damage::init(6, DamageElement::PHYSICAL).with_option(DamageOptions::AIMED_SHOT),
+                    BoltKind::Bullet,
+                ),
                 Some(6),
                 true,
             )
@@ -261,7 +264,10 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
                 "Triple Shot",
                 Some("SpellBook06_22.png"),
                 TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(4).with_option(DamageOptions::TRIPLE_SHOT), BoltKind::Bullet),
+                SkillEffect::RangedAttack(
+                    Damage::init(4, DamageElement::PHYSICAL).with_option(DamageOptions::TRIPLE_SHOT),
+                    BoltKind::Bullet,
+                ),
                 Some(4),
                 true,
             )
@@ -273,7 +279,7 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
                 "Quick Shot",
                 Some("SpellBook03_10.png"),
                 TargetType::Tile,
-                SkillEffect::MoveAndShoot(Damage::init(4), Some(5), BoltKind::Bullet),
+                SkillEffect::MoveAndShoot(Damage::init(4, DamageElement::PHYSICAL), Some(5), BoltKind::Bullet),
                 Some(1),
                 true,
             )
@@ -327,7 +333,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             skill.image = Some("gun_01_b.png".to_string());
             skill.range = skill.range.map(|r| r + 1);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL).with_option(DamageOptions::RAISE_TEMPERATURE),
                 BoltKind::FireBullet,
             );
         }
@@ -335,7 +341,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             skill.image = Some("SpellBook01_37.png".to_string());
             skill.range = skill.range.map(|r| r + 1);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 1)
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL | DamageElement::FIRE)
                     .with_option(DamageOptions::RAISE_TEMPERATURE)
                     .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
                 BoltKind::FireBullet,
@@ -345,7 +351,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             skill.image = Some("r_16.png".to_string());
             skill.range = skill.range.map(|r| r + 2);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 1)
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::FIRE)
                     .with_option(DamageOptions::TRIPLE_SHOT)
                     .with_option(DamageOptions::RAISE_TEMPERATURE),
                 BoltKind::FireBullet,
@@ -354,7 +360,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
         "Hot Hands" => {
             skill.image = Some("SpellBook01_15.png".to_string());
             skill.effect = SkillEffect::MoveAndShoot(
-                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::RAISE_TEMPERATURE),
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL).with_option(DamageOptions::RAISE_TEMPERATURE),
                 get_range(&skill.effect),
                 BoltKind::FireBullet,
             );
@@ -363,15 +369,15 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             skill.image = Some("gun_01_b.png".to_string());
             skill.range = skill.range.map(|r| r + 2);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
-                BoltKind::FireBullet,
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                BoltKind::AirBullet,
             );
         }
         "Air Lance" => {
             skill.image = Some("SpellBook06_46.png".to_string());
             skill.range = skill.range.map(|r| r + 3);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 2).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+                Damage::init(get_damage(&skill.effect) - 2, DamageElement::PHYSICAL).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
                 BoltKind::AirBullet,
             );
         }
@@ -379,7 +385,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
             skill.image = Some("SpellBookPage09_66.png".to_string());
             skill.range = skill.range.map(|r| r + 2);
             skill.effect = SkillEffect::RangedAttack(
-                Damage::init(get_damage(&skill.effect) - 1)
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL | DamageElement::LIGHTNING)
                     .with_option(DamageOptions::TRIPLE_SHOT)
                     .with_option(DamageOptions::CONSUMES_CHARGE_DMG),
                 BoltKind::AirBullet,
@@ -388,7 +394,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
         "Lightning Speed" => {
             skill.image = Some("SpellBookPage09_39.png".to_string());
             skill.effect = SkillEffect::MoveAndShoot(
-                Damage::init(get_damage(&skill.effect) - 1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+                Damage::init(get_damage(&skill.effect) - 1, DamageElement::PHYSICAL).with_option(DamageOptions::ADD_CHARGE_STATUS),
                 get_range(&skill.effect).map(|r| r + 1),
                 BoltKind::AirBullet,
             );

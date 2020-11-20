@@ -11,7 +11,7 @@ pub fn golem_skills(m: &mut SkillsResource) {
         "Golem Punch",
         None,
         TargetType::Player,
-        SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+        SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
         Some(1),
         false,
     ));
@@ -21,7 +21,7 @@ pub fn golem_skills(m: &mut SkillsResource) {
             "Ground Slam",
             None,
             TargetType::Player,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Earth),
+            SkillEffect::Field(FieldEffect::Damage(Damage::init(4, DamageElement::PHYSICAL), 1), FieldKind::Earth),
             Some(5),
             false,
         )

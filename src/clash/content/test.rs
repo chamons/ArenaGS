@@ -27,7 +27,7 @@ pub fn get_test_skills() -> SkillsResource {
         "TestRanged",
         None,
         TargetType::Enemy,
-        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(2, DamageElement::PHYSICAL), BoltKind::Fire),
         Some(2),
         false,
     ));
@@ -35,7 +35,7 @@ pub fn get_test_skills() -> SkillsResource {
         "TestMelee",
         None,
         TargetType::Enemy,
-        SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword),
+        SkillEffect::MeleeAttack(Damage::init(2, DamageElement::PHYSICAL), WeaponKind::Sword),
         Some(1),
         false,
     ));
@@ -43,7 +43,7 @@ pub fn get_test_skills() -> SkillsResource {
         "TestOrb",
         None,
         TargetType::Any,
-        SkillEffect::Orb(Damage::init(1), OrbKind::Feather, 2, 8),
+        SkillEffect::Orb(Damage::init(1, DamageElement::PHYSICAL), OrbKind::Feather, 2, 8),
         Some(5),
         false,
     ));
@@ -80,19 +80,19 @@ pub fn get_test_skills() -> SkillsResource {
         "TestField",
         None,
         TargetType::Any,
-        SkillEffect::Field(FieldEffect::Damage(Damage::init(1), 0), FieldKind::Fire),
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(1, DamageElement::PHYSICAL), 0), FieldKind::Fire),
     ));
     m.add(SkillInfo::init(
         "TestLargeField",
         None,
         TargetType::Any,
-        SkillEffect::Field(FieldEffect::Damage(Damage::init(1), 1), FieldKind::Fire),
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(1, DamageElement::PHYSICAL), 1), FieldKind::Fire),
     ));
     m.add(SkillInfo::init_with_distance(
         "TestMoveAndShoot",
         None,
         TargetType::Tile,
-        SkillEffect::MoveAndShoot(Damage::init(1), Some(5), BoltKind::Fire),
+        SkillEffect::MoveAndShoot(Damage::init(1, DamageElement::PHYSICAL), Some(5), BoltKind::Fire),
         Some(1),
         true,
     ));
@@ -104,7 +104,7 @@ pub fn get_test_skills() -> SkillsResource {
         TargetType::Enemy,
         sequence!(
             SkillEffect::Buff(StatusKind::Armored, 300),
-            SkillEffect::MeleeAttack(Damage::init(2), WeaponKind::Sword)
+            SkillEffect::MeleeAttack(Damage::init(2, DamageElement::PHYSICAL), WeaponKind::Sword)
         ),
     ));
     m.add(SkillInfo::init_with_distance(
@@ -120,7 +120,7 @@ pub fn get_test_skills() -> SkillsResource {
         None,
         TargetType::Enemy,
         sequence!(
-            SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
+            SkillEffect::RangedAttack(Damage::init(2, DamageElement::PHYSICAL), BoltKind::Fire),
             SkillEffect::Buff(StatusKind::Aimed, 200)
         ),
         Some(1),
@@ -144,7 +144,7 @@ pub fn get_test_skills() -> SkillsResource {
         "TestTap",
         None,
         TargetType::Enemy,
-        SkillEffect::RangedAttack(Damage::init(0), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(0, DamageElement::PHYSICAL), BoltKind::Fire),
         Some(2),
         false,
     ));
@@ -152,7 +152,7 @@ pub fn get_test_skills() -> SkillsResource {
         "TestCharge",
         None,
         TargetType::Any,
-        SkillEffect::ChargeAttack(Damage::init(1), WeaponKind::Sword),
+        SkillEffect::ChargeAttack(Damage::init(1, DamageElement::PHYSICAL), WeaponKind::Sword),
         Some(3),
         false,
     ));

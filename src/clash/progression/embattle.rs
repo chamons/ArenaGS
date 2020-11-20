@@ -98,7 +98,12 @@ where
     for mut a in base_attacks {
         a.range = a.range.map(|r| ((r as i32 + weapon_range + skill_range.get(&a.name).unwrap_or(&0)) as u32));
 
-        let new_damage = |damage: Damage| Damage::init((damage.dice() as i32 + weapon_strength + skill_damage.get(&a.name).unwrap_or(&0)) as u32);
+        let new_damage = |damage: Damage| {
+            Damage::init(
+                (damage.dice() as i32 + weapon_strength + skill_damage.get(&a.name).unwrap_or(&0)) as u32,
+                damage.element,
+            )
+        };
         a.effect = match a.effect {
             SkillEffect::RangedAttack(damage, kind) => SkillEffect::RangedAttack(new_damage(damage), kind),
             SkillEffect::MeleeAttack(damage, kind) => SkillEffect::MeleeAttack(new_damage(damage), kind),
@@ -296,7 +301,7 @@ mod tests {
                 "Basic Attack",
                 None,
                 TargetType::Any,
-                SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+                SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
             ),
@@ -360,7 +365,7 @@ mod tests {
                 "Basic Attack",
                 None,
                 TargetType::Any,
-                SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+                SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
             ),

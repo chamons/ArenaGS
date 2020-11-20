@@ -219,7 +219,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 6),
-            FieldEffect::Damage(Damage::init(1), 1),
+            FieldEffect::Damage(Damage::init(1, DamageElement::PHYSICAL), 1),
             "TestField",
             FieldKind::Fire,
         );
@@ -243,7 +243,16 @@ mod tests {
             .build();
         let player = find_at(&ecs, 2, 2);
 
-        begin_orb(&mut ecs, player, Point::init(2, 6), Damage::init(2), OrbKind::Feather, 2, 12, "TestOrb");
+        begin_orb(
+            &mut ecs,
+            player,
+            Point::init(2, 6),
+            Damage::init(2, DamageElement::PHYSICAL),
+            OrbKind::Feather,
+            2,
+            12,
+            "TestOrb",
+        );
         wait_for_animations(&mut ecs);
 
         assert_field_exists(&ecs, 2, 4);

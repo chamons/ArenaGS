@@ -8,6 +8,16 @@ use crate::atlas::prelude::*;
 use crate::clash::EventCoordinator;
 
 bitflags! {
+    #[derive(Deserialize, Serialize)]
+    pub struct DamageElement: u32 {
+        const PHYSICAL =   0b00000000_00000001;
+        const FIRE =       0b00000000_00000010;
+        const LIGHTNING =  0b00000000_00000100;
+        const ICE =        0b00000000_00001000;
+    }
+}
+
+bitflags! {
     #[derive(Serialize, Deserialize)]
     pub struct DamageOptions: u32 {
         const RAISE_TEMPERATURE =         0b00000000_00000001;
@@ -28,13 +38,15 @@ pub const STATIC_CHARGE_DAMAGE: u32 = 4;
 #[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct Damage {
     pub amount: Strength,
+    pub element: DamageElement,
     pub options: DamageOptions,
 }
 
 impl Damage {
-    pub fn init(dice: u32) -> Damage {
+    pub fn init(dice: u32, element: DamageElement) -> Damage {
         Damage {
             amount: Strength::init(dice),
+            element,
             options: DamageOptions::empty(),
         }
     }
@@ -48,6 +60,7 @@ impl Damage {
         Damage {
             amount: Strength::init(self.amount.dice + increase),
             options: self.options,
+            element: self.element,
         }
     }
 
@@ -161,12 +174,7 @@ fn apply_damage_core(ecs: &mut World, damage: Damage, target: Entity, source_pos
         ecs.add_status(target, StatusKind::StaticCharge, 300);
     }
     if rolled_damage.options.contains(DamageOptions::CONSUMES_CHARGE_DMG) && ecs.has_status(target, StatusKind::StaticCharge) {
-        apply_damage_to_character(
-            ecs,
-            Damage::init(STATIC_CHARGE_DAMAGE).with_option(DamageOptions::PIERCE_DEFENSES),
-            target,
-            None,
-        );
+        apply_damage_to_character(ecs, Damage::init(STATIC_CHARGE_DAMAGE, DamageElement::LIGHTNING), target, None);
         ecs.remove_status(target, StatusKind::StaticCharge);
     }
 
@@ -222,7 +230,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            Damage::init(1, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -239,7 +247,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 0),
-            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            Damage::init(1, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -260,7 +268,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(1).with_option(DamageOptions::KNOCKBACK),
+            Damage::init(1, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -277,7 +285,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+            Damage::init(1, DamageElement::PHYSICAL).with_option(DamageOptions::ADD_CHARGE_STATUS),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -290,7 +298,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(1).with_option(DamageOptions::ADD_CHARGE_STATUS),
+            Damage::init(1, DamageElement::PHYSICAL).with_option(DamageOptions::ADD_CHARGE_STATUS),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -309,7 +317,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(0).with_option(DamageOptions::CONSUMES_CHARGE_DMG),
+            Damage::init(0, DamageElement::PHYSICAL).with_option(DamageOptions::CONSUMES_CHARGE_DMG),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -331,7 +339,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(0).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
+            Damage::init(0, DamageElement::PHYSICAL).with_option(DamageOptions::CONSUMES_CHARGE_KNOCKBACK),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -351,7 +359,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(0).with_option(DamageOptions::CONSUMES_CHARGE_DMG),
+            Damage::init(0, DamageElement::PHYSICAL).with_option(DamageOptions::CONSUMES_CHARGE_DMG),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -371,7 +379,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(3).with_option(DamageOptions::TRIPLE_SHOT),
+            Damage::init(3, DamageElement::PHYSICAL).with_option(DamageOptions::TRIPLE_SHOT),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -390,7 +398,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(3).with_option(DamageOptions::TRIPLE_SHOT),
+            Damage::init(3, DamageElement::PHYSICAL).with_option(DamageOptions::TRIPLE_SHOT),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -408,7 +416,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(2, 3),
-            Damage::init(3).with_option(DamageOptions::AIMED_SHOT),
+            Damage::init(3, DamageElement::PHYSICAL).with_option(DamageOptions::AIMED_SHOT),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -424,7 +432,7 @@ mod tests {
 
         ecs.add_status(player, StatusKind::Aimed, 300);
 
-        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
+        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3, DamageElement::PHYSICAL), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         // We assume removal = more damage, since it's a bit tricky to test due to RNG
@@ -439,7 +447,7 @@ mod tests {
 
         ecs.add_status(target, StatusKind::Armored, 300);
 
-        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
+        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3, DamageElement::PHYSICAL), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         // 3 armor, 3 damage
@@ -459,7 +467,7 @@ mod tests {
 
         ecs.add_status(target, StatusKind::Flying, 300);
 
-        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3), BoltKind::Fire);
+        begin_bolt(&mut ecs, player, Point::init(2, 3), Damage::init(3, DamageElement::PHYSICAL), BoltKind::Fire);
         wait_for_animations(&mut ecs);
 
         assert_eq!(ecs.get_defenses(target).health, starting_health);

@@ -18,7 +18,11 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Tidal Surge",
             None,
             TargetType::AnyoneButSelf,
-            SkillEffect::ConeAttack(Damage::init(3).with_option(DamageOptions::KNOCKBACK), ConeKind::Water, TIDAL_SURGE_SIZE),
+            SkillEffect::ConeAttack(
+                Damage::init(3, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
+                ConeKind::Water,
+                TIDAL_SURGE_SIZE,
+            ),
             Some(1),
             false,
         )
@@ -29,7 +33,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
         "Ice Shard",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Water),
+        SkillEffect::RangedAttack(Damage::init(2, DamageElement::PHYSICAL | DamageElement::ICE), BoltKind::Water),
         Some(2),
         false,
     ));
@@ -49,7 +53,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             None,
             TargetType::Any,
             SkillEffect::Field(
-                FieldEffect::SustainedDamage(Damage::init(1).with_option(DamageOptions::PIERCE_DEFENSES), 6),
+                FieldEffect::SustainedDamage(Damage::init(1, DamageElement::FIRE).with_option(DamageOptions::PIERCE_DEFENSES), 6),
                 FieldKind::Fire,
             ),
             Some(MAGMA_ERUPTION_RANGE),
@@ -62,7 +66,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
         "Lava Bolt",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(2), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(2, DamageElement::FIRE | DamageElement::FIRE), BoltKind::Fire),
         Some(4),
         false,
     ));
@@ -71,7 +75,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
         "Lightning Surge",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(3), BoltKind::Lightning),
+        SkillEffect::RangedAttack(Damage::init(3, DamageElement::LIGHTNING), BoltKind::Lightning),
         Some(4),
         false,
     ));
@@ -81,7 +85,10 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Hailstone",
             None,
             TargetType::Player,
-            SkillEffect::Field(FieldEffect::Damage(Damage::init(4), 1), FieldKind::Hail),
+            SkillEffect::Field(
+                FieldEffect::Damage(Damage::init(4, DamageElement::PHYSICAL | DamageElement::ICE), 1),
+                FieldKind::Hail,
+            ),
             Some(8),
             false,
         )
@@ -93,7 +100,10 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Earthen Rage",
             None,
             TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(2).with_option(DamageOptions::KNOCKBACK), WeaponKind::Sword),
+            SkillEffect::ChargeAttack(
+                Damage::init(2, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
+                WeaponKind::Sword,
+            ),
             Some(5),
             false,
         )
@@ -105,7 +115,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Rock Slide",
             None,
             TargetType::Player,
-            SkillEffect::ChargeAttack(Damage::init(2), WeaponKind::Sword),
+            SkillEffect::ChargeAttack(Damage::init(2, DamageElement::PHYSICAL), WeaponKind::Sword),
             Some(3),
             false,
         )
@@ -116,7 +126,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
         "Pummel",
         None,
         TargetType::Player,
-        SkillEffect::MeleeAttack(Damage::init(3), WeaponKind::Sword),
+        SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
         Some(1),
         false,
     ));
@@ -161,7 +171,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             None,
             TargetType::Player,
             sequence!(
-                SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 0), FieldKind::Lightning),
+                SkillEffect::Field(FieldEffect::Damage(Damage::init(3, DamageElement::LIGHTNING), 0), FieldKind::Lightning),
                 SkillEffect::ReloadSome(AmmoKind::Charge, 5)
             ),
             Some(6),

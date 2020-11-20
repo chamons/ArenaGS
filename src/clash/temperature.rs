@@ -155,7 +155,7 @@ pub fn temp_event(ecs: &mut World, kind: EventKind, target: Option<Entity>) {
 
                 apply_damage_to_character(
                     ecs,
-                    Damage::init(TEMPERATURE_DAMAGE_PER_TICK).with_option(DamageOptions::PIERCE_DEFENSES),
+                    Damage::init(TEMPERATURE_DAMAGE_PER_TICK, DamageElement::FIRE).with_option(DamageOptions::PIERCE_DEFENSES),
                     target.unwrap(),
                     None,
                 );
@@ -269,7 +269,7 @@ mod tests {
                 &mut ecs,
                 player,
                 Point::init(3, 2),
-                Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
+                Damage::init(10, DamageElement::PHYSICAL).with_option(DamageOptions::RAISE_TEMPERATURE),
                 BoltKind::Fire,
             );
             wait_for_animations(&mut ecs);
@@ -290,7 +290,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(3, 2),
-            Damage::init(10).with_option(DamageOptions::RAISE_TEMPERATURE),
+            Damage::init(10, DamageElement::PHYSICAL).with_option(DamageOptions::RAISE_TEMPERATURE),
             BoltKind::Fire,
         );
         wait_for_animations(&mut ecs);
@@ -302,7 +302,7 @@ mod tests {
             &mut ecs,
             player,
             Point::init(3, 2),
-            Damage::init(10)
+            Damage::init(10, DamageElement::PHYSICAL)
                 .with_option(DamageOptions::RAISE_TEMPERATURE)
                 .with_option(DamageOptions::LARGE_TEMPERATURE_DELTA),
             BoltKind::Fire,
