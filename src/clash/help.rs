@@ -386,7 +386,7 @@ impl HelpInfo {
                 return HelpInfo::text_header("Equipment Slots", vec_of_strings![
                     "Characters can only use so many items magic auras conflict, pockets run out, and everything gets too heavy to carry into battle.",
                     "",
-                    "There are 4 types of equipment slots, one for each [[Equipment]] type, and color coded to match:",
+                    "There are 4 types of equipment slots, one for each Equipment type, and color coded to match:",
                     "",
                     "- Weapon parts are red.",
                     "- Armor mods are blue.",
@@ -404,7 +404,7 @@ impl HelpInfo {
                     "",
                     "Influence is gained from victories in the Arena both from battle's rewards and their rising fame in the world.",
                     "",
-                    "Influence is primarily spent in the [[Profession]] tree to source better equipment, tinker with gear, and make connections with vendors.",
+                    "Influence is primarily spent in the Profession tree to source better equipment, tinker with gear, and make connections with vendors.",
                     "",
                     "Influence can also be liquidated into raw currency and spent at the merchant. The prices are steep, but the selection is unbeatable."
                 ])
