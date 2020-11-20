@@ -18,17 +18,30 @@ bitflags! {
 }
 
 impl DamageElement {
-    pub fn description(&self) -> &'static str {
+    pub fn description(&self) -> String {
+        let mut description = String::new();
         if self.contains(DamageElement::PHYSICAL) {
-            return "Physical";
-        } else if self.contains(DamageElement::FIRE) {
-            return "Fire";
-        } else if self.contains(DamageElement::LIGHTNING) {
-            return "Lightning";
-        } else if self.contains(DamageElement::ICE) {
-            return "Ice";
+            description.push_str("Physical");
         }
-        panic!("Unknown element {:#?}", self)
+        if self.contains(DamageElement::FIRE) {
+            if description.len() > 0 {
+                description.push_str(" / ");
+            }
+            description.push_str("Fire");
+        }
+        if self.contains(DamageElement::LIGHTNING) {
+            if description.len() > 0 {
+                description.push_str(" / ");
+            }
+            description.push_str("Lightning");
+        }
+        if self.contains(DamageElement::ICE) {
+            if description.len() > 0 {
+                description.push_str(" / ");
+            }
+            description.push_str("Ice");
+        }
+        description
     }
 }
 

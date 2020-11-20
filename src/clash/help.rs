@@ -86,6 +86,7 @@ impl HelpInfo {
 
     fn report_damage(details: &mut Vec<String>, damage: &Damage) {
         details.push(format!("[[Strength]]: {}", damage.dice()));
+        details.push(damage.element.description());
         let opt = &damage.options;
         let raises = opt.contains(DamageOptions::RAISE_TEMPERATURE);
         let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
