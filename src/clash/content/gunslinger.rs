@@ -14,107 +14,6 @@ pub enum GunslingerAmmo {
     Cyclone,
 }
 
-pub fn get_skill_tree(equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
-    fn skill_pos(x: u32, y: u32) -> Point {
-        let x = 60 + (100 * x);
-        let y = 20 + 50 * y;
-        Point::init(x, y)
-    }
-
-    vec![
-        SkillTreeNode::with_equipment(equipment.get("Adjustable Sight"), skill_pos(0, 6), 5, &[]),
-        SkillTreeNode::with_equipment(equipment.get("Recoil Spring"), skill_pos(1, 6), 10, &["Adjustable Sight"]),
-        SkillTreeNode::with_equipment(equipment.get("Stippled Grip"), skill_pos(2, 5), 15, &["Recoil Spring"]),
-        SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 1, skill_pos(0, 8), 5, &[]),
-        SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 2, skill_pos(1, 8), 5, &["Weapon Expansion"]),
-        SkillTreeNode::with_equipment(equipment.get("Ignite Ammo"), skill_pos(0, 4), 5, &[]),
-    ]
-}
-
-pub fn get_equipment() -> Vec<EquipmentItem> {
-    vec![
-        EquipmentItem::init(
-            "Adjustable Sight",
-            Some("gun_06_b.png"),
-            EquipmentKinds::Weapon,
-            EquipmentRarity::Standard,
-            &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
-        ),
-        EquipmentItem::init(
-            "Recoil Spring",
-            Some("SpellBook06_22.png"),
-            EquipmentKinds::Weapon,
-            EquipmentRarity::Standard,
-            &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
-        ),
-        EquipmentItem::init(
-            "Stippled Grip",
-            Some("SpellBook03_10.png"),
-            EquipmentKinds::Weapon,
-            EquipmentRarity::Standard,
-            &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
-        ),
-        EquipmentItem::init(
-            "Ignite Ammo",
-            Some("b_31_1.png"),
-            EquipmentKinds::Weapon,
-            EquipmentRarity::Standard,
-            &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
-        ),
-        EquipmentItem::init(
-            "Oversized Chamber",
-            Some("gun_12_b.png"),
-            EquipmentKinds::Weapon,
-            EquipmentRarity::Uncommon,
-            &[
-                EquipmentEffect::ModifiesResourceTotal(-3, "Bullets".to_string()),
-                EquipmentEffect::ModifiesWeaponStrength(2),
-            ],
-        ),
-        // summon a shadow that shoots a few times
-        EquipmentItem::init(
-            "Gunslinger's Regret",
-            Some("artifact_01_b.png"),
-            EquipmentKinds::Accessory,
-            EquipmentRarity::Uncommon,
-            &[],
-        ),
-        // Rotate ammo every shot but reloads after every shot and slightly more skill damage
-        EquipmentItem::init("Luck of the Draw", Some("book_01_b.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
-    ]
-}
-
-pub fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
-    if ecs.has_status(invoker, StatusKind::Magnum) {
-        GunslingerAmmo::Magnum
-    } else if ecs.has_status(invoker, StatusKind::Ignite) {
-        GunslingerAmmo::Ignite
-    } else {
-        GunslingerAmmo::Cyclone
-    }
-}
-
-pub fn get_image_for_status(kind: StatusKind) -> &'static str {
-    match kind {
-        StatusKind::Ignite => "b_31_1.png",
-        StatusKind::Cyclone => "b_40_02.png",
-        StatusKind::Magnum => "b_30.png",
-        _ => panic!("Unknown status {:?} in get_image_for_status", kind),
-    }
-}
-
-pub fn get_image_for_kind(ammo: GunslingerAmmo) -> &'static str {
-    match ammo {
-        GunslingerAmmo::Ignite => "b_31_1.png",
-        GunslingerAmmo::Cyclone => "b_40_02.png",
-        GunslingerAmmo::Magnum => "b_30.png",
-    }
-}
-
-pub fn get_all_ammo_images() -> Vec<&'static str> {
-    vec!["b_31_1.png", "b_40_02.png", "b_30.png"]
-}
-
 fn set_current_ammo(ecs: &mut World, invoker: Entity, ammo: GunslingerAmmo) {
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Magnum);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Ignite);
@@ -124,10 +23,6 @@ fn set_current_ammo(ecs: &mut World, invoker: Entity, ammo: GunslingerAmmo) {
         GunslingerAmmo::Ignite => ecs.add_trait(invoker, StatusKind::Ignite),
         GunslingerAmmo::Cyclone => ecs.add_trait(invoker, StatusKind::Cyclone),
     }
-}
-
-pub fn get_equipped_ammos(ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo> {
-    ecs.read_storage::<GunslingerComponent>().grab(invoker).ammo_types.to_vec()
 }
 
 fn get_next_ammo(ecs: &mut World, invoker: Entity) -> GunslingerAmmo {
@@ -172,111 +67,14 @@ pub fn set_ammo_to(ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) 
     reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
-pub fn default_attack() -> &'static str {
-    "Snap Shot"
-}
-
-pub fn default_attack_replacement() -> &'static str {
-    "Quick Shot"
-}
-
 pub fn skills_for_ammo(ecs: &World, player: Option<Entity>, ammo: GunslingerAmmo) -> Vec<String> {
     let weapon_skills = if let Some(player) = player {
         ecs.read_storage::<GunslingerComponent>().grab(player).weapon_skills.clone()
     } else {
-        get_all_bases()
+        all_weapon_skill_classes()
     };
 
     weapon_skills.iter().map(|t| get_skill_name_under_ammo(t, ammo).to_string()).collect()
-}
-
-pub fn get_skill_name_under_ammo(base_name: &str, ammo: GunslingerAmmo) -> &str {
-    match ammo {
-        GunslingerAmmo::Magnum => base_name,
-        GunslingerAmmo::Ignite => match base_name {
-            "Snap Shot" => "Spark Shot",
-            "Aimed Shot" => "Explosive Blast",
-            "Triple Shot" => "Dragon's Breath",
-            "Quick Shot" => "Hot Hands",
-            _ => panic!("Unknown skill template {}", base_name),
-        },
-        GunslingerAmmo::Cyclone => match base_name {
-            "Snap Shot" => "Airburst Shot",
-            "Aimed Shot" => "Air Lance",
-            "Triple Shot" => "Tornado Shot",
-            "Quick Shot" => "Lightning Speed",
-            _ => panic!("Unknown skill  template {}", base_name),
-        },
-    }
-}
-
-pub fn get_all_bases() -> Vec<String> {
-    vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
-}
-
-// Syntax here gets ugly otherwise after autoformat
-#[allow(clippy::needless_return)]
-pub fn get_skill_base(name: &str) -> SkillInfo {
-    match name {
-        "Default" | "Snap Shot" => {
-            return SkillInfo::init_with_distance(
-                "Snap Shot",
-                Some("gun_08_b.png"),
-                TargetType::Enemy,
-                SkillEffect::RangedAttack(Damage::init(4, DamageElement::PHYSICAL), BoltKind::Bullet),
-                Some(7),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 1)
-            .with_alternate("Reload");
-        }
-        "Aimed Shot" => {
-            return SkillInfo::init_with_distance(
-                "Aimed Shot",
-                Some("gun_06_b.png"),
-                TargetType::Enemy,
-                SkillEffect::RangedAttack(
-                    Damage::init(6, DamageElement::PHYSICAL).with_option(DamageOptions::AIMED_SHOT),
-                    BoltKind::Bullet,
-                ),
-                Some(6),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 1)
-            .with_focus_use(0.5)
-            .with_alternate("Reload");
-        }
-        "Triple Shot" => {
-            return SkillInfo::init_with_distance(
-                "Triple Shot",
-                Some("SpellBook06_22.png"),
-                TargetType::Enemy,
-                SkillEffect::RangedAttack(
-                    Damage::init(4, DamageElement::PHYSICAL).with_option(DamageOptions::TRIPLE_SHOT),
-                    BoltKind::Bullet,
-                ),
-                Some(4),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 3)
-            .with_alternate("Reload");
-        }
-        "Quick Shot" => {
-            return SkillInfo::init_with_distance(
-                "Quick Shot",
-                Some("SpellBook03_10.png"),
-                TargetType::Tile,
-                SkillEffect::MoveAndShoot(Damage::init(4, DamageElement::PHYSICAL), Some(5), BoltKind::Bullet),
-                Some(1),
-                true,
-            )
-            .with_ammo(AmmoKind::Bullets, 1)
-            .with_exhaustion(40.0)
-            .with_alternate("Reload");
-        }
-
-        _ => panic!("Unknown gunslinger attack {}", name),
-    }
 }
 
 fn instance_skill_for_ammo(name: &str, ammo: GunslingerAmmo, templates: &Vec<SkillInfo>) -> SkillInfo {
@@ -393,59 +191,280 @@ fn instance_skill_for_ammo(name: &str, ammo: GunslingerAmmo, templates: &Vec<Ski
     skill
 }
 
-pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
-    vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
+fn get_skill_name_under_ammo(base_name: &str, ammo: GunslingerAmmo) -> &str {
+    match ammo {
+        GunslingerAmmo::Magnum => base_name,
+        GunslingerAmmo::Ignite => match base_name {
+            "Snap Shot" => "Spark Shot",
+            "Aimed Shot" => "Explosive Blast",
+            "Triple Shot" => "Dragon's Breath",
+            "Quick Shot" => "Hot Hands",
+            _ => panic!("Unknown skill template {}", base_name),
+        },
+        GunslingerAmmo::Cyclone => match base_name {
+            "Snap Shot" => "Airburst Shot",
+            "Aimed Shot" => "Air Lance",
+            "Triple Shot" => "Tornado Shot",
+            "Quick Shot" => "Lightning Speed",
+            _ => panic!("Unknown skill  template {}", base_name),
+        },
+    }
 }
 
-pub fn instance_skills(templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
-    // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
-    // since you can reach them via help
-    for template in templates {
-        for ammo in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
-            skills.add(instance_skill_for_ammo(get_skill_name_under_ammo(&template.name, *ammo), *ammo, &templates));
+pub fn get_image_for_status(kind: StatusKind) -> &'static str {
+    match kind {
+        StatusKind::Ignite => "b_31_1.png",
+        StatusKind::Cyclone => "b_40_02.png",
+        StatusKind::Magnum => "b_30.png",
+        _ => panic!("Unknown status {:?} in get_image_for_status", kind),
+    }
+}
+
+fn get_equipped_ammo(ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo> {
+    ecs.read_storage::<GunslingerComponent>().grab(invoker).ammo_types.to_vec()
+}
+
+fn get_current_weapon_trait(ecs: &World, invoker: Entity) -> GunslingerAmmo {
+    if ecs.has_status(invoker, StatusKind::Magnum) {
+        GunslingerAmmo::Magnum
+    } else if ecs.has_status(invoker, StatusKind::Ignite) {
+        GunslingerAmmo::Ignite
+    } else {
+        GunslingerAmmo::Cyclone
+    }
+}
+
+fn all_weapon_skill_classes() -> Vec<String> {
+    vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
+}
+
+pub struct GunslingerWeaponPack {}
+
+impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
+    fn get_skill_tree(&self, equipment: &EquipmentResource) -> Vec<SkillTreeNode> {
+        fn skill_pos(x: u32, y: u32) -> Point {
+            let x = 60 + (100 * x);
+            let y = 20 + 50 * y;
+            Point::init(x, y)
+        }
+
+        vec![
+            SkillTreeNode::with_equipment(equipment.get("Adjustable Sight"), skill_pos(0, 6), 5, &[]),
+            SkillTreeNode::with_equipment(equipment.get("Recoil Spring"), skill_pos(1, 6), 10, &["Adjustable Sight"]),
+            SkillTreeNode::with_equipment(equipment.get("Stippled Grip"), skill_pos(2, 5), 15, &["Recoil Spring"]),
+            SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 1, skill_pos(0, 8), 5, &[]),
+            SkillTreeNode::with_expansion(EquipmentKinds::Weapon, 2, skill_pos(1, 8), 5, &["Weapon Expansion"]),
+            SkillTreeNode::with_equipment(equipment.get("Ignite Ammo"), skill_pos(0, 4), 5, &[]),
+        ]
+    }
+
+    fn get_equipment(&self) -> Vec<EquipmentItem> {
+        vec![
+            EquipmentItem::init(
+                "Adjustable Sight",
+                Some("gun_06_b.png"),
+                EquipmentKinds::Weapon,
+                EquipmentRarity::Standard,
+                &[EquipmentEffect::UnlocksAbilityClass("Aimed Shot".to_string())],
+            ),
+            EquipmentItem::init(
+                "Recoil Spring",
+                Some("SpellBook06_22.png"),
+                EquipmentKinds::Weapon,
+                EquipmentRarity::Standard,
+                &[EquipmentEffect::UnlocksAbilityClass("Triple Shot".to_string())],
+            ),
+            EquipmentItem::init(
+                "Stippled Grip",
+                Some("SpellBook03_10.png"),
+                EquipmentKinds::Weapon,
+                EquipmentRarity::Standard,
+                &[EquipmentEffect::UnlocksAbilityClass("Quick Shot".to_string())],
+            ),
+            EquipmentItem::init(
+                "Ignite Ammo",
+                Some("b_31_1.png"),
+                EquipmentKinds::Weapon,
+                EquipmentRarity::Standard,
+                &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
+            ),
+            EquipmentItem::init(
+                "Oversized Chamber",
+                Some("gun_12_b.png"),
+                EquipmentKinds::Weapon,
+                EquipmentRarity::Uncommon,
+                &[
+                    EquipmentEffect::ModifiesResourceTotal(-3, "Bullets".to_string()),
+                    EquipmentEffect::ModifiesWeaponStrength(2),
+                ],
+            ),
+            // summon a shadow that shoots a few times
+            EquipmentItem::init(
+                "Gunslinger's Regret",
+                Some("artifact_01_b.png"),
+                EquipmentKinds::Accessory,
+                EquipmentRarity::Uncommon,
+                &[],
+            ),
+            // Rotate ammo every shot but reloads after every shot and slightly more skill damage
+            EquipmentItem::init("Luck of the Draw", Some("book_01_b.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
+        ]
+    }
+
+    fn get_equipped_ammo(&self, ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo> {
+        get_equipped_ammo(ecs, invoker)
+    }
+
+    fn get_current_weapon_trait(&self, ecs: &World, invoker: Entity) -> GunslingerAmmo {
+        get_current_weapon_trait(ecs, invoker)
+    }
+
+    fn all_weapon_skill_classes(&self) -> Vec<String> {
+        all_weapon_skill_classes()
+    }
+
+    fn set_ammo_to(&self, ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) {
+        set_ammo_to(ecs, invoker, next_ammo);
+    }
+
+    fn get_image_for_kind(&self, ammo: GunslingerAmmo) -> &'static str {
+        match ammo {
+            GunslingerAmmo::Ignite => "b_31_1.png",
+            GunslingerAmmo::Cyclone => "b_40_02.png",
+            GunslingerAmmo::Magnum => "b_30.png",
         }
     }
 
-    skills.add(SkillInfo::init(
-        "Reload",
-        Some("b_45.png"),
-        TargetType::None,
-        SkillEffect::Reload(AmmoKind::Bullets),
-    ));
-
-    skills.add(SkillInfo::init(
-        "Swap Ammo",
-        Some("b_28.png"),
-        TargetType::None,
-        SkillEffect::ReloadAndRotateAmmo(),
-    ));
-}
-
-pub fn add_active_skills(ecs: &mut World, player: Entity, modes: Vec<String>, templates: Vec<String>) {
-    let mut modes: Vec<GunslingerAmmo> = modes
-        .iter()
-        .map(|m| match m.as_str() {
-            "Magnum" => GunslingerAmmo::Magnum,
-            "Ignite" => GunslingerAmmo::Ignite,
-            "Cyclone" => GunslingerAmmo::Cyclone,
-            _ => panic!("Unknown gunslinger mode {}", m),
-        })
-        .collect();
-
-    if !modes.contains(&GunslingerAmmo::Magnum) {
-        modes.insert(0, GunslingerAmmo::Magnum);
+    fn get_all_ammo_images(&self) -> Vec<&'static str> {
+        vec!["b_31_1.png", "b_40_02.png", "b_30.png"]
     }
 
-    ecs.shovel(player, GunslingerComponent::init(&modes[..], &templates[..]));
-    set_current_ammo(ecs, player, GunslingerAmmo::Magnum);
+    fn default_attack(&self) -> SkillInfo {
+        self.get_raw_skill("Snap Shot")
+    }
 
-    // Since we start on Magnum, just add the templates directly
-    add_skills_to_front(ecs, player, templates);
-    if modes.len() > 1 {
-        ecs.write_storage::<SkillsComponent>().grab_mut(player).skills.push("Swap Ammo".to_string());
+    fn default_attack_replacement(&self) -> &'static str {
+        "Quick Shot"
+    }
+
+    // Syntax here gets ugly otherwise after autoformat
+    #[allow(clippy::needless_return)]
+    fn get_raw_skill(&self, name: &str) -> SkillInfo {
+        match name {
+            "Default" | "Snap Shot" => {
+                return SkillInfo::init_with_distance(
+                    "Snap Shot",
+                    Some("gun_08_b.png"),
+                    TargetType::Enemy,
+                    SkillEffect::RangedAttack(Damage::init(4, DamageElement::PHYSICAL), BoltKind::Bullet),
+                    Some(7),
+                    true,
+                )
+                .with_ammo(AmmoKind::Bullets, 1)
+                .with_alternate("Reload");
+            }
+            "Aimed Shot" => {
+                return SkillInfo::init_with_distance(
+                    "Aimed Shot",
+                    Some("gun_06_b.png"),
+                    TargetType::Enemy,
+                    SkillEffect::RangedAttack(
+                        Damage::init(6, DamageElement::PHYSICAL).with_option(DamageOptions::AIMED_SHOT),
+                        BoltKind::Bullet,
+                    ),
+                    Some(6),
+                    true,
+                )
+                .with_ammo(AmmoKind::Bullets, 1)
+                .with_focus_use(0.5)
+                .with_alternate("Reload");
+            }
+            "Triple Shot" => {
+                return SkillInfo::init_with_distance(
+                    "Triple Shot",
+                    Some("SpellBook06_22.png"),
+                    TargetType::Enemy,
+                    SkillEffect::RangedAttack(
+                        Damage::init(4, DamageElement::PHYSICAL).with_option(DamageOptions::TRIPLE_SHOT),
+                        BoltKind::Bullet,
+                    ),
+                    Some(4),
+                    true,
+                )
+                .with_ammo(AmmoKind::Bullets, 3)
+                .with_alternate("Reload");
+            }
+            "Quick Shot" => {
+                return SkillInfo::init_with_distance(
+                    "Quick Shot",
+                    Some("SpellBook03_10.png"),
+                    TargetType::Tile,
+                    SkillEffect::MoveAndShoot(Damage::init(4, DamageElement::PHYSICAL), Some(5), BoltKind::Bullet),
+                    Some(1),
+                    true,
+                )
+                .with_ammo(AmmoKind::Bullets, 1)
+                .with_exhaustion(40.0)
+                .with_alternate("Reload");
+            }
+
+            _ => panic!("Unknown gunslinger attack {}", name),
+        }
+    }
+
+    fn base_resources(&self) -> Vec<(AmmoKind, u32, u32)> {
+        vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
+    }
+
+    fn instance_skills(&self, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
+        // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
+        // since you can reach them via help
+        for template in templates {
+            for ammo in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
+                skills.add(instance_skill_for_ammo(get_skill_name_under_ammo(&template.name, *ammo), *ammo, &templates));
+            }
+        }
+
+        skills.add(SkillInfo::init(
+            "Reload",
+            Some("b_45.png"),
+            TargetType::None,
+            SkillEffect::Reload(AmmoKind::Bullets),
+        ));
+
+        skills.add(SkillInfo::init(
+            "Swap Ammo",
+            Some("b_28.png"),
+            TargetType::None,
+            SkillEffect::ReloadAndRotateAmmo(),
+        ));
+    }
+
+    fn add_active_skills(&self, ecs: &mut World, player: Entity, modes: Vec<String>, templates: Vec<String>) {
+        let mut modes: Vec<GunslingerAmmo> = modes
+            .iter()
+            .map(|m| match m.as_str() {
+                "Magnum" => GunslingerAmmo::Magnum,
+                "Ignite" => GunslingerAmmo::Ignite,
+                "Cyclone" => GunslingerAmmo::Cyclone,
+                _ => panic!("Unknown gunslinger mode {}", m),
+            })
+            .collect();
+
+        if !modes.contains(&GunslingerAmmo::Magnum) {
+            modes.insert(0, GunslingerAmmo::Magnum);
+        }
+
+        ecs.shovel(player, GunslingerComponent::init(&modes[..], &templates[..]));
+        set_current_ammo(ecs, player, GunslingerAmmo::Magnum);
+
+        // Since we start on Magnum, just add the templates directly
+        add_skills_to_front(ecs, player, templates);
+        if modes.len() > 1 {
+            ecs.write_storage::<SkillsComponent>().grab_mut(player).skills.push("Swap Ammo".to_string());
+        }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

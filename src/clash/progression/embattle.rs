@@ -4,40 +4,52 @@ use std::iter::Iterator;
 use specs::prelude::*;
 
 use crate::atlas::prelude::*;
-use crate::clash::content::{gunslinger, spawner};
+use crate::clash::content::{spawner, weapon_pack};
 use crate::clash::*;
 
-pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
-    let ability_classes = collect_ability_classes(ecs, true, gunslinger::get_skill_base);
+pub fn load_skills_for_help(ecs: &mut World, skills: &mut SkillsResource) {
+    let weapon_pack = weapon_pack::get_weapon_pack(ecs);
+    ecs.insert(EquipmentResource::init_with(&load_equipment(&weapon_pack)));
+
+    let ability_classes = collect_ability_classes(ecs, true, &weapon_pack);
     let templates = collect_attack_templates(ecs, ability_classes);
-    gunslinger::instance_skills(&templates, skills);
+    weapon_pack.instance_skills(&templates, skills);
 }
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
+    let weapon_pack = weapon_pack::get_weapon_pack(ecs);
+    ecs.insert(EquipmentResource::init_with(&load_equipment(&weapon_pack)));
+
     let (dodge, armor, absorb, health) = collect_defense_modifier(ecs);
     let defenses = DefenseComponent::init(Defenses::init(1 + dodge as u32, armor as u32, absorb as u32, 20 + health as u32));
 
-    let resources = get_player_resources(ecs);
+    let resources = get_player_resources(ecs, &weapon_pack);
     let resources = SkillResourceComponent::init(&resources[..]).with_focus(1.0);
 
     let player = spawner::player(ecs, player_position, resources, defenses);
 
     // Classes are the "raw" abilities unlocked by equipment, without any equipment specific modifiers
-    let ability_classes = collect_ability_classes(ecs, false, gunslinger::get_skill_base);
+    let ability_classes = collect_ability_classes(ecs, false, &weapon_pack);
     // Templates are those classes with all equipment modifiers applied
     let templates = collect_attack_templates(ecs, ability_classes);
     // Those templates are instanced into actual skills (such as variants for different modes) and added to SkillsResource
-    gunslinger::instance_skills(&templates, skills);
+    weapon_pack.instance_skills(&templates, skills);
 
     // Collect all unlocked modes
     let attack_modes = collect_attack_modes(ecs);
 
     // Now setup the skillbar and initial attack mode
-    gunslinger::add_active_skills(ecs, player, attack_modes, templates.iter().map(|t| t.name.to_string()).collect());
+    weapon_pack.add_active_skills(ecs, player, attack_modes, templates.iter().map(|t| t.name.to_string()).collect());
 }
 
-fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
-    let mut resources = gunslinger::base_resources();
+pub fn load_equipment(weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<EquipmentItem> {
+    let mut equipment = weapon_pack.get_equipment();
+    equipment.append(&mut content::items::get_equipment());
+    equipment
+}
+
+fn get_player_resources(ecs: &World, weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<(AmmoKind, u32, u32)> {
+    let mut resources = weapon_pack.base_resources();
     for delta in collect_resource_modifier(ecs) {
         let i = resources
             .iter()
@@ -51,12 +63,9 @@ fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
     resources
 }
 
-fn collect_ability_classes<F>(ecs: &World, force_all: bool, get: F) -> Vec<SkillInfo>
-where
-    F: Fn(&str) -> SkillInfo,
-{
+fn collect_ability_classes(ecs: &World, force_all: bool, weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<SkillInfo> {
     if force_all {
-        gunslinger::get_all_bases().iter().map(|b| get(b)).collect()
+        weapon_pack.all_weapon_skill_classes().iter().map(|b| weapon_pack.get_raw_skill(b)).collect()
     } else {
         let mut base_attacks = vec![];
 
@@ -65,7 +74,7 @@ where
                 for effect in e.effect {
                     match effect {
                         EquipmentEffect::UnlocksAbilityClass(kind) => {
-                            base_attacks.push(get(&kind));
+                            base_attacks.push(weapon_pack.get_raw_skill(&kind));
                         }
                         _ => {}
                     }
@@ -73,9 +82,9 @@ where
             }
         }
 
-        let default_attack_replacement = gunslinger::default_attack_replacement();
+        let default_attack_replacement = weapon_pack.default_attack_replacement();
         if !base_attacks.iter().any(|a| a.name == default_attack_replacement) {
-            base_attacks.push(get("Default"));
+            base_attacks.push(weapon_pack.default_attack());
         }
         base_attacks
     }

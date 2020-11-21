@@ -83,12 +83,6 @@ pub fn create_random_battle(ecs: &mut World, progression_world: World) {
     create_battle(ecs, progression, kind, difficulty);
 }
 
-pub fn load_equipment() -> Vec<EquipmentItem> {
-    let mut equipment = content::gunslinger::get_equipment();
-    equipment.append(&mut content::items::get_equipment());
-    equipment
-}
-
 fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKind, difficulty: u32) {
     let mut skills = SkillsResource::init();
 
@@ -101,8 +95,6 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     let map_data_path = map_data_path.stringify();
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
-
-    ecs.insert(EquipmentResource::init_with(&load_equipment()));
 
     let player_position = find_placement(&ecs, 1, 1);
     progression::embattle::create_player(ecs, &mut skills, player_position);
@@ -172,10 +164,8 @@ pub fn create_intermission_state(battle_state: &World, reward: Option<RewardsCom
     // Load all skills & equipment for help
     // If we are move to a game round these will be overwritten
     let mut skills = SkillsResource::init();
-    super::embattle::load_skills_for_help(&ecs, &mut skills);
+    super::embattle::load_skills_for_help(&mut ecs, &mut skills);
     ecs.insert(skills);
-
-    ecs.insert(EquipmentResource::init_with(&load_equipment()));
 
     ecs
 }

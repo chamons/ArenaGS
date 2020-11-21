@@ -15,7 +15,7 @@ impl ProgressionComponent {
         ProgressionComponent { state }
     }
 }
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Copy)]
 pub enum CharacterWeaponKind {
     Gunslinger,
 }
