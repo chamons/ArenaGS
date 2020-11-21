@@ -375,7 +375,7 @@ impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
     #[allow(clippy::needless_return)]
     fn get_raw_skill(&self, name: &str) -> SkillInfo {
         match name {
-            "Default" | "Snap Shot" => {
+            "Snap Shot" => {
                 return SkillInfo::init_with_distance(
                     "Snap Shot",
                     Some("gun_08_b.png"),
