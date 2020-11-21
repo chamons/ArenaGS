@@ -1,0 +1,2 @@
+- Figure out crash
+- Untangle mess of gunslinger hooks into single interface
