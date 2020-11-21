@@ -122,7 +122,7 @@ pub fn make_test_character(ecs: &mut World, position: SizedPoint, time: i32) -> 
         .with(SkillPowerComponent::init(0))
         .with(TemperatureComponent::init(Temperature::init()))
         .with(SkillResourceComponent::init(&[]))
-        .with(SkillsComponent::init(&[], &[]))
+        .with(SkillsComponent::init(&[]))
         .with(StatusComponent::init())
         .marked::<SimpleMarker<ToSerialize>>()
         .build()

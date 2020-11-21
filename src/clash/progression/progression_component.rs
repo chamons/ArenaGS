@@ -32,7 +32,7 @@ pub struct ProgressionState {
 
 impl ProgressionState {
     pub fn init_gunslinger() -> ProgressionState {
-        ProgressionState::init(0, 0, &[], CharacterWeaponKind::Gunslinger, Equipment::init(3, 2, 2, 1))
+        ProgressionState::init(0, 0, &["Oversized Chamber"], CharacterWeaponKind::Gunslinger, Equipment::init(3, 2, 2, 1))
     }
 
     pub fn init(phase: u32, influence: u32, items: &[&str], weapon: CharacterWeaponKind, equipment: Equipment) -> ProgressionState {

@@ -53,13 +53,15 @@ pub fn get_equipment() -> Vec<EquipmentItem> {
             EquipmentRarity::Standard,
             &[EquipmentEffect::UnlocksAbilityMode("Ignite".to_string())],
         ),
-        // More skill damage for gun effects. -3 ammo
         EquipmentItem::init(
             "Oversized Chamber",
             Some("gun_12_b.png"),
             EquipmentKinds::Weapon,
             EquipmentRarity::Uncommon,
-            &[],
+            &[
+                EquipmentEffect::ModifiesResourceTotal(-3, "Bullets".to_string()),
+                EquipmentEffect::ModifiesWeaponStrength(2),
+            ],
         ),
         // summon a shadow that shoots a few times
         EquipmentItem::init(
@@ -186,6 +188,10 @@ pub fn set_ammo_to(ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) 
     reload(ecs, invoker, AmmoKind::Bullets, None);
 }
 
+pub fn default_attack() -> &'static str {
+    "Snap Shot"
+}
+
 pub fn default_attack_replacement() -> &'static str {
     "Quick Shot"
 }
@@ -193,7 +199,7 @@ pub fn default_attack_replacement() -> &'static str {
 pub fn get_weapon_skills(ecs: &World, player: Option<Entity>, ammo: GunslingerAmmo) -> Vec<String> {
     let mut skills = vec![];
     let templates = if let Some(player) = player {
-        ecs.read_storage::<SkillsComponent>().grab(player).templates.clone()
+        ecs.read_storage::<SkillsComponent>().grab(player).skills.clone()
     } else {
         get_all_bases()
     };
@@ -223,7 +229,7 @@ pub fn get_weapon_skills(ecs: &World, player: Option<Entity>, ammo: GunslingerAm
     skills
 }
 
-fn get_all_bases() -> Vec<String> {
+pub fn get_all_bases() -> Vec<String> {
     vec_of_strings!["Snap Shot", "Aimed Shot", "Triple Shot", "Quick Shot"]
 }
 
@@ -292,10 +298,13 @@ pub fn get_base_skill(name: &str) -> SkillInfo {
     }
 }
 
-fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
+fn get_concrete_skill(name: &str, ammo: GunslingerAmmo, templates: &Vec<SkillInfo>) -> SkillInfo {
+    // Start with that base
+    let find = |n| templates.iter().find(|&skill_name| n == skill_name.name).unwrap().clone();
+
     let base_name = match ammo {
         GunslingerAmmo::Magnum => {
-            return get_base_skill(name);
+            return find(name);
         }
         GunslingerAmmo::Ignite => match name {
             "Spark Shot" => "Snap Shot",
@@ -313,8 +322,7 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo) -> SkillInfo {
         },
     };
 
-    // Start with that base
-    let mut skill = get_base_skill(base_name);
+    let mut skill = find(base_name);
     skill.name = name.to_string();
 
     let get_damage = |e: &SkillEffect| match e {
@@ -425,7 +433,7 @@ pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
     vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
 }
 
-pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>, skills: &mut SkillsResource) {
+pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
     let mut modes: Vec<GunslingerAmmo> = modes
         .iter()
         .map(|m| match m.as_str() {
@@ -442,15 +450,15 @@ pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>,
 
     ecs.shovel(player, GunslingerComponent::init(&modes[..]));
 
-    instance_skills(ecs, Some(player), skills);
+    instance_skills(ecs, Some(player), templates, skills);
 }
 
-pub fn instance_skills(ecs: &World, player: Option<Entity>, skills: &mut SkillsResource) {
+pub fn instance_skills(ecs: &World, player: Option<Entity>, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
     // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
     // since you can reach them via help
     for m in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
         for s in get_weapon_skills(ecs, player, *m) {
-            skills.add(get_concrete_skill(&s, *m));
+            skills.add(get_concrete_skill(&s, *m, &templates));
         }
     }
 }

@@ -8,7 +8,8 @@ use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
 pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
-    gunslinger::instance_skills(ecs, None, skills);
+    let templates = collect_attack_skills(ecs, true, gunslinger::get_base_skill);
+    gunslinger::instance_skills(ecs, None, &templates, skills);
 }
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
@@ -19,11 +20,10 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
 
     let player = spawner::player(ecs, player_position, SkillResourceComponent::init(&resources[..]).with_focus(1.0), defenses);
 
-    let templates = collect_attack_skills(ecs, gunslinger::get_base_skill);
-    ecs.write_component::<SkillsComponent>().grab_mut(player).templates = templates.iter().map(|t| t.name.to_string()).collect();
-    gunslinger::add_base_abilities(skills);
+    let templates = collect_attack_skills(ecs, false, gunslinger::get_base_skill);
 
-    gunslinger::process_attack_modes(ecs, player, collect_attack_modes(ecs), skills);
+    gunslinger::add_base_abilities(skills);
+    gunslinger::process_attack_modes(ecs, player, collect_attack_modes(ecs), &templates, skills);
 
     gunslinger::add_active_skills(ecs, player)
 }
@@ -58,7 +58,7 @@ fn collect_attack_modes(ecs: &World) -> Vec<String> {
     modes
 }
 
-fn collect_attack_skills<F>(ecs: &World, get: F) -> Vec<SkillInfo>
+fn collect_attack_skills<F>(ecs: &World, force_all_bases: bool, get: F) -> Vec<SkillInfo>
 where
     F: Fn(&str) -> SkillInfo,
 {
@@ -92,6 +92,10 @@ where
     let default_attack_replacement = gunslinger::default_attack_replacement();
     if !base_attacks.iter().any(|a| a.name == default_attack_replacement) {
         base_attacks.push(get("Default"));
+    }
+
+    if force_all_bases {
+        base_attacks = gunslinger::get_all_bases().iter().map(|b| get(b)).collect();
     }
 
     let mut final_attacks = vec![];
@@ -247,7 +251,7 @@ mod tests {
     fn attack_skills_default() {
         let ecs = equip_test_state(&[]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Default" => SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None),
             _ => panic!(),
         });
@@ -264,7 +268,7 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
             _ => panic!(),
         });
@@ -284,7 +288,7 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
@@ -296,7 +300,7 @@ mod tests {
     fn attack_skills_weapon_damage() {
         let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Default" => SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
@@ -326,7 +330,7 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
         });
@@ -343,7 +347,7 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Default" => SkillInfo::init_with_distance("Snap Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
             _ => panic!(),
@@ -360,7 +364,7 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
             "Default" => SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
@@ -374,6 +378,28 @@ mod tests {
         assert_eq!(1, skills.len());
         match skills[0].effect {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn default_attack_with_skill_power() {
+        let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(2)], 0)]);
+
+        let skills = collect_attack_skills(&ecs, false, |name| match name {
+            "Default" => SkillInfo::init_with_distance(
+                "Basic Attack",
+                None,
+                TargetType::Any,
+                SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
+                Some(5),
+                true,
+            ),
+            _ => panic!(),
+        });
+        assert_eq!(1, skills.len());
+        match skills[0].effect {
+            SkillEffect::MeleeAttack(damage, _) => assert_eq!(5, damage.dice()),
             _ => panic!(),
         }
     }

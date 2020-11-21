@@ -139,14 +139,12 @@ impl FieldComponent {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct SkillsComponent {
     pub skills: Vec<String>,
-    pub templates: Vec<String>,
 }
 
 impl SkillsComponent {
-    pub fn init(skills: &[&'static str], templates: &[&'static str]) -> SkillsComponent {
+    pub fn init(skills: &[&'static str]) -> SkillsComponent {
         SkillsComponent {
             skills: skills.iter().map(|x| x.to_string()).collect(),
-            templates: templates.iter().map(|x| x.to_string()).collect(),
         }
     }
 }
