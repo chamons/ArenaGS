@@ -308,7 +308,7 @@ mod tests {
             fn all_weapon_skill_classes(&self) -> Vec<String> {
                 panic!()
             }
-            fn instance_skills(&self, _: &Vec<SkillInfo>, _: &mut SkillsResource) {
+            fn instance_skills(&self, _: &[SkillInfo], _: &mut SkillsResource) {
                 panic!()
             }
             fn add_active_skills(&self, _: &mut World, _: Entity, _: Vec<String>, _: Vec<String>) {
