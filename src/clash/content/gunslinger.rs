@@ -96,7 +96,7 @@ pub fn skills_for_ammo(ecs: &World, player: Option<Entity>, ammo: GunslingerAmmo
     weapon_skills.iter().map(|t| get_skill_name_under_ammo(t, ammo).to_string()).collect()
 }
 
-fn instance_skill_for_ammo(name: &str, ammo: GunslingerAmmo, templates: &Vec<SkillInfo>) -> SkillInfo {
+fn instance_skill_for_ammo(name: &str, ammo: GunslingerAmmo, templates: &[SkillInfo]) -> SkillInfo {
     let base_name = match ammo {
         GunslingerAmmo::Magnum => name,
         GunslingerAmmo::Ignite => match name {
@@ -436,7 +436,7 @@ impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
         vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
     }
 
-    fn instance_skills(&self, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
+    fn instance_skills(&self, templates: &[SkillInfo], skills: &mut SkillsResource) {
         // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
         // since you can reach them via help
         for template in templates {

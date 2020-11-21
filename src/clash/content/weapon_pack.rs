@@ -12,7 +12,7 @@ pub trait WeaponPack {
     // Setup new game skills
     fn all_weapon_skill_classes(&self) -> Vec<String>;
     fn get_raw_skill(&self, name: &str) -> SkillInfo;
-    fn instance_skills(&self, templates: &Vec<SkillInfo>, skills: &mut SkillsResource);
+    fn instance_skills(&self, templates: &[SkillInfo], skills: &mut SkillsResource);
     fn add_active_skills(&self, ecs: &mut World, player: Entity, modes: Vec<String>, templates: Vec<String>);
     fn default_attack(&self) -> SkillInfo;
     fn default_attack_replacement(&self) -> &'static str;
