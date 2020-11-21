@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
@@ -15,20 +17,22 @@ pub enum GunslingerAmmo {
 }
 
 impl GunslingerAmmo {
-    pub fn to_string(&self) -> String {
-        match self {
-            GunslingerAmmo::Magnum => "Magnum".to_string(),
-            GunslingerAmmo::Ignite => "Ignite".to_string(),
-            GunslingerAmmo::Cyclone => "Cyclone".to_string(),
-        }
-    }
-
     pub fn from_string(str: &str) -> GunslingerAmmo {
         match str {
             "Magnum" => GunslingerAmmo::Magnum,
             "Ignite" => GunslingerAmmo::Ignite,
             "Cyclone" => GunslingerAmmo::Cyclone,
             _ => panic!("Unknown GunslingerAmmo {}", str),
+        }
+    }
+}
+
+impl fmt::Display for GunslingerAmmo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            GunslingerAmmo::Magnum => write!(f, "Magnum"),
+            GunslingerAmmo::Ignite => write!(f, "Ignite"),
+            GunslingerAmmo::Cyclone => write!(f, "Cyclone"),
         }
     }
 }

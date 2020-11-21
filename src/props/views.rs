@@ -297,12 +297,10 @@ impl TabView {
         &mut self.tabs[*self.index.borrow()].0
     }
 
-    #[allow(clippy::borrowed_box)]
     pub fn current_tab(&self) -> &Box<dyn View> {
         &self.tabs[*self.index.borrow()].1
     }
 
-    #[allow(clippy::borrowed_box)]
     pub fn current_tab_mut(&mut self) -> &mut Box<dyn View> {
         &mut self.tabs[*self.index.borrow()].1
     }
