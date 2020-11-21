@@ -279,14 +279,70 @@ mod tests {
         assert_eq!(-2, delta);
     }
 
+    fn test_weapon(fetch_skill: Option<Box<dyn Fn(&str) -> SkillInfo>>, default_skill: Option<SkillInfo>) -> Box<dyn weapon_pack::WeaponPack> {
+        struct TestWeaponPack {
+            fetch_skill: Option<Box<dyn Fn(&str) -> SkillInfo>>,
+            default_skill: Option<SkillInfo>,
+        }
+
+        impl crate::clash::content::weapon_pack::WeaponPack for TestWeaponPack {
+            fn default_attack_replacement(&self) -> &'static str {
+                "Quick Shot"
+            }
+            fn default_attack(&self) -> SkillInfo {
+                self.default_skill.clone().unwrap()
+            }
+            fn get_raw_skill(&self, name: &str) -> SkillInfo {
+                self.fetch_skill.as_ref().unwrap()(name)
+            }
+
+            fn get_skill_tree(&self, _: &EquipmentResource) -> Vec<SkillTreeNode> {
+                panic!()
+            }
+            fn get_equipment(&self) -> Vec<EquipmentItem> {
+                panic!()
+            }
+            fn base_resources(&self) -> Vec<(AmmoKind, u32, u32)> {
+                panic!()
+            }
+            fn all_weapon_skill_classes(&self) -> Vec<String> {
+                panic!()
+            }
+            fn instance_skills(&self, _: &Vec<SkillInfo>, _: &mut SkillsResource) {
+                panic!()
+            }
+            fn add_active_skills(&self, _: &mut World, _: Entity, _: Vec<String>, _: Vec<String>) {
+                panic!()
+            }
+            fn get_image_for_weapon_mode(&self, _: &str) -> &'static str {
+                panic!()
+            }
+            fn get_all_mode_images(&self) -> Vec<&'static str> {
+                panic!()
+            }
+            fn get_equipped_mode(&self, _: &World, _: Entity) -> Vec<String> {
+                panic!()
+            }
+            fn get_current_weapon_mode(&self, _: &World, _: Entity) -> String {
+                panic!()
+            }
+            fn set_mode_to(&self, _: &mut World, _: Entity, _: &str) {
+                panic!()
+            }
+        }
+
+        Box::new(TestWeaponPack { default_skill, fetch_skill })
+    }
+
     #[test]
     fn attack_skills_default() {
         let ecs = equip_test_state(&[]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Default" => SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None),
-            _ => panic!(),
-        });
+        let classes = collect_ability_classes(
+            &ecs,
+            false,
+            &test_weapon(None, Some(SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None))),
+        );
         assert_eq!(1, classes.len());
         assert_eq!("Basic Attack", classes[0].name);
     }
@@ -300,10 +356,15 @@ mod tests {
             0,
         )]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         assert_eq!(1, classes.len());
         assert_eq!("Quick Shot", classes[0].name);
     }
@@ -320,10 +381,15 @@ mod tests {
             0,
         )]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
         assert_eq!(1, skills.len());
         assert_eq!(Some(4), skills[0].range);
@@ -333,17 +399,19 @@ mod tests {
     fn attack_skills_weapon_damage() {
         let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Default" => SkillInfo::init_with_distance(
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
                 TargetType::Any,
                 SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
-            ),
-            _ => panic!(),
-        });
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
         assert_eq!(1, skills.len());
         match skills[0].effect {
@@ -364,10 +432,15 @@ mod tests {
             0,
         )]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
 
         assert_eq!(1, skills.len());
@@ -383,11 +456,22 @@ mod tests {
             0,
         )]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Default" => SkillInfo::init_with_distance("Snap Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            Some(SkillInfo::init_with_distance(
+                "Snap Shot",
+                None,
+                TargetType::Any,
+                SkillEffect::None,
+                Some(5),
+                true,
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
 
         assert_eq!(2, skills.len());
@@ -402,17 +486,19 @@ mod tests {
             0,
         )]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Default" => SkillInfo::init_with_distance(
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
                 TargetType::Any,
                 SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
-            ),
-            _ => panic!(),
-        });
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
 
         assert_eq!(1, skills.len());
@@ -426,17 +512,19 @@ mod tests {
     fn default_attack_with_skill_power() {
         let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(2)], 0)]);
 
-        let classes = collect_ability_classes(&ecs, false, |name| match name {
-            "Default" => SkillInfo::init_with_distance(
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
                 TargetType::Any,
                 SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
-            ),
-            _ => panic!(),
-        });
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
         let skills = collect_attack_templates(&ecs, classes);
 
         assert_eq!(1, skills.len());
