@@ -58,7 +58,7 @@ impl NextBattleView {
         let weapon_images = {
             let progression = preview_world.read_resource::<ProgressionComponent>();
             match progression.state.weapon {
-                CharacterWeaponKind::Gunslinger => content::gunslinger::get_all_trait_images(),
+                CharacterWeaponKind::Gunslinger => content::gunslinger::get_all_ammo_images(),
             }
         };
         let weapon_images = IconCache::init(render_context, IconLoader::init_icons(), &weapon_images)?;

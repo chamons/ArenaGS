@@ -8,9 +8,9 @@ use crate::clash::content::{gunslinger, spawner};
 use crate::clash::*;
 
 pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
-    let ability_classes = collect_ability_classes(ecs, true, gunslinger::get_base_skill);
+    let ability_classes = collect_ability_classes(ecs, true, gunslinger::get_skill_base);
     let templates = collect_attack_templates(ecs, ability_classes);
-    gunslinger::instance_skills(ecs, None, &templates, skills);
+    gunslinger::instance_skills(&templates, skills);
 }
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
@@ -22,12 +22,18 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
 
     let player = spawner::player(ecs, player_position, resources, defenses);
 
-    let ability_classes = collect_ability_classes(ecs, false, gunslinger::get_base_skill);
+    // Classes are the "raw" abilities unlocked by equipment, without any equipment specific modifiers
+    let ability_classes = collect_ability_classes(ecs, false, gunslinger::get_skill_base);
+    // Templates are those classes with all equipment modifiers applied
     let templates = collect_attack_templates(ecs, ability_classes);
-    gunslinger::instance_skills(ecs, Some(player), &templates, skills);
+    // Those templates are instanced into actual skills (such as variants for different modes) and added to SkillsResource
+    gunslinger::instance_skills(&templates, skills);
 
+    // Collect all unlocked modes
     let attack_modes = collect_attack_modes(ecs);
-    gunslinger::add_active_skills(ecs, player, attack_modes);
+
+    // Now setup the skillbar and initial attack mode
+    gunslinger::add_active_skills(ecs, player, attack_modes, templates.iter().map(|t| t.name.to_string()).collect());
 }
 
 fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {

@@ -30,5 +30,9 @@
         "type",
         "view",
         "wellworn"
+    ],
+    "cSpell.words": [
+        "autoformat",
+        "clippy"
     ]
 }

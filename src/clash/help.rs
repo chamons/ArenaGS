@@ -438,7 +438,7 @@ impl HelpInfo {
                     "Abilities:",
                     ""
                 ];
-                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(skills_for_ammo (ecs, maybe_find_player(ecs), GunslingerAmmo::Magnum).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Magnum Bullets",
                     text
@@ -454,7 +454,7 @@ impl HelpInfo {
                     ""
                 ];
 
-                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(skills_for_ammo (ecs, maybe_find_player(ecs), GunslingerAmmo::Ignite).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Ignite Bullets",
                     text
@@ -470,7 +470,7 @@ impl HelpInfo {
                     ""
                 ];
 
-                text.extend(get_weapon_skills (ecs, maybe_find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
+                text.extend(skills_for_ammo (ecs, maybe_find_player(ecs), GunslingerAmmo::Cyclone).iter().map(|x| format!("[[{}]]", x)));
                 return HelpInfo::text_header(
                     "Cyclone Bullets",
                     text

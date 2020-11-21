@@ -1,4 +1,3 @@
-- Figure out crash
 - Untangle mess of gunslinger hooks into single interface
 - Move embattler to class and pass in Box<WeaponPack>
 - Remove "Default" proc and fix tests
