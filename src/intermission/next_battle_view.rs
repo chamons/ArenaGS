@@ -133,7 +133,7 @@ impl NextBattleView {
                 CharacterWeaponKind::Gunslinger => {
                     let weapon_pack = crate::clash::content::weapon_pack::get_weapon_pack_for(progression.state.weapon);
                     let ammos = weapon_pack.get_equipped_mode(&preview_world, find_player(&preview_world));
-                    return Some(HitTestResult::Skill(format!("{:?}", ammos[weapon_button_index])));
+                    return Some(HitTestResult::Skill(format!("{}", ammos[weapon_button_index])));
                 }
             }
         }
