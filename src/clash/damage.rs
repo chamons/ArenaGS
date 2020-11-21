@@ -43,6 +43,27 @@ impl DamageElement {
         }
         description
     }
+
+    pub fn count(&self) -> u32 {
+        self.components().len() as u32
+    }
+
+    pub fn components(&self) -> Vec<DamageElement> {
+        let mut all = vec![];
+        if self.contains(DamageElement::PHYSICAL) {
+            all.push(DamageElement::PHYSICAL);
+        }
+        if self.contains(DamageElement::FIRE) {
+            all.push(DamageElement::FIRE);
+        }
+        if self.contains(DamageElement::LIGHTNING) {
+            all.push(DamageElement::LIGHTNING);
+        }
+        if self.contains(DamageElement::ICE) {
+            all.push(DamageElement::ICE);
+        }
+        all
+    }
 }
 
 bitflags! {
@@ -101,16 +122,18 @@ impl Damage {
 pub struct RolledDamage {
     pub absorbed_by_dodge: u32,
     pub absorbed_by_armor: u32,
+    pub absorbed_by_resist: u32,
     pub amount: u32,
     pub options: DamageOptions,
 }
 
 // A representation of a Damage after final roll, with a fixed value
 impl RolledDamage {
-    pub fn init(absorbed_by_dodge: u32, absorbed_by_armor: u32, amount: u32, options: &DamageOptions) -> RolledDamage {
+    pub fn init(absorbed_by_dodge: u32, absorbed_by_armor: u32, absorbed_by_resist: u32, amount: u32, options: &DamageOptions) -> RolledDamage {
         RolledDamage {
             absorbed_by_dodge,
             absorbed_by_armor,
+            absorbed_by_resist,
             amount,
             options: *options,
         }

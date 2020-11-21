@@ -1,2 +1,0 @@
-- Display damage types in skill dump
-- Make them actually apply

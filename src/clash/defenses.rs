@@ -7,15 +7,6 @@ use specs::prelude::*;
 
 use super::{Damage, DamageElement, DamageOptions, DefenseComponent, EventKind, RolledDamage, Strength};
 
-// After applying dodge, divide the damage by the number of DamageElements
-// Apply resistance to that section of damage
-// Example: Physical + Fire Damage 15
-// Dodge 2, remaining 13
-// 13 / 2 = 6 (round down)
-// Apply any physical defense against 6
-// Apply any fire defense against 6
-// Apply remaining of both
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Resistances {
     resistances: HashMap<DamageElement, u32>,
@@ -83,7 +74,7 @@ impl Defenses {
         self
     }
 
-    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> (u32, u32, u32) {
+    fn apply_defenses<R: Rng + ?Sized>(&mut self, damage_value: u32, damage: Damage, additional_armor: u32, rng: &mut R) -> (u32, u32, u32, u32) {
         if !damage.options.contains(DamageOptions::PIERCE_DEFENSES) {
             // Apply dodge first, burning charges up to matching dice
             let dodge_to_apply = cmp::min(self.dodge, damage.dice());
@@ -91,13 +82,40 @@ impl Defenses {
             let dodge_value = Strength::init(dodge_to_apply).roll(rng);
             let (_, damage_value) = apply_with_remain(damage_value, dodge_value);
 
-            // Then soak with armor, all of it applies
-            let armor_value = Strength::init(self.armor + additional_armor).roll(rng);
-            let (_, damage_value) = apply_with_remain(damage_value, armor_value);
-            (dodge_value, armor_value, damage_value)
+            // Apply resistance or armor to that section of damage
+            let (armor_value, resist_value, damage_value) = self.apply_resistances(damage, damage_value, additional_armor, rng);
+
+            (dodge_value, armor_value, resist_value, damage_value)
         } else {
-            (0, 0, damage_value)
+            (0, 0, 0, damage_value)
         }
+    }
+
+    fn apply_resistances<R: Rng + ?Sized>(&self, damage: Damage, mut damage_value: u32, additional_armor: u32, rng: &mut R) -> (u32, u32, u32) {
+        // After applying dodge, divide the damage by the number of DamageElements
+        let total_damage_types = damage.element.count();
+        let damage_to_soak_per_type = (damage_value as f64 / total_damage_types as f64).floor() as u32;
+
+        let mut resist_value = 0;
+        let mut armor_value = 0;
+
+        for damage_element in damage.element.components() {
+            let is_physical = damage_element == DamageElement::PHYSICAL;
+            let resistance_strength = if is_physical {
+                self.armor + additional_armor
+            } else {
+                self.resistances.get(damage_element)
+            };
+            let resistance_amount = Strength::init(resistance_strength).roll(rng);
+            let resistance_amount = cmp::min(resistance_amount, damage_to_soak_per_type);
+            if is_physical {
+                armor_value += resistance_amount;
+            } else {
+                resist_value += resistance_amount;
+            }
+            damage_value = apply_with_remain(damage_value, resistance_amount).1;
+        }
+        (armor_value, resist_value, damage_value)
     }
 
     pub fn apply_damage<R: Rng + ?Sized>(&mut self, damage: Damage, rng: &mut R) -> RolledDamage {
@@ -107,7 +125,7 @@ impl Defenses {
     pub fn apply_damage_with_additional_armor<R: Rng + ?Sized>(&mut self, damage: Damage, additional_armor: u32, rng: &mut R) -> RolledDamage {
         let damage_value = damage.amount.roll(rng);
 
-        let (absorbed_by_dodge, absorbed_by_armor, damage_value) = self.apply_defenses(damage_value, damage, additional_armor, rng);
+        let (absorbed_by_dodge, absorbed_by_armor, absorbed_by_resist, damage_value) = self.apply_defenses(damage_value, damage, additional_armor, rng);
 
         // Report damage after mitigation applied
         let total_applied_damage = damage_value;
@@ -120,7 +138,7 @@ impl Defenses {
         let (health_damage, _) = apply_with_remain(damage_value, self.health);
         self.health -= health_damage;
 
-        RolledDamage::init(absorbed_by_dodge, absorbed_by_armor, total_applied_damage, &damage.options)
+        RolledDamage::init(absorbed_by_dodge, absorbed_by_armor, absorbed_by_resist, total_applied_damage, &damage.options)
     }
 
     pub fn regain_dodge(&mut self, regain: u32) {
@@ -278,5 +296,24 @@ mod tests {
         wait_for_animations(&mut ecs);
         let dodge = ecs.read_storage::<DefenseComponent>().grab(player).defenses.dodge;
         assert_eq!(2, dodge);
+    }
+
+    #[test]
+    fn resistance_applies() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut def = Defenses::init(0, 0, 0, 20).with_resistances(Resistances::init(&[(DamageElement::FIRE, 10)]));
+        let applied_damage = def.apply_damage(Damage::init(4, DamageElement::FIRE), &mut rng);
+        assert_eq!(0, applied_damage.amount);
+        assert!(applied_damage.absorbed_by_resist > 0);
+    }
+
+    #[test]
+    fn mixed_resistance_applied_both() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut def = Defenses::init(0, 1, 0, 20).with_resistances(Resistances::init(&[(DamageElement::FIRE, 10)]));
+        let applied_damage = def.apply_damage(Damage::init(5, DamageElement::PHYSICAL | DamageElement::FIRE), &mut rng);
+        assert!(applied_damage.amount > 0);
+        assert!(applied_damage.absorbed_by_resist > 0);
+        assert!(applied_damage.absorbed_by_armor > 0);
     }
 }
