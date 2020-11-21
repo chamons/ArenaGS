@@ -66,7 +66,7 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
         "Lava Bolt",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(2, DamageElement::FIRE | DamageElement::FIRE), BoltKind::Fire),
+        SkillEffect::RangedAttack(Damage::init(2, DamageElement::FIRE | DamageElement::PHYSICAL), BoltKind::Fire),
         Some(4),
         false,
     ));
