@@ -14,6 +14,25 @@ pub enum GunslingerAmmo {
     Cyclone,
 }
 
+impl GunslingerAmmo {
+    pub fn to_string(&self) -> String {
+        match self {
+            GunslingerAmmo::Magnum => "Magnum".to_string(),
+            GunslingerAmmo::Ignite => "Ignite".to_string(),
+            GunslingerAmmo::Cyclone => "Cyclone".to_string(),
+        }
+    }
+
+    pub fn from_string(str: &str) -> GunslingerAmmo {
+        match str {
+            "Magnum" => GunslingerAmmo::Magnum,
+            "Ignite" => GunslingerAmmo::Ignite,
+            "Cyclone" => GunslingerAmmo::Cyclone,
+            _ => panic!("Unknown GunslingerAmmo {}", str),
+        }
+    }
+}
+
 fn set_current_ammo(ecs: &mut World, invoker: Entity, ammo: GunslingerAmmo) {
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Magnum);
     StatusStore::remove_trait_if_found_from(ecs, invoker, StatusKind::Ignite);
@@ -311,31 +330,32 @@ impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
         ]
     }
 
-    fn get_equipped_ammo(&self, ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo> {
-        get_equipped_ammo(ecs, invoker)
+    fn get_equipped_mode(&self, ecs: &World, invoker: Entity) -> Vec<String> {
+        get_equipped_ammo(ecs, invoker).iter().map(|a| a.to_string()).collect()
     }
 
-    fn get_current_weapon_trait(&self, ecs: &World, invoker: Entity) -> GunslingerAmmo {
-        get_current_weapon_trait(ecs, invoker)
+    fn get_current_weapon_mode(&self, ecs: &World, invoker: Entity) -> String {
+        get_current_weapon_trait(ecs, invoker).to_string()
     }
 
     fn all_weapon_skill_classes(&self) -> Vec<String> {
         all_weapon_skill_classes()
     }
 
-    fn set_ammo_to(&self, ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo) {
-        set_ammo_to(ecs, invoker, next_ammo);
+    fn set_mode_to(&self, ecs: &mut World, invoker: Entity, mode: &str) {
+        set_ammo_to(ecs, invoker, GunslingerAmmo::from_string(mode));
     }
 
-    fn get_image_for_kind(&self, ammo: GunslingerAmmo) -> &'static str {
-        match ammo {
-            GunslingerAmmo::Ignite => "b_31_1.png",
-            GunslingerAmmo::Cyclone => "b_40_02.png",
-            GunslingerAmmo::Magnum => "b_30.png",
+    fn get_image_for_weapon_mode(&self, mode: &str) -> &'static str {
+        match mode {
+            "Ignite" => "b_31_1.png",
+            "Cyclone" => "b_40_02.png",
+            "Magnum" => "b_30.png",
+            _ => panic!("Unknown image in get_image_for_weapon_mode: {}", mode),
         }
     }
 
-    fn get_all_ammo_images(&self) -> Vec<&'static str> {
+    fn get_all_mode_images(&self) -> Vec<&'static str> {
         vec!["b_31_1.png", "b_40_02.png", "b_30.png"]
     }
 
@@ -441,15 +461,7 @@ impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
     }
 
     fn add_active_skills(&self, ecs: &mut World, player: Entity, modes: Vec<String>, templates: Vec<String>) {
-        let mut modes: Vec<GunslingerAmmo> = modes
-            .iter()
-            .map(|m| match m.as_str() {
-                "Magnum" => GunslingerAmmo::Magnum,
-                "Ignite" => GunslingerAmmo::Ignite,
-                "Cyclone" => GunslingerAmmo::Cyclone,
-                _ => panic!("Unknown gunslinger mode {}", m),
-            })
-            .collect();
+        let mut modes: Vec<GunslingerAmmo> = modes.iter().map(|m| GunslingerAmmo::from_string(m)).collect();
 
         if !modes.contains(&GunslingerAmmo::Magnum) {
             modes.insert(0, GunslingerAmmo::Magnum);

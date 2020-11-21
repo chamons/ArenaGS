@@ -9,7 +9,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, EquipmentResource, ProgressionComponent, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{EquipmentResource, ProgressionComponent, SkillNodeStatus, SkillTree, SkillTreeNode};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 

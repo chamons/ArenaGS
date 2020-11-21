@@ -1,6 +1,5 @@
 use specs::prelude::*;
 
-use super::gunslinger::GunslingerAmmo;
 use crate::atlas::prelude::*;
 use crate::clash::*;
 
@@ -19,11 +18,11 @@ pub trait WeaponPack {
     fn default_attack_replacement(&self) -> &'static str;
 
     // Next battle preview buttons
-    fn get_image_for_kind(&self, ammo: GunslingerAmmo) -> &'static str;
-    fn get_all_ammo_images(&self) -> Vec<&'static str>;
-    fn get_equipped_ammo(&self, ecs: &World, invoker: Entity) -> Vec<GunslingerAmmo>;
-    fn get_current_weapon_trait(&self, ecs: &World, invoker: Entity) -> GunslingerAmmo;
-    fn set_ammo_to(&self, ecs: &mut World, invoker: Entity, next_ammo: GunslingerAmmo);
+    fn get_image_for_weapon_mode(&self, mode: &str) -> &'static str;
+    fn get_all_mode_images(&self) -> Vec<&'static str>;
+    fn get_equipped_mode(&self, ecs: &World, invoker: Entity) -> Vec<String>;
+    fn get_current_weapon_mode(&self, ecs: &World, invoker: Entity) -> String;
+    fn set_mode_to(&self, ecs: &mut World, invoker: Entity, next_mode: &str);
 }
 
 pub fn get_weapon_pack(ecs: &World) -> Box<dyn WeaponPack> {
