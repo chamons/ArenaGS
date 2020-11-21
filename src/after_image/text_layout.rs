@@ -79,7 +79,7 @@ impl WordBuffer {
         println!("debug_text_layout: WordBuffer::add");
 
         if self.current_line.len() > 0 {
-            self.current_line.push_str(" ");
+            self.current_line.push(' ');
             width += space_size;
         }
         self.current_line.push_str(text);
@@ -326,18 +326,18 @@ impl Layout {
             (false, Some(word[2..word.len() - 2].to_string()))
         } else if is_link_start {
             if self.links_in_flight.len() > 0 {
-                self.links_in_flight.push_str(" ");
+                self.links_in_flight.push(' ');
             }
             self.links_in_flight.push_str(word);
             (true, None)
         } else if is_link_end {
-            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push(' ');
             self.links_in_flight.push_str(word);
             let link = self.links_in_flight[2..self.links_in_flight.len() - 2].to_string();
             self.links_in_flight.clear();
             (false, Some(link))
         } else if self.links_in_flight.len() > 0 {
-            self.links_in_flight.push_str(" ");
+            self.links_in_flight.push(' ');
             self.links_in_flight.push_str(word);
             (true, None)
         } else {

@@ -12,7 +12,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
         "Wing Blast",
         None,
         TargetType::Player,
-        SkillEffect::RangedAttack(Damage::init(1), BoltKind::AirBullet),
+        SkillEffect::RangedAttack(Damage::init(1, DamageElement::PHYSICAL), BoltKind::AirBullet),
         Some(2),
         true,
     ));
@@ -21,7 +21,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
             "Feather Orb",
             None,
             TargetType::Player,
-            SkillEffect::Orb(Damage::init(3), OrbKind::Feather, 2, 12),
+            SkillEffect::Orb(Damage::init(3, DamageElement::PHYSICAL), OrbKind::Feather, 2, 12),
             Some(12),
             true,
         )
@@ -34,7 +34,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
             TargetType::Player,
             SkillEffect::Sequence(
                 Box::new(SkillEffect::RangedAttack(
-                    Damage::init(0).with_option(DamageOptions::KNOCKBACK),
+                    Damage::init(0, DamageElement::PHYSICAL).with_option(DamageOptions::KNOCKBACK),
                     BoltKind::AirBullet,
                 )),
                 Box::new(SkillEffect::ReloadSomeRandom(AmmoKind::Feathers, 3)),
@@ -48,7 +48,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
         "Explosive Eggs",
         None,
         TargetType::Tile,
-        SkillEffect::Field(FieldEffect::Damage(Damage::init(3), 1), FieldKind::Fire),
+        SkillEffect::Field(FieldEffect::Damage(Damage::init(3, DamageElement::FIRE), 1), FieldKind::Fire),
     ));
     m.add(SkillInfo::init("Take Off", None, TargetType::None, SkillEffect::Buff(StatusKind::Flying, 600)).with_cooldown(1000));
     m.add(

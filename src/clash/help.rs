@@ -86,6 +86,7 @@ impl HelpInfo {
 
     fn report_damage(details: &mut Vec<String>, damage: &Damage) {
         details.push(format!("[[Strength]]: {}", damage.dice()));
+        details.push(damage.element.description());
         let opt = &damage.options;
         let raises = opt.contains(DamageOptions::RAISE_TEMPERATURE);
         let lowers = opt.contains(DamageOptions::LOWER_TEMPERATURE);
@@ -386,7 +387,7 @@ impl HelpInfo {
                 return HelpInfo::text_header("Equipment Slots", vec_of_strings![
                     "Characters can only use so many items magic auras conflict, pockets run out, and everything gets too heavy to carry into battle.",
                     "",
-                    "There are 4 types of equipment slots, one for each [[Equipment]] type, and color coded to match:",
+                    "There are 4 types of equipment slots, one for each Equipment type, and color coded to match:",
                     "",
                     "- Weapon parts are red.",
                     "- Armor mods are blue.",
@@ -404,7 +405,7 @@ impl HelpInfo {
                     "",
                     "Influence is gained from victories in the Arena both from battle's rewards and their rising fame in the world.",
                     "",
-                    "Influence is primarily spent in the [[Profession]] tree to source better equipment, tinker with gear, and make connections with vendors.",
+                    "Influence is primarily spent in the Profession tree to source better equipment, tinker with gear, and make connections with vendors.",
                     "",
                     "Influence can also be liquidated into raw currency and spent at the merchant. The prices are steep, but the selection is unbeatable."
                 ])
@@ -693,12 +694,16 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
         on_text(&format!("{}: {:.2}", linkify("Armor"), defenses.armor));
     }
 
+    for r in defenses.resistances.all() {
+        on_text(&format!("{} Resistance: {:.2}", r.0.description(), r.1));
+    }
+
     let resources = &ecs.read_storage::<SkillResourceComponent>();
     if let Some(resource) = resources.get(entity) {
-        on_text(&format!("{}: {:.2}", linkify("Exhaustion"), resource.exhaustion));
-
-        on_text(&format!("{}: {:.2}", linkify("Focus"), resource.focus).as_str());
-
+        if entity == find_player(ecs) {
+            on_text(&format!("{}: {:.2}", linkify("Exhaustion"), resource.exhaustion));
+            on_text(&format!("{}: {:.2}", linkify("Focus"), resource.focus).as_str());
+        }
         for kind in AmmoKind::into_enum_iter() {
             match resource.max.get(&kind) {
                 Some(value) => {

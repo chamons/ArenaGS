@@ -292,7 +292,7 @@ mod tests {
             .with(TimeComponent::init(100))
             .with(AttackComponent::init(
                 Point::init(2, 2),
-                Damage::init(2),
+                Damage::init(2, DamageElement::PHYSICAL),
                 AttackKind::Explode(ExplosionKind::Bomb, 2),
                 Some(Point::init(2, 2)),
             ))
@@ -324,7 +324,12 @@ mod tests {
         ecs.shovel(damage_source, BehaviorComponent::init(BehaviorKind::TickDamage));
         ecs.shovel(
             damage_source,
-            AttackComponent::init(Point::init(2, 2), Damage::init(1), AttackKind::DamageTick, Some(Point::init(2, 2))),
+            AttackComponent::init(
+                Point::init(2, 2),
+                Damage::init(1, DamageElement::PHYSICAL),
+                AttackKind::DamageTick,
+                Some(Point::init(2, 2)),
+            ),
         );
         ecs.write_storage::<IsCharacterComponent>().remove(damage_source);
 
