@@ -395,7 +395,19 @@ fn get_concrete_skill(name: &str, ammo: GunslingerAmmo, templates: &Vec<SkillInf
     skill
 }
 
-pub fn add_base_abilities(skills: &mut SkillsResource) {
+pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
+    vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
+}
+
+pub fn instance_skills(ecs: &World, player: Option<Entity>, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
+    // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
+    // since you can reach them via help
+    for m in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
+        for s in get_weapon_skills(ecs, player, *m) {
+            skills.add(get_concrete_skill(&s, *m, &templates));
+        }
+    }
+
     skills.add(SkillInfo::init(
         "Reload",
         Some("b_45.png"),
@@ -411,11 +423,7 @@ pub fn add_base_abilities(skills: &mut SkillsResource) {
     ));
 }
 
-pub fn base_resources() -> Vec<(AmmoKind, u32, u32)> {
-    vec![(AmmoKind::Bullets, 6, 6), (AmmoKind::Adrenaline, 0, 100)]
-}
-
-pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
+pub fn add_active_skills(ecs: &mut World, player: Entity, modes: Vec<String>) {
     let mut modes: Vec<GunslingerAmmo> = modes
         .iter()
         .map(|m| match m.as_str() {
@@ -431,21 +439,6 @@ pub fn process_attack_modes(ecs: &mut World, player: Entity, modes: Vec<String>,
     }
 
     ecs.shovel(player, GunslingerComponent::init(&modes[..]));
-
-    instance_skills(ecs, Some(player), templates, skills);
-}
-
-pub fn instance_skills(ecs: &World, player: Option<Entity>, templates: &Vec<SkillInfo>, skills: &mut SkillsResource) {
-    // We instance all, even those impossible to reach in game (because we haven't unlocked that ammo kind)
-    // since you can reach them via help
-    for m in &[GunslingerAmmo::Magnum, GunslingerAmmo::Ignite, GunslingerAmmo::Cyclone] {
-        for s in get_weapon_skills(ecs, player, *m) {
-            skills.add(get_concrete_skill(&s, *m, &templates));
-        }
-    }
-}
-
-pub fn add_active_skills(ecs: &mut World, player: Entity) {
     set_current_weapon_trait(ecs, player, GunslingerAmmo::Magnum);
 
     add_skills_to_front(ecs, player, get_weapon_skills(ecs, Some(player), GunslingerAmmo::Magnum));
