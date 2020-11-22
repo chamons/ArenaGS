@@ -107,7 +107,7 @@ impl HelpPopup {
         }
         self.size = if let Some(help) = &help {
             match help.text.len() {
-                1..=2 => HelpPopupSize::Small,
+                0..=2 => HelpPopupSize::Small,
                 _ => HelpPopupSize::Medium,
             }
         } else {
@@ -351,12 +351,22 @@ impl View for HelpPopup {
         if let Some(help) = &self.help {
             match &help.header {
                 HelpHeader::Image(title, file) => {
+                    let request = LayoutRequest::init(
+                        frame.x() as u32 + HELP_OFFSET,
+                        frame.y() as u32 + 2 + HELP_OFFSET,
+                        frame_size.0 as u32 - (HELP_OFFSET * 2) - 24 - 4,
+                        2,
+                    );
+                    // We really want the text to be on one line, so we use layout_text to tell us
+                    // if it fits in one line/chunk, and if not we use a smaller font
+                    let layout = self.text_renderer.layout_text(&title, FontSize::Bold, request)?;
+
                     let (text_width, _) = self.text_renderer.render_text(
                         &title,
-                        frame.x() + HELP_OFFSET as i32,
-                        frame.y() + 2 + HELP_OFFSET as i32,
+                        layout.chunks[0].position.x as i32,
+                        layout.chunks[0].position.y as i32,
                         canvas,
-                        FontSize::Bold,
+                        if layout.chunks.len() > 1 { FontSize::Small } else { FontSize::Bold },
                         FontColor::White,
                     )?;
 
