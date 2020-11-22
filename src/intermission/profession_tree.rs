@@ -9,7 +9,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{CharacterWeaponKind, EquipmentResource, ProgressionComponent, SkillNodeStatus, SkillTree, SkillTreeNode};
+use crate::clash::{EquipmentResource, ProgressionComponent, SkillNodeStatus, SkillTree, SkillTreeNode};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, ButtonEnabledState, HitTestResult, View};
 
@@ -27,9 +27,7 @@ pub const SKILL_BORDER: u32 = 2;
 
 pub fn get_tree(ecs: &World) -> Vec<SkillTreeNode> {
     let equipment = &ecs.read_resource::<EquipmentResource>();
-    match ecs.read_resource::<ProgressionComponent>().state.weapon {
-        CharacterWeaponKind::Gunslinger => crate::clash::content::gunslinger::get_skill_tree(equipment),
-    }
+    crate::clash::content::weapon_pack::get_weapon_pack(ecs).get_skill_tree(equipment)
 }
 
 pub fn get_tree_icons(render_context: &RenderContext, tree: &SkillTree) -> BoxResult<IconCache> {

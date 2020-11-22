@@ -9,7 +9,7 @@ use specs::prelude::*;
 
 use crate::after_image::prelude::*;
 use crate::atlas::prelude::*;
-use crate::clash::{content, find_player, new_game, CharacterWeaponKind, ProgressionComponent};
+use crate::clash::{find_player, new_game, CharacterWeaponKind, ProgressionComponent};
 use crate::enclose;
 use crate::props::{Button, ButtonDelegate, HitTestResult, InfoBarView, SkillBarView, View};
 
@@ -57,9 +57,7 @@ impl NextBattleView {
 
         let weapon_images = {
             let progression = preview_world.read_resource::<ProgressionComponent>();
-            match progression.state.weapon {
-                CharacterWeaponKind::Gunslinger => content::gunslinger::get_all_trait_images(),
-            }
+            crate::clash::content::weapon_pack::get_weapon_pack_for(progression.state.weapon).get_all_mode_images()
         };
         let weapon_images = IconCache::init(render_context, IconLoader::init_icons(), &weapon_images)?;
         let weapon_frame = Rc::new(IconLoader::init_ui().get(render_context, "skill_tree_frame.png")?);
@@ -86,26 +84,28 @@ impl NextBattleView {
         let progression = preview_world.read_resource::<ProgressionComponent>();
         match progression.state.weapon {
             CharacterWeaponKind::Gunslinger => {
-                let ammos = content::gunslinger::get_equipped_ammos(preview_world, find_player(preview_world));
+                let weapon_pack = crate::clash::content::weapon_pack::get_weapon_pack_for(progression.state.weapon);
+                let ammos = weapon_pack.get_equipped_mode(preview_world, find_player(preview_world));
                 ammos
                     .iter()
                     .enumerate()
-                    .map(|(i, &a)| {
+                    .map(|(i, ammo)| {
                         Button::image(
                             SDLRect::new(320 + 75 * i as i32, 140, 48, 48),
-                            weapon_images.get_reference(content::gunslinger::get_image_for_kind(a)),
+                            weapon_images.get_reference(weapon_pack.get_image_for_weapon_mode(ammo)),
                             weapon_frame,
                             ButtonDelegate::init()
-                                .enabled(Box::new(move |ecs| {
-                                    if content::gunslinger::get_current_weapon_trait(ecs, find_player(ecs)) == a {
+                                .enabled(Box::new(enclose! { (ammo) move |ecs| {
+                                    let current = crate::clash::content::weapon_pack::get_weapon_pack(ecs).get_current_weapon_mode(ecs, find_player(ecs));
+                                    if current == ammo {
                                         crate::props::ButtonEnabledState::Ghosted
                                     } else {
                                         crate::props::ButtonEnabledState::Shown
                                     }
-                                }))
-                                .handler(Box::new(move |ecs| {
-                                    content::gunslinger::set_ammo_to(ecs, find_player(ecs), a);
-                                })),
+                                }}))
+                                .handler(Box::new(enclose! { (ammo) move |ecs| {
+                                    crate::clash::content::weapon_pack::get_weapon_pack(ecs).set_mode_to(ecs, find_player(ecs), &ammo);
+                                }})),
                         )
                         .expect("Unable to load weapon buttons")
                     })
@@ -131,8 +131,9 @@ impl NextBattleView {
             let progression = preview_world.read_resource::<ProgressionComponent>();
             match progression.state.weapon {
                 CharacterWeaponKind::Gunslinger => {
-                    let ammos = content::gunslinger::get_equipped_ammos(&preview_world, find_player(&preview_world));
-                    return Some(HitTestResult::Skill(format!("{:?}", ammos[weapon_button_index])));
+                    let weapon_pack = crate::clash::content::weapon_pack::get_weapon_pack_for(progression.state.weapon);
+                    let ammos = weapon_pack.get_equipped_mode(&preview_world, find_player(&preview_world));
+                    return Some(HitTestResult::Skill(ammos[weapon_button_index].to_string()));
                 }
             }
         }

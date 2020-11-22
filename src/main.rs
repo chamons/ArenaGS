@@ -2,6 +2,7 @@
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::single_match)]
 #![allow(clippy::len_zero)]
+#![allow(clippy::borrowed_box)]
 
 use std::{cell::RefCell, rc::Rc};
 

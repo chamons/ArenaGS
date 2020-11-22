@@ -4,32 +4,52 @@ use std::iter::Iterator;
 use specs::prelude::*;
 
 use crate::atlas::prelude::*;
-use crate::clash::content::{gunslinger, spawner};
+use crate::clash::content::{spawner, weapon_pack};
 use crate::clash::*;
 
-pub fn load_skills_for_help(ecs: &World, skills: &mut SkillsResource) {
-    gunslinger::instance_skills(ecs, None, skills);
+pub fn load_skills_for_help(ecs: &mut World, skills: &mut SkillsResource) {
+    let weapon_pack = weapon_pack::get_weapon_pack(ecs);
+    ecs.insert(EquipmentResource::init_with(&load_equipment(&weapon_pack)));
+
+    let ability_classes = collect_ability_classes(ecs, true, &weapon_pack);
+    let templates = collect_attack_templates(ecs, ability_classes);
+    weapon_pack.instance_skills(&templates, skills);
 }
 
 pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_position: Point) {
+    let weapon_pack = weapon_pack::get_weapon_pack(ecs);
+    ecs.insert(EquipmentResource::init_with(&load_equipment(&weapon_pack)));
+
     let (dodge, armor, absorb, health) = collect_defense_modifier(ecs);
     let defenses = DefenseComponent::init(Defenses::init(1 + dodge as u32, armor as u32, absorb as u32, 20 + health as u32));
 
-    let resources = get_player_resources(ecs);
+    let resources = get_player_resources(ecs, &weapon_pack);
+    let resources = SkillResourceComponent::init(&resources[..]).with_focus(1.0);
 
-    let player = spawner::player(ecs, player_position, SkillResourceComponent::init(&resources[..]).with_focus(1.0), defenses);
+    let player = spawner::player(ecs, player_position, resources, defenses);
 
-    let templates = collect_attack_skills(ecs, gunslinger::get_base_skill);
-    ecs.write_component::<SkillsComponent>().grab_mut(player).templates = templates.iter().map(|t| t.name.to_string()).collect();
-    gunslinger::add_base_abilities(skills);
+    // Classes are the "raw" abilities unlocked by equipment, without any equipment specific modifiers
+    let ability_classes = collect_ability_classes(ecs, false, &weapon_pack);
+    // Templates are those classes with all equipment modifiers applied
+    let templates = collect_attack_templates(ecs, ability_classes);
+    // Those templates are instanced into actual skills (such as variants for different modes) and added to SkillsResource
+    weapon_pack.instance_skills(&templates, skills);
 
-    gunslinger::process_attack_modes(ecs, player, collect_attack_modes(ecs), skills);
+    // Collect all unlocked modes
+    let attack_modes = collect_attack_modes(ecs);
 
-    gunslinger::add_active_skills(ecs, player)
+    // Now setup the skillbar and initial attack mode
+    weapon_pack.add_active_skills(ecs, player, attack_modes, templates.iter().map(|t| t.name.to_string()).collect());
 }
 
-fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
-    let mut resources = gunslinger::base_resources();
+pub fn load_equipment(weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<EquipmentItem> {
+    let mut equipment = weapon_pack.get_equipment();
+    equipment.append(&mut content::items::get_equipment());
+    equipment
+}
+
+fn get_player_resources(ecs: &World, weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<(AmmoKind, u32, u32)> {
+    let mut resources = weapon_pack.base_resources();
     for delta in collect_resource_modifier(ecs) {
         let i = resources
             .iter()
@@ -43,6 +63,34 @@ fn get_player_resources(ecs: &World) -> Vec<(AmmoKind, u32, u32)> {
     resources
 }
 
+fn collect_ability_classes(ecs: &World, force_all: bool, weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<SkillInfo> {
+    if force_all {
+        weapon_pack.all_weapon_skill_classes().iter().map(|b| weapon_pack.get_raw_skill(b)).collect()
+    } else {
+        let mut base_attacks = vec![];
+
+        for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
+            if let Some(e) = e {
+                for effect in e.effect {
+                    match effect {
+                        EquipmentEffect::UnlocksAbilityClass(kind) => {
+                            base_attacks.push(weapon_pack.get_raw_skill(&kind));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        let default_attack_replacement = weapon_pack.default_attack_replacement();
+        if !base_attacks.iter().any(|a| a.name == default_attack_replacement) {
+            base_attacks.push(weapon_pack.default_attack());
+        }
+        base_attacks
+    }
+}
+
+// Such as ammo for Gunslinger
 fn collect_attack_modes(ecs: &World) -> Vec<String> {
     let mut modes = vec![];
     for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
@@ -58,11 +106,7 @@ fn collect_attack_modes(ecs: &World) -> Vec<String> {
     modes
 }
 
-fn collect_attack_skills<F>(ecs: &World, get: F) -> Vec<SkillInfo>
-where
-    F: Fn(&str) -> SkillInfo,
-{
-    let mut base_attacks = vec![];
+fn collect_attack_templates(ecs: &World, base_attacks: Vec<SkillInfo>) -> Vec<SkillInfo> {
     let mut weapon_range = 0;
     let mut weapon_strength = 0;
 
@@ -76,9 +120,6 @@ where
         if let Some(e) = e {
             for effect in e.effect {
                 match effect {
-                    EquipmentEffect::UnlocksAbilityClass(kind) => {
-                        base_attacks.push(get(&kind));
-                    }
                     EquipmentEffect::ModifiesWeaponRange(delta) => weapon_range += delta,
                     EquipmentEffect::ModifiesWeaponStrength(delta) => weapon_strength += delta,
                     EquipmentEffect::ModifiesSkillRange(delta, skill) => add_skill_range(skill, delta),
@@ -87,11 +128,6 @@ where
                 }
             }
         }
-    }
-
-    let default_attack_replacement = gunslinger::default_attack_replacement();
-    if !base_attacks.iter().any(|a| a.name == default_attack_replacement) {
-        base_attacks.push(get("Default"));
     }
 
     let mut final_attacks = vec![];
@@ -243,16 +279,72 @@ mod tests {
         assert_eq!(-2, delta);
     }
 
+    fn test_weapon(fetch_skill: Option<Box<dyn Fn(&str) -> SkillInfo>>, default_skill: Option<SkillInfo>) -> Box<dyn weapon_pack::WeaponPack> {
+        struct TestWeaponPack {
+            fetch_skill: Option<Box<dyn Fn(&str) -> SkillInfo>>,
+            default_skill: Option<SkillInfo>,
+        }
+
+        impl crate::clash::content::weapon_pack::WeaponPack for TestWeaponPack {
+            fn default_attack_replacement(&self) -> &'static str {
+                "Quick Shot"
+            }
+            fn default_attack(&self) -> SkillInfo {
+                self.default_skill.clone().unwrap()
+            }
+            fn get_raw_skill(&self, name: &str) -> SkillInfo {
+                self.fetch_skill.as_ref().unwrap()(name)
+            }
+
+            fn get_skill_tree(&self, _: &EquipmentResource) -> Vec<SkillTreeNode> {
+                panic!()
+            }
+            fn get_equipment(&self) -> Vec<EquipmentItem> {
+                panic!()
+            }
+            fn base_resources(&self) -> Vec<(AmmoKind, u32, u32)> {
+                panic!()
+            }
+            fn all_weapon_skill_classes(&self) -> Vec<String> {
+                panic!()
+            }
+            fn instance_skills(&self, _: &[SkillInfo], _: &mut SkillsResource) {
+                panic!()
+            }
+            fn add_active_skills(&self, _: &mut World, _: Entity, _: Vec<String>, _: Vec<String>) {
+                panic!()
+            }
+            fn get_image_for_weapon_mode(&self, _: &str) -> &'static str {
+                panic!()
+            }
+            fn get_all_mode_images(&self) -> Vec<&'static str> {
+                panic!()
+            }
+            fn get_equipped_mode(&self, _: &World, _: Entity) -> Vec<String> {
+                panic!()
+            }
+            fn get_current_weapon_mode(&self, _: &World, _: Entity) -> String {
+                panic!()
+            }
+            fn set_mode_to(&self, _: &mut World, _: Entity, _: &str) {
+                panic!()
+            }
+        }
+
+        Box::new(TestWeaponPack { default_skill, fetch_skill })
+    }
+
     #[test]
     fn attack_skills_default() {
         let ecs = equip_test_state(&[]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Default" => SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None),
-            _ => panic!(),
-        });
-        assert_eq!(1, skills.len());
-        assert_eq!("Basic Attack", skills[0].name);
+        let classes = collect_ability_classes(
+            &ecs,
+            false,
+            &test_weapon(None, Some(SkillInfo::init("Basic Attack", None, TargetType::Any, SkillEffect::None))),
+        );
+        assert_eq!(1, classes.len());
+        assert_eq!("Basic Attack", classes[0].name);
     }
 
     #[test]
@@ -264,12 +356,17 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
-            _ => panic!(),
-        });
-        assert_eq!(1, skills.len());
-        assert_eq!("Quick Shot", skills[0].name);
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init("Quick Shot", None, TargetType::Any, SkillEffect::None),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        assert_eq!(1, classes.len());
+        assert_eq!("Quick Shot", classes[0].name);
     }
 
     #[test]
@@ -284,10 +381,16 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
         assert_eq!(1, skills.len());
         assert_eq!(Some(4), skills[0].range);
     }
@@ -296,17 +399,20 @@ mod tests {
     fn attack_skills_weapon_damage() {
         let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(1)], 0)]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Default" => SkillInfo::init_with_distance(
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
                 TargetType::Any,
                 SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
-            ),
-            _ => panic!(),
-        });
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
         assert_eq!(1, skills.len());
         match skills[0].effect {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
@@ -326,10 +432,17 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Quick Shot" => SkillInfo::init_with_distance("Quick Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            None,
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
+
         assert_eq!(1, skills.len());
         assert_eq!(Some(4), skills[0].range);
     }
@@ -343,11 +456,24 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Default" => SkillInfo::init_with_distance("Snap Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
-            _ => panic!(),
-        });
+        let weapon = test_weapon(
+            Some(Box::new(|name| match name {
+                "Triple Shot" => SkillInfo::init_with_distance("Triple Shot", None, TargetType::Any, SkillEffect::None, Some(5), true),
+                _ => panic!(),
+            })),
+            Some(SkillInfo::init_with_distance(
+                "Snap Shot",
+                None,
+                TargetType::Any,
+                SkillEffect::None,
+                Some(5),
+                true,
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
+
         assert_eq!(2, skills.len());
     }
 
@@ -360,20 +486,50 @@ mod tests {
             0,
         )]);
 
-        let skills = collect_attack_skills(&ecs, |name| match name {
-            "Default" => SkillInfo::init_with_distance(
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
                 "Basic Attack",
                 None,
                 TargetType::Any,
                 SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
                 Some(5),
                 true,
-            ),
-            _ => panic!(),
-        });
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
+
         assert_eq!(1, skills.len());
         match skills[0].effect {
             SkillEffect::MeleeAttack(damage, _) => assert_eq!(4, damage.dice()),
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn default_attack_with_skill_power() {
+        let ecs = equip_test_state(&[test_eq("a", EquipmentKinds::Weapon, &[EquipmentEffect::ModifiesWeaponStrength(2)], 0)]);
+
+        let weapon = test_weapon(
+            None,
+            Some(SkillInfo::init_with_distance(
+                "Basic Attack",
+                None,
+                TargetType::Any,
+                SkillEffect::MeleeAttack(Damage::init(3, DamageElement::PHYSICAL), WeaponKind::Sword),
+                Some(5),
+                true,
+            )),
+        );
+
+        let classes = collect_ability_classes(&ecs, false, &weapon);
+        let skills = collect_attack_templates(&ecs, classes);
+
+        assert_eq!(1, skills.len());
+        match skills[0].effect {
+            SkillEffect::MeleeAttack(damage, _) => assert_eq!(5, damage.dice()),
             _ => panic!(),
         }
     }

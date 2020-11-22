@@ -139,14 +139,12 @@ impl FieldComponent {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct SkillsComponent {
     pub skills: Vec<String>,
-    pub templates: Vec<String>,
 }
 
 impl SkillsComponent {
-    pub fn init(skills: &[&'static str], templates: &[&'static str]) -> SkillsComponent {
+    pub fn init(skills: &[&'static str]) -> SkillsComponent {
         SkillsComponent {
             skills: skills.iter().map(|x| x.to_string()).collect(),
-            templates: templates.iter().map(|x| x.to_string()).collect(),
         }
     }
 }
@@ -330,12 +328,14 @@ use super::content::gunslinger::GunslingerAmmo;
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct GunslingerComponent {
     pub ammo_types: Vec<GunslingerAmmo>,
+    pub weapon_skills: Vec<String>,
 }
 
 impl GunslingerComponent {
-    pub fn init(ammo_types: &[GunslingerAmmo]) -> GunslingerComponent {
+    pub fn init(ammo_types: &[GunslingerAmmo], weapon_skills: &[String]) -> GunslingerComponent {
         GunslingerComponent {
             ammo_types: ammo_types.to_vec(),
+            weapon_skills: weapon_skills.to_vec(),
         }
     }
 }
