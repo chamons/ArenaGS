@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::content::spawner;
 use super::find_clear_landing;
-use super::ShortInfo;
+use super::{PlayerAlly, ShortInfo};
 use crate::atlas::prelude::*;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -21,9 +21,9 @@ pub enum SpawnKind {
     ShadowGunSlinger,
 }
 
-pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
+pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind, is_player_ally: bool) {
     let target = find_clear_landing(ecs, &target, None);
-    match kind {
+    let spawn = match kind {
         SpawnKind::Egg => spawner::bird_monster_add_egg(ecs, target),
         SpawnKind::BirdSpawn => spawner::bird_monster_add(ecs, target),
         SpawnKind::WaterElemental => spawner::water_elemental(ecs, target.origin, 0),
@@ -32,11 +32,14 @@ pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
         SpawnKind::EarthElemental => spawner::earth_elemental(ecs, target.origin, 0),
         SpawnKind::ShadowGunSlinger => spawner::shadow_gunslinger(ecs, target.origin),
         _ => panic!("Can not spawn {:?} during combat", kind),
+    };
+    if is_player_ally {
+        ecs.shovel(spawn, PlayerAlly::init())
     }
 }
 
-pub fn spawn_replace(ecs: &mut World, invoker: Entity, kind: SpawnKind) {
+pub fn spawn_replace(ecs: &mut World, invoker: Entity, kind: SpawnKind, is_player_ally: bool) {
     let position = ecs.get_position(invoker);
     ecs.delete_entity(invoker).unwrap();
-    spawn(ecs, position, kind);
+    spawn(ecs, position, kind, is_player_ally);
 }

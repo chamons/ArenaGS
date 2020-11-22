@@ -261,9 +261,9 @@ pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
 
 pub fn water_elemental_action(ecs: &mut World, enemy: Entity) {
     let current_position = ecs.get_position(enemy);
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     if distance <= 3 {
-        if let Some(cone_target) = check_for_cone_striking_player(ecs, enemy, TIDAL_SURGE_SIZE) {
+        if let Some(cone_target) = check_for_cone_striking_enemy(ecs, enemy, TIDAL_SURGE_SIZE) {
             try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", cone_target));
         }
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ice Shard"));
@@ -310,7 +310,7 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: Entity) {
 }
 
 pub fn earth_elemental_action(ecs: &mut World, enemy: Entity) {
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
     if distance < 6 {
         try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));

@@ -413,8 +413,8 @@ fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target:
             *duration,
             skill_name,
         ),
-        SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind),
-        SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, invoker, *kind),
+        SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind, is_player_or_ally(ecs, invoker)),
+        SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, invoker, *kind, is_player_or_ally(ecs, invoker)),
         SkillEffect::Sequence(first, second) => {
             process_skill(ecs, invoker, first, target, skill_name);
             process_skill(ecs, invoker, second, target, skill_name);
@@ -424,11 +424,10 @@ fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target:
 }
 
 fn find_valid_buff_target(ecs: &World, invoker: Entity, target: Option<Point>) -> Entity {
+    let is_invoker_player_or_ally = is_player_or_ally(ecs, invoker);
     if let Some(target) = target {
         if let Some(target) = find_character_at_location(ecs, target) {
-            // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
-            let player = find_player(ecs);
-            if invoker != player && target != player {
+            if is_player_or_ally(ecs, target) == is_invoker_player_or_ally {
                 return target;
             }
         }

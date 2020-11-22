@@ -38,7 +38,7 @@ fn create_monster(
     position: SizedPoint,
     skill_resources: SkillResourceComponent,
     skill_power: u32,
-) {
+) -> Entity {
     let monster = ecs
         .create_entity()
         .with(PositionComponent::init(position))
@@ -55,6 +55,7 @@ fn create_monster(
         .build();
 
     ecs.raise_event(EventKind::Creation(kind), Some(monster));
+    monster
 }
 
 pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
@@ -70,7 +71,7 @@ pub fn elementalist(ecs: &mut World, position: Point, difficulty: u32) {
     );
 }
 
-pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) -> Entity {
     create_monster(
         ecs,
         "Water Elemental",
@@ -80,10 +81,10 @@ pub fn water_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
-pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) -> Entity {
     create_monster(
         ecs,
         "Fire Elemental",
@@ -93,10 +94,10 @@ pub fn fire_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
-pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) -> Entity {
     create_monster(
         ecs,
         "Wind Elemental",
@@ -106,10 +107,10 @@ pub fn wind_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
-pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
+pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) -> Entity {
     create_monster(
         ecs,
         "Earth Elemental",
@@ -119,7 +120,7 @@ pub fn earth_elemental(ecs: &mut World, position: Point, difficulty: u32) {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
 pub fn simple_golem(ecs: &mut World, position: Point) {
@@ -148,7 +149,7 @@ pub fn bird_monster(ecs: &mut World, position: Point, difficulty: u32) {
     );
 }
 
-pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
+pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) -> Entity {
     create_monster(
         ecs,
         "Egg",
@@ -158,10 +159,10 @@ pub fn bird_monster_add_egg(ecs: &mut World, position: SizedPoint) {
         position,
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
-pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
+pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) -> Entity {
     create_monster(
         ecs,
         "Bird",
@@ -171,10 +172,10 @@ pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
         position,
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
-pub fn shadow_gunslinger(ecs: &mut World, position: Point) {
+pub fn shadow_gunslinger(ecs: &mut World, position: Point) -> Entity {
     create_monster(
         ecs,
         "Shadow",
@@ -184,7 +185,7 @@ pub fn shadow_gunslinger(ecs: &mut World, position: Point) {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    );
+    )
 }
 
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {

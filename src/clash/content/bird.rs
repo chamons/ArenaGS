@@ -64,7 +64,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
 }
 
 pub fn default_behavior(ecs: &mut World, enemy: Entity) {
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     if distance > 7 {
         try_behavior!(move_towards_player(ecs, enemy));
     } else {

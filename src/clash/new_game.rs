@@ -126,7 +126,7 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
                     ElementalKind::Fire => spawner::fire_elemental(ecs, enemy_position, difficulty),
                     ElementalKind::Wind => spawner::wind_elemental(ecs, enemy_position, difficulty),
                     ElementalKind::Earth => spawner::earth_elemental(ecs, enemy_position, difficulty),
-                }
+                };
             }
             let enemy_position = find_placement(&ecs, 1, 1);
             spawner::elementalist(ecs, enemy_position, difficulty);

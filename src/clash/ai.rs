@@ -156,6 +156,7 @@ pub fn move_randomly(ecs: &mut World, enemy: Entity) -> bool {
     }
 }
 
+// ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
 pub fn move_towards_player(ecs: &mut World, enemy: Entity) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(find_player(ecs));
@@ -184,6 +185,7 @@ fn use_skill_core(ecs: &mut World, enemy: Entity, skill_name: &str, target_point
     false
 }
 
+// ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
 pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
     let player_position = ecs.get_position(find_player(ecs));
@@ -199,6 +201,7 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_nam
     false
 }
 
+// ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
 pub fn use_skill_at_any_enemy_if_in_range(ecs: &mut World, enemy: Entity, skill_name: &str) -> bool {
     let current_position = ecs.get_position(enemy);
 
@@ -259,18 +262,21 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: Entity, skill_name: 
     false
 }
 
-pub fn distance_to_player(ecs: &mut World, enemy: Entity) -> Option<u32> {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(ecs));
-    current_position.distance_to_multi(player_position)
+pub fn distance_to_nearest_enemy(ecs: &mut World, entity: Entity) -> Option<u32> {
+    let current_position = ecs.get_position(entity);
+    find_enemies_of(ecs, entity)
+        .iter()
+        .map(|&e| ecs.get_position(e).distance_to_multi(current_position))
+        .min_by(|&a, &b| a.cmp(&b))
+        .flatten()
 }
 
-pub fn check_for_cone_striking_player(ecs: &World, enemy: Entity, size: u32) -> Option<Point> {
-    let position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(&ecs));
+pub fn check_for_cone_striking_enemy(ecs: &World, entity: Entity, size: u32) -> Option<Point> {
+    let position = ecs.get_position(entity);
+    let enemy_positions: Vec<SizedPoint> = find_enemies_of(ecs, entity).iter().map(|&e| ecs.get_position(e)).collect();
     for origin in position.all_positions() {
         for d in &[Direction::North, Direction::East, Direction::South, Direction::East] {
-            if origin.get_cone(*d, size).iter().any(|p| player_position.contains_point(p)) {
+            if origin.get_cone(*d, size).iter().any(|p| enemy_positions.iter().any(|e| e.contains_point(p))) {
                 return Some(d.point_in_direction(&origin).unwrap());
             }
         }
@@ -278,12 +284,10 @@ pub fn check_for_cone_striking_player(ecs: &World, enemy: Entity, size: u32) -> 
     None
 }
 
-pub fn any_ally_without_buff_in_range(ecs: &World, enemy: Entity, buff: StatusKind, range: u32) -> Option<Entity> {
-    let position = ecs.get_position(enemy);
-    let player = find_player(ecs);
-    find_all_characters(ecs)
+pub fn any_ally_without_buff_in_range(ecs: &World, entity: Entity, buff: StatusKind, range: u32) -> Option<Entity> {
+    let position = ecs.get_position(entity);
+    find_allies_of(ecs, entity)
         .iter()
-        .filter(|&&c| c != player)
         .filter(|&&c| !ecs.has_status(c, buff))
         .find(|&&c| position.distance_to_multi(ecs.get_position(c)).unwrap_or(std::u32::MAX) <= range)
         .copied()
