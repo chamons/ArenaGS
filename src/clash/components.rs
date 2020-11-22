@@ -49,6 +49,15 @@ impl PlayerComponent {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
+pub struct PlayerAlly {}
+
+impl PlayerAlly {
+    pub fn init() -> PlayerAlly {
+        PlayerAlly {}
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct IsCharacterComponent {}
 
 impl IsCharacterComponent {
