@@ -244,7 +244,7 @@ pub fn get_elemental_summon_to_use(ecs: &World) -> &'static str {
 
 pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
     if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
-        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
+        try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
     }
 
     if !ecs.has_status(enemy, StatusKind::Armored) {
@@ -278,7 +278,7 @@ pub fn water_elemental_action(ecs: &mut World, enemy: Entity) {
         ));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
@@ -291,7 +291,7 @@ pub fn fire_elemental_action(ecs: &mut World, enemy: Entity) {
         try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Magma Eruption"));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
@@ -304,7 +304,7 @@ pub fn wind_elemental_action(ecs: &mut World, enemy: Entity) {
         try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Hailstone"));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
@@ -318,7 +318,7 @@ pub fn earth_elemental_action(ecs: &mut World, enemy: Entity) {
     if distance < 4 {
         try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Rock Slide"));
     }
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }

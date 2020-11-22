@@ -156,11 +156,10 @@ pub fn move_randomly(ecs: &mut World, enemy: Entity) -> bool {
     }
 }
 
-// ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
 pub fn move_towards_nearest_enemy(ecs: &mut World, entity: Entity) -> bool {
     let current_position = ecs.get_position(entity);
 
-    let enemies = find_enemies_of(ecs, entity)
+    let enemies: Vec<Entity> = find_enemies_of(ecs, entity)
         .iter()
         .map(|&e| (ecs.get_position(e).distance_to_multi(current_position), e))
         .sorted_by(|&a, &b| a.0.cmp(&b.0))
@@ -168,7 +167,7 @@ pub fn move_towards_nearest_enemy(ecs: &mut World, entity: Entity) -> bool {
         .collect();
 
     for e in enemies {
-        if let Some(path) = current_position.line_to(e.origin) {
+        if let Some(path) = current_position.line_to(ecs.get_position(e).origin) {
             let next = current_position.move_to(path[1]);
             if is_tile_safe(ecs, &next) {
                 return move_character_action(ecs, entity, next);

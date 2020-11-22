@@ -66,12 +66,12 @@ pub fn bird_skills(m: &mut SkillsResource) {
 pub fn default_behavior(ecs: &mut World, enemy: Entity) {
     let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     if distance > 7 {
-        try_behavior!(move_towards_player(ecs, enemy));
+        try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     } else {
         try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Wing Blast"));
         try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Feather Orb"));
     }
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
