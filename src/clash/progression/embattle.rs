@@ -40,6 +40,9 @@ pub fn create_player(ecs: &mut World, skills: &mut SkillsResource, player_positi
 
     // Now setup the skillbar and initial attack mode
     weapon_pack.add_active_skills(ecs, player, attack_modes, templates.iter().map(|t| t.name.to_string()).collect());
+
+    let item_skills = collect_item_abilities(ecs, skills);
+    super::super::content::weapon_pack::add_skills_to_end(ecs, player, item_skills.iter().map(|i| i.name.to_string()).collect());
 }
 
 pub fn load_equipment(weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<EquipmentItem> {
@@ -61,6 +64,24 @@ fn get_player_resources(ecs: &World, weapon_pack: &Box<dyn weapon_pack::WeaponPa
         }
     }
     resources
+}
+
+fn collect_item_abilities(ecs: &World, skills: &mut SkillsResource) -> Vec<SkillInfo> {
+    let mut abilities = vec![];
+
+    for e in ecs.read_resource::<ProgressionComponent>().state.equipment.all() {
+        if let Some(e) = e {
+            for effect in e.effect {
+                match effect {
+                    EquipmentEffect::AddsSkill(skill) => {
+                        abilities.push(skills.get(&skill));
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    abilities
 }
 
 fn collect_ability_classes(ecs: &World, force_all: bool, weapon_pack: &Box<dyn weapon_pack::WeaponPack>) -> Vec<SkillInfo> {

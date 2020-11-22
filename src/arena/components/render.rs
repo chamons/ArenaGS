@@ -28,6 +28,7 @@ pub enum SpriteKinds {
     WindElemental,
     EarthElemental,
     SimpleGolem,
+    ShadowGunSlinger,
 
     NoBolt,
     FireBolt,

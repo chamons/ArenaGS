@@ -96,6 +96,8 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
 
+    super::content::items::get_item_skills(&mut skills);
+
     let player_position = find_placement(&ecs, 1, 1);
     progression::embattle::create_player(ecs, &mut skills, player_position);
 

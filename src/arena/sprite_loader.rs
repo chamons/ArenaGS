@@ -145,6 +145,12 @@ impl SpriteLoader {
                     9,
                     StandardCharacterSize::Large,
                 )?),
+                SpriteKinds::ShadowGunSlinger => Box::new(StandardCharacter::init(
+                    render_context,
+                    &SpriteFolderDescription::init(&folder, "chara4"),
+                    48,
+                    StandardCharacterSize::Small,
+                )?),
             };
             sprites.insert(s.into(), sprite);
         }

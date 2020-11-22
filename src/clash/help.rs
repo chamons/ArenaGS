@@ -63,6 +63,7 @@ impl HelpInfo {
             SpawnKind::EarthElemental => "Earth Elemental",
             SpawnKind::Elementalist => "Elementalist",
             SpawnKind::SimpleGolem => "Simple Golem",
+            SpawnKind::ShadowGunSlinger => "Shadow Gunslinger",
         }
     }
 

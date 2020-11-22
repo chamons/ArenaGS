@@ -49,6 +49,7 @@ pub enum BehaviorKind {
     WindElemental,
     EarthElemental,
     SimpleGolem,
+    ShadowGunslinger,
     TickDamage,
     Explode,
     Orb,
@@ -67,6 +68,7 @@ pub fn take_enemy_action(ecs: &mut World, enemy: Entity) {
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::SimpleGolem => super::content::tutorial::golem_action(ecs, enemy),
+        BehaviorKind::ShadowGunslinger => super::content::items::shadow_gunslinger_behavior(ecs, enemy),
         BehaviorKind::Explode => begin_explode(ecs, enemy),
         BehaviorKind::TickDamage => {
             wait(ecs, enemy);
@@ -194,6 +196,30 @@ pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_nam
             }
         }
     }
+    false
+}
+
+pub fn use_skill_at_any_enemy_if_in_range(ecs: &mut World, enemy: Entity, skill_name: &str) -> bool {
+    let current_position = ecs.get_position(enemy);
+
+    let enemies = find_enemies(ecs);
+    let mut targets = vec![];
+
+    for e in enemies {
+        if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(ecs.get_position(e)) {
+            let skill = ecs.get_skill(skill_name);
+            if distance <= skill.range.unwrap() {
+                targets.push((distance, target_point));
+            }
+        }
+    }
+    if let Some(target) = targets.iter().min_by(|a, b| a.0.cmp(&b.0)) {
+        if can_invoke_skill(ecs, enemy, skill_name, Some(target.1)) {
+            invoke_skill(ecs, enemy, skill_name, Some(target.1));
+            return true;
+        }
+    }
+
     false
 }
 

@@ -18,6 +18,7 @@ pub enum SpawnKind {
     EarthElemental,
     Elementalist,
     SimpleGolem,
+    ShadowGunSlinger,
 }
 
 pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
@@ -29,6 +30,7 @@ pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind) {
         SpawnKind::FireElemental => spawner::fire_elemental(ecs, target.origin, 0),
         SpawnKind::WindElemental => spawner::wind_elemental(ecs, target.origin, 0),
         SpawnKind::EarthElemental => spawner::earth_elemental(ecs, target.origin, 0),
+        SpawnKind::ShadowGunSlinger => spawner::shadow_gunslinger(ecs, target.origin),
         _ => panic!("Can not spawn {:?} during combat", kind),
     }
 }

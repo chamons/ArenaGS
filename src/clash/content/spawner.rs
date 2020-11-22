@@ -174,6 +174,19 @@ pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) {
     );
 }
 
+pub fn shadow_gunslinger(ecs: &mut World, position: Point) {
+    create_monster(
+        ecs,
+        "Shadow",
+        SpawnKind::ShadowGunSlinger,
+        BehaviorKind::ShadowGunslinger,
+        Defenses::init(1, 0, 20, 1),
+        SizedPoint::init(position.x, position.y),
+        SkillResourceComponent::init(&[]),
+        0,
+    );
+}
+
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {
     ecs.create_entity()
         .with(PositionComponent::init(SizedPoint::from(position)))
