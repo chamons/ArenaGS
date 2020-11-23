@@ -1,0 +1,2 @@
+- Cooldown based skills not showing up in help or bar
+- Make shadow have limited lifetype

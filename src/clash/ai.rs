@@ -200,9 +200,11 @@ pub fn use_skill_at_any_enemy_if_in_range(ecs: &mut World, entity: Entity, skill
 
     let mut targets = vec![];
     for e in find_enemies_of(ecs, entity) {
-        if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(ecs.get_position(e)) {
-            if distance <= skill_range && can_invoke_skill(ecs, entity, skill_name, Some(target_point)) {
-                targets.push((distance, target_point));
+        if let Some(enemy_position) = ecs.find_position(e) {
+            if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(enemy_position) {
+                if distance <= skill_range && can_invoke_skill(ecs, entity, skill_name, Some(target_point)) {
+                    targets.push((distance, target_point));
+                }
             }
         }
     }

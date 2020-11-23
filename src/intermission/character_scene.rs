@@ -36,8 +36,8 @@ impl CharacterScene {
                 text_renderer,
                 vec![
                     TabInfo::init("Profession", Box::new(ProfessionTreeView::init(render_context, text_renderer, &ecs)?)),
-                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init("Merchant", Box::new(MerchantView::init(render_context, text_renderer, &ecs)?)),
+                    TabInfo::init("Equipment", Box::new(EquipmentView::init(render_context, text_renderer, &ecs)?)),
                     TabInfo::init(
                         "Next Battle",
                         Box::new(NextBattleView::init(render_context, text_renderer, &mut ecs, &next_fight)?),

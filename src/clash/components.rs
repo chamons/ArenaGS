@@ -456,6 +456,7 @@ pub fn create_world() -> World {
 }
 
 pub trait ShortInfo {
+    fn find_position(&self, entity: Entity) -> Option<SizedPoint>;
     fn get_position(&self, entity: Entity) -> SizedPoint;
     fn get_defenses(&self, entity: Entity) -> Defenses;
     fn get_temperature(&self, entity: Entity) -> Temperature;
@@ -463,6 +464,13 @@ pub trait ShortInfo {
 }
 
 impl ShortInfo for World {
+    fn find_position(&self, entity: Entity) -> Option<SizedPoint> {
+        if let Some(position) = self.read_storage::<PositionComponent>().get(entity) {
+            Some(position.position)
+        } else {
+            None
+        }
+    }
     fn get_position(&self, entity: Entity) -> SizedPoint {
         self.read_storage::<PositionComponent>().grab(entity).position
     }
