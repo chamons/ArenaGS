@@ -176,7 +176,7 @@ pub fn bird_monster_add(ecs: &mut World, position: SizedPoint) -> Entity {
 }
 
 pub fn shadow_gunslinger(ecs: &mut World, position: Point) -> Entity {
-    create_monster(
+    let monster = create_monster(
         ecs,
         "Shadow",
         SpawnKind::ShadowGunSlinger,
@@ -185,7 +185,9 @@ pub fn shadow_gunslinger(ecs: &mut World, position: Point) -> Entity {
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,
-    )
+    );
+    ecs.shovel(monster, DurationComponent::init(5));
+    monster
 }
 
 pub fn create_orb(ecs: &mut World, position: Point, attack: AttackComponent, orb: OrbComponent) -> Entity {

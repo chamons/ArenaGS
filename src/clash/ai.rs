@@ -68,25 +68,32 @@ pub fn take_enemy_action(ecs: &mut World, enemy: Entity) {
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::SimpleGolem => super::content::tutorial::golem_action(ecs, enemy),
-        BehaviorKind::ShadowGunslinger => super::content::items::shadow_gunslinger_behavior(ecs, enemy),
+        BehaviorKind::ShadowGunslinger => {
+            super::content::items::shadow_gunslinger_behavior(ecs, enemy);
+            apply_duration(ecs, enemy);
+        }
         BehaviorKind::Explode => begin_explode(ecs, enemy),
         BehaviorKind::TickDamage => {
             wait(ecs, enemy);
             tick_damage(ecs, enemy);
-            let should_die = {
-                if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(enemy) {
-                    d.duration -= 1;
-                    d.duration == 0
-                } else {
-                    false
-                }
-            };
-            if should_die {
-                ecs.delete_entity(enemy).unwrap();
-            }
+            apply_duration(ecs, enemy);
         }
         BehaviorKind::Orb => move_orb(ecs, enemy),
     };
+}
+
+fn apply_duration(ecs: &mut World, enemy: Entity) {
+    let should_die = {
+        if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(enemy) {
+            d.duration -= 1;
+            d.duration == 0
+        } else {
+            false
+        }
+    };
+    if should_die {
+        ecs.delete_entity(enemy).unwrap();
+    }
 }
 
 impl Distribution<Direction> for Standard {
