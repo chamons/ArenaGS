@@ -94,9 +94,9 @@ pub fn get_item_skills(m: &mut SkillsResource) {
             "Summon Shadow",
             Some("SpellBook03_76.png"),
             TargetType::Tile,
-            SkillEffect::Spawn(SpawnKind::ShadowGunSlinger),
+            SkillEffect::Spawn(SpawnKind::ShadowGunSlinger, Some(5)),
         )
-        .with_cooldown(2500),
+        .with_cooldown(1500),
     );
 }
 

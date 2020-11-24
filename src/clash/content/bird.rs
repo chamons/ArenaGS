@@ -57,7 +57,7 @@ pub fn bird_skills(m: &mut SkillsResource) {
             .with_cooldown_spent(),
     );
     m.add(
-        SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg))
+        SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg, None))
             .with_ammo(AmmoKind::Eggs, 1)
             .with_cooldown(500),
     );

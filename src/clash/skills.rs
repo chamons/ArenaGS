@@ -39,7 +39,7 @@ pub enum SkillEffect {
     Field(FieldEffect, FieldKind),
     ReloadAndRotateAmmo(),
     Buff(StatusKind, i32),
-    Spawn(SpawnKind),
+    Spawn(SpawnKind, Option<u32>),
     SpawnReplace(SpawnKind),
     Sequence(Box<SkillEffect>, Box<SkillEffect>),
 }
@@ -416,7 +416,7 @@ fn process_skill(ecs: &mut World, invoker: Entity, effect: &SkillEffect, target:
             *duration,
             skill_name,
         ),
-        SkillEffect::Spawn(kind) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind, is_player_or_ally(ecs, invoker)),
+        SkillEffect::Spawn(kind, duration) => spawn(ecs, SizedPoint::from(target.unwrap()), *kind, is_player_or_ally(ecs, invoker), *duration),
         SkillEffect::SpawnReplace(kind) => spawn_replace(ecs, invoker, *kind, is_player_or_ally(ecs, invoker)),
         SkillEffect::Sequence(first, second) => {
             process_skill(ecs, invoker, first, target, skill_name);
@@ -450,7 +450,7 @@ fn gain_adrenaline(ecs: &mut World, invoker: Entity, skill: &SkillInfo) {
         SkillEffect::Reload(_) => 3,
         SkillEffect::ReloadSome(_, _) => 3,
         SkillEffect::Field(_, _) => 3,
-        SkillEffect::Spawn(_) => 3,
+        SkillEffect::Spawn(_, _) => 3,
         SkillEffect::ReloadSomeRandom(_, _) => 3,
         SkillEffect::ReloadAndRotateAmmo() => 3,
         SkillEffect::Buff(_, _) => 3,

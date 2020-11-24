@@ -135,18 +135,34 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Summon Elemental (Water)",
             None,
             TargetType::Tile,
-            SkillEffect::Spawn(SpawnKind::WaterElemental),
+            SkillEffect::Spawn(SpawnKind::WaterElemental, None),
         )
         .with_ammo(AmmoKind::Charge, 60),
     );
-    m.add(SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60));
-    m.add(SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60));
+    m.add(
+        SkillInfo::init(
+            "Summon Elemental (Fire)",
+            None,
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::FireElemental, None),
+        )
+        .with_ammo(AmmoKind::Charge, 60),
+    );
+    m.add(
+        SkillInfo::init(
+            "Summon Elemental (Wind)",
+            None,
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::WindElemental, None),
+        )
+        .with_ammo(AmmoKind::Charge, 60),
+    );
     m.add(
         SkillInfo::init(
             "Summon Elemental (Earth)",
             None,
             TargetType::Tile,
-            SkillEffect::Spawn(SpawnKind::EarthElemental),
+            SkillEffect::Spawn(SpawnKind::EarthElemental, None),
         )
         .with_ammo(AmmoKind::Charge, 60),
     );

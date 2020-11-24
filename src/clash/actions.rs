@@ -19,6 +19,7 @@ pub fn maybe_find_player(ecs: &World) -> Option<Entity> {
     }
 }
 
+#[allow(dead_code)]
 pub fn is_enemy(ecs: &World, entity: Entity) -> bool {
     ecs.read_storage::<PlayerComponent>().get(entity).is_none() && ecs.read_storage::<PlayerAlly>().get(entity).is_none()
 }
@@ -27,6 +28,7 @@ pub fn is_player_or_ally(ecs: &World, entity: Entity) -> bool {
     ecs.read_storage::<PlayerComponent>().get(entity).is_some() || ecs.read_storage::<PlayerAlly>().get(entity).is_some()
 }
 
+#[allow(dead_code)]
 pub fn is_of_my_side(ecs: &World, entity: Entity, target: Entity) -> bool {
     is_player_or_ally(ecs, entity) == is_player_or_ally(ecs, target)
 }

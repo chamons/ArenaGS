@@ -3,7 +3,7 @@ use specs::prelude::*;
 
 use super::content::spawner;
 use super::find_clear_landing;
-use super::{PlayerAlly, ShortInfo};
+use super::{DurationComponent, PlayerAlly, ShortInfo};
 use crate::atlas::prelude::*;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -21,7 +21,7 @@ pub enum SpawnKind {
     ShadowGunSlinger,
 }
 
-pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind, is_player_ally: bool) {
+pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind, is_player_ally: bool, duration: Option<u32>) {
     let target = find_clear_landing(ecs, &target, None);
     let spawn = match kind {
         SpawnKind::Egg => spawner::bird_monster_add_egg(ecs, target),
@@ -34,12 +34,15 @@ pub fn spawn(ecs: &mut World, target: SizedPoint, kind: SpawnKind, is_player_all
         _ => panic!("Can not spawn {:?} during combat", kind),
     };
     if is_player_ally {
-        ecs.shovel(spawn, PlayerAlly::init())
+        ecs.shovel(spawn, PlayerAlly::init());
+    }
+    if let Some(duration) = duration {
+        ecs.shovel(spawn, DurationComponent::init(duration));
     }
 }
 
 pub fn spawn_replace(ecs: &mut World, invoker: Entity, kind: SpawnKind, is_player_ally: bool) {
     let position = ecs.get_position(invoker);
     ecs.delete_entity(invoker).unwrap();
-    spawn(ecs, position, kind, is_player_ally);
+    spawn(ecs, position, kind, is_player_ally, None);
 }

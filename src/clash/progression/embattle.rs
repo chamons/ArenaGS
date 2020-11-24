@@ -176,7 +176,7 @@ fn collect_attack_templates(ecs: &World, base_attacks: Vec<SkillInfo>) -> Vec<Sk
             | SkillEffect::Field(_, _)
             | SkillEffect::ReloadAndRotateAmmo()
             | SkillEffect::Buff(_, _)
-            | SkillEffect::Spawn(_)
+            | SkillEffect::Spawn(_, _)
             | SkillEffect::SpawnReplace(_)
             | SkillEffect::Sequence(_, _) => a.effect,
         };

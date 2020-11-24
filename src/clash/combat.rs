@@ -244,7 +244,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 .collect();
             spawner::create_damage_field(ecs, &cast.name, cast.target, attack, FieldComponent::init_group(fields));
         }
-        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind, cast.is_from_player),
+        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind, cast.is_from_player, None),
         FieldEffect::SustainedDamage(damage, duration) => {
             let (r, g, b) = match cast.kind {
                 FieldKind::Fire => (255, 140, 0),

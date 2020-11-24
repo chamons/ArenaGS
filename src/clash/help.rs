@@ -181,7 +181,14 @@ impl HelpInfo {
                 details.push("Fire a slow moving a orb along a path.".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::Spawn(kind) => details.push(format!("Summon a {}.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::Spawn(kind, length) => {
+                let duration = if let Some(length) = length {
+                    format!(" for {} turns", length)
+                } else {
+                    "".to_string()
+                };
+                details.push(format!("Summon a {}{}.", HelpInfo::get_spawn_name(*kind), duration));
+            }
             SkillEffect::SpawnReplace(kind) => details.push(format!("Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
             SkillEffect::Sequence(first, second) => {
                 HelpInfo::report_skill_effect(details, first);
