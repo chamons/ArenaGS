@@ -227,27 +227,30 @@ impl SkillInfo {
         if self.get_ammo_usage(ecs, entity).unwrap_or(1) == 0 {
             return UsableResults::LacksAmmo;
         }
+        if self.get_cooldown(ecs, entity) > 0 {
+            return UsableResults::OnCooldown;
+        }
+
         UsableResults::Usable
     }
 
-    pub fn get_cooldown(&self, ecs: &mut World, entity: Entity) -> u32 {
-        let mut skill_resources = ecs.write_storage::<SkillResourceComponent>();
-        if let Some(skill_resource) = skill_resources.get_mut(entity) {
-            *skill_resource
-                .cooldown
-                .entry(self.name.to_string())
-                .or_insert_with(|| if self.start_cooldown_spent { self.cooldown.unwrap() } else { 0 })
+    pub fn get_cooldown(&self, ecs: &World, entity: Entity) -> u32 {
+        let skill_resources = ecs.read_storage::<SkillResourceComponent>();
+        if let Some(skill_resource) = skill_resources.get(entity) {
+            *skill_resource.cooldown.get(&self.name.to_string()).unwrap_or(&0)
         } else {
             0
         }
     }
 }
 
+#[derive(Eq, PartialEq)]
 pub enum UsableResults {
     Usable,
     LacksAmmo,
     Exhaustion,
     LacksFocus,
+    OnCooldown,
 }
 
 fn assert_correct_targeting(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) {
@@ -271,7 +274,13 @@ pub fn is_good_target(ecs: &World, invoker: Entity, skill: &SkillInfo, target: P
     if !match skill.target {
         TargetType::Tile => is_area_clear_of_others(ecs, from_ref(&target), invoker),
         TargetType::Enemy => !is_area_clear_of_others(ecs, from_ref(&target), invoker),
-        TargetType::Player => ecs.get_position(find_player(ecs)).contains_point(&target),
+        TargetType::Player => {
+            if let Some(potential_target) = find_character_at_location(ecs, target) {
+                is_player_or_ally(ecs, potential_target)
+            } else {
+                false
+            }
+        }
         TargetType::AnyoneButSelf => {
             if let Some(initial) = ecs.read_storage::<PositionComponent>().get(invoker) {
                 !initial.position.contains_point(&target)
@@ -324,16 +333,10 @@ pub fn skill_secondary_range(skill: &SkillInfo) -> Option<u32> {
     }
 }
 
-pub fn has_resources_for_skill(ecs: &mut World, invoker: Entity, skill: &SkillInfo) -> bool {
-    let has_needed_ammo = skill.get_remaining_usages(ecs, invoker).map_or(true, |x| x > 0);
-    let has_no_cooldown = skill.get_cooldown(ecs, invoker) == 0;
-    has_needed_ammo && has_no_cooldown
-}
-
 pub fn can_invoke_skill(ecs: &mut World, invoker: Entity, name: &str, target: Option<Point>) -> bool {
     let skill = ecs.get_skill(name);
     let has_valid_target = target.map_or(true, |x| is_good_target(ecs, invoker, &skill, x));
-    has_resources_for_skill(ecs, invoker, &skill) && has_valid_target
+    has_valid_target && skill.is_usable(ecs, invoker) == UsableResults::Usable
 }
 
 pub fn spend_focus(ecs: &mut World, invoker: Entity, cost: f64) {

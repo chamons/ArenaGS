@@ -181,7 +181,7 @@ pub fn shadow_gunslinger(ecs: &mut World, position: Point) -> Entity {
         "Shadow",
         SpawnKind::ShadowGunSlinger,
         BehaviorKind::ShadowGunslinger,
-        Defenses::init(1, 0, 20, 1),
+        Defenses::init(1, 0, 1, 1),
         SizedPoint::init(position.x, position.y),
         SkillResourceComponent::init(&[]),
         0,

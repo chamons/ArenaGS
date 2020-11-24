@@ -219,7 +219,7 @@ pub fn use_skill_at_any_enemy_if_in_range(ecs: &mut World, entity: Entity, skill
 pub fn use_skill_with_random_target_near_player(ecs: &mut World, enemy: Entity, skill_name: &str, range: u32) -> bool {
     let skill = ecs.get_skill(skill_name);
     // Early return for lack of resources before trying many target squares
-    if !has_resources_for_skill(ecs, enemy, &skill) {
+    if skill.is_usable(ecs, enemy) != UsableResults::Usable {
         return false;
     }
 
