@@ -90,12 +90,15 @@ pub fn get_item_skills(m: &mut SkillsResource) {
     ));
 
     m.add(
-        SkillInfo::init(
+        SkillInfo::init_with_distance(
             "Summon Shadow",
             Some("SpellBook03_76.png"),
             TargetType::Tile,
             SkillEffect::Spawn(SpawnKind::ShadowGunSlinger, Some(5)),
+            Some(5),
+            true,
         )
+        .with_focus_use(0.5)
         .with_cooldown(1500),
     );
 }

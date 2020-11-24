@@ -1,2 +1,0 @@
-- Cooldown based skills not showing up in help or bar
-- Make duration show up on help as well
