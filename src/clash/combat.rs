@@ -104,14 +104,7 @@ impl AttackComponent {
 }
 
 pub fn begin_bolt_nearest_in_range(ecs: &mut World, source: Entity, range: Option<u32>, strength: Damage, kind: BoltKind) {
-    let targets = {
-        if find_player(ecs) == source {
-            find_enemies(&ecs)
-        } else {
-            // ALLIES_TODO -  https://github.com/chamons/ArenaGS/issues/201
-            vec![find_player(&ecs)]
-        }
-    };
+    let targets = find_enemies_of(ecs, source);
     let source_position = ecs.get_position(source);
     let target = targets.iter().filter(|&&t| !ecs.has_status(t, StatusKind::Flying)).min_by(|first, second| {
         let first = source_position.distance_to_multi(ecs.get_position(**first));
@@ -194,7 +187,10 @@ pub fn apply_melee(ecs: &mut World, character: Entity) {
 }
 
 pub fn begin_field(ecs: &mut World, source: Entity, target: Point, effect: FieldEffect, name: &str, kind: FieldKind) {
-    ecs.shovel(source, FieldCastComponent::init(effect, name, kind, SizedPoint::from(target)));
+    ecs.shovel(
+        source,
+        FieldCastComponent::init(effect, name, kind, SizedPoint::from(target), is_player_or_ally(ecs, source)),
+    );
     ecs.raise_event(EventKind::Field(FieldState::BeginCastAnimation), Some(source));
 }
 
@@ -248,7 +244,7 @@ pub fn apply_field(ecs: &mut World, projectile: Entity) {
                 .collect();
             spawner::create_damage_field(ecs, &cast.name, cast.target, attack, FieldComponent::init_group(fields));
         }
-        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind),
+        FieldEffect::Spawn(kind) => spawn(ecs, cast.target, kind, cast.is_from_player, None),
         FieldEffect::SustainedDamage(damage, duration) => {
             let (r, g, b) = match cast.kind {
                 FieldKind::Fire => (255, 140, 0),

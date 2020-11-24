@@ -57,21 +57,21 @@ pub fn bird_skills(m: &mut SkillsResource) {
             .with_cooldown_spent(),
     );
     m.add(
-        SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg))
+        SkillInfo::init("Throw Eggs", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::Egg, None))
             .with_ammo(AmmoKind::Eggs, 1)
             .with_cooldown(500),
     );
 }
 
 pub fn default_behavior(ecs: &mut World, enemy: Entity) {
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     if distance > 7 {
-        try_behavior!(move_towards_player(ecs, enemy));
+        try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     } else {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Wing Blast"));
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Feather Orb"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Wing Blast"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Feather Orb"));
     }
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
@@ -86,25 +86,25 @@ pub fn bird_action(ecs: &mut World, enemy: Entity) {
     };
 
     if phase == 1 {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Tailwind"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Tailwind"));
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 2 {
         if ecs.has_status(enemy, StatusKind::Flying) {
-            try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
+            try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, "Explosive Eggs", 4));
         } else {
             try_behavior!(use_skill(ecs, enemy, "Take Off"));
-            try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Tailwind"));
+            try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Tailwind"));
             do_behavior!(default_behavior(ecs, enemy));
         }
     } else if phase == 3 {
-        try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 6));
+        try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, "Throw Eggs", 6));
         do_behavior!(default_behavior(ecs, enemy));
     } else if phase == 4 {
         if ecs.has_status(enemy, StatusKind::Flying) {
             if coin_flip(ecs) {
-                try_behavior!(use_skill_with_random_target(ecs, enemy, "Explosive Eggs", 4));
+                try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, "Explosive Eggs", 4));
             }
-            try_behavior!(use_skill_with_random_target(ecs, enemy, "Throw Eggs", 8));
+            try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, "Throw Eggs", 8));
         } else {
             try_behavior!(use_skill(ecs, enemy, "Take Off"));
             do_behavior!(default_behavior(ecs, enemy));

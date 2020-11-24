@@ -135,18 +135,34 @@ pub fn elementalist_skills(m: &mut SkillsResource) {
             "Summon Elemental (Water)",
             None,
             TargetType::Tile,
-            SkillEffect::Spawn(SpawnKind::WaterElemental),
+            SkillEffect::Spawn(SpawnKind::WaterElemental, None),
         )
         .with_ammo(AmmoKind::Charge, 60),
     );
-    m.add(SkillInfo::init("Summon Elemental (Fire)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::FireElemental)).with_ammo(AmmoKind::Charge, 60));
-    m.add(SkillInfo::init("Summon Elemental (Wind)", None, TargetType::Tile, SkillEffect::Spawn(SpawnKind::WindElemental)).with_ammo(AmmoKind::Charge, 60));
+    m.add(
+        SkillInfo::init(
+            "Summon Elemental (Fire)",
+            None,
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::FireElemental, None),
+        )
+        .with_ammo(AmmoKind::Charge, 60),
+    );
+    m.add(
+        SkillInfo::init(
+            "Summon Elemental (Wind)",
+            None,
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::WindElemental, None),
+        )
+        .with_ammo(AmmoKind::Charge, 60),
+    );
     m.add(
         SkillInfo::init(
             "Summon Elemental (Earth)",
             None,
             TargetType::Tile,
-            SkillEffect::Spawn(SpawnKind::EarthElemental),
+            SkillEffect::Spawn(SpawnKind::EarthElemental, None),
         )
         .with_ammo(AmmoKind::Charge, 60),
     );
@@ -244,7 +260,7 @@ pub fn get_elemental_summon_to_use(ecs: &World) -> &'static str {
 
 pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
     if get_elemental_summon_count(ecs) < MAX_ELEMENTS_SUMMONED {
-        try_behavior!(use_skill_with_random_target(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
+        try_behavior!(use_skill_with_random_target_near_player(ecs, enemy, get_elemental_summon_to_use(ecs), 6));
     }
 
     if !ecs.has_status(enemy, StatusKind::Armored) {
@@ -253,7 +269,7 @@ pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
 
     let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Call Lightning"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Call Lightning"));
     }
     try_behavior!(use_skill(ecs, enemy, "Invoke the Elements"));
     wait(ecs, enemy);
@@ -261,12 +277,12 @@ pub fn elementalist_action(ecs: &mut World, enemy: Entity) {
 
 pub fn water_elemental_action(ecs: &mut World, enemy: Entity) {
     let current_position = ecs.get_position(enemy);
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
     if distance <= 3 {
-        if let Some(cone_target) = check_for_cone_striking_player(ecs, enemy, TIDAL_SURGE_SIZE) {
+        if let Some(cone_target) = check_for_cone_striking_enemy(ecs, enemy, TIDAL_SURGE_SIZE) {
             try_behavior!(use_skill_at_position(ecs, enemy, "Tidal Surge", cone_target));
         }
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Ice Shard"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Ice Shard"));
     }
 
     if let Some(target) = any_ally_without_buff_in_range(ecs, enemy, StatusKind::Regen, HEALING_MIST_RANGE) {
@@ -278,47 +294,47 @@ pub fn water_elemental_action(ecs: &mut World, enemy: Entity) {
         ));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
 
 pub fn fire_elemental_action(ecs: &mut World, enemy: Entity) {
-    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lava Bolt"));
+    try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Lava Bolt"));
 
     let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Magma Eruption"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Magma Eruption"));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
 
 pub fn wind_elemental_action(ecs: &mut World, enemy: Entity) {
-    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Lightning Surge"));
+    try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Lightning Surge"));
 
     let player_position = ecs.get_position(find_player(ecs));
     if find_field_at_location(ecs, &player_position).is_none() {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Hailstone"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Hailstone"));
     }
 
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }
 
 pub fn earth_elemental_action(ecs: &mut World, enemy: Entity) {
-    let distance = distance_to_player(ecs, enemy).unwrap_or(0);
-    try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Pummel"));
+    let distance = distance_to_nearest_enemy(ecs, enemy).unwrap_or(0);
+    try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Pummel"));
     if distance < 6 {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Earthen Rage"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Earthen Rage"));
     }
     if distance < 4 {
-        try_behavior!(use_skill_at_player_if_in_range(ecs, enemy, "Rock Slide"));
+        try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Rock Slide"));
     }
-    try_behavior!(move_towards_player(ecs, enemy));
+    try_behavior!(move_towards_nearest_enemy(ecs, enemy));
     try_behavior!(move_randomly(ecs, enemy));
     wait(ecs, enemy);
 }

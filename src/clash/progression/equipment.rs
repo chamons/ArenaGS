@@ -38,9 +38,8 @@ pub enum EquipmentEffect {
     ModifiesArmor(i32),
     ModifiesAbsorb(i32),
     ModifiesMaxHealth(i32),
-    // Part of https://github.com/chamons/ArenaGS/issues/249 when we do damage types
-    // ModifiesResistance (i32, String)
-    // ModifiesSkillElement (String, String)
+    AddsSkill(String),
+    ModifiesResistance(i32, String),
 }
 
 #[derive(Hash, PartialEq, Eq, Deserialize, Serialize, Clone, Debug)]
@@ -79,6 +78,8 @@ impl EquipmentItem {
                 EquipmentEffect::ModifiesArmor(amount) => description.push(format!("Armor: {}.", amount)),
                 EquipmentEffect::ModifiesAbsorb(amount) => description.push(format!("Absorb: {}.", amount)),
                 EquipmentEffect::ModifiesMaxHealth(amount) => description.push(format!("Health: {}.", amount)),
+                EquipmentEffect::AddsSkill(skill) => description.push(format!("Adds Skill: {}.", skill)),
+                EquipmentEffect::ModifiesResistance(amount, resistance) => description.push(format!("Adds {} resistance to {}.", amount, resistance)),
             }
         }
         description

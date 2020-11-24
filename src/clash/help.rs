@@ -63,6 +63,7 @@ impl HelpInfo {
             SpawnKind::EarthElemental => "Earth Elemental",
             SpawnKind::Elementalist => "Elementalist",
             SpawnKind::SimpleGolem => "Simple Golem",
+            SpawnKind::ShadowGunSlinger => "Shadow Gunslinger",
         }
     }
 
@@ -180,7 +181,14 @@ impl HelpInfo {
                 details.push("Fire a slow moving a orb along a path.".to_string());
                 HelpInfo::report_damage(details, &damage);
             }
-            SkillEffect::Spawn(kind) => details.push(format!("Summon a {}.", HelpInfo::get_spawn_name(*kind))),
+            SkillEffect::Spawn(kind, length) => {
+                let duration = if let Some(length) = length {
+                    format!(" for {} turns", length)
+                } else {
+                    "".to_string()
+                };
+                details.push(format!("Summon a {}{}.", HelpInfo::get_spawn_name(*kind), duration));
+            }
             SkillEffect::SpawnReplace(kind) => details.push(format!("Summon a {} replacing itself.", HelpInfo::get_spawn_name(*kind))),
             SkillEffect::Sequence(first, second) => {
                 HelpInfo::report_skill_effect(details, first);
@@ -210,15 +218,15 @@ impl HelpInfo {
         if let Some(focus) = skill.focus_use {
             details.push(format!("Costs {} [[Focus]]", focus))
         }
-
         if let Some(exhaustion) = skill.exhaustion {
             details.push(format!("Costs {} [[Exhaustion]]", exhaustion))
         }
-
         if let Some(ammo) = &skill.ammo_info {
             details.push(format!("Costs {} {}", ammo.usage, HelpInfo::get_ammo_name(ammo.kind)));
         }
-
+        if let Some(cooldown) = skill.cooldown {
+            details.push(format!("Has a {} turn cooldown.", cooldown / 100))
+        }
         if !skill.must_be_clear {
             details.push("Requires no Line of Sight.".to_string())
         }
@@ -727,6 +735,11 @@ pub fn summarize_character<'a>(ecs: &'a World, entity: Entity, show_status_effec
                 on_text(&format!("Status: {}", all.iter().map(|a| linkify(a)).collect::<Vec<String>>().join(" ")));
             }
         }
+    }
+
+    let durations = &ecs.read_storage::<DurationComponent>();
+    if let Some(duration) = durations.get(entity) {
+        on_text(&format!("Duration: {} turn(s)", duration.duration));
     }
 }
 

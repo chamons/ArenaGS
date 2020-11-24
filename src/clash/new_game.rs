@@ -96,6 +96,8 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
     ecs.insert(MapComponent::init(Map::init(map_data_path)));
     ecs.insert(ProgressionComponent::init(progression));
 
+    super::content::items::get_item_skills(&mut skills);
+
     let player_position = find_placement(&ecs, 1, 1);
     progression::embattle::create_player(ecs, &mut skills, player_position);
 
@@ -124,7 +126,7 @@ fn create_battle(ecs: &mut World, progression: ProgressionState, kind: BattleKin
                     ElementalKind::Fire => spawner::fire_elemental(ecs, enemy_position, difficulty),
                     ElementalKind::Wind => spawner::wind_elemental(ecs, enemy_position, difficulty),
                     ElementalKind::Earth => spawner::earth_elemental(ecs, enemy_position, difficulty),
-                }
+                };
             }
             let enemy_position = find_placement(&ecs, 1, 1);
             spawner::elementalist(ecs, enemy_position, difficulty);

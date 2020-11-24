@@ -1,10 +1,10 @@
 use std::cmp;
 
-use serde::{Deserialize, Serialize};
-use specs::prelude::*;
-
+use itertools::Itertools;
 use rand::distributions::{Distribution, Standard};
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
+use specs::prelude::*;
 
 use super::*;
 use crate::atlas::prelude::*;
@@ -49,6 +49,7 @@ pub enum BehaviorKind {
     WindElemental,
     EarthElemental,
     SimpleGolem,
+    ShadowGunslinger,
     TickDamage,
     Explode,
     Orb,
@@ -67,24 +68,32 @@ pub fn take_enemy_action(ecs: &mut World, enemy: Entity) {
         BehaviorKind::WindElemental => super::content::elementalist::wind_elemental_action(ecs, enemy),
         BehaviorKind::EarthElemental => super::content::elementalist::earth_elemental_action(ecs, enemy),
         BehaviorKind::SimpleGolem => super::content::tutorial::golem_action(ecs, enemy),
+        BehaviorKind::ShadowGunslinger => {
+            super::content::items::shadow_gunslinger_behavior(ecs, enemy);
+            apply_duration(ecs, enemy);
+        }
         BehaviorKind::Explode => begin_explode(ecs, enemy),
         BehaviorKind::TickDamage => {
             wait(ecs, enemy);
             tick_damage(ecs, enemy);
-            let should_die = {
-                if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(enemy) {
-                    d.duration -= 1;
-                    d.duration == 0
-                } else {
-                    false
-                }
-            };
-            if should_die {
-                ecs.delete_entity(enemy).unwrap();
-            }
+            apply_duration(ecs, enemy);
         }
         BehaviorKind::Orb => move_orb(ecs, enemy),
     };
+}
+
+fn apply_duration(ecs: &mut World, enemy: Entity) {
+    let should_die = {
+        if let Some(d) = &mut ecs.write_storage::<DurationComponent>().get_mut(enemy) {
+            d.duration -= 1;
+            d.duration == 0
+        } else {
+            false
+        }
+    };
+    if should_die {
+        ecs.delete_entity(enemy).unwrap();
+    }
 }
 
 impl Distribution<Direction> for Standard {
@@ -154,15 +163,25 @@ pub fn move_randomly(ecs: &mut World, enemy: Entity) -> bool {
     }
 }
 
-pub fn move_towards_player(ecs: &mut World, enemy: Entity) -> bool {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(ecs));
-    if let Some(path) = current_position.line_to(player_position.origin) {
-        let next = current_position.move_to(path[1]);
-        if is_tile_safe(ecs, &next) {
-            return move_character_action(ecs, enemy, next);
+pub fn move_towards_nearest_enemy(ecs: &mut World, entity: Entity) -> bool {
+    let current_position = ecs.get_position(entity);
+
+    let enemies: Vec<Entity> = find_enemies_of(ecs, entity)
+        .iter()
+        .map(|&e| (ecs.get_position(e).distance_to_multi(current_position), e))
+        .sorted_by(|&a, &b| a.0.cmp(&b.0))
+        .map(|e| e.1)
+        .collect();
+
+    for e in enemies {
+        if let Some(path) = current_position.line_to(ecs.get_position(e).origin) {
+            let next = current_position.move_to(path[1]);
+            if is_tile_safe(ecs, &next) {
+                return move_character_action(ecs, entity, next);
+            }
         }
     }
+
     false
 }
 
@@ -182,25 +201,32 @@ fn use_skill_core(ecs: &mut World, enemy: Entity, skill_name: &str, target_point
     false
 }
 
-pub fn use_skill_at_player_if_in_range(ecs: &mut World, enemy: Entity, skill_name: &str) -> bool {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(ecs));
-    if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(player_position) {
-        let skill = ecs.get_skill(skill_name);
-        if distance <= skill.range.unwrap() {
-            if can_invoke_skill(ecs, enemy, skill_name, Some(target_point)) {
-                invoke_skill(ecs, enemy, skill_name, Some(target_point));
-                return true;
+pub fn use_skill_at_any_enemy_if_in_range(ecs: &mut World, entity: Entity, skill_name: &str) -> bool {
+    let current_position = ecs.get_position(entity);
+    let skill_range = ecs.get_skill(skill_name).range.unwrap();
+
+    let mut targets = vec![];
+    for e in find_enemies_of(ecs, entity) {
+        if let Some(enemy_position) = ecs.find_position(e) {
+            if let Some((_, target_point, distance)) = current_position.distance_to_multi_with_endpoints(enemy_position) {
+                if distance <= skill_range && can_invoke_skill(ecs, entity, skill_name, Some(target_point)) {
+                    targets.push((distance, target_point));
+                }
             }
         }
     }
+    if let Some(target) = targets.iter().min_by(|a, b| a.0.cmp(&b.0)) {
+        invoke_skill(ecs, entity, skill_name, Some(target.1));
+        return true;
+    }
+
     false
 }
 
-pub fn use_skill_with_random_target(ecs: &mut World, enemy: Entity, skill_name: &str, range: u32) -> bool {
+pub fn use_skill_with_random_target_near_player(ecs: &mut World, enemy: Entity, skill_name: &str, range: u32) -> bool {
     let skill = ecs.get_skill(skill_name);
     // Early return for lack of resources before trying many target squares
-    if !has_resources_for_skill(ecs, enemy, &skill) {
+    if skill.is_usable(ecs, enemy) != UsableResults::Usable {
         return false;
     }
 
@@ -233,18 +259,21 @@ pub fn use_skill_with_random_target(ecs: &mut World, enemy: Entity, skill_name: 
     false
 }
 
-pub fn distance_to_player(ecs: &mut World, enemy: Entity) -> Option<u32> {
-    let current_position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(ecs));
-    current_position.distance_to_multi(player_position)
+pub fn distance_to_nearest_enemy(ecs: &mut World, entity: Entity) -> Option<u32> {
+    let current_position = ecs.get_position(entity);
+    find_enemies_of(ecs, entity)
+        .iter()
+        .map(|&e| ecs.get_position(e).distance_to_multi(current_position))
+        .min_by(|&a, &b| a.cmp(&b))
+        .flatten()
 }
 
-pub fn check_for_cone_striking_player(ecs: &World, enemy: Entity, size: u32) -> Option<Point> {
-    let position = ecs.get_position(enemy);
-    let player_position = ecs.get_position(find_player(&ecs));
+pub fn check_for_cone_striking_enemy(ecs: &World, entity: Entity, size: u32) -> Option<Point> {
+    let position = ecs.get_position(entity);
+    let enemy_positions: Vec<SizedPoint> = find_enemies_of(ecs, entity).iter().map(|&e| ecs.get_position(e)).collect();
     for origin in position.all_positions() {
         for d in &[Direction::North, Direction::East, Direction::South, Direction::East] {
-            if origin.get_cone(*d, size).iter().any(|p| player_position.contains_point(p)) {
+            if origin.get_cone(*d, size).iter().any(|p| enemy_positions.iter().any(|e| e.contains_point(p))) {
                 return Some(d.point_in_direction(&origin).unwrap());
             }
         }
@@ -252,12 +281,10 @@ pub fn check_for_cone_striking_player(ecs: &World, enemy: Entity, size: u32) -> 
     None
 }
 
-pub fn any_ally_without_buff_in_range(ecs: &World, enemy: Entity, buff: StatusKind, range: u32) -> Option<Entity> {
-    let position = ecs.get_position(enemy);
-    let player = find_player(ecs);
-    find_all_characters(ecs)
+pub fn any_ally_without_buff_in_range(ecs: &World, entity: Entity, buff: StatusKind, range: u32) -> Option<Entity> {
+    let position = ecs.get_position(entity);
+    find_allies_of(ecs, entity)
         .iter()
-        .filter(|&&c| c != player)
         .filter(|&&c| !ecs.has_status(c, buff))
         .find(|&&c| position.distance_to_multi(ecs.get_position(c)).unwrap_or(std::u32::MAX) <= range)
         .copied()

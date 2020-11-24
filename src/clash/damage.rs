@@ -14,6 +14,7 @@ bitflags! {
         const FIRE =       0b00000000_00000010;
         const LIGHTNING =  0b00000000_00000100;
         const ICE =        0b00000000_00001000;
+        const DARKNESS =   0b00000000_00010000;
     }
 }
 
@@ -41,6 +42,12 @@ impl DamageElement {
             }
             description.push_str("Ice");
         }
+        if self.contains(DamageElement::DARKNESS) {
+            if description.len() > 0 {
+                description.push_str(" / ");
+            }
+            description.push_str("Darkness");
+        }
         description
     }
 
@@ -61,6 +68,9 @@ impl DamageElement {
         }
         if self.contains(DamageElement::ICE) {
             all.push(DamageElement::ICE);
+        }
+        if self.contains(DamageElement::DARKNESS) {
+            all.push(DamageElement::DARKNESS);
         }
         all
     }

@@ -10,6 +10,7 @@ use sdl2::render::Texture;
 
 pub enum StandardCharacterSize {
     Micro,  // (42, 36)
+    Small,  // (26, 36)
     Normal, // (52, 72)
     Large,  // (120, 128)
 }
@@ -43,6 +44,7 @@ impl StandardCharacter {
     fn get_size(&self) -> (i32, i32) {
         match self.size {
             StandardCharacterSize::Micro => (42, 36),
+            StandardCharacterSize::Small => (26, 36),
             StandardCharacterSize::Normal => (52, 72),
             StandardCharacterSize::Large => (120, 128),
         }
@@ -51,6 +53,7 @@ impl StandardCharacter {
     fn get_scale(&self) -> f32 {
         match self.size {
             StandardCharacterSize::Micro => 2.5,
+            StandardCharacterSize::Small => 2.0,
             _ => 1.0,
         }
     }
@@ -58,6 +61,7 @@ impl StandardCharacter {
     fn get_offset(&self) -> Option<SDLPoint> {
         match self.size {
             StandardCharacterSize::Micro => Some(SDLPoint::new(0, -8)),
+            StandardCharacterSize::Small => Some(SDLPoint::new(0, 0)),
             StandardCharacterSize::Normal => Some(SDLPoint::new(1, 6)),
             StandardCharacterSize::Large => Some(SDLPoint::new(-1, -20)),
         }

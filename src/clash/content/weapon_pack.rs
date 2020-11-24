@@ -45,6 +45,15 @@ pub fn add_skills_to_front(ecs: &mut World, invoker: Entity, skills_to_add: Vec<
     }
 }
 
+pub fn add_skills_to_end(ecs: &mut World, invoker: Entity, skills_to_add: Vec<String>) {
+    let mut skills = ecs.write_storage::<SkillsComponent>();
+    let skill_list = &mut skills.grab_mut(invoker).skills;
+
+    for s in skills_to_add {
+        skill_list.push(s.to_string());
+    }
+}
+
 pub fn remove_skills(ecs: &mut World, invoker: Entity, skills_to_remove: Vec<String>) {
     let mut skills = ecs.write_storage::<SkillsComponent>();
     let skill_list = &mut skills.grab_mut(invoker).skills;

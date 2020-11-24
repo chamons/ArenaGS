@@ -1,3 +1,6 @@
+// The ai macros can add "unnecessary" returns occationally
+#![allow(clippy::needless_return)]
+
 use super::super::*;
 
 pub fn get_equipment() -> Vec<EquipmentItem> {
@@ -74,4 +77,36 @@ fn get_masteries() -> Vec<EquipmentItem> {
         // Convert all dodge to armor. Improves skill damage but no regen
         EquipmentItem::init("The Final Crusade", Some("arm_b_08.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
     ]
+}
+
+pub fn get_item_skills(m: &mut SkillsResource) {
+    m.add(SkillInfo::init_with_distance(
+        "Shadow Shot",
+        None,
+        TargetType::Enemy,
+        SkillEffect::RangedAttack(Damage::init(4, DamageElement::DARKNESS), BoltKind::Bullet),
+        Some(5),
+        true,
+    ));
+
+    m.add(
+        SkillInfo::init_with_distance(
+            "Summon Shadow",
+            Some("SpellBook03_76.png"),
+            TargetType::Tile,
+            SkillEffect::Spawn(SpawnKind::ShadowGunSlinger, Some(5)),
+            Some(5),
+            true,
+        )
+        .with_focus_use(0.5)
+        .with_cooldown(1500),
+    );
+}
+
+use crate::try_behavior;
+use specs::prelude::*;
+
+pub fn shadow_gunslinger_behavior(ecs: &mut World, enemy: Entity) {
+    try_behavior!(use_skill_at_any_enemy_if_in_range(ecs, enemy, "Shadow Shot"));
+    wait(ecs, enemy);
 }

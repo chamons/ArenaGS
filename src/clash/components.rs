@@ -49,6 +49,15 @@ impl PlayerComponent {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
+pub struct PlayerAlly {}
+
+impl PlayerAlly {
+    pub fn init() -> PlayerAlly {
+        PlayerAlly {}
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct IsCharacterComponent {}
 
 impl IsCharacterComponent {
@@ -300,15 +309,17 @@ pub struct FieldCastComponent {
     pub name: String,
     pub kind: FieldKind,
     pub target: SizedPoint,
+    pub is_from_player: bool,
 }
 
 impl FieldCastComponent {
-    pub fn init(effect: FieldEffect, name: &str, kind: FieldKind, target: SizedPoint) -> FieldCastComponent {
+    pub fn init(effect: FieldEffect, name: &str, kind: FieldKind, target: SizedPoint, is_from_player: bool) -> FieldCastComponent {
         FieldCastComponent {
             effect,
             name: name.to_string(),
             kind,
             target,
+            is_from_player,
         }
     }
 }
@@ -408,6 +419,7 @@ pub fn create_world() -> World {
     ecs.register::<DurationComponent>();
     ecs.register::<GunslingerComponent>();
     ecs.register::<RewardsComponent>();
+    ecs.register::<PlayerAlly>();
     // If you add additional components remember to update saveload.rs
 
     // This we do not serialized this as it contains function pointers
@@ -444,6 +456,7 @@ pub fn create_world() -> World {
 }
 
 pub trait ShortInfo {
+    fn find_position(&self, entity: Entity) -> Option<SizedPoint>;
     fn get_position(&self, entity: Entity) -> SizedPoint;
     fn get_defenses(&self, entity: Entity) -> Defenses;
     fn get_temperature(&self, entity: Entity) -> Temperature;
@@ -451,6 +464,13 @@ pub trait ShortInfo {
 }
 
 impl ShortInfo for World {
+    fn find_position(&self, entity: Entity) -> Option<SizedPoint> {
+        if let Some(position) = self.read_storage::<PositionComponent>().get(entity) {
+            Some(position.position)
+        } else {
+            None
+        }
+    }
     fn get_position(&self, entity: Entity) -> SizedPoint {
         self.read_storage::<PositionComponent>().grab(entity).position
     }

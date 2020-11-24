@@ -327,7 +327,7 @@ impl super::weapon_pack::WeaponPack for GunslingerWeaponPack {
                 Some("artifact_01_b.png"),
                 EquipmentKinds::Accessory,
                 EquipmentRarity::Uncommon,
-                &[],
+                &[EquipmentEffect::AddsSkill("Summon Shadow".to_string())],
             ),
             // Rotate ammo every shot but reloads after every shot and slightly more skill damage
             EquipmentItem::init("Luck of the Draw", Some("book_01_b.png"), EquipmentKinds::Mastery, EquipmentRarity::Rare, &[]),
