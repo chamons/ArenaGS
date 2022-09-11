@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.64"
+ggez = { path = "/Users/donblas/Programming/ggez" }
+winit = "0.26"
 
 [build-dependencies]
 winres = "0.1.11"

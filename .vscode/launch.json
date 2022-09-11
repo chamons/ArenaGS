@@ -7,34 +7,37 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'ArenaGS'",
+            "name": "Debug executable 'arena-gs'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=ArenaGS",
-                    "--package=ArenaGS"
+                    "--bin=arena-gs",
+                    "--package=arena-gs"
                 ],
                 "filter": {
-                    "name": "ArenaGS",
+                    "name": "arena-gs",
                     "kind": "bin"
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CARGO_MANIFEST_DIR": "${workspaceFolder}",
+            }
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'ArenaGS'",
+            "name": "Debug unit tests in executable 'arena-gs'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=ArenaGS",
-                    "--package=ArenaGS"
+                    "--bin=arena-gs",
+                    "--package=arena-gs"
                 ],
                 "filter": {
-                    "name": "ArenaGS",
+                    "name": "arena-gs",
                     "kind": "bin"
                 }
             },
