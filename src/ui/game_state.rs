@@ -5,61 +5,58 @@ use std::{
 };
 
 use anyhow::Result;
+use bevy_ecs::prelude::*;
 use ggez::{
     event::EventHandler,
     graphics::{self, Color},
     Context, GameResult,
 };
 
+use crate::core;
+
+use super::{BattleScene, ImageCache, SceneStack};
+
 pub struct GameState {
-    images: HashMap<String, ggez::graphics::Image>,
+    world: World,
+    schedule: Schedule,
+    scenes: SceneStack<World>,
 }
 
 impl GameState {
     pub fn new(ctx: &mut Context) -> Result<GameState> {
-        ctx.gfx.add_font(
-            "LibreFranklin-Regular",
-            graphics::FontData::from_path(ctx, "/fonts/LibreFranklin-Regular.ttf")?,
-        );
+        let mut world = core::create_game_world();
 
-        let mut images: HashMap<String, ggez::graphics::Image> = HashMap::new();
-        GameState::load_images(ctx, path::PathBuf::from("/"), &mut images)?;
+        ctx.gfx
+            .add_font("default", graphics::FontData::from_path(ctx, "/fonts/LibreFranklin-Regular.ttf")?);
 
-        Ok(GameState { images })
-    }
+        world.insert_resource(ImageCache::load(ctx, path::PathBuf::from("/"))?);
 
-    fn load_images(
-        ctx: &mut Context,
-        dir: PathBuf,
-        images: &mut HashMap<String, ggez::graphics::Image>,
-    ) -> Result<()> {
-        for item in ctx.fs.read_dir(dir)? {
-            if ctx.fs.is_file(&item) {
-                if let Some(extension) = item
-                    .extension()
-                    .and_then(OsStr::to_str)
-                    .map(|s| s.to_lowercase())
-                {
-                    if extension.as_str() == "png" {
-                        let image = ggez::graphics::Image::from_path(ctx, &item, false)?;
-                        images.insert(item.to_str().unwrap().to_owned(), image);
-                    }
-                }
-            } else {
-                GameState::load_images(ctx, item, images)?;
-            }
-        }
-        Ok(())
+        let schedule = core::create_game_schedule();
+        let mut scenes = SceneStack::new();
+        scenes.push(Box::new(BattleScene::new()));
+
+        Ok(GameState { world, schedule, scenes })
     }
 }
 
+const FPS: u32 = 60;
+
 impl EventHandler for GameState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        while ctx.time.check_update_time(FPS) {
+            self.schedule.run_once(&mut self.world);
+        }
+        self.scenes.update(&mut self.world, ctx);
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
+        let mut canvas = graphics::Canvas::from_frame(ctx, Color::BLACK);
+        // Because pixel art
+        canvas.set_sampler(graphics::Sampler::nearest_clamp());
+
+        self.scenes.draw(&mut self.world, ctx, &mut canvas);
+
         canvas.finish(ctx)
     }
 }
