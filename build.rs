@@ -3,7 +3,7 @@ use std::path::Path;
 
 #[allow(dead_code)]
 fn print<S: Into<String>>(message: S) {
-    println!("{}", format!("cargo:warning={}", message.into()));
+    println!("cargo:warning={}", message.into());
 }
 
 fn main() {
