@@ -10,7 +10,7 @@ use ui::GameState;
 fn main() -> Result<()> {
     let (mut ctx, event_loop) = get_game_context().build()?;
 
-    let my_game = GameState::new(&mut ctx);
+    let my_game = GameState::new(&mut ctx)?;
     event::run(ctx, event_loop, my_game);
 }
 

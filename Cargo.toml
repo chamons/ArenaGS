@@ -12,3 +12,7 @@ serde = "1.0.97"
 
 [build-dependencies]
 winres = "0.1.11"
+
+# ggez and winit are slow and loading images otherwise
+[profile.dev.package."*"]
+opt-level = 1
