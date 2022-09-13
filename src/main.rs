@@ -23,7 +23,7 @@ fn get_game_context() -> ContextBuilder {
             ..Default::default()
         })
         .window_mode(conf::WindowMode {
-            logical_size: Some(LogicalSize::new(1024.0, 768.0)),
+            logical_size: Some(LogicalSize::new(800.0, 600.0)),
             ..Default::default()
         });
 
@@ -31,7 +31,6 @@ fn get_game_context() -> ContextBuilder {
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let root = path::PathBuf::from(manifest_dir);
         cb = cb.add_resource_path(root.join("..").join("ArenaGS-Data"));
-        cb = cb.add_resource_path(root.join("conf"));
     }
 
     cb
