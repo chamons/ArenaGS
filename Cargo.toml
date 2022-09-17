@@ -10,6 +10,7 @@ winit = "0.26"
 toml = "0.5"
 serde = "1.0.97"
 bevy_ecs = "0.8.1"
+bincode = "1.3.1"
 
 [build-dependencies]
 winres = "0.1.11"

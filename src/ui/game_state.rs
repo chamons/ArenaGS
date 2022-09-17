@@ -24,7 +24,7 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(ctx: &mut Context) -> Result<GameState> {
-        let mut world = core::create_game_world();
+        let mut world = core::create_game_world(&mut ctx.fs)?;
 
         ctx.gfx
             .add_font("default", graphics::FontData::from_path(ctx, "/fonts/LibreFranklin-Regular.ttf")?);

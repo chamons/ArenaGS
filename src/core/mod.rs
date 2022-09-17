@@ -1,9 +1,11 @@
+use anyhow::Result;
 use bevy_ecs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use self::points::SizedPoint;
+use self::{map::Map, points::SizedPoint};
 
 mod frame_count;
+mod map;
 mod points;
 
 #[derive(Component, Debug, Deserialize, Serialize)]
@@ -42,17 +44,20 @@ impl Appearance {
     }
 }
 
-pub fn create_game_world() -> World {
+pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World> {
     let mut world = World::new();
     world.insert_resource(frame_count::Frame::zero());
+
+    let map = Map::load(&mut fs.open("/maps/beach/map1.dat")?)?;
+    world.insert_resource(map);
 
     world.spawn().insert(Position::new(10, 7)).insert(Appearance::new(AppearanceKind::Gunslinger));
     world
         .spawn()
         .insert(Position::new_sized(2, 7, 2, 2))
-        .insert(Appearance::new(AppearanceKind::Gunslinger));
+        .insert(Appearance::new(AppearanceKind::Golem));
 
-    world
+    Ok(world)
 }
 
 pub fn create_game_schedule() -> Schedule {

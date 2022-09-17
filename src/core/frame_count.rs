@@ -14,5 +14,4 @@ impl Frame {
 
 pub fn update_frame_count(mut time: ResMut<Frame>) {
     time.current += 1;
-    println!("{}", time.current);
 }
