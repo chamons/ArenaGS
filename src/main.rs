@@ -7,7 +7,7 @@ use winit::dpi::LogicalSize;
 mod ui;
 use ui::GameState;
 
-mod core;
+pub mod core;
 
 fn main() -> Result<()> {
     let (mut ctx, event_loop) = get_game_context().build()?;

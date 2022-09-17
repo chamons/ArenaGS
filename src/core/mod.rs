@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use self::{map::Map, points::SizedPoint};
 
-mod frame_count;
-mod map;
-mod points;
+pub mod frame_count;
+pub mod map;
+pub mod points;
 
 #[derive(Component, Debug, Deserialize, Serialize)]
 struct Position {

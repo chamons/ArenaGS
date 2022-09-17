@@ -11,10 +11,24 @@ use ggez::{
     graphics::{self, Color},
     Context, GameResult,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::core;
 
 use super::{BattleScene, ImageCache, SceneStack};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ScreenScale {
+    pub scale: f64,
+}
+
+impl ScreenScale {
+    pub fn new(ctx: &mut Context) -> Self {
+        ScreenScale {
+            scale: ctx.gfx.window().scale_factor(),
+        }
+    }
+}
 
 pub struct GameState {
     world: World,
@@ -25,6 +39,7 @@ pub struct GameState {
 impl GameState {
     pub fn new(ctx: &mut Context) -> Result<GameState> {
         let mut world = core::create_game_world(&mut ctx.fs)?;
+        world.insert_resource(ScreenScale::new(ctx));
 
         ctx.gfx
             .add_font("default", graphics::FontData::from_path(ctx, "/fonts/LibreFranklin-Regular.ttf")?);
