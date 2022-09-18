@@ -7,24 +7,10 @@ use ggez::{
     graphics::{self, Color},
     Context, GameError, GameResult,
 };
-use serde::{Deserialize, Serialize};
 
 use crate::core;
 
-use super::{BattleScene, ImageCache, SceneStack};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ScreenScale {
-    pub scale: f64,
-}
-
-impl ScreenScale {
-    pub fn new(ctx: &mut Context) -> Self {
-        ScreenScale {
-            scale: ctx.gfx.window().scale_factor(),
-        }
-    }
-}
+use super::{BattleScene, ImageCache, SceneStack, ScreenScale};
 
 pub struct GameState {
     world: World,

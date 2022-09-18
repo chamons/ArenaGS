@@ -66,6 +66,7 @@ impl<C> SceneStack<C> {
         self.scenes.pop().unwrap()
     }
 
+    #[allow(dead_code)]
     pub fn current(&self) -> &dyn Scene<C> {
         &**self.scenes.last().unwrap()
     }

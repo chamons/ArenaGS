@@ -6,7 +6,7 @@ use ggez::{
 };
 use winit::event::VirtualKeyCode;
 
-use super::{game_state::ScreenScale, *};
+use crate::ui::*;
 
 pub struct BattleScene {
     request_debug: bool,

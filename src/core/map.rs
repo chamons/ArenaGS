@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use super::points::Point;
+use super::utils::Point;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum MapKind {
@@ -26,7 +26,7 @@ pub struct Map {
 }
 
 impl Map {
-    pub const MAX_TILES: usize = super::points::MAX_POINT_SIZE as usize;
+    pub const MAX_TILES: usize = super::utils::MAX_POINT_SIZE as usize;
 
     pub fn load(file: &mut ggez::filesystem::File) -> Result<Map> {
         let mut data = vec![];

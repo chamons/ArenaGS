@@ -2,7 +2,7 @@ use bevy_ecs::world::World;
 use ggez::{graphics::Canvas, input::keyboard::KeyInput};
 use winit::event::VirtualKeyCode;
 
-use super::{Scene, SceneSwitch};
+use crate::ui::*;
 
 #[cfg(debug_assertions)]
 pub struct DebugOverlay {
