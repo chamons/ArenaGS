@@ -13,15 +13,17 @@ pub trait Scene<C> {
     fn update(&mut self, world: &mut C, ctx: &mut ggez::Context) -> SceneSwitch<C>;
     fn draw(&mut self, world: &mut C, ctx: &mut ggez::Context, canvas: &mut Canvas);
 
-    fn mouse_button_down_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _x: f32, _y: f32) {}
+    fn mouse_button_down_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _button: ggez::event::MouseButton, _x: f32, _y: f32) {}
 
-    fn mouse_button_up_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _x: f32, _y: f32) {}
+    fn mouse_button_up_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _button: ggez::event::MouseButton, _x: f32, _y: f32) {}
 
     fn mouse_motion_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _x: f32, _y: f32, _dx: f32, _dy: f32) {}
 
+    fn mouse_wheel_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _x: f32, _y: f32) {}
+
     fn mouse_enter_or_leave(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _entered: bool) {}
 
-    fn key_down_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _repeated: bool) {}
+    fn key_down_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _input: KeyInput, _repeated: bool) {}
 
     fn key_up_event(&mut self, _world: &mut C, _ctx: &mut ggez::Context, _input: KeyInput) {}
 
@@ -30,6 +32,7 @@ pub trait Scene<C> {
     }
 }
 
+#[allow(dead_code)]
 impl<C> SceneSwitch<C> {
     pub fn replace<S>(scene: S) -> Self
     where
@@ -99,7 +102,7 @@ impl<C> SceneStack<C> {
     }
 
     fn draw_scenes(scenes: &mut [Box<dyn Scene<C>>], world: &mut C, ctx: &mut ggez::Context, canvas: &mut Canvas) {
-        assert!(scenes.len() > 0);
+        assert!(!scenes.is_empty());
         if let Some((current, rest)) = scenes.split_last_mut() {
             if current.draw_previous() {
                 SceneStack::draw_scenes(rest, world, ctx, canvas);
@@ -112,12 +115,12 @@ impl<C> SceneStack<C> {
         SceneStack::draw_scenes(&mut self.scenes, world, ctx, canvas);
     }
 
-    pub fn mouse_button_down_event(&mut self, world: &mut C, ctx: &mut ggez::Context, x: f32, y: f32) {
-        self.current_mut().mouse_button_down_event(world, ctx, x, y);
+    pub fn mouse_button_down_event(&mut self, world: &mut C, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+        self.current_mut().mouse_button_down_event(world, ctx, button, x, y);
     }
 
-    pub fn mouse_button_up_event(&mut self, world: &mut C, ctx: &mut ggez::Context, x: f32, y: f32) {
-        self.current_mut().mouse_button_up_event(world, ctx, x, y);
+    pub fn mouse_button_up_event(&mut self, world: &mut C, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+        self.current_mut().mouse_button_up_event(world, ctx, button, x, y);
     }
 
     pub fn mouse_motion_event(&mut self, world: &mut C, ctx: &mut ggez::Context, x: f32, y: f32, dx: f32, dy: f32) {
@@ -128,8 +131,12 @@ impl<C> SceneStack<C> {
         self.current_mut().mouse_enter_or_leave(world, ctx, entered);
     }
 
-    pub fn key_down_event(&mut self, world: &mut C, ctx: &mut ggez::Context, repeated: bool) {
-        self.current_mut().key_down_event(world, ctx, repeated);
+    pub fn mouse_wheel_event(&mut self, world: &mut C, ctx: &mut ggez::Context, x: f32, y: f32) {
+        self.current_mut().mouse_wheel_event(world, ctx, x, y);
+    }
+
+    pub fn key_down_event(&mut self, world: &mut C, ctx: &mut ggez::Context, input: ggez::input::keyboard::KeyInput, repeated: bool) {
+        self.current_mut().key_down_event(world, ctx, input, repeated);
     }
 
     pub fn key_up_event(&mut self, world: &mut C, ctx: &mut ggez::Context, input: KeyInput) {

@@ -1,15 +1,11 @@
-use std::{
-    collections::HashMap,
-    ffi::OsStr,
-    path::{self, PathBuf},
-};
+use std::path;
 
 use anyhow::Result;
 use bevy_ecs::prelude::*;
 use ggez::{
     event::EventHandler,
     graphics::{self, Color},
-    Context, GameResult,
+    Context, GameError, GameResult,
 };
 use serde::{Deserialize, Serialize};
 
@@ -73,5 +69,40 @@ impl EventHandler for GameState {
         self.scenes.draw(&mut self.world, ctx, &mut canvas);
 
         canvas.finish(ctx)
+    }
+
+    fn mouse_button_down_event(&mut self, ctx: &mut Context, button: ggez::event::MouseButton, x: f32, y: f32) -> Result<(), GameError> {
+        self.scenes.mouse_button_down_event(&mut self.world, ctx, button, x, y);
+        Ok(())
+    }
+
+    fn mouse_button_up_event(&mut self, ctx: &mut Context, button: ggez::event::MouseButton, x: f32, y: f32) -> Result<(), GameError> {
+        self.scenes.mouse_button_up_event(&mut self.world, ctx, button, x, y);
+        Ok(())
+    }
+
+    fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> Result<(), GameError> {
+        self.scenes.mouse_motion_event(&mut self.world, ctx, x, y, dx, dy);
+        Ok(())
+    }
+
+    fn mouse_enter_or_leave(&mut self, ctx: &mut Context, entered: bool) -> Result<(), GameError> {
+        self.scenes.mouse_enter_or_leave(&mut self.world, ctx, entered);
+        Ok(())
+    }
+
+    fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) -> Result<(), GameError> {
+        self.scenes.mouse_wheel_event(&mut self.world, ctx, x, y);
+        Ok(())
+    }
+
+    fn key_down_event(&mut self, ctx: &mut Context, input: ggez::input::keyboard::KeyInput, repeated: bool) -> Result<(), GameError> {
+        self.scenes.key_down_event(&mut self.world, ctx, input, repeated);
+        Ok(())
+    }
+
+    fn key_up_event(&mut self, ctx: &mut Context, input: ggez::input::keyboard::KeyInput) -> Result<(), GameError> {
+        self.scenes.key_up_event(&mut self.world, ctx, input);
+        Ok(())
     }
 }

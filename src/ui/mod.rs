@@ -9,3 +9,6 @@ pub use battle_scene::BattleScene;
 
 mod image_cache;
 pub use image_cache::*;
+
+mod debug_overlay;
+pub use debug_overlay::*;
