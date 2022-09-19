@@ -12,9 +12,11 @@ use ggez::{
 
 use super::ScreenScale;
 
-pub const MAP_CORNER_X: f32 = 0.0;
-pub const MAP_CORNER_Y: f32 = 0.0;
-pub const TILE_SIZE: f32 = 32.0;
+// The map is placed at 16x16 but the first maptile is a ways off the corner
+pub const MAP_IMAGE_POSITION: mint::Point2<f32> = mint::Point2 { x: 16.0, y: 16.0 };
+pub const MAP_CORNER_X: f32 = 50.0;
+pub const MAP_CORNER_Y: f32 = 50.0;
+pub const TILE_SIZE: f32 = 56.0;
 
 pub fn screen_point_for_map_grid(x: usize, y: usize) -> Vec2 {
     Vec2::new(MAP_CORNER_X + (x as f32) * TILE_SIZE, MAP_CORNER_Y + (y as f32) * TILE_SIZE)

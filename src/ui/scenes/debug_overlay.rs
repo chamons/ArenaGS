@@ -55,14 +55,16 @@ impl Scene<World> for DebugOverlay {
 
         match self.overlay_kind {
             DebugKind::MapOverlay => {
+                let mut flip = false;
                 for x in 0..Map::MAX_TILES {
                     for y in 0..Map::MAX_TILES {
                         let grid_rect = screen_point_for_map_grid(x, y);
-                        if x % 2 == 0 {
+                        if flip {
                             canvas.draw(&self.red_square, grid_rect);
                         } else {
                             canvas.draw(&self.green_square, grid_rect);
                         }
+                        flip = !flip;
                     }
                 }
             }

@@ -25,7 +25,7 @@ impl Scene<World> for BattleScene {
     }
 
     fn draw(&mut self, world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
-        draw_image(canvas, world, "/maps/beach/map1.png", mint::Point2 { x: 16.0, y: 16.0 });
+        draw_image(canvas, world, "/maps/beach/map1.png", MAP_IMAGE_POSITION);
 
         let _map = world.get_resource::<crate::core::map::Map>().unwrap();
     }
