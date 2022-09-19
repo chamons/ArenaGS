@@ -23,7 +23,7 @@ fn get_game_context() -> ContextBuilder {
             ..Default::default()
         })
         .window_mode(conf::WindowMode {
-            logical_size: Some(LogicalSize::new(800.0, 600.0)),
+            logical_size: Some(LogicalSize::new(1024.0, 786.0)),
             ..Default::default()
         });
 
