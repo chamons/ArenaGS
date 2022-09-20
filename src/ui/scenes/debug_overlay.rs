@@ -8,6 +8,8 @@ use winit::event::VirtualKeyCode;
 
 use crate::{core::map::Map, ui::*};
 
+use super::draw_map_grid;
+
 #[derive(Debug)]
 pub enum DebugKind {
     MapOverlay,
@@ -23,9 +25,10 @@ pub struct DebugOverlay {
 
 impl DebugOverlay {
     pub fn new(ctx: &mut ggez::Context) -> Self {
-        let square_size = Rect::new(0.0, 0.0, TILE_SIZE, TILE_SIZE);
-        let red_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(1.0, 0.0, 0.0, 0.5)).unwrap();
-        let green_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.0, 1.0, 0.0, 0.5)).unwrap();
+        // Offset each debug tile overlay for a grid border
+        let square_size = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_BORDER, TILE_SIZE - TILE_BORDER);
+        let red_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.8, 0.1, 0.1, 0.5)).unwrap();
+        let green_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.1, 0.8, 0.1, 0.5)).unwrap();
 
         DebugOverlay {
             canceled: false,
@@ -45,7 +48,7 @@ impl Scene<World> for DebugOverlay {
         }
     }
 
-    fn draw(&mut self, _world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
+    fn draw(&mut self, _world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
         canvas.draw(
             graphics::Text::new(format!("Debug: {:?}", self.overlay_kind))
                 .set_font("default")
@@ -55,6 +58,8 @@ impl Scene<World> for DebugOverlay {
 
         match self.overlay_kind {
             DebugKind::MapOverlay => {
+                draw_map_grid(canvas, ctx);
+
                 let mut flip = false;
                 for x in 0..Map::MAX_TILES {
                     for y in 0..Map::MAX_TILES {
