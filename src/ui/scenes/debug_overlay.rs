@@ -1,12 +1,16 @@
 use bevy_ecs::world::World;
 use ggez::{
+    event::MouseButton,
     glam::Vec2,
     graphics::{self, Canvas, Color, Mesh, Rect},
     input::keyboard::KeyInput,
 };
 use winit::event::VirtualKeyCode;
 
-use crate::{core::map::Map, ui::*};
+use crate::{
+    core::{map::Map, utils::Point},
+    ui::*,
+};
 
 use super::draw_map_grid;
 
@@ -48,7 +52,7 @@ impl Scene<World> for DebugOverlay {
         }
     }
 
-    fn draw(&mut self, _world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
+    fn draw(&mut self, world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
         canvas.draw(
             graphics::Text::new(format!("Debug: {:?}", self.overlay_kind))
                 .set_font("default")
@@ -60,18 +64,27 @@ impl Scene<World> for DebugOverlay {
             DebugKind::MapOverlay => {
                 draw_map_grid(canvas, ctx);
 
-                let mut flip = false;
-                for x in 0..Map::MAX_TILES {
-                    for y in 0..Map::MAX_TILES {
+                let map = world.get_resource::<crate::core::map::Map>().unwrap();
+                for x in 0..Map::MAX_TILES as u32 {
+                    for y in 0..Map::MAX_TILES as u32 {
                         let grid_rect = screen_point_for_map_grid(x, y);
-                        if flip {
-                            canvas.draw(&self.red_square, grid_rect);
-                        } else {
+                        if map.is_walkable(&Point::new(x, y)) {
                             canvas.draw(&self.green_square, grid_rect);
+                        } else {
+                            canvas.draw(&self.red_square, grid_rect);
                         }
-                        flip = !flip;
                     }
                 }
+            }
+        }
+    }
+
+    fn mouse_button_up_event(&mut self, world: &mut World, _ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+        if button == MouseButton::Left {
+            if let Some(point) = screen_to_map_position(x, y) {
+                let mut map = world.get_resource_mut::<crate::core::map::Map>().unwrap();
+                let was_walkable = map.is_walkable(&point);
+                map.set_walkable(&point, !was_walkable);
             }
         }
     }

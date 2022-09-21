@@ -10,7 +10,7 @@ use ggez::{
     mint,
 };
 
-use crate::core::map::Map;
+use crate::core::{map::Map, utils::Point};
 
 use super::ScreenScale;
 
@@ -21,8 +21,28 @@ pub const MAP_CORNER_Y: f32 = 50.0;
 pub const TILE_SIZE: f32 = 56.0;
 
 /// The upper left position of map point (x,y) on screen
-pub fn screen_point_for_map_grid(x: usize, y: usize) -> Vec2 {
+pub fn screen_point_for_map_grid(x: u32, y: u32) -> Vec2 {
     Vec2::new(MAP_CORNER_X + (x as f32) * TILE_SIZE, MAP_CORNER_Y + (y as f32) * TILE_SIZE)
+}
+
+pub fn screen_to_map_position(x: f32, y: f32) -> Option<Point> {
+    // First remove map offset
+    let x = x - MAP_CORNER_X;
+    let y = y - MAP_CORNER_Y;
+
+    if x < 0.0 || y < 0.0 {
+        return None;
+    }
+
+    // Now divide by grid position
+    let x = x as u32 / TILE_SIZE as u32;
+    let y = y as u32 / TILE_SIZE as u32;
+
+    // Don't go off map
+    if x >= Map::MAX_TILES as u32 || y >= Map::MAX_TILES as u32 {
+        return None;
+    }
+    Some(Point::new(x, y))
 }
 
 fn draw_image(canvas: &mut Canvas, world: &mut World, image: &str, position: mint::Point2<f32>) {
