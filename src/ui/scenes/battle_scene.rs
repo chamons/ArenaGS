@@ -1,5 +1,5 @@
 use bevy_ecs::world::World;
-use ggez::{graphics::Canvas, input::keyboard::KeyInput, mint};
+use ggez::{graphics::Canvas, input::keyboard::KeyInput};
 use winit::event::VirtualKeyCode;
 
 use super::*;
@@ -26,8 +26,6 @@ impl Scene<World> for BattleScene {
 
     fn draw(&mut self, world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
         draw_image(canvas, world, "/maps/beach/map1.png", MAP_IMAGE_POSITION);
-
-        let _map = world.get_resource::<crate::core::map::Map>().unwrap();
     }
 
     fn key_up_event(&mut self, _world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
