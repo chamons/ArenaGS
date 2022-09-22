@@ -2,13 +2,14 @@ use anyhow::Result;
 use bevy_ecs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use self::{map::Map, utils::SizedPoint};
+mod map;
+pub use map::*;
 
-pub mod map;
 pub mod utils;
+pub use utils::*;
 
 #[derive(Component, Debug, Deserialize, Serialize)]
-struct Position {
+pub struct Position {
     pub position: SizedPoint,
 }
 
@@ -24,22 +25,46 @@ impl Position {
             position: SizedPoint::new_sized(x, y, width, height),
         }
     }
+
+    pub fn origin(&self) -> Point {
+        self.position.origin
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
-enum AppearanceKind {
-    Gunslinger,
+pub enum AppearanceKind {
+    MaleBrownHairBlueBody,
     Golem,
 }
 
+#[allow(dead_code)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum AnimationState {
+    AttackOne,
+    AttackTwo,
+    Bow,
+    Cheer,
+    Crouch,
+    Hit,
+    Idle,
+    Item,
+    Magic,
+    Status,
+    Walk,
+}
+
 #[derive(Component, Debug, Deserialize, Serialize)]
-struct Appearance {
-    kind: AppearanceKind,
+pub struct Appearance {
+    pub kind: AppearanceKind,
+    pub state: AnimationState,
 }
 
 impl Appearance {
     pub fn new(kind: AppearanceKind) -> Self {
-        Appearance { kind }
+        Appearance {
+            kind,
+            state: AnimationState::Idle,
+        }
     }
 }
 
@@ -50,7 +75,10 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
     let map = Map::load(&mut fs.open("/maps/beach/map1.dat")?)?;
     world.insert_resource(map);
 
-    world.spawn().insert(Position::new(10, 7)).insert(Appearance::new(AppearanceKind::Gunslinger));
+    world
+        .spawn()
+        .insert(Position::new(10, 7))
+        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
     world
         .spawn()
         .insert(Position::new_sized(2, 7, 2, 2))

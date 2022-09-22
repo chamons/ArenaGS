@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Frame {
-    current: u64,
+    pub current: u64,
 }
 
 impl Frame {

@@ -10,7 +10,7 @@ use ggez::{
     mint,
 };
 
-use crate::core::{map::Map, utils::Point};
+use crate::core::{Map, Point};
 
 use super::ScreenScale;
 

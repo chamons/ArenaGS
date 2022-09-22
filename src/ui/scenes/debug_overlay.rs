@@ -8,7 +8,7 @@ use ggez::{
 use winit::event::VirtualKeyCode;
 
 use crate::{
-    core::{map::Map, utils::Point},
+    core::{Map, Point},
     ui::*,
 };
 
@@ -64,7 +64,7 @@ impl Scene<World> for DebugOverlay {
             DebugKind::MapOverlay => {
                 draw_map_grid(canvas, ctx);
 
-                let map = world.get_resource::<crate::core::map::Map>().unwrap();
+                let map = world.get_resource::<Map>().unwrap();
                 for x in 0..Map::MAX_TILES as u32 {
                     for y in 0..Map::MAX_TILES as u32 {
                         let grid_rect = screen_point_for_map_grid(x, y);
@@ -82,7 +82,7 @@ impl Scene<World> for DebugOverlay {
     fn mouse_button_up_event(&mut self, world: &mut World, _ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
         if button == MouseButton::Left {
             if let Some(point) = screen_to_map_position(x, y) {
-                let mut map = world.get_resource_mut::<crate::core::map::Map>().unwrap();
+                let mut map = world.get_resource_mut::<Map>().unwrap();
                 let was_walkable = map.is_walkable(&point);
                 map.set_walkable(&point, !was_walkable);
             }

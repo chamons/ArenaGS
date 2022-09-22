@@ -6,3 +6,6 @@ pub use utils::*;
 
 mod scenes;
 pub use scenes::*;
+
+mod sprite;
+pub use sprite::*;

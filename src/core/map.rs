@@ -22,7 +22,7 @@ pub struct MapTile {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Map {
     tiles: [[MapTile; Map::MAX_TILES]; Map::MAX_TILES],
-    kind: MapKind,
+    pub kind: MapKind,
 }
 
 impl Map {
