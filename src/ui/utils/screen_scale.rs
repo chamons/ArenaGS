@@ -9,7 +9,7 @@ pub struct ScreenScale {
 impl ScreenScale {
     pub fn new(ctx: &mut Context) -> Self {
         ScreenScale {
-            scale: ctx.gfx.window().scale_factor() as f32,
+            scale: 1.0, //ctx.gfx.window().scale_factor() as f32,
         }
     }
 }

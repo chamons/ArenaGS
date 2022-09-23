@@ -81,14 +81,17 @@ impl Scene<World> for DebugOverlay {
         }
     }
 
-    fn mouse_motion_event(&mut self, _world: &mut World, _ctx: &mut ggez::Context, x: f32, y: f32, _dx: f32, _dy: f32) {
-        println!("({},{})", x, y)
+    fn mouse_motion_event(&mut self, _world: &mut World, ctx: &mut ggez::Context, x: f32, y: f32, _dx: f32, _dy: f32) {
+        let (x, y) = logical_mouse_position(ctx, x, y);
+        println!("{},{}", x.round(), y.round());
     }
 
-    fn mouse_button_up_event(&mut self, world: &mut World, _ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
-        let scale = world.get_resource::<ScreenScale>().unwrap().scale;
+    fn mouse_button_up_event(&mut self, world: &mut World, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+        let (x, y) = logical_mouse_position(ctx, x, y);
+
+        let scale = ctx.gfx.window().scale_factor();
         if button == MouseButton::Left {
-            if let Some(point) = screen_to_map_position(x, y, scale) {
+            if let Some(point) = screen_to_map_position(x, y, 1.0) {
                 let mut map = world.get_resource_mut::<Map>().unwrap();
                 let was_walkable = map.is_walkable(&point);
                 map.set_walkable(&point, !was_walkable);
@@ -106,4 +109,12 @@ impl Scene<World> for DebugOverlay {
     fn draw_previous(&self) -> bool {
         true
     }
+}
+
+fn logical_mouse_position(ctx: &mut ggez::Context, x: f32, y: f32) -> (f32, f32) {
+    let screen_rect = graphics::Rect::new(0.0, 0.0, 1280.0, 960.0);
+    let size = ctx.gfx.window().inner_size();
+    let pos_x = (x / (size.width as f32)) * screen_rect.w + screen_rect.x;
+    let pos_y = (y / (size.height as f32)) * screen_rect.h + screen_rect.y;
+    (pos_x, pos_y)
 }

@@ -51,6 +51,7 @@ impl EventHandler for GameState {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::BLACK);
         // Because pixel art
         canvas.set_sampler(graphics::Sampler::nearest_clamp());
+        canvas.set_screen_coordinates(graphics::Rect::new(0.0, 0.0, 1280.0, 960.0));
 
         self.scenes.draw(&mut self.world, ctx, &mut canvas);
 
