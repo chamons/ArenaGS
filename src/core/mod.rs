@@ -8,6 +8,9 @@ pub use map::*;
 pub mod utils;
 pub use utils::*;
 
+pub mod appearance;
+pub use appearance::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,
@@ -31,43 +34,6 @@ impl Position {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum AppearanceKind {
-    MaleBrownHairBlueBody,
-    Golem,
-}
-
-#[allow(dead_code)]
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum AnimationState {
-    AttackOne,
-    AttackTwo,
-    Bow,
-    Cheer,
-    Crouch,
-    Hit,
-    Idle,
-    Item,
-    Magic,
-    Status,
-    Walk,
-}
-
-#[derive(Component, Debug, Deserialize, Serialize)]
-pub struct Appearance {
-    pub kind: AppearanceKind,
-    pub state: AnimationState,
-}
-
-impl Appearance {
-    pub fn new(kind: AppearanceKind) -> Self {
-        Appearance {
-            kind,
-            state: AnimationState::Idle,
-        }
-    }
-}
-
 pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World> {
     let mut world = World::new();
     world.insert_resource(utils::Frame::zero());
@@ -87,11 +53,14 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
     Ok(world)
 }
 
+fn gameplay_schedule() -> SystemStage {
+    SystemStage::single_threaded().with_system(utils::update_frame_count)
+}
+
 pub fn create_game_schedule() -> Schedule {
     let mut schedule = Schedule::default();
 
-    let gameplay = SystemStage::single_threaded().with_system(utils::update_frame_count);
-    schedule.add_stage("gameplay", gameplay);
+    schedule.add_stage("gameplay", gameplay_schedule());
 
     schedule
 }

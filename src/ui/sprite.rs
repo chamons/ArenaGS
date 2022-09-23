@@ -1,24 +1,19 @@
-use std::cmp;
-
-use bevy_ecs::world::World;
 use ggez::{
     glam::Vec2,
     graphics::{Canvas, DrawParam, Rect, Transform},
     mint::{self, Point2},
 };
+use keyframe::{keyframes, AnimationSequence, Keyframe};
 
-use crate::core::{AnimationState, Appearance, AppearanceKind, Frame};
+use crate::core::{AnimationState, Appearance, AppearanceKind};
 
-use super::ScreenScale;
+use super::{ImageCache, ScreenScale};
 
-pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, world: &World) {
-    let frame = world.get_resource::<Frame>().unwrap().current;
-    let screen_scale = world.get_resource::<ScreenScale>().unwrap().scale;
-    let images = world.get_resource::<crate::ui::ImageCache>().unwrap();
+pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, screen_scale: &ScreenScale, images: &ImageCache) {
+    let image = images.get(appearance.filename()).clone();
 
-    let image = images.get(appearance.filename());
-    let (image_offset_x, image_offset_y) = appearance.sprite_rect(frame);
-    let scale = appearance.sprite_scale() * screen_scale;
+    let (image_offset_x, image_offset_y) = appearance.sprite_rect();
+    let scale = appearance.sprite_scale() * screen_scale.scale;
     let offset = appearance.sprite_offset();
     let render_position = render_position + offset;
     let sprite_size = appearance.sprite_size();
@@ -45,14 +40,26 @@ pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance,
         ..Default::default()
     };
 
-    canvas.draw(image, draw_params);
+    canvas.draw(&image, draw_params);
 }
 
+// A 3 frame animation should not show: 0, 1, 2, 0, 1, 2 as there is a cliff from 2 to 0
+// It should show: 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2
 fn get_animation_frame(number_of_frames: usize, animation_length: usize, current_frame: u64) -> usize {
-    let period = animation_length / number_of_frames;
+    // A period is the time for one full double cycle (0, 1, 2, 1, 0)
+    let number_of_frames_for_period = (2 * number_of_frames) - 1;
+    let frame_for_period = animation_length / number_of_frames_for_period;
+
+    // Segment the current frame to one period
     let current_frame = current_frame as usize % animation_length;
-    let current_frame = (current_frame / period) as usize;
-    cmp::min(current_frame, number_of_frames - 1)
+
+    // Find the midpoint
+    let midpoint = (frame_for_period * number_of_frames_for_period) / 2;
+    match current_frame.cmp(&midpoint) {
+        std::cmp::Ordering::Less => current_frame / frame_for_period,
+        std::cmp::Ordering::Equal => number_of_frames - 1,
+        std::cmp::Ordering::Greater => (number_of_frames - 1) - ((current_frame / frame_for_period) - (number_of_frames - 1)),
+    }
 }
 
 enum SpriteSize {
@@ -68,8 +75,16 @@ impl Appearance {
         }
     }
 
-    pub fn sprite_rect(&self, frame: u64) -> (usize, usize) {
-        let index = self.sprite_index(frame);
+    pub fn create_animation(&self) -> AnimationSequence<f32> {
+        let animation_length = 55.0 / 3.0;
+        let frames: Vec<Keyframe<f32>> = (0..self.sprite_animation_length())
+            .map(|i| (i as f32, i as f32 * animation_length).into())
+            .collect();
+        AnimationSequence::from(frames)
+    }
+
+    pub fn sprite_rect(&self) -> (usize, usize) {
+        let index = self.sprite_index();
         let sheet_size = self.sprite_sheet_size();
         let row = index / sheet_size;
         let col = index % sheet_size;
@@ -103,18 +118,14 @@ impl Appearance {
         }
     }
 
-    fn sprite_index(&self, frame: u64) -> usize {
+    fn sprite_index(&self) -> usize {
+        let animation_offset = self.animation.as_ref().map(|a| a.now() as usize).unwrap_or(0);
+
         match self.sprite_size_class() {
             SpriteSize::Detailed => {
-                let animation_length = match self.state {
-                    AnimationState::Idle => 55,
-                    _ => 15,
-                };
-                let offset = get_animation_frame(3, animation_length, frame);
-
                 // The detailed character sheets are somewhat strangely laid out
                 // 1, 2, 0
-                let offset = match offset {
+                let offset = match animation_offset {
                     0 => 2,
                     1 => 0,
                     2 => 1,
@@ -134,16 +145,9 @@ impl Appearance {
                     AnimationState::Status => 42,
                     AnimationState::Item => 48,
                 };
-                println!("{}", index_base + offset);
                 index_base + offset
             }
-            SpriteSize::LargeEnemy => {
-                let animation_length = match self.state {
-                    AnimationState::Idle => 55,
-                    _ => 15,
-                };
-                get_animation_frame(3, animation_length, frame)
-            }
+            SpriteSize::LargeEnemy => animation_offset,
         }
     }
 
@@ -167,6 +171,10 @@ impl Appearance {
             AppearanceKind::Golem => SpriteSize::LargeEnemy,
         }
     }
+
+    fn sprite_animation_length(&self) -> usize {
+        3
+    }
 }
 
 enum LargeEnemySize {
@@ -187,6 +195,33 @@ impl LargeEnemySize {
         match self {
             LargeEnemySize::Normal => (0.0, 0.0).into(),
             LargeEnemySize::Bird | LargeEnemySize::LargeBird => (1.0, -20.0).into(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use keyframe::*;
+
+    use super::*;
+
+    #[test]
+    fn animation_period_test() {
+        let expected = [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0];
+        let mut animation = keyframes![(0.0, 0.0), (1.0, 10.0), (2.0, 20.0)];
+        for i in (0..100).step_by(10) {
+            let current_expected = expected[i / 10];
+            let result = animation.now() as u64;
+            assert_eq!(
+                current_expected, result,
+                "
+Animation value {}
+Expected {}
+Frame {}
+",
+                result, current_expected, i
+            );
+            animation.advance_and_maybe_reverse(10.0);
         }
     }
 }
