@@ -3,7 +3,7 @@ use ggez::{
     graphics::{Canvas, DrawParam, Rect, Transform},
     mint::{self, Point2},
 };
-use keyframe::{keyframes, AnimationSequence, Keyframe};
+use keyframe::{functions::Step, AnimationSequence, Keyframe};
 
 use crate::core::{AnimationState, Appearance, AppearanceKind};
 
@@ -43,25 +43,6 @@ pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance,
     canvas.draw(&image, draw_params);
 }
 
-// A 3 frame animation should not show: 0, 1, 2, 0, 1, 2 as there is a cliff from 2 to 0
-// It should show: 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2
-fn get_animation_frame(number_of_frames: usize, animation_length: usize, current_frame: u64) -> usize {
-    // A period is the time for one full double cycle (0, 1, 2, 1, 0)
-    let number_of_frames_for_period = (2 * number_of_frames) - 1;
-    let frame_for_period = animation_length / number_of_frames_for_period;
-
-    // Segment the current frame to one period
-    let current_frame = current_frame as usize % animation_length;
-
-    // Find the midpoint
-    let midpoint = (frame_for_period * number_of_frames_for_period) / 2;
-    match current_frame.cmp(&midpoint) {
-        std::cmp::Ordering::Less => current_frame / frame_for_period,
-        std::cmp::Ordering::Equal => number_of_frames - 1,
-        std::cmp::Ordering::Greater => (number_of_frames - 1) - ((current_frame / frame_for_period) - (number_of_frames - 1)),
-    }
-}
-
 enum SpriteSize {
     Detailed,
     LargeEnemy,
@@ -76,9 +57,9 @@ impl Appearance {
     }
 
     pub fn create_animation(&self) -> AnimationSequence<f32> {
-        let animation_length = 55.0 / 3.0;
+        let animation_length = 140.0 / 3.0;
         let frames: Vec<Keyframe<f32>> = (0..self.sprite_animation_length())
-            .map(|i| (i as f32, i as f32 * animation_length).into())
+            .map(|i| (i as f32, i as f32 * animation_length, Step).into())
             .collect();
         AnimationSequence::from(frames)
     }

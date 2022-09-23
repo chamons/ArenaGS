@@ -43,18 +43,18 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
 
     world
         .spawn()
-        .insert(Position::new(10, 7))
+        .insert(Position::new(12, 11))
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
     world
         .spawn()
-        .insert(Position::new_sized(2, 7, 2, 2))
+        .insert(Position::new_sized(5, 11, 2, 2))
         .insert(Appearance::new(AppearanceKind::Golem));
 
     Ok(world)
 }
 
 fn gameplay_schedule() -> SystemStage {
-    SystemStage::single_threaded().with_system(utils::update_frame_count)
+    SystemStage::single_threaded()
 }
 
 pub fn create_game_schedule() -> Schedule {

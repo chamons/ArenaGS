@@ -26,6 +26,7 @@ impl Scene<World> for BattleScene {
     }
 
     fn draw(&mut self, world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
+        world.get_resource_mut::<Frame>().unwrap().current += 1;
         advance_animations(world);
 
         draw_map(world, canvas);
