@@ -7,14 +7,14 @@ use keyframe::{functions::Step, AnimationSequence, Keyframe};
 
 use crate::core::{AnimationState, Appearance, AppearanceKind};
 
-use super::{ImageCache, ScreenScale};
+use super::ImageCache;
 
-pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, screen_scale: &ScreenScale, images: &ImageCache) {
+pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, scale: f32, images: &ImageCache) {
     let image = images.get(appearance.filename()).clone();
 
     let (image_offset_x, image_offset_y) = appearance.sprite_rect();
-    let scale = appearance.sprite_scale() * screen_scale.scale;
-    let offset = appearance.sprite_offset();
+    let scale = appearance.sprite_scale() * scale;
+    let offset = appearance.sprite_offset() * scale;
     let render_position = render_position + offset;
     let sprite_size = appearance.sprite_size();
 
@@ -31,7 +31,7 @@ pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance,
                 x: scale as f32,
                 y: scale as f32,
             },
-            offset: mint::Point2 { x: 0.0, y: 0.0 },
+            offset: mint::Point2 { x: 0.5, y: 0.5 },
             dest: Point2 {
                 x: render_position.x,
                 y: render_position.y,
@@ -74,7 +74,7 @@ impl Appearance {
         (width * col, height * row)
     }
 
-    pub fn sprite_scale(&self) -> f64 {
+    pub fn sprite_scale(&self) -> f32 {
         match self.sprite_size_class() {
             SpriteSize::Detailed => 0.65,
             SpriteSize::LargeEnemy => self.large_enemy_size_class().scale(),
@@ -83,7 +83,7 @@ impl Appearance {
 
     pub fn sprite_offset(&self) -> Vec2 {
         match self.sprite_size_class() {
-            SpriteSize::Detailed => (0.0, 0.0).into(),
+            SpriteSize::Detailed => (0.0, -30.0).into(),
             SpriteSize::LargeEnemy => self.large_enemy_size_class().offset(),
         }
     }
@@ -165,7 +165,7 @@ enum LargeEnemySize {
 }
 
 impl LargeEnemySize {
-    fn scale(&self) -> f64 {
+    fn scale(&self) -> f32 {
         match self {
             LargeEnemySize::LargeBird => 1.5,
             _ => 1.0,

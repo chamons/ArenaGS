@@ -43,11 +43,11 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
 
     world
         .spawn()
-        .insert(Position::new(12, 11))
+        .insert(Position::new(6, 6))
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
     world
         .spawn()
-        .insert(Position::new_sized(5, 11, 2, 2))
+        .insert(Position::new_sized(3, 3, 2, 2))
         .insert(Appearance::new(AppearanceKind::Golem));
 
     Ok(world)
