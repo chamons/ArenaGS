@@ -30,7 +30,7 @@ impl Scene<World> for BattleScene {
         for (position, appearance) in &world.query::<(&Position, &Appearance)>().iter(&world).collect::<Vec<_>>() {
             let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
             render_position.x += TILE_SIZE / 2.0;
-            sprite::draw(render_position, &appearance, world);
+            sprite::draw(canvas, render_position, &appearance, world);
         }
     }
 

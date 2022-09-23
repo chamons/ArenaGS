@@ -1,26 +1,51 @@
 use std::cmp;
 
 use bevy_ecs::world::World;
-use ggez::{glam::Vec2, mint};
+use ggez::{
+    glam::Vec2,
+    graphics::{Canvas, DrawParam, Rect, Transform},
+    mint::{self, Point2},
+};
 
-use crate::core::{AnimationState, Appearance, AppearanceKind};
+use crate::core::{AnimationState, Appearance, AppearanceKind, Frame};
 
 use super::ScreenScale;
 
-pub fn draw(render_position: Vec2, appearance: &Appearance, world: &World) {
-    let screen_scale = world.get_resource::<ScreenScale>().unwrap().scale as f32;
+pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, world: &World) {
+    let frame = world.get_resource::<Frame>().unwrap().current;
+    let screen_scale = world.get_resource::<ScreenScale>().unwrap().scale;
     let images = world.get_resource::<crate::ui::ImageCache>().unwrap();
 
     let image = images.get(appearance.filename());
-}
+    let (image_offset_x, image_offset_y) = appearance.sprite_rect(frame);
+    let scale = appearance.sprite_scale() * screen_scale;
+    let offset = appearance.sprite_offset();
+    let render_position = render_position + offset;
+    let sprite_size = appearance.sprite_size();
 
-fn get_sprite_sheet_rect_for_index(i: usize, width: f32, height: f32) -> mint::Point2<f32> {
-    let row = i % 9;
-    let col = i / 9;
-    mint::Point2 {
-        x: width * row as f32,
-        y: height * col as f32,
-    }
+    let draw_params = DrawParam {
+        src: Rect {
+            x: image_offset_x as f32 / image.width() as f32,
+            y: image_offset_y as f32 / image.height() as f32,
+            w: sprite_size.0 as f32 / image.width() as f32,
+            h: sprite_size.1 as f32 / image.height() as f32,
+        },
+        transform: Transform::Values {
+            rotation: 0.0,
+            scale: mint::Vector2 {
+                x: scale as f32,
+                y: scale as f32,
+            },
+            offset: mint::Point2 { x: 0.0, y: 0.0 },
+            dest: Point2 {
+                x: render_position.x,
+                y: render_position.y,
+            },
+        },
+        ..Default::default()
+    };
+
+    canvas.draw(image, draw_params);
 }
 
 fn get_animation_frame(number_of_frames: usize, animation_length: usize, current_frame: u64) -> usize {
@@ -46,28 +71,28 @@ impl Appearance {
     pub fn sprite_rect(&self, frame: u64) -> (usize, usize) {
         let index = self.sprite_index(frame);
         let sheet_size = self.sprite_sheet_size();
-        let row = index % sheet_size;
-        let col = index / sheet_size;
+        let row = index / sheet_size;
+        let col = index % sheet_size;
 
         let (width, height) = self.sprite_size();
-        (width * row, height * col)
+        (width * col, height * row)
     }
 
     pub fn sprite_scale(&self) -> f64 {
         match self.sprite_size_class() {
-            SpriteSize::Detailed => 1.0,
+            SpriteSize::Detailed => 0.65,
             SpriteSize::LargeEnemy => self.large_enemy_size_class().scale(),
         }
     }
 
-    pub fn sprite_offset(&self) -> (f64, f64) {
+    pub fn sprite_offset(&self) -> Vec2 {
         match self.sprite_size_class() {
-            SpriteSize::Detailed => (0.0, 0.0),
+            SpriteSize::Detailed => (0.0, 0.0).into(),
             SpriteSize::LargeEnemy => self.large_enemy_size_class().offset(),
         }
     }
 
-    fn sprite_size(&self) -> (usize, usize) {
+    pub fn sprite_size(&self) -> (usize, usize) {
         match self.sprite_size_class() {
             SpriteSize::Detailed => (144, 144),
             SpriteSize::LargeEnemy => match self.large_enemy_size_class() {
@@ -109,10 +134,16 @@ impl Appearance {
                     AnimationState::Status => 42,
                     AnimationState::Item => 48,
                 };
-
+                println!("{}", index_base + offset);
                 index_base + offset
             }
-            SpriteSize::LargeEnemy => frame as usize % 3,
+            SpriteSize::LargeEnemy => {
+                let animation_length = match self.state {
+                    AnimationState::Idle => 55,
+                    _ => 15,
+                };
+                get_animation_frame(3, animation_length, frame)
+            }
         }
     }
 
@@ -152,10 +183,10 @@ impl LargeEnemySize {
         }
     }
 
-    fn offset(&self) -> (f64, f64) {
+    fn offset(&self) -> Vec2 {
         match self {
-            LargeEnemySize::Normal => (0.0, 0.0),
-            LargeEnemySize::Bird | LargeEnemySize::LargeBird => (1.0, -20.0),
+            LargeEnemySize::Normal => (0.0, 0.0).into(),
+            LargeEnemySize::Bird | LargeEnemySize::LargeBird => (1.0, -20.0).into(),
         }
     }
 }
