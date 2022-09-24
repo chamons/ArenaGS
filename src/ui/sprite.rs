@@ -180,30 +180,3 @@ impl LargeEnemySize {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use keyframe::*;
-
-    use super::*;
-
-    #[test]
-    fn animation_period_test() {
-        let expected = [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0];
-        let mut animation = keyframes![(0.0, 0.0), (1.0, 10.0), (2.0, 20.0)];
-        for i in (0..100).step_by(10) {
-            let current_expected = expected[i / 10];
-            let result = animation.now() as u64;
-            assert_eq!(
-                current_expected, result,
-                "
-Animation value {}
-Expected {}
-Frame {}
-",
-                result, current_expected, i
-            );
-            animation.advance_and_maybe_reverse(10.0);
-        }
-    }
-}
