@@ -30,8 +30,9 @@ fn load_images(ctx: &mut Context, dir: PathBuf, images: &mut HashMap<String, gge
         if ctx.fs.is_file(&item) {
             if let Some(extension) = item.extension().and_then(OsStr::to_str).map(|s| s.to_lowercase()) {
                 if extension.as_str() == "png" {
-                    let image = ggez::graphics::Image::from_path(ctx, &item, true)?;
-                    images.insert(item.to_str().unwrap().to_owned(), image);
+                    let image = ggez::graphics::Image::from_path(ctx, &item)?;
+                    let key = item.to_str().unwrap().replace("\\", "/");
+                    images.insert(key, image);
                 }
             }
         } else {
