@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::*;
 
-use crate::core::{appearance, AnimationState, Appearance};
+use crate::core::{AnimationState, Appearance};
 
 pub struct SpriteAnimateActionEvent {
     pub entity: Entity,
@@ -31,15 +31,14 @@ pub fn advance_all_animations(world: &mut World) {
             appearance.animation = Some(appearance.create_standard_animation())
         }
 
-        let loops = match appearance.state {
-            AnimationState::Idle => true,
-            _ => false,
-        };
+        let should_loop = matches!(appearance.state, AnimationState::Idle);
+
         if let Some(animation) = &mut appearance.animation {
-            if loops {
+            if should_loop {
                 animation.advance_and_maybe_reverse(1.0);
             } else {
-                if animation.advance_by(1.0) > 0.0 {
+                let animation_complete_amount = animation.advance_by(1.0);
+                if animation_complete_amount > 0.0 {
                     completed.push(entity);
                 }
             }
