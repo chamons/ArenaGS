@@ -13,8 +13,7 @@ pub use battle_scene::BattleScene;
 mod debug_overlay;
 pub use debug_overlay::*;
 
-mod screen_coordinate;
-pub use screen_coordinate::*;
+use super::ScreenCoordinates;
 
 // The map is placed at 16x16 but the first maptile is a ways off the corner
 pub const MAP_IMAGE_POSITION: mint::Point2<f32> = mint::Point2 { x: 31.0, y: 31.0 };
