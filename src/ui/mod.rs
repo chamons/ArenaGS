@@ -5,8 +5,8 @@ pub use game_state::GameState;
 mod utils;
 pub use utils::*;
 
-mod scenes;
-pub use scenes::*;
+mod battle;
+pub use battle::*;
 
 mod draw;
 pub use draw::*;
