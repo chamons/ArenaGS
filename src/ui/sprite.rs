@@ -16,8 +16,17 @@ impl Appearance {
         }
     }
 
-    pub fn create_animation(&self, frame: Option<f64>) -> AnimationSequence<f32> {
-        let animation_length = 140.0 / 3.0;
+    const IDLE_ANIMATION_LENGTH: f32 = 140.0 / 3.0;
+    pub fn create_idle_animation(&self, frame: Option<f64>) -> AnimationSequence<f32> {
+        self.create_animation(Appearance::IDLE_ANIMATION_LENGTH, frame)
+    }
+
+    const DEFAULT_ANIMATION_LENGTH: f32 = 120.0 / 3.0;
+    pub fn create_standard_animation(&self) -> AnimationSequence<f32> {
+        self.create_animation(Appearance::DEFAULT_ANIMATION_LENGTH, None)
+    }
+
+    fn create_animation(&self, animation_length: f32, frame: Option<f64>) -> AnimationSequence<f32> {
         let frames: Vec<Keyframe<f32>> = (0..self.sprite_animation_length())
             .map(|i| (i as f32, i as f32 * animation_length, Step).into())
             .collect();
