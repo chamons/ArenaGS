@@ -158,6 +158,7 @@ impl Appearance {
     }
 }
 
+#[allow(dead_code)]
 enum LargeEnemySize {
     Normal,
     Bird,

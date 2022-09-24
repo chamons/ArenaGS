@@ -4,7 +4,7 @@ use anyhow::Result;
 use bevy_ecs::prelude::*;
 use ggez::{
     event::EventHandler,
-    graphics::{self, Canvas, Color},
+    graphics::{self, Color},
     Context, GameError, GameResult,
 };
 

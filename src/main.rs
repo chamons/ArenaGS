@@ -5,7 +5,6 @@ use std::{env, path};
 
 use anyhow::Result;
 use ggez::{conf, event, ContextBuilder};
-use winit::dpi::LogicalSize;
 
 mod ui;
 use ui::GameState;

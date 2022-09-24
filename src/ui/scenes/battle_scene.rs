@@ -17,7 +17,7 @@ impl BattleScene {
 }
 
 impl Scene<World> for BattleScene {
-    fn update(&mut self, world: &mut World, ctx: &mut ggez::Context) -> SceneSwitch<World> {
+    fn update(&mut self, _world: &mut World, ctx: &mut ggez::Context) -> SceneSwitch<World> {
         if self.request_debug {
             self.request_debug = false;
             return SceneSwitch::Push(Box::new(DebugOverlay::new(ctx)));

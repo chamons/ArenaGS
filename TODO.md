@@ -1,3 +1,2 @@
- - Clean up sprite.rs
 - Test animation swap
 - Do animations speed up when alt+tabed away for awhile

@@ -1,4 +1,3 @@
-use bevy_ecs::world::World;
 use ggez::{
     graphics::{self, Canvas},
     Context,
