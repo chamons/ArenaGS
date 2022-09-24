@@ -4,13 +4,13 @@ use anyhow::Result;
 use bevy_ecs::prelude::*;
 use ggez::{
     event::EventHandler,
-    graphics::{self, Color},
+    graphics::{self, Canvas, Color},
     Context, GameError, GameResult,
 };
 
 use crate::core;
 
-use super::{BattleScene, ImageCache, SceneStack, ScreenScale};
+use super::{BattleScene, ImageCache, SceneStack, ScreenCoordinates, ScreenScale};
 
 pub struct GameState {
     world: World,
@@ -26,6 +26,7 @@ impl GameState {
         ctx.gfx
             .add_font("default", graphics::FontData::from_path(ctx, "/fonts/LibreFranklin-Regular.ttf")?);
 
+        world.insert_resource(ScreenCoordinates::calculate(ctx));
         world.insert_resource(ImageCache::load(ctx, path::PathBuf::from("/"))?);
 
         let schedule = core::create_game_schedule();
@@ -51,7 +52,8 @@ impl EventHandler for GameState {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::BLACK);
         // Because pixel art
         canvas.set_sampler(graphics::Sampler::nearest_clamp());
-        canvas.set_screen_coordinates(graphics::Rect::new(0.0, 0.0, 1280.0, 960.0));
+
+        self.world.get_resource::<ScreenCoordinates>().unwrap().set_screen(&mut canvas);
 
         self.scenes.draw(&mut self.world, ctx, &mut canvas);
 

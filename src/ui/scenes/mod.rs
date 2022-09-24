@@ -1,18 +1,21 @@
-mod battle_scene;
-pub use battle_scene::BattleScene;
-
-mod debug_overlay;
 use bevy_ecs::world::World;
-pub use debug_overlay::*;
 use ggez::{
     glam::Vec2,
     graphics::{self, Canvas, Color, DrawParam, Rect, Transform},
     mint,
 };
 
+use super::ScreenScale;
 use crate::core::{Map, Point};
 
-use super::ScreenScale;
+mod battle_scene;
+pub use battle_scene::BattleScene;
+
+mod debug_overlay;
+pub use debug_overlay::*;
+
+mod screen_coordinate;
+pub use screen_coordinate::*;
 
 // The map is placed at 16x16 but the first maptile is a ways off the corner
 pub const MAP_IMAGE_POSITION: mint::Point2<f32> = mint::Point2 { x: 31.0, y: 31.0 };
@@ -94,4 +97,12 @@ fn get_image_draw_params(screen_scale: f32, dest: mint::Point2<f32>) -> DrawPara
         },
         ..Default::default()
     }
+}
+
+fn logical_mouse_position(ctx: &mut ggez::Context, screen_coordinate: &ScreenCoordinates, x: f32, y: f32) -> (f32, f32) {
+    let screen_rect = screen_coordinate.rect;
+    let size = ctx.gfx.window().inner_size();
+    let pos_x = (x / (size.width as f32)) * screen_rect.w + screen_rect.x;
+    let pos_y = (y / (size.height as f32)) * screen_rect.h + screen_rect.y;
+    (pos_x, pos_y)
 }

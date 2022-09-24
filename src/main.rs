@@ -26,7 +26,8 @@ fn get_game_context() -> ContextBuilder {
             ..Default::default()
         })
         .window_mode(conf::WindowMode {
-            logical_size: Some(LogicalSize::new(1280.0, 960.0)),
+            width: 2560.0,
+            height: 1920.0,
             ..Default::default()
         });
 
