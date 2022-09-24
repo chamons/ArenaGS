@@ -27,8 +27,11 @@ impl GameState {
 
         world.insert_resource(ScreenCoordinates::calculate(ctx));
         world.insert_resource(ImageCache::load(ctx, path::PathBuf::from("/"))?);
+        super::setup_ui_resources(&mut world);
 
-        let schedule = core::create_game_schedule();
+        let mut schedule = core::create_game_schedule();
+        schedule.add_stage("ui", super::create_ui_schedule());
+
         let mut scenes = SceneStack::new();
         scenes.push(Box::new(BattleScene::new()));
 

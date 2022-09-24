@@ -47,6 +47,11 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
     world
         .spawn()
+        .insert(Position::new(8, 6))
+        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
+
+    world
+        .spawn()
         .insert(Position::new_sized(3, 3, 2, 2))
         .insert(Appearance::new(AppearanceKind::Golem));
 

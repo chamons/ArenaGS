@@ -1,5 +1,4 @@
 # Get UI Ready
-- Test animation swap (make sure it's in sync with other characters)
 - Status Text Box
 - Message Box
 - Skillbar

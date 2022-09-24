@@ -27,7 +27,7 @@ impl Scene<World> for BattleScene {
 
     fn draw(&mut self, world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
         world.get_resource_mut::<Frame>().unwrap().current += 1;
-        advance_animations(world);
+        animation::advance_all_animations(world);
 
         draw_map(world, canvas);
 
@@ -38,13 +38,23 @@ impl Scene<World> for BattleScene {
             render_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
 
             let images = world.get_resource::<ImageCache>().unwrap();
-            sprite::draw(canvas, render_position, appearance, images);
+            draw::render_sprite(canvas, render_position, appearance, images);
         }
     }
 
-    fn key_up_event(&mut self, _world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
+    fn key_up_event(&mut self, world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
         match input.keycode {
             Some(VirtualKeyCode::F1) => self.request_debug = true,
+            Some(VirtualKeyCode::D) => {
+                let query = &world.query::<(Entity, &Appearance)>().iter(world).collect::<Vec<_>>();
+                let first = query
+                    .iter()
+                    .filter(|(_, a)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
+                    .map(|(e, _)| e)
+                    .next()
+                    .unwrap();
+                world.send_event(SpriteAnimateActionEvent::new(*first, AnimationState::Cheer));
+            }
             _ => {}
         }
     }
@@ -60,18 +70,4 @@ fn draw_map(world: &mut World, canvas: &mut Canvas) {
         MapKind::Winter => "/maps/winter/map1.png",
     };
     draw_image(canvas, world, map_image, MAP_IMAGE_POSITION);
-}
-
-fn advance_animations(world: &mut World) {
-    let mut query = world.query::<&mut Appearance>();
-
-    for mut appearance in query.iter_mut(world) {
-        if appearance.animation.is_none() {
-            appearance.animation = Some(appearance.create_animation())
-        }
-
-        if let Some(animation) = &mut appearance.animation {
-            animation.advance_and_maybe_reverse(1.0);
-        }
-    }
 }
