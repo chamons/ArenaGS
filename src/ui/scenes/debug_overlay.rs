@@ -28,9 +28,9 @@ pub struct DebugOverlay {
 }
 
 impl DebugOverlay {
-    pub fn new(ctx: &mut ggez::Context, scale: f32) -> Self {
+    pub fn new(ctx: &mut ggez::Context) -> Self {
         // Offset each debug tile overlay for a grid border
-        let square_size = Rect::new(TILE_BORDER, TILE_BORDER, scale * (TILE_SIZE - TILE_BORDER), scale * (TILE_SIZE - TILE_BORDER));
+        let square_size = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_BORDER, TILE_SIZE - TILE_BORDER);
         let red_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.8, 0.1, 0.1, 0.5)).unwrap();
         let green_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.1, 0.8, 0.1, 0.5)).unwrap();
 
@@ -53,23 +53,21 @@ impl Scene<World> for DebugOverlay {
     }
 
     fn draw(&mut self, world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
-        let scale = world.get_resource::<ScreenScale>().unwrap().scale;
-
         canvas.draw(
             graphics::Text::new(format!("Debug: {:?}", self.overlay_kind))
                 .set_font("default")
-                .set_scale(18.0 * scale),
-            Vec2::new(10.0 * scale, 10.0 * scale),
+                .set_scale(18.0),
+            Vec2::new(10.0, 10.0),
         );
 
         match self.overlay_kind {
             DebugKind::MapOverlay => {
-                draw_map_grid(canvas, ctx, scale);
+                draw_map_grid(canvas, ctx);
 
                 let map = world.get_resource::<Map>().unwrap();
                 for x in 0..Map::MAX_TILES as u32 {
                     for y in 0..Map::MAX_TILES as u32 {
-                        let grid_rect = screen_point_for_map_grid(x, y, scale);
+                        let grid_rect = screen_point_for_map_grid(x, y);
                         if map.is_walkable(&Point::new(x, y)) {
                             canvas.draw(&self.green_square, grid_rect);
                         } else {
@@ -81,18 +79,12 @@ impl Scene<World> for DebugOverlay {
         }
     }
 
-    fn mouse_motion_event(&mut self, world: &mut World, ctx: &mut ggez::Context, x: f32, y: f32, _dx: f32, _dy: f32) {
-        let screen_coordinate = world.get_resource::<ScreenCoordinates>().unwrap();
-        let (x, y) = logical_mouse_position(ctx, screen_coordinate, x, y);
-        println!("{},{}", x.round(), y.round());
-    }
-
     fn mouse_button_up_event(&mut self, world: &mut World, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
         let screen_coordinate = world.get_resource::<ScreenCoordinates>().unwrap();
         let (x, y) = logical_mouse_position(ctx, screen_coordinate, x, y);
 
         if button == MouseButton::Left {
-            if let Some(point) = screen_to_map_position(x, y, 1.0) {
+            if let Some(point) = screen_to_map_position(x, y) {
                 let mut map = world.get_resource_mut::<Map>().unwrap();
                 let was_walkable = map.is_walkable(&point);
                 map.set_walkable(&point, !was_walkable);

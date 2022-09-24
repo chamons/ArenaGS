@@ -20,8 +20,7 @@ impl Scene<World> for BattleScene {
     fn update(&mut self, world: &mut World, ctx: &mut ggez::Context) -> SceneSwitch<World> {
         if self.request_debug {
             self.request_debug = false;
-            let scale = world.get_resource::<ScreenScale>().unwrap().scale;
-            return SceneSwitch::Push(Box::new(DebugOverlay::new(ctx, scale)));
+            return SceneSwitch::Push(Box::new(DebugOverlay::new(ctx)));
         }
         SceneSwitch::None
     }
@@ -32,15 +31,14 @@ impl Scene<World> for BattleScene {
 
         draw_map(world, canvas);
 
-        let scale = world.get_resource::<ScreenScale>().unwrap().scale;
         for (appearance, position) in &world.query::<(&Appearance, &Position)>().iter(world).collect::<Vec<_>>() {
-            let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y, scale);
+            let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
 
-            render_position.x += (position.position.width as f32 * TILE_SIZE * scale) / 2.0;
-            render_position.y += (position.position.height as f32 * TILE_SIZE * scale) / 2.0;
+            render_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
+            render_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
 
             let images = world.get_resource::<ImageCache>().unwrap();
-            sprite::draw(canvas, render_position, appearance, scale, images);
+            sprite::draw(canvas, render_position, appearance, images);
         }
     }
 

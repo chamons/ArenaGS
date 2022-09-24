@@ -9,12 +9,12 @@ use crate::core::{AnimationState, Appearance, AppearanceKind};
 
 use super::ImageCache;
 
-pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, scale: f32, images: &ImageCache) {
+pub fn draw(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, images: &ImageCache) {
     let image = images.get(appearance.filename()).clone();
 
     let (image_offset_x, image_offset_y) = appearance.sprite_rect();
-    let scale = appearance.sprite_scale() * scale;
-    let offset = appearance.sprite_offset() * scale;
+    let scale = appearance.sprite_scale();
+    let offset = appearance.sprite_offset();
     let render_position = render_position + offset;
     let sprite_size = appearance.sprite_size();
 
