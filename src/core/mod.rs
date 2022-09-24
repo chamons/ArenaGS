@@ -16,6 +16,9 @@ pub struct Position {
     pub position: SizedPoint,
 }
 
+#[derive(Component, Debug, Deserialize, Serialize)]
+pub struct Player;
+
 impl Position {
     pub const fn new(x: u32, y: u32) -> Self {
         Position {
@@ -44,7 +47,8 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
     world
         .spawn()
         .insert(Position::new(6, 6))
-        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
+        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
+        .insert(Player);
     world
         .spawn()
         .insert(Position::new(8, 6))

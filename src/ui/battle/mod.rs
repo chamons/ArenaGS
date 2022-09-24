@@ -13,6 +13,9 @@ pub use battle_scene::BattleScene;
 mod debug_overlay;
 pub use debug_overlay::*;
 
+mod status_view;
+pub use status_view::*;
+
 use super::ScreenCoordinates;
 
 // The map is placed at 16x16 but the first maptile is a ways off the corner

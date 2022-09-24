@@ -30,6 +30,7 @@ impl Scene<World> for BattleScene {
         animation::advance_all_animations(world);
 
         draw_map(world, canvas);
+        draw_status(world, canvas);
 
         for (appearance, position) in &world.query::<(&Appearance, &Position)>().iter(world).collect::<Vec<_>>() {
             let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
