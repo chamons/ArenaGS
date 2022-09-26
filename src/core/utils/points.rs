@@ -17,6 +17,7 @@ impl Point {
         Point { x, y }
     }
 
+    #[allow(dead_code)]
     pub fn in_bounds(&self) -> bool {
         self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
     }
@@ -35,6 +36,7 @@ pub struct SizedPoint {
     pub height: u32,
 }
 
+#[allow(dead_code)]
 impl SizedPoint {
     pub const fn new(x: u32, y: u32) -> SizedPoint {
         SizedPoint {
