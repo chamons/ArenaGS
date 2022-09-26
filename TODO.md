@@ -1,5 +1,4 @@
 # Get UI Ready
-- Status Text Box
 - Message Box
 - Skillbar
 - Sliding Movement Animation

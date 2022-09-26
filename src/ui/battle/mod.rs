@@ -7,11 +7,9 @@ use ggez::{
 
 use crate::core::{Map, Point};
 
-mod battle_scene;
-pub use battle_scene::BattleScene;
+pub mod battle_scene;
 
-mod debug_overlay;
-pub use debug_overlay::*;
+pub mod debug_overlay;
 
 mod status_view;
 pub use status_view::*;
