@@ -17,6 +17,9 @@ pub use sprite::*;
 mod animation;
 pub use animation::*;
 
+mod scenes;
+pub use scenes::*;
+
 pub fn create_ui_schedule() -> SystemStage {
     SystemStage::single_threaded()
         .with_system(start_animation)

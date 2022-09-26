@@ -10,12 +10,11 @@ use ggez::{
 
 use crate::core;
 
-use super::{BattleScene, ImageCache, SceneStack, ScreenCoordinates};
+use super::{ImageCache, SceneKind, Scenes, ScreenCoordinates};
 
 pub struct GameState {
     world: World,
     schedule: Schedule,
-    scenes: SceneStack<World>,
 }
 
 impl GameState {
@@ -32,10 +31,15 @@ impl GameState {
         let mut schedule = core::create_game_schedule();
         schedule.add_stage("ui", super::create_ui_schedule());
 
-        let mut scenes = SceneStack::new();
-        scenes.push(Box::new(BattleScene::new()));
+        let mut scenes = Scenes::new();
+        scenes.push(SceneKind::Battle);
+        world.insert_resource(scenes);
 
-        Ok(GameState { world, schedule, scenes })
+        Ok(GameState { world, schedule })
+    }
+
+    pub fn current_scene(&self) -> SceneKind {
+        self.world.get_resource::<Scenes>().unwrap().current()
     }
 }
 
@@ -46,7 +50,7 @@ impl EventHandler for GameState {
         while ctx.time.check_update_time(FPS) {
             self.schedule.run_once(&mut self.world);
         }
-        self.scenes.update(&mut self.world, ctx);
+        Scenes::update(self.current_scene(), &mut self.world, ctx);
         Ok(())
     }
 
@@ -57,43 +61,43 @@ impl EventHandler for GameState {
 
         self.world.get_resource::<ScreenCoordinates>().unwrap().set_screen(&mut canvas);
 
-        self.scenes.draw(&mut self.world, ctx, &mut canvas);
+        Scenes::draw(&mut self.world.get_resource::<Scenes>().unwrap().all(), &mut self.world, ctx, &mut canvas);
 
         canvas.finish(ctx)
     }
 
     fn mouse_button_down_event(&mut self, ctx: &mut Context, button: ggez::event::MouseButton, x: f32, y: f32) -> Result<(), GameError> {
-        self.scenes.mouse_button_down_event(&mut self.world, ctx, button, x, y);
+        Scenes::mouse_button_down_event(self.current_scene(), &mut self.world, ctx, button, x, y);
         Ok(())
     }
 
     fn mouse_button_up_event(&mut self, ctx: &mut Context, button: ggez::event::MouseButton, x: f32, y: f32) -> Result<(), GameError> {
-        self.scenes.mouse_button_up_event(&mut self.world, ctx, button, x, y);
+        Scenes::mouse_button_up_event(self.current_scene(), &mut self.world, ctx, button, x, y);
         Ok(())
     }
 
     fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> Result<(), GameError> {
-        self.scenes.mouse_motion_event(&mut self.world, ctx, x, y, dx, dy);
+        Scenes::mouse_motion_event(self.current_scene(), &mut self.world, ctx, x, y, dx, dy);
         Ok(())
     }
 
     fn mouse_enter_or_leave(&mut self, ctx: &mut Context, entered: bool) -> Result<(), GameError> {
-        self.scenes.mouse_enter_or_leave(&mut self.world, ctx, entered);
+        Scenes::mouse_enter_or_leave(self.current_scene(), &mut self.world, ctx, entered);
         Ok(())
     }
 
     fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) -> Result<(), GameError> {
-        self.scenes.mouse_wheel_event(&mut self.world, ctx, x, y);
+        Scenes::mouse_wheel_event(self.current_scene(), &mut self.world, ctx, x, y);
         Ok(())
     }
 
     fn key_down_event(&mut self, ctx: &mut Context, input: ggez::input::keyboard::KeyInput, repeated: bool) -> Result<(), GameError> {
-        self.scenes.key_down_event(&mut self.world, ctx, input, repeated);
+        Scenes::key_down_event(self.current_scene(), &mut self.world, ctx, input, repeated);
         Ok(())
     }
 
     fn key_up_event(&mut self, ctx: &mut Context, input: ggez::input::keyboard::KeyInput) -> Result<(), GameError> {
-        self.scenes.key_up_event(&mut self.world, ctx, input);
+        Scenes::key_up_event(self.current_scene(), &mut self.world, ctx, input);
         Ok(())
     }
 }
