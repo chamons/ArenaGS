@@ -8,9 +8,11 @@ use super::*;
 use crate::core::*;
 use crate::ui::*;
 
-pub fn update(_world: &mut World, _ctx: &mut ggez::Context) {}
+#[no_mangle]
+pub fn battle_update(_world: &mut World, _ctx: &mut ggez::Context) {}
 
-pub fn draw(world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
+#[no_mangle]
+pub fn battle_draw(world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
     world.get_resource_mut::<Frame>().unwrap().current += 1;
     animation::advance_all_animations(world);
 
@@ -28,7 +30,8 @@ pub fn draw(world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
     }
 }
 
-pub fn key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
+#[no_mangle]
+pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
     match input.keycode {
         Some(VirtualKeyCode::F1) => {
             world.get_resource_mut::<Scenes>().unwrap().push(SceneKind::DebugOverlay);
@@ -48,7 +51,8 @@ pub fn key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: KeyInput
     }
 }
 
-pub fn draw_previous() -> bool {
+#[no_mangle]
+pub fn battle_draw_previous() -> bool {
     false
 }
 

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use bevy_ecs::prelude::*;
 
 use crate::core::{AnimationState, Appearance};
@@ -13,6 +15,7 @@ impl SpriteAnimateActionEvent {
     }
 }
 
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
 pub struct SpriteAnimateActionComplete {
     pub entity: Entity,
 }
@@ -49,27 +52,32 @@ pub fn advance_all_animations(world: &mut World) {
     }
 }
 
+#[no_mangle]
 pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut query: Query<(Entity, &mut Appearance)>) {
     for request in requests.iter() {
         if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
             appearance.state = request.state;
             appearance.animation = None;
-            println!("Setting animation: {:?}", request.state);
         }
     }
 }
 
+#[no_mangle]
 pub fn end_animation(mut requests: EventReader<SpriteAnimateActionComplete>, mut query: Query<(Entity, &mut Appearance)>) {
+    // Because we can note animations as complete in render thread, we can often get multiple
+    // notifications of the same Entity being complete. This is fine as long as we de-duplicate them
+    let requests: HashSet<SpriteAnimateActionComplete> = HashSet::from_iter(requests.iter().cloned());
+
     // Unlike other animations, the idle "bob" needs to be sync across all units for it
     // to look good. So if we have any animation end requests, find the first idle (if any)
-    // and use it's duration. Else default to zero.
-    let idle_frame = if !requests.is_empty() {
+    // and use it
+    let existing_idle_animation = if !requests.is_empty() {
         query
             .iter()
             .filter_map(|(_, a)| {
                 if a.state == AnimationState::Idle {
                     if let Some(animation) = &a.animation {
-                        return Some(animation.time());
+                        return Some(animation.clone());
                     }
                 }
                 None
@@ -81,9 +89,12 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionComplete>, mut
 
     for request in requests.iter() {
         if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
-            println!("Clear animation: {:?}", appearance.state);
             appearance.state = AnimationState::Idle;
-            appearance.animation = Some(appearance.create_idle_animation(idle_frame));
+            if existing_idle_animation.is_some() {
+                appearance.animation = existing_idle_animation.clone();
+            } else {
+                appearance.animation = Some(appearance.create_idle_animation());
+            }
         }
     }
 }

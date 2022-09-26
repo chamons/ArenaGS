@@ -2,7 +2,22 @@ use bevy_ecs::prelude::*;
 use ggez::{self, graphics::Canvas, input::keyboard::KeyInput};
 use serde::{Deserialize, Serialize};
 
-use super::{battle_scene, debug_overlay};
+#[cfg(not(feature = "hotreload"))]
+use super::{battle_scene::*, debug_overlay::*};
+
+#[cfg(feature = "hotreload")]
+use systems_hot::*;
+
+#[cfg(feature = "hotreload")]
+#[hot_lib_reloader::hot_module(dylib = "arenalib")]
+mod systems_hot {
+    use bevy_ecs::prelude::*;
+    use ggez::graphics::Canvas;
+    use ggez::input::keyboard::KeyInput;
+
+    hot_functions_from_file!("src/ui/battle/battle_scene.rs");
+    hot_functions_from_file!("src/ui/battle/debug_overlay.rs");
+}
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum SceneKind {
@@ -40,11 +55,11 @@ impl Scenes {
 
     // This kind of manual dispatch is ugly, but it allows hot swapping
     // and serialization of UI state
-
+    // All scene calls must be marked #[no_mangle] for hot reloading to work!
     pub fn update(state: SceneKind, world: &mut World, ctx: &mut ggez::Context) {
         match state {
-            SceneKind::Battle => battle_scene::update(world, ctx),
-            SceneKind::DebugOverlay => debug_overlay::update(world, ctx),
+            SceneKind::Battle => battle_update(world, ctx),
+            SceneKind::DebugOverlay => debug_update(world, ctx),
         }
     }
 
@@ -52,18 +67,18 @@ impl Scenes {
         assert!(!scenes.is_empty());
         if let Some((current, rest)) = scenes.split_last_mut() {
             let draw_previous = match current {
-                SceneKind::Battle => battle_scene::draw_previous(),
-                SceneKind::DebugOverlay => debug_overlay::draw_previous(),
+                SceneKind::Battle => battle_draw_previous(),
+                SceneKind::DebugOverlay => debug_draw_previous(),
             };
             if draw_previous {
                 Scenes::draw(rest, world, ctx, canvas);
             }
             match current {
                 SceneKind::Battle => {
-                    battle_scene::draw(world, ctx, canvas);
+                    battle_draw(world, ctx, canvas);
                 }
                 SceneKind::DebugOverlay => {
-                    debug_overlay::draw(world, ctx, canvas);
+                    debug_draw(world, ctx, canvas);
                 }
             }
         }
@@ -79,7 +94,7 @@ impl Scenes {
     pub fn mouse_button_up_event(state: SceneKind, world: &mut World, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
         match state {
             SceneKind::Battle => {}
-            SceneKind::DebugOverlay => debug_overlay::mouse_button_up_event(world, ctx, button, x, y),
+            SceneKind::DebugOverlay => debug_mouse_button_up_event(world, ctx, button, x, y),
         }
     }
 
@@ -113,8 +128,8 @@ impl Scenes {
 
     pub fn key_up_event(state: SceneKind, world: &mut World, ctx: &mut ggez::Context, input: KeyInput) {
         match state {
-            SceneKind::Battle => battle_scene::key_up_event(world, ctx, input),
-            SceneKind::DebugOverlay => debug_overlay::key_up_event(world, ctx, input),
+            SceneKind::Battle => battle_key_up_event(world, ctx, input),
+            SceneKind::DebugOverlay => debug_key_up_event(world, ctx, input),
         }
     }
 }
