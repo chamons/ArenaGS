@@ -8,6 +8,7 @@ use ggez::{conf, event, ContextBuilder};
 
 mod ui;
 use ui::GameState;
+use winit::dpi::LogicalSize;
 
 pub mod core;
 
@@ -25,8 +26,7 @@ fn get_game_context() -> ContextBuilder {
             ..Default::default()
         })
         .window_mode(conf::WindowMode {
-            width: 2560.0,
-            height: 1920.0,
+            logical_size: Some(LogicalSize::new(1280.0, 960.0)),
             ..Default::default()
         });
 
