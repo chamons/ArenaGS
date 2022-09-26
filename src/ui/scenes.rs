@@ -3,7 +3,7 @@ use ggez::{self, graphics::Canvas, input::keyboard::KeyInput};
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(feature = "hotreload"))]
-use super::{battle_scene, debug_overlay};
+use super::{battle_scene::*, debug_overlay::*};
 
 #[cfg(feature = "hotreload")]
 use systems_hot::*;
