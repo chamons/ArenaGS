@@ -83,6 +83,8 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionComplete>, mut
 
     for request in requests.iter() {
         if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
+            println!("{:?}", idle_frame);
+
             appearance.state = AnimationState::Idle;
             appearance.animation = Some(appearance.create_idle_animation(idle_frame));
         }
