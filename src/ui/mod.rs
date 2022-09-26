@@ -20,12 +20,8 @@ pub use animation::*;
 mod scenes;
 pub use scenes::*;
 
-pub fn create_ui_schedule() -> SystemStage {
-    SystemStage::single_threaded()
-        .with_system(start_animation)
-        .with_system(end_animation)
-        .with_system(clear_event_buffers)
-}
+mod schedule;
+pub use schedule::*;
 
 pub fn setup_ui_resources(world: &mut World) {
     world.insert_resource(Events::<SpriteAnimateActionEvent>::default());

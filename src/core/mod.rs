@@ -5,11 +5,14 @@ use serde::{Deserialize, Serialize};
 mod map;
 pub use map::*;
 
-pub mod utils;
+mod utils;
 pub use utils::*;
 
-pub mod appearance;
+mod appearance;
 pub use appearance::*;
+
+mod schedule;
+pub use schedule::*;
 
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
@@ -60,10 +63,6 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Appearance::new(AppearanceKind::Golem));
 
     Ok(world)
-}
-
-fn gameplay_schedule() -> SystemStage {
-    SystemStage::single_threaded()
 }
 
 pub fn create_game_schedule() -> Schedule {
