@@ -14,6 +14,9 @@ pub use appearance::*;
 mod schedule;
 pub use schedule::*;
 
+mod log;
+pub use log::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,
@@ -42,10 +45,8 @@ impl Position {
 
 pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World> {
     let mut world = World::new();
-    world.insert_resource(utils::Frame::zero());
 
-    let map = Map::load(&mut fs.open("/maps/beach/map1.dat")?)?;
-    world.insert_resource(map);
+    setup_game_resources(&mut world, fs)?;
 
     world
         .spawn()
@@ -71,4 +72,23 @@ pub fn create_game_schedule() -> Schedule {
     schedule.add_stage("gameplay", gameplay_schedule());
 
     schedule
+}
+
+pub fn setup_game_resources(world: &mut World, fs: &mut ggez::filesystem::Filesystem) -> Result<()> {
+    world.insert_resource(utils::Frame::zero());
+    world.insert_resource(Log::new());
+
+    let map = Map::load(&mut fs.open("/maps/beach/map1.dat")?)?;
+    world.insert_resource(map);
+
+    world.insert_resource(Events::<NewMessageEvent>::default());
+    world.insert_resource(Events::<ScrollMessageEvent>::default());
+
+    Ok(())
+}
+
+// Since we aren't using Bevy's App model, we have to clear our event buffers by hand
+pub fn clear_event_buffers(mut a: ResMut<Events<NewMessageEvent>>, mut b: ResMut<Events<ScrollMessageEvent>>) {
+    a.update();
+    b.update();
 }

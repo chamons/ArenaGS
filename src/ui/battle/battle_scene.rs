@@ -12,12 +12,13 @@ use crate::ui::*;
 pub fn battle_update(_world: &mut World, _ctx: &mut ggez::Context) {}
 
 #[no_mangle]
-pub fn battle_draw(world: &mut World, _ctx: &mut ggez::Context, canvas: &mut Canvas) {
+pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
     world.get_resource_mut::<Frame>().unwrap().current += 1;
     animation::advance_all_animations(world);
 
     draw_map(world, canvas);
     draw_status(world, canvas);
+    message_draw(world, ctx, canvas);
 
     for (appearance, position) in &world.query::<(&Appearance, &Position)>().iter(world).collect::<Vec<_>>() {
         let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
@@ -46,7 +47,13 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
                 .next()
                 .unwrap();
             world.send_event(SpriteAnimateActionEvent::new(*first, AnimationState::Cheer));
+            let frame = world.get_resource::<Frame>().unwrap().current;
+            world.send_event(NewMessageEvent::new(&format!("Dance Party: {}", frame)));
         }
+        Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
+        Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
+        Some(VirtualKeyCode::End) => world.send_event(ScrollMessageEvent::scroll_to_end()),
+
         _ => {}
     }
 }
