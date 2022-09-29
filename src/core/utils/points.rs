@@ -3,6 +3,10 @@ use std::fmt;
 use ggez::glam::Vec2;
 use serde::{Deserialize, Serialize};
 
+use crate::core::Map;
+
+use super::Direction;
+
 // Points are always in the context of a map, which is a fixed sized
 // Negative points and points > 12 are invalid in most contexts
 pub const MAX_POINT_SIZE: u32 = 13;
@@ -83,6 +87,38 @@ impl SizedPoint {
             height: self.height,
         }
     }
+
+    pub fn in_direction(&self, direction: Direction) -> Option<SizedPoint> {
+        let x: i32 = self.origin.x as i32;
+        let y: i32 = self.origin.y as i32;
+        match direction {
+            Direction::North => self.constrain_to_map(x, y - 1),
+            Direction::NorthEast => self.constrain_to_map(x + 1, y - 1),
+            Direction::East => self.constrain_to_map(x + 1, y),
+            Direction::SouthEast => self.constrain_to_map(x + 1, y + 1),
+            Direction::South => self.constrain_to_map(x, y + 1),
+            Direction::SouthWest => self.constrain_to_map(x - 1, y + 1),
+            Direction::West => self.constrain_to_map(x - 1, y),
+            Direction::NorthWest => self.constrain_to_map(x - 1, y - 1),
+            Direction::None => Some(*self),
+        }
+    }
+
+    fn constrain_to_map(&self, x: i32, y: i32) -> Option<SizedPoint> {
+        let width = self.width as i32;
+        let left = x - (width - 1);
+        let right = x + (width - 1);
+
+        let height = self.height as i32;
+        let top = y - (height - 1);
+        let bottom = y + (height - 1);
+
+        if left >= 0 && top >= 0 && bottom < Map::MAX_TILES as i32 && right < Map::MAX_TILES as i32 {
+            Some(self.move_to(Point::new(x as u32, y as u32)))
+        } else {
+            None
+        }
+    }
 }
 
 impl From<Point> for SizedPoint {
@@ -144,5 +180,32 @@ mod tests {
         assert_eq!(all[3], Point::new(4, 2));
         assert_eq!(all[4], Point::new(3, 1));
         assert_eq!(all[5], Point::new(4, 1));
+    }
+
+    #[test]
+    fn off_map() {
+        assert!(SizedPoint::new(0, 0).in_direction(Direction::North).is_none());
+        assert!(SizedPoint::new(12, 0).in_direction(Direction::East).is_none());
+        assert!(SizedPoint::new_sized(11, 1, 2, 2).in_direction(Direction::East).is_none());
+        assert!(SizedPoint::new_sized(1, 1, 2, 2).in_direction(Direction::North).is_none());
+    }
+
+    #[test]
+    fn constrained() {
+        let point = SizedPoint::new_sized(2, 2, 1, 1);
+        assert!(point.constrain_to_map(0, 0).is_some());
+        assert!(point.constrain_to_map(12, 12).is_some());
+        assert!(point.constrain_to_map(13, 12).is_none());
+        assert!(point.constrain_to_map(-1, 0).is_none());
+    }
+
+    #[test]
+    fn constrained_with_sized() {
+        let point = SizedPoint::new_sized(2, 2, 2, 2);
+        assert!(point.constrain_to_map(0, 0).is_none());
+        assert!(point.constrain_to_map(1, 1).is_some());
+        assert!(point.constrain_to_map(11, 11).is_some());
+        assert!(point.constrain_to_map(12, 12).is_none());
+        assert!(point.constrain_to_map(-1, 0).is_none());
     }
 }
