@@ -30,7 +30,7 @@ pub struct Appearance {
     pub state: AnimationState,
 
     #[serde(skip_serializing, skip_deserializing)]
-    pub animation: Option<AnimationSequence<f32>>,
+    pub sprite: Option<AnimationSequence<f32>>,
 }
 
 impl std::fmt::Debug for Appearance {
@@ -44,7 +44,7 @@ impl Appearance {
         Appearance {
             kind,
             state: AnimationState::Idle,
-            animation: None,
+            sprite: None,
         }
     }
 }

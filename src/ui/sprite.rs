@@ -30,7 +30,7 @@ impl Appearance {
     }
 
     const DEFAULT_ANIMATION_LENGTH: f32 = 120.0 / 3.0;
-    pub fn create_standard_animation(&self) -> AnimationSequence<f32> {
+    pub fn create_standard_sprite_animation(&self) -> AnimationSequence<f32> {
         self.create_animation(Appearance::DEFAULT_ANIMATION_LENGTH)
     }
 
@@ -77,7 +77,7 @@ impl Appearance {
     }
 
     fn sprite_index(&self) -> usize {
-        let animation_offset = self.animation.as_ref().map(|a| a.now() as usize).unwrap_or(0);
+        let animation_offset = self.sprite.as_ref().map(|a| a.now() as usize).unwrap_or(0);
 
         match self.sprite_size_class() {
             SpriteSize::Detailed => {

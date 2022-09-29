@@ -30,13 +30,13 @@ pub fn advance_all_animations(world: &mut World) {
     let mut query = world.query::<(Entity, &mut Appearance)>();
     let mut completed = vec![];
     for (entity, mut appearance) in query.iter_mut(world) {
-        if appearance.animation.is_none() {
-            appearance.animation = Some(appearance.create_standard_animation())
+        if appearance.sprite.is_none() {
+            appearance.sprite = Some(appearance.create_standard_sprite_animation())
         }
 
         let should_loop = matches!(appearance.state, AnimationState::Idle);
 
-        if let Some(animation) = &mut appearance.animation {
+        if let Some(animation) = &mut appearance.sprite {
             if should_loop {
                 animation.advance_and_maybe_reverse(1.0);
             } else {
@@ -57,7 +57,7 @@ pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut 
     for request in requests.iter() {
         if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
             appearance.state = request.state;
-            appearance.animation = None;
+            appearance.sprite = None;
         }
     }
 }
@@ -76,7 +76,7 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>
             .iter()
             .filter_map(|(_, a)| {
                 if a.state == AnimationState::Idle {
-                    if let Some(animation) = &a.animation {
+                    if let Some(animation) = &a.sprite {
                         return Some(animation.clone());
                     }
                 }
@@ -91,9 +91,9 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>
         if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
             appearance.state = AnimationState::Idle;
             if existing_idle_animation.is_some() {
-                appearance.animation = existing_idle_animation.clone();
+                appearance.sprite = existing_idle_animation.clone();
             } else {
-                appearance.animation = Some(appearance.create_idle_animation());
+                appearance.sprite = Some(appearance.create_idle_animation());
             }
         }
     }
