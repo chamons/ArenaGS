@@ -4,12 +4,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Log {
     pub messages: Vec<String>,
-    pub index: usize,
+    pub last_index: usize,
 }
 
 impl Log {
     pub fn new() -> Self {
-        Log { messages: vec![], index: 0 }
+        Log {
+            messages: vec![],
+            last_index: 0,
+        }
     }
 
     pub fn push(&mut self, message: &str) {
@@ -65,13 +68,17 @@ pub fn process_new_messages(mut log: ResMut<Log>, mut events: EventReader<NewMes
     }
 }
 
+pub const LOG_ENTRIES_ON_SCREEN: usize = 8;
+
 #[no_mangle]
-pub fn set_message_index(mut events: EventReader<ScrollMessageEvent>) {
+pub fn set_message_index(mut log: ResMut<Log>, mut events: EventReader<ScrollMessageEvent>) {
+    let message_count = log.messages.len();
     for event in events.iter() {
-        match event.kind {
-            ScrollMessageKind::PageUp => println!("Page Up"),
-            ScrollMessageKind::PageDown => println!("Page Down"),
-            ScrollMessageKind::ScrollToEnd => println!("Scroll To End"),
-        }
+        let new_last_index = match event.kind {
+            ScrollMessageKind::PageUp => std::cmp::max(log.last_index as i64 - LOG_ENTRIES_ON_SCREEN as i64, 0) as usize,
+            ScrollMessageKind::PageDown => std::cmp::min(log.last_index + LOG_ENTRIES_ON_SCREEN, message_count),
+            ScrollMessageKind::ScrollToEnd => message_count,
+        };
+        log.last_index = new_last_index;
     }
 }

@@ -1,10 +1,4 @@
-- Messages
-Implement scroll up / down / to end
-Test 
-
-
 # Get UI Ready
-- Message Box
 - Skillbar
 - Sliding Movement Animation
 - Projectile Animations
