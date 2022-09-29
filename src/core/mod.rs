@@ -40,10 +40,6 @@ impl Position {
             position: SizedPoint::new_sized(x, y, width, height),
         }
     }
-
-    pub fn origin(&self) -> Point {
-        self.position.origin
-    }
 }
 
 pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World> {

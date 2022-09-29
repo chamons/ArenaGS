@@ -1,5 +1,4 @@
 # Get UI Ready
-- Sliding Movement Animation
 - Projectile Animations
 - Character Overlays
 - Fields
@@ -16,4 +15,6 @@
 
 
 # Minor Bugs
-- Do animations speed up when alt+tabed away for awhile
+- Idle animation plays during movement
+- Animations speed up when alt+tabed away for awhile
+- Window shrinks to tiny size when closing laptop lid then restore

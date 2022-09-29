@@ -28,9 +28,9 @@ pub const MAP_CORNER_Y: f32 = 65.0;
 pub const TILE_SIZE: f32 = 56.0;
 
 /// The upper left position of map point (x,y) on screen
-pub fn screen_point_for_map_grid(x: u32, y: u32) -> Vec2 {
-    let x = MAP_CORNER_X + (x as f32) * TILE_SIZE;
-    let y = MAP_CORNER_Y + (y as f32) * TILE_SIZE;
+pub fn screen_point_for_map_grid(x: f32, y: f32) -> Vec2 {
+    let x = MAP_CORNER_X + x * TILE_SIZE;
+    let y = MAP_CORNER_Y + y * TILE_SIZE;
     Vec2::new(x, y)
 }
 

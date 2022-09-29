@@ -55,7 +55,7 @@ pub fn debug_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canva
             let map = world.get_resource::<Map>().unwrap();
             for x in 0..Map::MAX_TILES as u32 {
                 for y in 0..Map::MAX_TILES as u32 {
-                    let grid_rect = screen_point_for_map_grid(x, y);
+                    let grid_rect = screen_point_for_map_grid(x as f32, y as f32);
                     if map.is_walkable(&Point::new(x, y)) {
                         canvas.draw(&green_square, grid_rect);
                     } else {
