@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
+use keyframe::AnimationSequence;
+use serde::{Deserialize, Serialize};
 
 use crate::core::{AnimationState, Appearance};
 
@@ -26,17 +28,37 @@ impl SpriteAnimateActionCompleteEvent {
     }
 }
 
-pub fn advance_all_animations(world: &mut World) {
-    let mut query = world.query::<(Entity, &mut Appearance)>();
-    let mut completed = vec![];
-    for (entity, mut appearance) in query.iter_mut(world) {
-        if appearance.sprite.is_none() {
-            appearance.sprite = Some(appearance.create_standard_sprite_animation())
-        }
+#[derive(Component)]
+pub struct Animation {
+    pub sprite: Option<AnimationSequence<f32>>,
+}
 
+pub fn create_needed_idle_animations(world: &mut World) {
+    let mut query = world.query::<(Entity, &Appearance, Option<&mut Animation>)>();
+    let mut needs_sprite_animations = vec![];
+    for (entity, appearance, mut animations) in query.iter_mut(world) {
+        if let Some(animations) = animations.as_mut() {
+            if animations.sprite.is_none() {
+                animations.sprite = Some(appearance.create_standard_sprite_animation())
+            }
+        } else {
+            needs_sprite_animations.push((entity, appearance.create_standard_sprite_animation()));
+        }
+    }
+    for (entity, animation) in needs_sprite_animations {
+        world.get_entity_mut(entity).unwrap().insert(Animation { sprite: Some(animation) });
+    }
+}
+
+pub fn advance_all_animations(world: &mut World) {
+    create_needed_idle_animations(world);
+
+    let mut query = world.query::<(Entity, &Appearance, &mut Animation)>();
+    let mut completed = vec![];
+    for (entity, appearance, mut animation) in query.iter_mut(world) {
         let should_loop = matches!(appearance.state, AnimationState::Idle);
 
-        if let Some(animation) = &mut appearance.sprite {
+        if let Some(animation) = &mut animation.sprite {
             if should_loop {
                 animation.advance_and_maybe_reverse(1.0);
             } else {
@@ -53,17 +75,17 @@ pub fn advance_all_animations(world: &mut World) {
 }
 
 #[no_mangle]
-pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut query: Query<(Entity, &mut Appearance)>) {
+pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
     for request in requests.iter() {
-        if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
+        if let Ok((_, mut appearance, mut animation)) = query.get_mut(request.entity) {
             appearance.state = request.state;
-            appearance.sprite = None;
+            animation.sprite = None;
         }
     }
 }
 
 #[no_mangle]
-pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance)>) {
+pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
     // Because we can note animations as complete in render thread, we can often get multiple
     // notifications of the same Entity being complete. This is fine as long as we de-duplicate them
     let requests: HashSet<SpriteAnimateActionCompleteEvent> = HashSet::from_iter(requests.iter().cloned());
@@ -74,9 +96,9 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>
     let existing_idle_animation = if !requests.is_empty() {
         query
             .iter()
-            .filter_map(|(_, a)| {
-                if a.state == AnimationState::Idle {
-                    if let Some(animation) = &a.sprite {
+            .filter_map(|(_, appearance, animation)| {
+                if appearance.state == AnimationState::Idle {
+                    if let Some(animation) = &animation.sprite {
                         return Some(animation.clone());
                     }
                 }
@@ -88,12 +110,12 @@ pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>
     };
 
     for request in requests.iter() {
-        if let Ok((_, mut appearance)) = query.get_mut(request.entity) {
+        if let Ok((_, mut appearance, mut animation)) = query.get_mut(request.entity) {
             appearance.state = AnimationState::Idle;
             if existing_idle_animation.is_some() {
-                appearance.sprite = existing_idle_animation.clone();
+                animation.sprite = existing_idle_animation.clone();
             } else {
-                appearance.sprite = Some(appearance.create_idle_animation());
+                animation.sprite = Some(appearance.create_idle_animation());
             }
         }
     }

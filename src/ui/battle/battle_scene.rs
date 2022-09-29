@@ -21,14 +21,14 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     message_draw(world, ctx, canvas);
     skillbar_draw(world, ctx, canvas);
 
-    for (appearance, position) in &world.query::<(&Appearance, &Position)>().iter(world).collect::<Vec<_>>() {
+    for (appearance, animation, position) in &world.query::<(&Appearance, &Animation, &Position)>().iter(world).collect::<Vec<_>>() {
         let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
 
         render_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
         render_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
 
         let images = world.get_resource::<ImageCache>().unwrap();
-        draw::render_sprite(canvas, render_position, appearance, images);
+        draw::render_sprite(canvas, render_position, appearance, animation, images);
     }
 }
 

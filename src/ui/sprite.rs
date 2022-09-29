@@ -41,8 +41,8 @@ impl Appearance {
         AnimationSequence::from(frames)
     }
 
-    pub fn sprite_rect(&self) -> (usize, usize) {
-        let index = self.sprite_index();
+    pub fn sprite_rect(&self, animation_offset: usize) -> (usize, usize) {
+        let index = self.sprite_index(animation_offset);
         let sheet_size = self.sprite_sheet_size();
         let row = index / sheet_size;
         let col = index % sheet_size;
@@ -76,9 +76,7 @@ impl Appearance {
         }
     }
 
-    fn sprite_index(&self) -> usize {
-        let animation_offset = self.sprite.as_ref().map(|a| a.now() as usize).unwrap_or(0);
-
+    fn sprite_index(&self, animation_offset: usize) -> usize {
         match self.sprite_size_class() {
             SpriteSize::Detailed => {
                 // The detailed character sheets are somewhat strangely laid out

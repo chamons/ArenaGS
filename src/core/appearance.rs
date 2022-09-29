@@ -28,9 +28,6 @@ pub enum AnimationState {
 pub struct Appearance {
     pub kind: AppearanceKind,
     pub state: AnimationState,
-
-    #[serde(skip_serializing, skip_deserializing)]
-    pub sprite: Option<AnimationSequence<f32>>,
 }
 
 impl std::fmt::Debug for Appearance {
@@ -44,7 +41,6 @@ impl Appearance {
         Appearance {
             kind,
             state: AnimationState::Idle,
-            sprite: None,
         }
     }
 }
