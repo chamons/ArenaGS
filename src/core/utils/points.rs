@@ -96,3 +96,53 @@ impl fmt::Display for SizedPoint {
         write!(f, "({},{}) {}x{}", self.origin.x, self.origin.y, self.width, self.height)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn covered_points() {
+        //  (2,0) (3,0)
+        //  (2,1) (3,1)
+        //  (2,2) (3,2)
+        let point = SizedPoint::new_sized(2, 2, 2, 3);
+        let all = point.covered_points();
+        assert_eq!(6, all.len());
+        assert_eq!(all[0], Point::new(2, 2));
+        assert_eq!(all[1], Point::new(3, 2));
+        assert_eq!(all[2], Point::new(2, 1));
+        assert_eq!(all[3], Point::new(3, 1));
+        assert_eq!(all[4], Point::new(2, 0));
+        assert_eq!(all[5], Point::new(3, 0));
+    }
+
+    #[test]
+    fn contains_point() {
+        let point = SizedPoint::new_sized(2, 2, 2, 3);
+        assert!(point.contains_point(&Point::new(2, 2)));
+        assert!(point.contains_point(&Point::new(3, 2)));
+        assert!(point.contains_point(&Point::new(2, 1)));
+        assert!(point.contains_point(&Point::new(3, 1)));
+        assert!(point.contains_point(&Point::new(2, 0)));
+        assert!(point.contains_point(&Point::new(3, 0)));
+        assert!(!point.contains_point(&Point::new(4, 4)));
+        assert!(!point.contains_point(&Point::new(0, 0)));
+        assert!(!point.contains_point(&Point::new(2, 5)));
+    }
+
+    #[test]
+    fn move_by() {
+        let mut point = SizedPoint::new_sized(2, 2, 2, 3);
+        point = point.move_to(Point::new(3, 3));
+
+        let all = point.covered_points();
+        assert_eq!(6, all.len());
+        assert_eq!(all[0], Point::new(3, 3));
+        assert_eq!(all[1], Point::new(4, 3));
+        assert_eq!(all[2], Point::new(3, 2));
+        assert_eq!(all[3], Point::new(4, 2));
+        assert_eq!(all[4], Point::new(3, 1));
+        assert_eq!(all[5], Point::new(4, 1));
+    }
+}
