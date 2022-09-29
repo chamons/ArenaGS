@@ -1,23 +1,17 @@
-use std::{collections::HashSet, time::Duration};
+use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
-use ggez::{glam::Vec2, mint::Vector2};
-use keyframe::{functions::Linear, AnimationSequence, CanTween, Keyframe};
+use ggez::mint::Vector2;
+use keyframe::{functions::Linear, AnimationSequence, Keyframe};
 use keyframe_derive::CanTween;
 
-use crate::core::{AnimationState, Appearance, Point, SizedPoint};
+use crate::core::{AnimationState, Appearance, Point};
 
 use super::{MovementAnimationComplete, MovementAnimationEvent, SpriteAnimateActionCompleteEvent, SpriteAnimateActionEvent};
 
 #[derive(CanTween, Debug, Clone)]
 pub struct MovementAnimation {
     pub animation: Vector2<f32>,
-}
-
-impl MovementAnimation {
-    pub fn new(animation: Vector2<f32>) -> Self {
-        Self { animation }
-    }
 }
 
 impl From<Point> for MovementAnimation {

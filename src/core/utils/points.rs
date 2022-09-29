@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ggez::{glam::Vec2, mint::Vector2};
+use ggez::glam::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::core::Map;

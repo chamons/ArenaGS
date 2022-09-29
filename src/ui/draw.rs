@@ -1,8 +1,8 @@
-use crate::core::{Appearance, SizedPoint};
+use crate::core::Appearance;
 use ggez::{
     glam::Vec2,
     graphics::{Canvas, DrawParam, Rect, Transform},
-    mint::{self, Point2, Vector2},
+    mint::{self, Point2},
 };
 
 use super::{Animation, ImageCache};

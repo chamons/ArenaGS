@@ -1,5 +1,6 @@
 use super::SizedPoint;
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction {
     None,
@@ -23,6 +24,7 @@ fn clamp_to_one(x: i32) -> i32 {
     }
 }
 
+#[allow(dead_code)]
 impl Direction {
     pub fn from_two_points(initial: &SizedPoint, end: &SizedPoint) -> Direction {
         let x = clamp_to_one(end.origin.x as i32 - initial.origin.x as i32);
