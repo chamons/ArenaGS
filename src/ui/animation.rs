@@ -16,13 +16,13 @@ impl SpriteAnimateActionEvent {
 }
 
 #[derive(Hash, Debug, PartialEq, Eq, Clone)]
-pub struct SpriteAnimateActionComplete {
+pub struct SpriteAnimateActionCompleteEvent {
     pub entity: Entity,
 }
 
-impl SpriteAnimateActionComplete {
+impl SpriteAnimateActionCompleteEvent {
     pub fn new(entity: Entity) -> Self {
-        SpriteAnimateActionComplete { entity }
+        SpriteAnimateActionCompleteEvent { entity }
     }
 }
 
@@ -48,7 +48,7 @@ pub fn advance_all_animations(world: &mut World) {
         }
     }
     for complete in completed {
-        world.send_event(SpriteAnimateActionComplete::new(complete));
+        world.send_event(SpriteAnimateActionCompleteEvent::new(complete));
     }
 }
 
@@ -63,10 +63,10 @@ pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut 
 }
 
 #[no_mangle]
-pub fn end_animation(mut requests: EventReader<SpriteAnimateActionComplete>, mut query: Query<(Entity, &mut Appearance)>) {
+pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance)>) {
     // Because we can note animations as complete in render thread, we can often get multiple
     // notifications of the same Entity being complete. This is fine as long as we de-duplicate them
-    let requests: HashSet<SpriteAnimateActionComplete> = HashSet::from_iter(requests.iter().cloned());
+    let requests: HashSet<SpriteAnimateActionCompleteEvent> = HashSet::from_iter(requests.iter().cloned());
 
     // Unlike other animations, the idle "bob" needs to be sync across all units for it
     // to look good. So if we have any animation end requests, find the first idle (if any)

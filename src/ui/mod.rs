@@ -25,11 +25,11 @@ pub use schedule::*;
 
 pub fn setup_ui_resources(world: &mut World) {
     world.insert_resource(Events::<SpriteAnimateActionEvent>::default());
-    world.insert_resource(Events::<SpriteAnimateActionComplete>::default());
+    world.insert_resource(Events::<SpriteAnimateActionCompleteEvent>::default());
 }
 
 // Since we aren't using Bevy's App model, we have to clear our event buffers by hand
-pub fn clear_event_buffers(mut a: ResMut<Events<SpriteAnimateActionEvent>>, mut b: ResMut<Events<SpriteAnimateActionComplete>>) {
+pub fn clear_event_buffers(mut a: ResMut<Events<SpriteAnimateActionEvent>>, mut b: ResMut<Events<SpriteAnimateActionCompleteEvent>>) {
     a.update();
     b.update();
 }

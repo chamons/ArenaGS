@@ -1,5 +1,4 @@
 # Get UI Ready
-- Message Box
 - Skillbar
 - Sliding Movement Animation
 - Projectile Animations

@@ -8,11 +8,13 @@ use ggez::{
 use crate::core::{Map, Point};
 
 pub mod battle_scene;
-
 pub mod debug_overlay;
 
 mod status_view;
 pub use status_view::*;
+
+mod messages;
+pub use messages::*;
 
 use super::ScreenCoordinates;
 
