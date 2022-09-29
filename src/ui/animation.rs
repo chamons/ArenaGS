@@ -39,11 +39,6 @@ impl Default for MovementAnimation {
     }
 }
 
-// Need to use a wrapper struct as Vector2<f32> does not implement default
-
-// Need a system to tweet start to end
-// Need to give an offset for render_sprite
-
 #[derive(Component)]
 pub struct Animation {
     pub sprite: Option<AnimationSequence<f32>>,
