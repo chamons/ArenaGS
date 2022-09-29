@@ -28,9 +28,9 @@ impl Point {
     }
 }
 
-impl Into<Vec2> for Point {
-    fn into(self) -> Vec2 {
-        Vec2::new(self.x as f32, self.y as f32)
+impl From<Point> for Vec2 {
+    fn from(s: Point) -> Vec2 {
+        Vec2::new(s.x as f32, s.y as f32)
     }
 }
 

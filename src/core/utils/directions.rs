@@ -1,7 +1,7 @@
 use super::SizedPoint;
 
 #[allow(dead_code)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
     None,
     North,

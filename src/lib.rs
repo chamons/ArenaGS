@@ -1,4 +1,5 @@
 #![allow(clippy::single_match)]
+#![allow(clippy::collapsible_else_if)]
 
 use std::{env, path};
 
