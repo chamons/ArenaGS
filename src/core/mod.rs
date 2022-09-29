@@ -17,6 +17,9 @@ pub use schedule::*;
 mod log;
 pub use log::*;
 
+mod skill;
+pub use skill::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,

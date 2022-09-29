@@ -5,6 +5,7 @@
         "ggez",
         "Hamons",
         "horz",
+        "skillbar",
         "winit"
     ]
 }

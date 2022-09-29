@@ -16,6 +16,9 @@ pub use status_view::*;
 mod messages;
 pub use messages::*;
 
+mod skillbar;
+pub use skillbar::*;
+
 use super::ScreenCoordinates;
 
 // The map is placed at 16x16 but the first maptile is a ways off the corner

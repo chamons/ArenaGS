@@ -4,10 +4,13 @@ use ggez::{
     graphics::{self, Canvas, Drawable},
 };
 
-use crate::core::{Log, LOG_ENTRIES_ON_SCREEN};
+use crate::{
+    core::{Log, LOG_ENTRIES_ON_SCREEN},
+    ui::GAME_WIDTH,
+};
 
 const LOG_LEFT: f32 = 875.0;
-const LOG_WIDTH: f32 = 1280.0 - 875.0;
+const LOG_WIDTH: f32 = GAME_WIDTH - 875.0;
 const LOG_TOP: f32 = 750.0;
 const LOG_BOTTOM: f32 = 950.0;
 const LOG_HEIGHT: f32 = LOG_BOTTOM - LOG_TOP;
