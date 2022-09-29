@@ -1,5 +1,4 @@
 use bevy_ecs::prelude::*;
-use keyframe::AnimationSequence;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Deserialize, Serialize)]

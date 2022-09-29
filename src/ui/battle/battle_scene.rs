@@ -19,7 +19,7 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     draw_map(world, canvas);
     draw_status(world, canvas);
     message_draw(world, ctx, canvas);
-    skillbar_draw(world, ctx, canvas);
+    skillbar_draw(world, canvas);
 
     for (appearance, animation, position) in &world.query::<(&Appearance, &Animation, &Position)>().iter(world).collect::<Vec<_>>() {
         let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);

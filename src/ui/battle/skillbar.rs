@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use ggez::{
     glam::Vec2,
-    graphics::{self, Canvas, Color, Rect, TextLayout},
+    graphics::{self, Canvas, TextLayout},
 };
 
 use crate::{
@@ -13,7 +13,7 @@ const BORDER_WIDTH: f32 = 4.0;
 const ICON_SIZE: f32 = 48.0;
 const MAX_ICON_COUNT: f32 = 10.0;
 
-pub fn skillbar_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
+pub fn skillbar_draw(world: &mut World, canvas: &mut Canvas) {
     let images = world.get_resource::<crate::ui::ImageCache>().unwrap();
 
     let skills = vec![Skill::new(SkillKind::Shoot), Skill::new(SkillKind::Dodge)];
@@ -28,11 +28,11 @@ pub fn skillbar_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Ca
             x: base_position.x + offset + BORDER_WIDTH + (ICON_SIZE + BORDER_WIDTH + 1.0) * i as f32,
             y: base_position.y + BORDER_WIDTH + 1.0,
         };
-        draw_skill(skill, i, position, images, ctx, canvas);
+        draw_skill(skill, i, position, images, canvas);
     }
 }
 
-fn draw_skill(skill: &Skill, index: usize, position: Vec2, images: &ImageCache, ctx: &mut ggez::Context, canvas: &mut Canvas) {
+fn draw_skill(skill: &Skill, index: usize, position: Vec2, images: &ImageCache, canvas: &mut Canvas) {
     let skillbar_frame = images.get("/ui/skillbar_frame.png");
     let skill_image = images.get(skill.kind.filename());
     canvas.draw(skill_image, Vec2::new(position.x + BORDER_WIDTH / 2.0, position.y + BORDER_WIDTH / 2.0));

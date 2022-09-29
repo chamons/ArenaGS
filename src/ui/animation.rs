@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
 use keyframe::AnimationSequence;
-use serde::{Deserialize, Serialize};
 
 use crate::core::{AnimationState, Appearance};
 
