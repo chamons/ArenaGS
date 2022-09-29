@@ -5,12 +5,13 @@ use ggez::{
     mint::{self, Point2},
 };
 
-use super::ImageCache;
+use super::{Animation, ImageCache};
 
-pub fn render_sprite(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, images: &ImageCache) {
+pub fn render_sprite(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, animation: &Animation, images: &ImageCache) {
     let image = images.get(appearance.filename()).clone();
+    let animation_offset = animation.sprite.as_ref().map(|a| a.now() as usize).unwrap_or(0);
 
-    let (image_offset_x, image_offset_y) = appearance.sprite_rect();
+    let (image_offset_x, image_offset_y) = appearance.sprite_rect(animation_offset);
     let scale = appearance.sprite_scale();
     let offset = appearance.sprite_offset();
     let render_position = render_position + offset;

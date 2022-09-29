@@ -1,5 +1,4 @@
 # Get UI Ready
-- Skillbar
 - Sliding Movement Animation
 - Projectile Animations
 - Character Overlays

@@ -30,7 +30,7 @@ impl Appearance {
     }
 
     const DEFAULT_ANIMATION_LENGTH: f32 = 120.0 / 3.0;
-    pub fn create_standard_animation(&self) -> AnimationSequence<f32> {
+    pub fn create_standard_sprite_animation(&self) -> AnimationSequence<f32> {
         self.create_animation(Appearance::DEFAULT_ANIMATION_LENGTH)
     }
 
@@ -41,8 +41,8 @@ impl Appearance {
         AnimationSequence::from(frames)
     }
 
-    pub fn sprite_rect(&self) -> (usize, usize) {
-        let index = self.sprite_index();
+    pub fn sprite_rect(&self, animation_offset: usize) -> (usize, usize) {
+        let index = self.sprite_index(animation_offset);
         let sheet_size = self.sprite_sheet_size();
         let row = index / sheet_size;
         let col = index % sheet_size;
@@ -76,9 +76,7 @@ impl Appearance {
         }
     }
 
-    fn sprite_index(&self) -> usize {
-        let animation_offset = self.animation.as_ref().map(|a| a.now() as usize).unwrap_or(0);
-
+    fn sprite_index(&self, animation_offset: usize) -> usize {
         match self.sprite_size_class() {
             SpriteSize::Detailed => {
                 // The detailed character sheets are somewhat strangely laid out
