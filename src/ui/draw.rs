@@ -2,7 +2,7 @@ use crate::core::{Appearance, SizedPoint};
 use ggez::{
     glam::Vec2,
     graphics::{Canvas, DrawParam, Rect, Transform},
-    mint::{self, Point2},
+    mint::{self, Point2, Vector2},
 };
 
 use super::{Animation, ImageCache};
@@ -10,7 +10,6 @@ use super::{Animation, ImageCache};
 pub fn render_sprite(canvas: &mut Canvas, render_position: Vec2, appearance: &Appearance, animation: &Animation, images: &ImageCache) {
     let image = images.get(appearance.filename()).clone();
     let animation_offset = animation.sprite.as_ref().map(|a| a.now() as usize).unwrap_or(0);
-    let position_offset: Vec2 = animation.movement.as_ref().map(|a| a.now().origin.into()).unwrap_or(render_position);
 
     let (image_offset_x, image_offset_y) = appearance.sprite_rect(animation_offset);
     let scale = appearance.sprite_scale();

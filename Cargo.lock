@@ -69,6 +69,7 @@ dependencies = [
  "ggez",
  "hot-lib-reloader",
  "keyframe",
+ "keyframe_derive",
  "serde",
  "toml",
  "winit",
@@ -1290,6 +1291,16 @@ checksum = "60708bf7981518d09095d6f5673ce5cf6a64f1e0d9708b554f670e6d9d2bd9a9"
 dependencies = [
  "mint",
  "num-traits",
+]
+
+[[package]]
+name = "keyframe_derive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "377d191d4db9904c659a7336fc943feb17bc737e18e8d7dbf4c3cfc86698f610"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]

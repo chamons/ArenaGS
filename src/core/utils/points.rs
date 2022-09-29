@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ggez::glam::Vec2;
+use ggez::{glam::Vec2, mint::Vector2};
 use serde::{Deserialize, Serialize};
 
 use crate::core::Map;
@@ -118,12 +118,6 @@ impl SizedPoint {
         } else {
             None
         }
-    }
-}
-
-impl From<Point> for SizedPoint {
-    fn from(origin: Point) -> Self {
-        SizedPoint::new(origin.x, origin.y)
     }
 }
 

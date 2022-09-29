@@ -1,42 +1,45 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Duration};
 
 use bevy_ecs::prelude::*;
-use keyframe::{AnimationSequence, Keyframe};
+use ggez::{glam::Vec2, mint::Vector2};
+use keyframe::{functions::Linear, AnimationSequence, CanTween, Keyframe};
+use keyframe_derive::CanTween;
 
-use crate::core::{AnimationState, Appearance, SizedPoint};
+use crate::core::{AnimationState, Appearance, Point, SizedPoint};
 
-pub struct SpriteAnimateActionEvent {
-    pub entity: Entity,
-    pub state: AnimationState,
+use super::{MovementAnimationComplete, MovementAnimationEvent, SpriteAnimateActionCompleteEvent, SpriteAnimateActionEvent};
+
+#[derive(CanTween, Debug, Clone)]
+pub struct MovementAnimation {
+    pub animation: Vector2<f32>,
 }
 
-impl SpriteAnimateActionEvent {
-    pub fn new(entity: Entity, state: AnimationState) -> Self {
-        SpriteAnimateActionEvent { entity, state }
+impl MovementAnimation {
+    pub fn new(animation: Vector2<f32>) -> Self {
+        Self { animation }
     }
 }
 
-#[derive(Hash, Debug, PartialEq, Eq, Clone)]
-pub struct SpriteAnimateActionCompleteEvent {
-    pub entity: Entity,
-}
-
-impl SpriteAnimateActionCompleteEvent {
-    pub fn new(entity: Entity) -> Self {
-        SpriteAnimateActionCompleteEvent { entity }
+impl From<Point> for MovementAnimation {
+    fn from(point: Point) -> Self {
+        Self {
+            animation: Vector2 {
+                x: point.x as f32,
+                y: point.y as f32,
+            },
+        }
     }
 }
 
-#[derive(Hash, Debug, PartialEq, Eq, Clone)]
-pub struct MovementAnimationComplete {
-    pub entity: Entity,
-}
-
-impl MovementAnimationComplete {
-    pub fn new(entity: Entity) -> Self {
-        MovementAnimationComplete { entity }
+impl Default for MovementAnimation {
+    fn default() -> Self {
+        Self {
+            animation: Vector2 { x: 0.0, y: 0.0 },
+        }
     }
 }
+
+// Need to use a wrapper struct as Vector2<f32> does not implement default
 
 // Need a system to tweet start to end
 // Need to give an offset for render_sprite
@@ -44,7 +47,7 @@ impl MovementAnimationComplete {
 #[derive(Component)]
 pub struct Animation {
     pub sprite: Option<AnimationSequence<f32>>,
-    pub movement: Option<AnimationSequence<SizedPoint>>,
+    pub movement: Option<AnimationSequence<MovementAnimation>>,
 }
 
 impl Animation {
@@ -52,8 +55,8 @@ impl Animation {
         Animation { sprite, movement: None }
     }
 
-    pub fn create_movement_animation(&mut self, start: SizedPoint, end: SizedPoint, duration: f32) {
-        let frames: Vec<Keyframe<SizedPoint>> = vec![(start, 0.0).into(), (end, duration).into()];
+    pub fn create_movement_animation(&mut self, start: Point, end: Point, duration: f32) {
+        let frames: Vec<Keyframe<MovementAnimation>> = vec![(start.into(), 0.0, Linear).into(), (end.into(), duration, Linear).into()];
         self.movement = Some(AnimationSequence::from(frames));
     }
 }
@@ -113,7 +116,7 @@ pub fn advance_all_animations(world: &mut World) {
 }
 
 #[no_mangle]
-pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
+pub fn start_sprite_animations(mut requests: EventReader<SpriteAnimateActionEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
     for request in requests.iter() {
         if let Ok((_, mut appearance, mut animation)) = query.get_mut(request.entity) {
             appearance.state = request.state;
@@ -123,7 +126,7 @@ pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut 
 }
 
 #[no_mangle]
-pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
+pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(&mut Appearance, &mut Animation)>) {
     // Because we can note animations as complete in render thread, we can often get multiple
     // notifications of the same Entity being complete. This is fine as long as we de-duplicate them
     let requests: HashSet<SpriteAnimateActionCompleteEvent> = HashSet::from_iter(requests.iter().cloned());
@@ -134,7 +137,7 @@ pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionComplet
     let existing_idle_animation = if !requests.is_empty() {
         query
             .iter()
-            .filter_map(|(_, appearance, animation)| {
+            .filter_map(|(appearance, animation)| {
                 if appearance.state == AnimationState::Idle {
                     if let Some(animation) = &animation.sprite {
                         return Some(animation.clone());
@@ -148,13 +151,24 @@ pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionComplet
     };
 
     for request in requests.iter() {
-        if let Ok((_, mut appearance, mut animation)) = query.get_mut(request.entity) {
+        if let Ok((mut appearance, mut animation)) = query.get_mut(request.entity) {
             appearance.state = AnimationState::Idle;
             if existing_idle_animation.is_some() {
                 animation.sprite = existing_idle_animation.clone();
             } else {
                 animation.sprite = Some(appearance.create_idle_animation());
             }
+        }
+    }
+}
+
+const MOVEMENT_ANIMATION_DURATION: f32 = 12.0;
+
+#[no_mangle]
+pub fn start_movement_animations(mut requests: EventReader<MovementAnimationEvent>, mut query: Query<&mut Animation>) {
+    for request in requests.iter() {
+        if let Ok(mut animation) = query.get_mut(request.entity) {
+            animation.create_movement_animation(request.start.origin, request.end.origin, MOVEMENT_ANIMATION_DURATION);
         }
     }
 }

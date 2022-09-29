@@ -22,7 +22,13 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     skillbar_draw(world, canvas);
 
     for (appearance, animation, position) in &world.query::<(&Appearance, &Animation, &Position)>().iter(world).collect::<Vec<_>>() {
-        let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
+        let render_position: Vec2 = animation
+            .movement
+            .as_ref()
+            .map(|a| a.now().animation.into())
+            .unwrap_or_else(|| position.position.origin.into());
+
+        let mut render_position = screen_point_for_map_grid(render_position.x, render_position.y);
 
         render_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
         render_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
@@ -51,11 +57,45 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             let frame = world.get_resource::<Frame>().unwrap().current;
             world.send_event(NewMessageEvent::new(&format!("Dance Party: {}", frame)));
         }
+        Some(VirtualKeyCode::Left) => {
+            move_to(world, Direction::West);
+        }
+        Some(VirtualKeyCode::Right) => {
+            move_to(world, Direction::East);
+        }
+        Some(VirtualKeyCode::Up) => {
+            move_to(world, Direction::North);
+        }
+        Some(VirtualKeyCode::Down) => {
+            move_to(world, Direction::South);
+        }
         Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
         Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
         Some(VirtualKeyCode::End) => world.send_event(ScrollMessageEvent::scroll_to_end()),
 
         _ => {}
+    }
+}
+
+fn move_to(world: &mut World, direction: Direction) {
+    let event = {
+        let query = &mut world.query::<(Entity, &Appearance, &mut Position)>().iter_mut(world).collect::<Vec<_>>();
+        let (entity, position) = query
+            .iter_mut()
+            .filter(|(_, a, _)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
+            .map(|(e, _, p)| (e, p))
+            .next()
+            .unwrap();
+        let current_position = position.position;
+        if let Some(new_position) = current_position.in_direction(direction) {
+            position.position = new_position;
+            Some(MovementAnimationEvent::new(*entity, current_position, new_position))
+        } else {
+            None
+        }
+    };
+    if let Some(event) = event {
+        world.send_event(event);
     }
 }
 
