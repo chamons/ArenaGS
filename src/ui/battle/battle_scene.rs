@@ -19,6 +19,7 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     draw_map(world, canvas);
     draw_status(world, canvas);
     message_draw(world, ctx, canvas);
+    skillbar_draw(world, ctx, canvas);
 
     for (appearance, position) in &world.query::<(&Appearance, &Position)>().iter(world).collect::<Vec<_>>() {
         let mut render_position = screen_point_for_map_grid(position.origin().x, position.origin().y);
@@ -65,12 +66,18 @@ pub fn battle_draw_previous() -> bool {
 
 fn draw_map(world: &mut World, canvas: &mut Canvas) {
     let map = world.get_resource::<Map>().unwrap();
-    let map_image = match map.kind {
-        MapKind::Ashlands => "/maps/ashlands/map1.png",
-        MapKind::Beach => "/maps/beach/map1.png",
-        MapKind::Desert => "/maps/desert/map1.png",
-        MapKind::Ruins => "/maps/ruins/map1.png",
-        MapKind::Winter => "/maps/winter/map1.png",
-    };
-    draw_image(canvas, world, map_image, MAP_IMAGE_POSITION);
+    let map_image = map.kind.filename().to_string();
+    draw_image(canvas, world, &map_image, MAP_IMAGE_POSITION);
+}
+
+impl BackingImage for MapKind {
+    fn filename(&self) -> &str {
+        match self {
+            MapKind::Ashlands => "/maps/ashlands/map1.png",
+            MapKind::Beach => "/maps/beach/map1.png",
+            MapKind::Desert => "/maps/desert/map1.png",
+            MapKind::Ruins => "/maps/ruins/map1.png",
+            MapKind::Winter => "/maps/winter/map1.png",
+        }
+    }
 }

@@ -10,7 +10,7 @@ name = "arenalib"
 [dependencies]
 anyhow = "1.0.64"
 ggez = { path = "../ggez", default-features = false }
-winit = "0.26"
+winit = { version = "0.27.3", features = ["serde"] }
 toml = "0.5"
 serde = { version = "1.0.97", features = ["derive"] }
 bevy_ecs = "0.8.1"

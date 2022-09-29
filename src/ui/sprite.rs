@@ -3,17 +3,25 @@ use keyframe::{functions::Step, AnimationSequence, Keyframe};
 
 use crate::core::{AnimationState, Appearance, AppearanceKind};
 
+use super::BackingImage;
+
 enum SpriteSize {
     Detailed,
     LargeEnemy,
 }
 
-impl Appearance {
-    pub fn filename(&self) -> &'static str {
-        match self.kind {
+impl BackingImage for AppearanceKind {
+    fn filename(&self) -> &str {
+        match self {
             AppearanceKind::MaleBrownHairBlueBody => "/images/battle/1_1.png",
             AppearanceKind::Golem => "/images/monsters/$monster_golem1.png",
         }
+    }
+}
+
+impl Appearance {
+    pub fn filename(&self) -> &str {
+        self.kind.filename()
     }
 
     const IDLE_ANIMATION_LENGTH: f32 = 140.0 / 3.0;

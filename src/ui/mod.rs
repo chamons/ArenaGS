@@ -23,6 +23,13 @@ pub use scenes::*;
 mod schedule;
 pub use schedule::*;
 
+pub const GAME_WIDTH: f32 = 1280.0;
+pub const GAME_HEIGHT: f32 = 960.0;
+
+pub trait BackingImage {
+    fn filename(&self) -> &str;
+}
+
 pub fn setup_ui_resources(world: &mut World) {
     world.insert_resource(Events::<SpriteAnimateActionEvent>::default());
     world.insert_resource(Events::<SpriteAnimateActionCompleteEvent>::default());
