@@ -1,5 +1,6 @@
 use std::fmt;
 
+use ggez::glam::Vec2;
 use serde::{Deserialize, Serialize};
 
 // Points are always in the context of a map, which is a fixed sized
@@ -20,6 +21,12 @@ impl Point {
     #[allow(dead_code)]
     pub fn in_bounds(&self) -> bool {
         self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
+    }
+}
+
+impl Into<Vec2> for Point {
+    fn into(self) -> Vec2 {
+        Vec2::new(self.x as f32, self.y as f32)
     }
 }
 

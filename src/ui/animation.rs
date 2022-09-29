@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
-use keyframe::AnimationSequence;
+use keyframe::{AnimationSequence, Keyframe};
 
-use crate::core::{AnimationState, Appearance};
+use crate::core::{AnimationState, Appearance, SizedPoint};
 
 pub struct SpriteAnimateActionEvent {
     pub entity: Entity,
@@ -27,9 +27,35 @@ impl SpriteAnimateActionCompleteEvent {
     }
 }
 
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct MovementAnimationComplete {
+    pub entity: Entity,
+}
+
+impl MovementAnimationComplete {
+    pub fn new(entity: Entity) -> Self {
+        MovementAnimationComplete { entity }
+    }
+}
+
+// Need a system to tweet start to end
+// Need to give an offset for render_sprite
+
 #[derive(Component)]
 pub struct Animation {
     pub sprite: Option<AnimationSequence<f32>>,
+    pub movement: Option<AnimationSequence<SizedPoint>>,
+}
+
+impl Animation {
+    pub fn new(sprite: Option<AnimationSequence<f32>>) -> Self {
+        Animation { sprite, movement: None }
+    }
+
+    pub fn create_movement_animation(&mut self, start: SizedPoint, end: SizedPoint, duration: f32) {
+        let frames: Vec<Keyframe<SizedPoint>> = vec![(start, 0.0).into(), (end, duration).into()];
+        self.movement = Some(AnimationSequence::from(frames));
+    }
 }
 
 pub fn create_needed_idle_animations(world: &mut World) {
@@ -45,7 +71,7 @@ pub fn create_needed_idle_animations(world: &mut World) {
         }
     }
     for (entity, animation) in needs_sprite_animations {
-        world.get_entity_mut(entity).unwrap().insert(Animation { sprite: Some(animation) });
+        world.get_entity_mut(entity).unwrap().insert(Animation::new(Some(animation)));
     }
 }
 
@@ -53,23 +79,36 @@ pub fn advance_all_animations(world: &mut World) {
     create_needed_idle_animations(world);
 
     let mut query = world.query::<(Entity, &Appearance, &mut Animation)>();
-    let mut completed = vec![];
+    let mut sprite_completed = vec![];
+    let mut movement_completed = vec![];
+
     for (entity, appearance, mut animation) in query.iter_mut(world) {
         let should_loop = matches!(appearance.state, AnimationState::Idle);
 
-        if let Some(animation) = &mut animation.sprite {
+        if let Some(sprite_animation) = &mut animation.sprite {
             if should_loop {
-                animation.advance_and_maybe_reverse(1.0);
+                sprite_animation.advance_and_maybe_reverse(1.0);
             } else {
-                let animation_complete_amount = animation.advance_by(1.0);
+                let animation_complete_amount = sprite_animation.advance_by(1.0);
                 if animation_complete_amount > 0.0 {
-                    completed.push(entity);
+                    sprite_completed.push(entity);
                 }
             }
         }
+        if let Some(movement_animation) = &mut animation.movement {
+            let animation_complete_amount = movement_animation.advance_by(1.0);
+            if animation_complete_amount > 0.0 {
+                animation.movement = None;
+                movement_completed.push(entity);
+            }
+        }
     }
-    for complete in completed {
+    for complete in sprite_completed {
         world.send_event(SpriteAnimateActionCompleteEvent::new(complete));
+    }
+
+    for complete in movement_completed {
+        world.send_event(MovementAnimationComplete::new(complete));
     }
 }
 
@@ -84,7 +123,7 @@ pub fn start_animation(mut requests: EventReader<SpriteAnimateActionEvent>, mut 
 }
 
 #[no_mangle]
-pub fn end_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
+pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionCompleteEvent>, mut query: Query<(Entity, &mut Appearance, &mut Animation)>) {
     // Because we can note animations as complete in render thread, we can often get multiple
     // notifications of the same Entity being complete. This is fine as long as we de-duplicate them
     let requests: HashSet<SpriteAnimateActionCompleteEvent> = HashSet::from_iter(requests.iter().cloned());
