@@ -132,7 +132,6 @@ fn advance_movement_animations(world: &mut World) {
         if let Some(movement_animation) = &mut animation.movement {
             let animation_complete_amount = movement_animation.advance_by(1.0);
             if animation_complete_amount > 0.0 {
-                animation.movement = None;
                 movement_completed.push(entity);
             }
         }
