@@ -42,6 +42,12 @@ impl Position {
     }
 }
 
+impl From<SizedPoint> for Position {
+    fn from(position: SizedPoint) -> Self {
+        Position { position }
+    }
+}
+
 pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World> {
     let mut world = World::new();
 
@@ -51,15 +57,18 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .spawn()
         .insert(Position::new(6, 6))
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
+        .insert(crate::ui::Animation::new())
         .insert(Player);
     world
         .spawn()
         .insert(Position::new(8, 6))
+        .insert(crate::ui::Animation::new())
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
 
     world
         .spawn()
         .insert(Position::new_sized(3, 3, 2, 2))
+        .insert(crate::ui::Animation::new())
         .insert(Appearance::new(AppearanceKind::Golem));
 
     Ok(world)

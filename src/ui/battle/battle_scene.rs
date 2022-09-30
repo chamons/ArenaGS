@@ -21,20 +21,30 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     message_draw(world, ctx, canvas);
     skillbar_draw(world, canvas);
 
+    draw_sprites(world, canvas);
+}
+
+fn draw_sprites(world: &mut World, canvas: &mut Canvas) {
     for (appearance, animation, position) in &world.query::<(&Appearance, &Animation, &Position)>().iter(world).collect::<Vec<_>>() {
-        let render_position: Vec2 = animation
-            .movement
-            .as_ref()
-            .map(|a| a.now().animation.into())
-            .unwrap_or_else(|| position.position.origin.into());
-
-        let mut render_position = screen_point_for_map_grid(render_position.x, render_position.y);
-
-        render_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
-        render_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
-
+        let screen_position = calculate_screen_position(animation, position);
         let images = world.get_resource::<ImageCache>().unwrap();
-        draw::render_sprite(canvas, render_position, appearance, animation, images);
+        draw::render_sprite(canvas, screen_position, appearance, animation, images);
+    }
+}
+
+fn calculate_screen_position(animation: &Animation, position: &Position) -> Vec2 {
+    let render_position = calculate_render_position(animation, position);
+    let mut screen_position = screen_point_for_map_grid(render_position.x, render_position.y);
+    screen_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
+    screen_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
+    screen_position
+}
+
+fn calculate_render_position(animation: &Animation, position: &Position) -> Vec2 {
+    if let Some(render_position) = animation.movement.as_ref().map(|a| a.now().animation.into()) {
+        render_position
+    } else {
+        position.position.origin.into()
     }
 }
 
@@ -68,6 +78,17 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
         }
         Some(VirtualKeyCode::Down) => {
             move_to(world, Direction::South);
+        }
+        Some(VirtualKeyCode::F) => {
+            let target = SizedPoint::new(3, 3);
+            let bolt = world
+                .spawn()
+                .insert(Position::from(target))
+                .insert(Appearance::new(AppearanceKind::FireBolt))
+                .insert(Animation::new())
+                .insert(PostMovementAction::new(PostMovementActionKind::Despawn))
+                .id();
+            world.send_event(MovementAnimationEvent::new(bolt, SizedPoint::new(8, 6), target))
         }
         Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
         Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),

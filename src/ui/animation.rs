@@ -5,7 +5,7 @@ use ggez::mint::Vector2;
 use keyframe::{functions::Linear, AnimationSequence, Keyframe};
 use keyframe_derive::CanTween;
 
-use crate::core::{AnimationState, Appearance, Point};
+use crate::core::{AnimationState, Appearance, Point, SizedPoint};
 
 use super::{MovementAnimationComplete, MovementAnimationEvent, SpriteAnimateActionCompleteEvent, SpriteAnimateActionEvent};
 
@@ -14,12 +14,12 @@ pub struct MovementAnimation {
     pub animation: Vector2<f32>,
 }
 
-impl From<Point> for MovementAnimation {
-    fn from(point: Point) -> Self {
+impl From<SizedPoint> for MovementAnimation {
+    fn from(point: SizedPoint) -> Self {
         Self {
             animation: Vector2 {
-                x: point.x as f32,
-                y: point.y as f32,
+                x: point.origin.x as f32,
+                y: point.origin.y as f32,
             },
         }
     }
@@ -39,41 +39,78 @@ pub struct Animation {
     pub movement: Option<AnimationSequence<MovementAnimation>>,
 }
 
-impl Animation {
-    pub fn new(sprite: Option<AnimationSequence<f32>>) -> Self {
-        Animation { sprite, movement: None }
-    }
+pub enum PostMovementActionKind {
+    Despawn,
+}
 
-    pub fn create_movement_animation(&mut self, start: Point, end: Point, duration: f32) {
-        let frames: Vec<Keyframe<MovementAnimation>> = vec![(start.into(), 0.0, Linear).into(), (end.into(), duration, Linear).into()];
-        self.movement = Some(AnimationSequence::from(frames));
+#[derive(Component)]
+pub struct PostMovementAction {
+    kind: PostMovementActionKind,
+}
+
+impl PostMovementAction {
+    pub fn new(kind: PostMovementActionKind) -> Self {
+        PostMovementAction { kind }
     }
 }
 
-pub fn create_needed_idle_animations(world: &mut World) {
-    let mut query = world.query::<(Entity, &Appearance, Option<&mut Animation>)>();
-    let mut needs_sprite_animations = vec![];
-    for (entity, appearance, mut animations) in query.iter_mut(world) {
-        if let Some(animations) = animations.as_mut() {
-            if animations.sprite.is_none() {
-                animations.sprite = Some(appearance.create_standard_sprite_animation())
-            }
-        } else {
-            needs_sprite_animations.push((entity, appearance.create_standard_sprite_animation()));
-        }
+impl Animation {
+    pub fn new() -> Self {
+        Animation { sprite: None, movement: None }
     }
-    for (entity, animation) in needs_sprite_animations {
-        world.get_entity_mut(entity).unwrap().insert(Animation::new(Some(animation)));
+}
+
+pub fn create_movement_animation(start: SizedPoint, end: SizedPoint, duration: f32) -> AnimationSequence<MovementAnimation> {
+    AnimationSequence::from(vec![(start.into(), 0.0, Linear).into(), (end.into(), duration, Linear).into()])
+}
+
+fn find_idle_animation(world: &mut World, entity: Entity) -> AnimationSequence<f32> {
+    // Unlike other animations, the idle "bob" needs to be sync across all units for it
+    // to look good. So if we have any animation end requests, find the first idle (if any)
+    // and use it
+    let mut query = world.query::<(&Appearance, &Animation)>();
+    let existing_idle_animation = query
+        .iter(world)
+        .filter_map(|(appearance, animation)| {
+            if appearance.state == AnimationState::Idle {
+                if let Some(animation) = &animation.sprite {
+                    return Some(animation.clone());
+                }
+            }
+            None
+        })
+        .next();
+    if let Some(existing_idle_animation) = existing_idle_animation {
+        existing_idle_animation
+    } else {
+        world.get::<Appearance>(entity).unwrap().create_standard_sprite_animation()
     }
 }
 
 pub fn advance_all_animations(world: &mut World) {
     create_needed_idle_animations(world);
 
-    let mut query = world.query::<(Entity, &Appearance, &mut Animation)>();
-    let mut sprite_completed = vec![];
-    let mut movement_completed = vec![];
+    advance_sprite_animations(world);
+    advance_movement_animations(world);
+}
 
+pub fn create_needed_idle_animations(world: &mut World) {
+    let mut query = world.query_filtered::<(Entity, &Animation), With<Appearance>>();
+    let mut needs_sprite_animations = vec![];
+    for (entity, animations) in query.iter_mut(world) {
+        if animations.sprite.is_none() {
+            needs_sprite_animations.push(entity);
+        }
+    }
+    for entity in needs_sprite_animations {
+        let animation = find_idle_animation(world, entity);
+        world.get_mut::<Animation>(entity).unwrap().sprite = Some(animation);
+    }
+}
+
+fn advance_sprite_animations(world: &mut World) {
+    let mut sprite_completed = vec![];
+    let mut query = world.query::<(Entity, &Appearance, &mut Animation)>();
     for (entity, appearance, mut animation) in query.iter_mut(world) {
         let should_loop = matches!(appearance.state, AnimationState::Idle);
 
@@ -87,6 +124,16 @@ pub fn advance_all_animations(world: &mut World) {
                 }
             }
         }
+    }
+    for complete in sprite_completed {
+        world.send_event(SpriteAnimateActionCompleteEvent::new(complete));
+    }
+}
+
+fn advance_movement_animations(world: &mut World) {
+    let mut movement_completed = vec![];
+    let mut query = world.query::<(Entity, &mut Animation)>();
+    for (entity, mut animation) in query.iter_mut(world) {
         if let Some(movement_animation) = &mut animation.movement {
             let animation_complete_amount = movement_animation.advance_by(1.0);
             if animation_complete_amount > 0.0 {
@@ -95,10 +142,6 @@ pub fn advance_all_animations(world: &mut World) {
             }
         }
     }
-    for complete in sprite_completed {
-        world.send_event(SpriteAnimateActionCompleteEvent::new(complete));
-    }
-
     for complete in movement_completed {
         world.send_event(MovementAnimationComplete::new(complete));
     }
@@ -151,13 +194,32 @@ pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionComplet
     }
 }
 
-const MOVEMENT_ANIMATION_DURATION: f32 = 12.0;
+const MOVEMENT_ANIMATION_DURATION: f32 = 10.0;
+const LARGE_MOVEMENT_ANIMATION_DURATION: f32 = 3.0;
 
 #[no_mangle]
 pub fn start_movement_animations(mut requests: EventReader<MovementAnimationEvent>, mut query: Query<&mut Animation>) {
     for request in requests.iter() {
-        if let Ok(mut animation) = query.get_mut(request.entity) {
-            animation.create_movement_animation(request.start.origin, request.end.origin, MOVEMENT_ANIMATION_DURATION);
+        let mut animation = query.get_mut(request.entity).expect("Starting movement animation on item without animation");
+        let distance = request.start.distance_to_multi(request.end).unwrap();
+        let duration = match distance {
+            1 => MOVEMENT_ANIMATION_DURATION,
+            _ => 20.0 * distance as f32,
+        };
+        animation.movement = Some(create_movement_animation(request.start, request.end, duration));
+    }
+}
+
+#[no_mangle]
+pub fn post_movement_actions(mut requests: EventReader<MovementAnimationComplete>, mut query: Query<&mut PostMovementAction>, mut commands: Commands) {
+    for request in requests.iter() {
+        let entity = request.entity;
+        if let Ok(action) = query.get_mut(entity) {
+            match action.kind {
+                PostMovementActionKind::Despawn => commands.add(move |w: &mut World| {
+                    w.despawn(entity);
+                }),
+            }
         }
     }
 }

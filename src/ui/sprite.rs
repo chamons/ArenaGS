@@ -8,6 +8,7 @@ use super::BackingImage;
 enum SpriteSize {
     Detailed,
     LargeEnemy,
+    Bolt,
 }
 
 impl BackingImage for AppearanceKind {
@@ -15,6 +16,7 @@ impl BackingImage for AppearanceKind {
         match self {
             AppearanceKind::MaleBrownHairBlueBody => "/images/battle/1_1.png",
             AppearanceKind::Golem => "/images/monsters/$monster_golem1.png",
+            AppearanceKind::FireBolt => "/images/bolts/fire.png",
         }
     }
 }
@@ -55,13 +57,15 @@ impl Appearance {
         match self.sprite_size_class() {
             SpriteSize::Detailed => 0.65,
             SpriteSize::LargeEnemy => self.large_enemy_size_class().scale(),
+            SpriteSize::Bolt => 2.0,
         }
     }
 
     pub fn sprite_offset(&self) -> Vec2 {
         match self.sprite_size_class() {
-            SpriteSize::Detailed => (0.0, -30.0).into(),
+            SpriteSize::Detailed => (0.0, -17.0).into(),
             SpriteSize::LargeEnemy => self.large_enemy_size_class().offset(),
+            SpriteSize::Bolt => (0.0, 0.0).into(),
         }
     }
 
@@ -73,6 +77,7 @@ impl Appearance {
                 LargeEnemySize::Bird => (122, 96),
                 LargeEnemySize::LargeBird => (122, 96),
             },
+            SpriteSize::Bolt => (64, 64),
         }
     }
 
@@ -104,6 +109,10 @@ impl Appearance {
                 index_base + offset
             }
             SpriteSize::LargeEnemy => animation_offset,
+            SpriteSize::Bolt => match self.kind {
+                AppearanceKind::FireBolt => 10,
+                _ => panic!("Unexpected bolt kind"),
+            },
         }
     }
 
@@ -111,6 +120,10 @@ impl Appearance {
         match self.sprite_size_class() {
             SpriteSize::Detailed => 9,
             SpriteSize::LargeEnemy => 3,
+            SpriteSize::Bolt => match self.kind {
+                AppearanceKind::FireBolt => 5,
+                _ => panic!("Unexpected bolt kind"),
+            },
         }
     }
 
@@ -125,6 +138,7 @@ impl Appearance {
         match self.kind {
             AppearanceKind::MaleBrownHairBlueBody => SpriteSize::Detailed,
             AppearanceKind::Golem => SpriteSize::LargeEnemy,
+            AppearanceKind::FireBolt => SpriteSize::Bolt,
         }
     }
 
