@@ -29,6 +29,7 @@ fn draw_sprites(world: &mut World, canvas: &mut Canvas) {
         let screen_position = calculate_screen_position(animation, position);
         let images = world.get_resource::<ImageCache>().unwrap();
         draw::render_sprite(canvas, screen_position, appearance, animation, images);
+        overlay::render_sprite(canvas, screen_position, position, false, images);
     }
 }
 
