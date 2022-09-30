@@ -73,7 +73,7 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Position::new(8, 6))
         .insert(Player)
         .insert(Skills::new(&[
-            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy).with_range(24),
+            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy).with_range(24).must_be_clear(),
             Skill::new("Dodge", SkillEffect::Move, TargetType::Tile).with_range(2).must_be_clear(),
         ]));
 

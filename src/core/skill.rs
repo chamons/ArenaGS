@@ -51,6 +51,10 @@ impl Skill {
         self.must_be_clear = true;
         self
     }
+
+    pub fn show_trail(&self) -> bool {
+        self.must_be_clear
+    }
 }
 
 pub fn is_valid_target(world: &mut World, invoker: Entity, skill: &Skill, target: Point) -> bool {

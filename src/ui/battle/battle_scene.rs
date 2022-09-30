@@ -100,16 +100,21 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
                 .id();
             world.send_event(MovementAnimationEvent::new(bolt, position.visual_center(), target.visual_center()))
         }
-        Some(VirtualKeyCode::T) => {
+        Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
+        Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
+        Some(VirtualKeyCode::End) => world.send_event(ScrollMessageEvent::scroll_to_end()),
+        Some(VirtualKeyCode::Key1) => {
             let player = find_player(world);
             let skill = world.get::<Skills>(player).unwrap().skills[0].clone();
             world.insert_resource(TargetRequest::new(skill));
             world.get_resource_mut::<Scenes>().unwrap().push(SceneKind::Target);
         }
-        Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
-        Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
-        Some(VirtualKeyCode::End) => world.send_event(ScrollMessageEvent::scroll_to_end()),
-
+        Some(VirtualKeyCode::Key2) => {
+            let player = find_player(world);
+            let skill = world.get::<Skills>(player).unwrap().skills[1].clone();
+            world.insert_resource(TargetRequest::new(skill));
+            world.get_resource_mut::<Scenes>().unwrap().push(SceneKind::Target);
+        }
         _ => {}
     }
 }
