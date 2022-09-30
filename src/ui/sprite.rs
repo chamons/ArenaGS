@@ -57,7 +57,7 @@ impl Appearance {
         match self.sprite_size_class() {
             SpriteSize::Detailed => 0.65,
             SpriteSize::LargeEnemy => self.large_enemy_size_class().scale(),
-            SpriteSize::Bolt => 2.0,
+            SpriteSize::Bolt => 1.5,
         }
     }
 
@@ -110,7 +110,7 @@ impl Appearance {
             }
             SpriteSize::LargeEnemy => animation_offset,
             SpriteSize::Bolt => match self.kind {
-                AppearanceKind::FireBolt => 10,
+                AppearanceKind::FireBolt => animation_offset,
                 _ => panic!("Unexpected bolt kind"),
             },
         }

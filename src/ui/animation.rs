@@ -190,7 +190,7 @@ pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionComplet
 }
 
 const MOVEMENT_ANIMATION_DURATION: f32 = 10.0;
-const LARGE_MOVEMENT_ANIMATION_DURATION: f32 = 4.0;
+const LARGE_MOVEMENT_ANIMATION_DURATION: f32 = 5.0;
 
 fn distance(left: Vector2<f32>, right: Vector2<f32>) -> f32 {
     f32::sqrt((left.x - right.x).powi(2) + (left.y - right.y).powi(2))
