@@ -20,6 +20,9 @@ pub use log::*;
 mod skill;
 pub use skill::*;
 
+mod field;
+pub use field::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,
@@ -70,6 +73,10 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Position::new_sized(3, 3, 2, 2))
         .insert(crate::ui::Animation::new())
         .insert(Appearance::new(AppearanceKind::Golem));
+
+    world
+        .spawn()
+        .insert(Fields::new(FieldColor::Gray, &[Point::new(7, 5), Point::new(7, 6), Point::new(7, 7)]));
 
     Ok(world)
 }

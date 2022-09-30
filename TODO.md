@@ -1,5 +1,4 @@
 # Get UI Ready
-- Fields
 - Targeting
 
 # Start of Gameplay 

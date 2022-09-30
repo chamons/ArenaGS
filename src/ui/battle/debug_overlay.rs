@@ -44,11 +44,12 @@ pub fn debug_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canva
         Vec2::new(10.0, 10.0),
     );
 
+    const SQUARE_SIZE: Rect = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_BORDER, TILE_SIZE - TILE_BORDER);
+
     match overlay_kind {
         DebugKind::MapOverlay => {
-            let square_size = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_BORDER, TILE_SIZE - TILE_BORDER);
-            let red_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.8, 0.1, 0.1, 0.5)).unwrap();
-            let green_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), square_size, Color::new(0.1, 0.8, 0.1, 0.5)).unwrap();
+            let red_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), SQUARE_SIZE, Color::new(0.8, 0.1, 0.1, 0.5)).unwrap();
+            let green_square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), SQUARE_SIZE, Color::new(0.1, 0.8, 0.1, 0.5)).unwrap();
 
             draw_map_grid(canvas, ctx);
 
