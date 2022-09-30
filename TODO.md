@@ -1,6 +1,4 @@
 # Get UI Ready
-- Projectile Animations
-
 - Character Overlays
 - Fields
 - Targeting
