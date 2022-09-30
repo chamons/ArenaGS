@@ -210,14 +210,21 @@ pub fn start_movement_animations(mut requests: EventReader<MovementAnimationEven
 }
 
 #[no_mangle]
-pub fn post_movement_actions(mut requests: EventReader<MovementAnimationComplete>, mut query: Query<&mut PostMovementAction>, mut commands: Commands) {
+pub fn end_movement_animation(
+    mut requests: EventReader<MovementAnimationComplete>,
+    mut query: Query<(&mut Animation, Option<&mut PostMovementAction>)>,
+    mut commands: Commands,
+) {
     for request in requests.iter() {
         let entity = request.entity;
-        if let Ok(action) = query.get_mut(entity) {
-            match action.kind {
-                PostMovementActionKind::Despawn => commands.add(move |w: &mut World| {
-                    w.despawn(entity);
-                }),
+        if let Ok((mut animation, action)) = query.get_mut(entity) {
+            animation.movement = None;
+            if let Some(action) = action {
+                match action.kind {
+                    PostMovementActionKind::Despawn => commands.add(move |w: &mut World| {
+                        w.despawn(entity);
+                    }),
+                }
             }
         }
     }

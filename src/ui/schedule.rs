@@ -1,7 +1,7 @@
 use bevy_ecs::schedule::SystemStage;
 
 #[cfg(not(feature = "hotreload"))]
-use super::{end_sprite_animation, post_movement_actions, start_movement_animations, start_sprite_animations};
+use super::{end_movement_animation, end_sprite_animation, start_movement_animations, start_sprite_animations};
 
 #[cfg(feature = "hotreload")]
 use systems_hot::*;
@@ -24,6 +24,6 @@ pub fn create_ui_schedule() -> SystemStage {
         .with_system(start_sprite_animations)
         .with_system(end_sprite_animation)
         .with_system(start_movement_animations)
-        .with_system(post_movement_actions)
+        .with_system(end_movement_animation)
         .with_system(super::clear_event_buffers) // This is is fine never to hot reload, it's data centric
 }

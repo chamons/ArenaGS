@@ -1,5 +1,4 @@
 # Get UI Ready
-- Character Overlays
 - Fields
 - Targeting
 
@@ -13,6 +12,7 @@
 
 # Minor Features
 - Projectiles fade over a few frames instead of disappearing
+- Character Overlay for status effects
 
 # Minor Refactorings
 - Look into moving AnimationState somewhere else
