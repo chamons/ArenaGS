@@ -6,9 +6,22 @@ use ggez::{
 };
 use winit::event::VirtualKeyCode;
 
-use crate::ui::{Scenes, ScreenCoordinates, TILE_BORDER};
-
 use super::{screen_point_for_map_grid, screen_to_map_position, TILE_SIZE};
+use crate::{
+    core::Skill,
+    ui::{Scenes, ScreenCoordinates, TILE_BORDER},
+};
+
+#[derive(Debug)]
+pub struct TargetRequest {
+    pub skill: Skill,
+}
+
+impl TargetRequest {
+    pub fn new(skill: Skill) -> Self {
+        TargetRequest { skill }
+    }
+}
 
 #[no_mangle]
 pub fn targeting_update(_world: &mut World, _ctx: &mut ggez::Context) {}
@@ -19,6 +32,8 @@ const TARGET_SIZE: Rect = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_B
 pub fn targeting_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
     let mouse = ctx.mouse.position();
     let position = world.get_resource::<ScreenCoordinates>().unwrap().logical_mouse_position(ctx, mouse.x, mouse.y);
+    let skill = &world.get_resource::<TargetRequest>().unwrap().skill;
+
     if let Some(grid_rect) = screen_to_map_position(position.0, position.1) {
         let grid_rect = screen_point_for_map_grid(grid_rect.x as f32, grid_rect.y as f32);
         let color = Color::new(1.0, 1.0, 0.0, 0.75);
@@ -34,6 +49,7 @@ pub fn targeting_mouse_button_up_event(world: &mut World, ctx: &mut ggez::Contex
 pub fn targeting_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {
     match input.keycode {
         Some(VirtualKeyCode::Escape) => {
+            world.remove_resource::<TargetRequest>();
             world.get_resource_mut::<Scenes>().unwrap().pop();
         }
         _ => {}

@@ -23,6 +23,9 @@ pub use skill::*;
 mod field;
 pub use field::*;
 
+mod physics;
+pub use physics::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,
@@ -62,8 +65,8 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
         .insert(crate::ui::Animation::new())
         .insert(Skills::new(&[
-            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy),
-            Skill::new("Dodge", SkillEffect::Move, TargetType::Tile),
+            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy).with_range(4).must_be_clear(),
+            Skill::new("Dodge", SkillEffect::Move, TargetType::Tile).with_range(2).must_be_clear(),
         ]))
         .insert(Player);
     world
