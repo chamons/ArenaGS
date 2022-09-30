@@ -33,18 +33,13 @@ fn draw_sprites(world: &mut World, canvas: &mut Canvas) {
 }
 
 fn calculate_screen_position(animation: &Animation, position: &Position) -> Vec2 {
-    let render_position = calculate_render_position(animation, position);
-    let mut screen_position = screen_point_for_map_grid(render_position.x, render_position.y);
-    screen_position.x += (position.position.width as f32 * TILE_SIZE) / 2.0;
-    screen_position.y += (position.position.height as f32 * TILE_SIZE) / 2.0;
-    screen_position
-}
-
-fn calculate_render_position(animation: &Animation, position: &Position) -> Vec2 {
-    if let Some(render_position) = animation.movement.as_ref().map(|a| a.now().animation.into()) {
-        render_position
+    if let Some(render_position) = animation.movement.as_ref().map(|a| Vec2::from(a.now().animation)) {
+        // Animations are to specific points that can be in between grid cells
+        screen_point_for_map_grid(render_position.x, render_position.y)
     } else {
-        position.position.origin.into()
+        // Entities sit on exact coordinates, so offset their visuals to their center
+        let render_position = position.position.visual_center();
+        screen_point_for_map_grid(render_position.x, render_position.y)
     }
 }
 
@@ -80,7 +75,16 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             move_to(world, Direction::South);
         }
         Some(VirtualKeyCode::F) => {
-            let target = SizedPoint::new(3, 3);
+            let query = &mut world.query::<(&Appearance, &mut Position)>().iter_mut(world).collect::<Vec<_>>();
+            let position = query
+                .iter_mut()
+                .filter(|(a, _)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
+                .map(|(_, p)| p)
+                .next()
+                .unwrap()
+                .position;
+
+            let target = SizedPoint::new_sized(3, 3, 2, 2);
             let bolt = world
                 .spawn()
                 .insert(Position::from(target))
@@ -88,7 +92,7 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
                 .insert(Animation::new())
                 .insert(PostMovementAction::new(PostMovementActionKind::Despawn))
                 .id();
-            world.send_event(MovementAnimationEvent::new(bolt, SizedPoint::new(8, 6), target))
+            world.send_event(MovementAnimationEvent::new(bolt, position.visual_center(), target.visual_center()))
         }
         Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
         Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
@@ -110,7 +114,11 @@ fn move_to(world: &mut World, direction: Direction) {
         let current_position = position.position;
         if let Some(new_position) = current_position.in_direction(direction) {
             position.position = new_position;
-            Some(MovementAnimationEvent::new(*entity, current_position, new_position))
+            Some(MovementAnimationEvent::new(
+                *entity,
+                current_position.visual_center(),
+                new_position.visual_center(),
+            ))
         } else {
             None
         }

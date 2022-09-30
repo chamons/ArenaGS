@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ggez::glam::Vec2;
+use ggez::{glam::Vec2, mint::Vector2};
 use line_drawing::WalkGrid;
 use serde::{Deserialize, Serialize};
 
@@ -214,6 +214,13 @@ impl SizedPoint {
             .min_by(|&&x, &&y| point.distance_to(x).cmp(&point.distance_to(y)))
             .take()
             .unwrap()
+    }
+
+    pub fn visual_center(&self) -> Vector2<f32> {
+        Vector2 {
+            x: self.origin.x as f32 + (self.width as f32 / 2.0),
+            y: self.origin.y as f32 + (self.height as f32 / 2.0),
+        }
     }
 }
 
@@ -471,5 +478,18 @@ mod tests {
         let point = SizedPoint::new(2, 2);
         let target = SizedPoint::new_sized(3, 3, 2, 2);
         assert_points_equal(target.nearest_point_to(point), Point::new(3, 2));
+    }
+
+    #[test]
+    fn visual_center() {
+        let point = SizedPoint::new(2, 3);
+        let center = point.visual_center();
+        assert_approx_eq!(2.5, center.x);
+        assert_approx_eq!(3.5, center.y);
+
+        let point = SizedPoint::new_sized(2, 3, 2, 2);
+        let center = point.visual_center();
+        assert_approx_eq!(3.0, center.x);
+        assert_approx_eq!(4.0, center.y);
     }
 }

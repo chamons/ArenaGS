@@ -14,14 +14,9 @@ pub struct MovementAnimation {
     pub animation: Vector2<f32>,
 }
 
-impl From<SizedPoint> for MovementAnimation {
-    fn from(point: SizedPoint) -> Self {
-        Self {
-            animation: Vector2 {
-                x: point.origin.x as f32,
-                y: point.origin.y as f32,
-            },
-        }
+impl From<Vector2<f32>> for MovementAnimation {
+    fn from(animation: Vector2<f32>) -> Self {
+        Self { animation }
     }
 }
 
@@ -60,7 +55,7 @@ impl Animation {
     }
 }
 
-pub fn create_movement_animation(start: SizedPoint, end: SizedPoint, duration: f32) -> AnimationSequence<MovementAnimation> {
+pub fn create_movement_animation(start: Vector2<f32>, end: Vector2<f32>, duration: f32) -> AnimationSequence<MovementAnimation> {
     AnimationSequence::from(vec![(start.into(), 0.0, Linear).into(), (end.into(), duration, Linear).into()])
 }
 
@@ -195,16 +190,21 @@ pub fn end_sprite_animation(mut requests: EventReader<SpriteAnimateActionComplet
 }
 
 const MOVEMENT_ANIMATION_DURATION: f32 = 10.0;
-const LARGE_MOVEMENT_ANIMATION_DURATION: f32 = 3.0;
+const LARGE_MOVEMENT_ANIMATION_DURATION: f32 = 4.0;
+
+fn distance(left: Vector2<f32>, right: Vector2<f32>) -> f32 {
+    f32::sqrt((left.x - right.x).powi(2) + (left.y - right.y).powi(2))
+}
 
 #[no_mangle]
 pub fn start_movement_animations(mut requests: EventReader<MovementAnimationEvent>, mut query: Query<&mut Animation>) {
     for request in requests.iter() {
         let mut animation = query.get_mut(request.entity).expect("Starting movement animation on item without animation");
-        let distance = request.start.distance_to_multi(request.end).unwrap();
+
+        let distance = distance(request.start, request.end);
         let duration = match distance {
-            1 => MOVEMENT_ANIMATION_DURATION,
-            _ => 20.0 * distance as f32,
+            x if (0.9..1.1).contains(&x) => MOVEMENT_ANIMATION_DURATION,
+            _ => LARGE_MOVEMENT_ANIMATION_DURATION * distance as f32,
         };
         animation.movement = Some(create_movement_animation(request.start, request.end, duration));
     }

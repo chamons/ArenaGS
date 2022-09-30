@@ -6,6 +6,7 @@
         "ggez",
         "Hamons",
         "horz",
+        "powi",
         "skillbar",
         "winit"
     ]

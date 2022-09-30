@@ -65,7 +65,7 @@ impl Appearance {
         match self.sprite_size_class() {
             SpriteSize::Detailed => (0.0, -17.0).into(),
             SpriteSize::LargeEnemy => self.large_enemy_size_class().offset(),
-            SpriteSize::Bolt => (0.0, 0.0).into(),
+            SpriteSize::Bolt => (0.0, -8.0).into(),
         }
     }
 
