@@ -32,12 +32,4 @@ impl ScreenCoordinates {
     pub fn set_screen(&self, canvas: &mut Canvas) {
         canvas.set_screen_coordinates(self.rect);
     }
-
-    pub fn logical_mouse_position(&self, ctx: &mut ggez::Context, x: f32, y: f32) -> (f32, f32) {
-        let screen_rect = self.rect;
-        let size = ctx.gfx.window().inner_size();
-        let pos_x = (x / (size.width as f32)) * screen_rect.w + screen_rect.x;
-        let pos_y = (y / (size.height as f32)) * screen_rect.h + screen_rect.y;
-        (pos_x, pos_y)
-    }
 }

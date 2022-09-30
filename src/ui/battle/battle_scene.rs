@@ -69,7 +69,7 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             world.insert_resource(DebugOverlayRequest::new(DebugKind::MapOverlay));
         }
         Some(VirtualKeyCode::D) => {
-            let player = get_player_entity(world);
+            let player = find_player(world);
             world.send_event(SpriteAnimateActionEvent::new(player, AnimationState::Cheer));
             let frame = world.get_resource::<Frame>().unwrap().current;
             world.send_event(NewMessageEvent::new(&format!("Dance Party: {}", frame)));
@@ -87,8 +87,8 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             move_to(world, Direction::South);
         }
         Some(VirtualKeyCode::F) => {
-            let player = get_player_entity(world);
-            let position = world.get::<Position>(player).unwrap().position;
+            let player = find_player(world);
+            let position = find_position(world, player).unwrap();
 
             let target = SizedPoint::new_sized(3, 3, 2, 2);
             let bolt = world
@@ -101,7 +101,7 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             world.send_event(MovementAnimationEvent::new(bolt, position.visual_center(), target.visual_center()))
         }
         Some(VirtualKeyCode::T) => {
-            let player = get_player_entity(world);
+            let player = find_player(world);
             let skill = world.get::<Skills>(player).unwrap().skills[0].clone();
             world.insert_resource(TargetRequest::new(skill));
             world.get_resource_mut::<Scenes>().unwrap().push(SceneKind::Target);
@@ -116,7 +116,7 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
 
 fn move_to(world: &mut World, direction: Direction) {
     let event = {
-        let player = get_player_entity(world);
+        let player = find_player(world);
         let mut position = world.get_mut::<Position>(player).unwrap();
         let current_position = position.position;
         if let Some(new_position) = current_position.in_direction(direction) {

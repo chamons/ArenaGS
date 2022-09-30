@@ -1,7 +1,9 @@
+use std::slice::from_ref;
+
 use bevy_ecs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::{find_character_at_location, is_area_clear_of_others, is_player_or_ally, Point};
+use super::{find_character_at_location, find_position, is_area_clear_of_others, is_player_or_ally, Point, Position};
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum SkillEffect {
@@ -51,20 +53,26 @@ impl Skill {
     }
 }
 
-pub fn is_valid_target(world: &mut World, invoker: Entity, skill: &Skill, target: Option<Point>) -> bool {
+pub fn is_valid_target(world: &mut World, invoker: Entity, skill: &Skill, target: Point) -> bool {
     let final_point_good = match skill.target {
-        TargetType::Tile => is_area_clear_of_others(ecs, from_ref(&target), invoker),
-        TargetType::Enemy => !is_area_clear_of_others(ecs, from_ref(&target), invoker),
+        TargetType::Tile => is_area_clear_of_others(world, from_ref(&target), invoker),
+        TargetType::Enemy => {
+            if let Some(potential_target) = find_character_at_location(world, target) {
+                !is_player_or_ally(world, potential_target)
+            } else {
+                false
+            }
+        }
         TargetType::Player => {
-            if let Some(potential_target) = find_character_at_location(ecs, target) {
-                is_player_or_ally(ecs, potential_target)
+            if let Some(potential_target) = find_character_at_location(world, target) {
+                is_player_or_ally(world, potential_target)
             } else {
                 false
             }
         }
         TargetType::AnyoneButSelf => {
-            if let Some(initial) = ecs.read_storage::<PositionComponent>().get(invoker) {
-                !initial.position.contains_point(&target)
+            if let Some(initial) = find_position(world, invoker) {
+                !initial.contains_point(&target)
             } else {
                 true
             }
@@ -77,16 +85,16 @@ pub fn is_valid_target(world: &mut World, invoker: Entity, skill: &Skill, target
         return false;
     }
 
-    if !in_possible_skill_range(ecs, invoker, skill, target) {
+    if !in_possible_skill_range(world, invoker, skill, target) {
         return false;
     }
 
     true
 }
 
-pub fn in_possible_skill_range(ecs: &World, invoker: Entity, skill: &SkillInfo, target: Point) -> bool {
+pub fn in_possible_skill_range(world: &mut World, invoker: Entity, skill: &Skill, target: Point) -> bool {
     if let Some(skill_range) = skill.range {
-        if let Some(range_to_target) = ecs.get_position(invoker).distance_to(target) {
+        if let Some(range_to_target) = find_position(world, invoker).unwrap().distance_to(target) {
             if range_to_target > skill_range {
                 return false;
             }
@@ -94,14 +102,14 @@ pub fn in_possible_skill_range(ecs: &World, invoker: Entity, skill: &SkillInfo, 
     }
 
     if skill.must_be_clear {
-        if let Some(mut path) = ecs.get_position(invoker).line_to(target) {
+        if let Some(mut path) = find_position(world, invoker).unwrap().line_to(target) {
             // If we are targeting an enemy/player we can safely
             // ignore the last square, since we know that it must
             // have the target (from checks above)
-            if skill.target.is_enemy() || skill.target.is_player() {
+            if matches!(skill.target, TargetType::Enemy | TargetType::Player) {
                 path.pop();
             }
-            if !is_area_clear_of_others(ecs, &path, invoker) {
+            if !is_area_clear_of_others(world, &path, invoker) {
                 return false;
             }
         }

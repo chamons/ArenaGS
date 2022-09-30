@@ -26,6 +26,9 @@ pub use field::*;
 mod physics;
 pub use physics::*;
 
+mod ecs;
+pub use ecs::*;
+
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position {
     pub position: SizedPoint,
@@ -33,6 +36,9 @@ pub struct Position {
 
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Player;
+
+#[derive(Component, Debug, Deserialize, Serialize)]
+pub struct Character;
 
 impl Position {
     pub const fn new(x: u32, y: u32) -> Self {
@@ -61,23 +67,27 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
 
     world
         .spawn()
-        .insert(Position::new(6, 6))
+        .insert(Character)
+        .insert(crate::ui::Animation::new())
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
-        .insert(crate::ui::Animation::new())
-        .insert(Skills::new(&[
-            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy).with_range(4).must_be_clear(),
-            Skill::new("Dodge", SkillEffect::Move, TargetType::Tile).with_range(2).must_be_clear(),
-        ]))
-        .insert(Player);
-    world
-        .spawn()
         .insert(Position::new(8, 6))
-        .insert(crate::ui::Animation::new())
-        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody));
+        .insert(Player)
+        .insert(Skills::new(&[
+            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy).with_range(24),
+            Skill::new("Dodge", SkillEffect::Move, TargetType::Tile).with_range(2).must_be_clear(),
+        ]));
 
     world
         .spawn()
-        .insert(Position::new_sized(3, 3, 2, 2))
+        .insert(Character)
+        .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
+        .insert(crate::ui::Animation::new())
+        .insert(Position::new(6, 6));
+
+    world
+        .spawn()
+        .insert(Character)
+        .insert(Position::new_sized(3, 4, 2, 2))
         .insert(crate::ui::Animation::new())
         .insert(Appearance::new(AppearanceKind::Golem));
 

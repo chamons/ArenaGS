@@ -8,7 +8,7 @@ use winit::event::VirtualKeyCode;
 
 use super::{screen_point_for_map_grid, screen_to_map_position, TILE_SIZE};
 use crate::{
-    core::Skill,
+    core::{find_player, is_valid_target, Skill},
     ui::{Scenes, ScreenCoordinates, TILE_BORDER},
 };
 
@@ -31,15 +31,22 @@ const TARGET_SIZE: Rect = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_B
 #[no_mangle]
 pub fn targeting_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
     let mouse = ctx.mouse.position();
-    let position = world.get_resource::<ScreenCoordinates>().unwrap().logical_mouse_position(ctx, mouse.x, mouse.y);
-    let skill = &world.get_resource::<TargetRequest>().unwrap().skill;
+    world.resource_scope(|world, target: Mut<TargetRequest>| {
+        let skill = &target.skill;
 
-    if let Some(grid_rect) = screen_to_map_position(position.0, position.1) {
-        let grid_rect = screen_point_for_map_grid(grid_rect.x as f32, grid_rect.y as f32);
-        let color = Color::new(1.0, 1.0, 0.0, 0.75);
-        let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), TARGET_SIZE, color).unwrap();
-        canvas.draw(&square, grid_rect);
-    }
+        if let Some(grid_rect) = screen_to_map_position(mouse.x, mouse.y) {
+            let player = find_player(world);
+            let color = if is_valid_target(world, player, skill, grid_rect) {
+                Color::new(1.0, 1.0, 0.0, 0.75)
+            } else {
+                Color::new(1.0, 0.0, 0.0, 0.75)
+            };
+
+            let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), TARGET_SIZE, color).unwrap();
+            let screen_point = screen_point_for_map_grid(grid_rect.x as f32, grid_rect.y as f32);
+            canvas.draw(&square, screen_point);
+        }
+    });
 }
 
 #[no_mangle]

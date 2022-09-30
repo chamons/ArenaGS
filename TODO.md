@@ -1,5 +1,7 @@
 # Get UI Ready
 - Targeting
+   - Must write tests for new logic in core
+- Rewards (pick 3)
 
 # Start of Gameplay 
 - Taking turns (Double hitting move before animation complete glitches)

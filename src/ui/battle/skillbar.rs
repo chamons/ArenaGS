@@ -5,11 +5,9 @@ use ggez::{
 };
 
 use crate::{
-    core::{Skill, SkillEffect, Skills, TargetType},
+    core::{find_player, Skill, Skills},
     ui::{BackingImage, ImageCache, GAME_HEIGHT, GAME_WIDTH},
 };
-
-use super::get_player_entity;
 
 const BORDER_WIDTH: f32 = 4.0;
 const ICON_SIZE: f32 = 48.0;
@@ -17,7 +15,7 @@ const MAX_ICON_COUNT: f32 = 10.0;
 
 pub fn skillbar_draw(world: &mut World, canvas: &mut Canvas) {
     let skills = {
-        let player = get_player_entity(world);
+        let player = find_player(world);
         let skill_component = world.get_mut::<Skills>(player).unwrap();
         skill_component.skills.clone()
     };

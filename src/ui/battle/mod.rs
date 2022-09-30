@@ -53,9 +53,3 @@ pub fn screen_to_map_position(x: f32, y: f32) -> Option<Point> {
     }
     Some(Point::new(x, y))
 }
-
-pub fn get_player_entity(world: &mut World) -> Entity {
-    let query = &mut world.query_filtered::<Entity, With<Player>>();
-    let player = query.single(world);
-    player
-}
