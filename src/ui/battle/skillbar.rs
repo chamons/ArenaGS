@@ -5,18 +5,24 @@ use ggez::{
 };
 
 use crate::{
-    core::{Skill, SkillKind},
+    core::{Skill, SkillEffect, Skills, TargetType},
     ui::{BackingImage, ImageCache, GAME_HEIGHT, GAME_WIDTH},
 };
+
+use super::get_player_entity;
 
 const BORDER_WIDTH: f32 = 4.0;
 const ICON_SIZE: f32 = 48.0;
 const MAX_ICON_COUNT: f32 = 10.0;
 
 pub fn skillbar_draw(world: &mut World, canvas: &mut Canvas) {
-    let images = world.get_resource::<crate::ui::ImageCache>().unwrap();
+    let skills = {
+        let player = get_player_entity(world);
+        let skill_component = world.get_mut::<Skills>(player).unwrap();
+        skill_component.skills.clone()
+    };
 
-    let skills = vec![Skill::new(SkillKind::Shoot), Skill::new(SkillKind::Dodge)];
+    let images = world.get_resource::<crate::ui::ImageCache>().unwrap();
 
     let base_position = Vec2 {
         x: GAME_WIDTH / 4.0,
@@ -34,7 +40,7 @@ pub fn skillbar_draw(world: &mut World, canvas: &mut Canvas) {
 
 fn draw_skill(skill: &Skill, index: usize, position: Vec2, images: &ImageCache, canvas: &mut Canvas) {
     let skillbar_frame = images.get("/ui/skillbar_frame.png");
-    let skill_image = images.get(skill.kind.filename());
+    let skill_image = images.get(skill.filename());
     canvas.draw(skill_image, Vec2::new(position.x + BORDER_WIDTH / 2.0, position.y + BORDER_WIDTH / 2.0));
 
     canvas.draw(skillbar_frame, position);
@@ -59,11 +65,12 @@ fn get_skillbar_offset(skills: &[Skill]) -> f32 {
     (MAX_ICON_COUNT as f32 - skills.len() as f32) * (ICON_SIZE + BORDER_WIDTH) / 2.0
 }
 
-impl BackingImage for SkillKind {
+impl BackingImage for Skill {
     fn filename(&self) -> &str {
-        match self {
-            SkillKind::Shoot => "/icons/items/gun_08_b.PNG",
-            SkillKind::Dodge => "/icons/spell/SpellBook02_44.png",
+        match self.name.as_str() {
+            "Shoot" => "/icons/items/gun_08_b.PNG",
+            "Dodge" => "/icons/spell/SpellBook02_44.png",
+            _ => panic!(),
         }
     }
 }

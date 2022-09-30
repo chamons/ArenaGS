@@ -2,8 +2,11 @@ use bevy_ecs::prelude::*;
 use ggez::{self, graphics::Canvas, input::keyboard::KeyInput};
 use serde::{Deserialize, Serialize};
 
+use crate::ui::targeting_draw_previous;
+
+use super::targeting_key_up_event;
 #[cfg(not(feature = "hotreload"))]
-use super::{battle_scene::*, debug_overlay::*};
+use super::{battle_scene::*, debug_overlay::*, target_overlay::*};
 
 #[cfg(feature = "hotreload")]
 use systems_hot::*;
@@ -17,11 +20,13 @@ mod systems_hot {
 
     hot_functions_from_file!("src/ui/battle/battle_scene.rs");
     hot_functions_from_file!("src/ui/battle/debug_overlay.rs");
+    hot_functions_from_file!("src/ui/battle/target_overlay.rs");
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum SceneKind {
     Battle,
+    Target,
     DebugOverlay,
 }
 
@@ -60,6 +65,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => battle_update(world, ctx),
             SceneKind::DebugOverlay => debug_update(world, ctx),
+            SceneKind::Target => targeting_update(world, ctx),
         }
     }
 
@@ -69,17 +75,15 @@ impl Scenes {
             let draw_previous = match current {
                 SceneKind::Battle => battle_draw_previous(),
                 SceneKind::DebugOverlay => debug_draw_previous(),
+                SceneKind::Target => targeting_draw_previous(),
             };
             if draw_previous {
                 Scenes::draw(rest, world, ctx, canvas);
             }
             match current {
-                SceneKind::Battle => {
-                    battle_draw(world, ctx, canvas);
-                }
-                SceneKind::DebugOverlay => {
-                    debug_draw(world, ctx, canvas);
-                }
+                SceneKind::Battle => battle_draw(world, ctx, canvas),
+                SceneKind::DebugOverlay => debug_draw(world, ctx, canvas),
+                SceneKind::Target => targeting_draw(world, ctx, canvas),
             }
         }
     }
@@ -88,6 +92,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => {}
+            SceneKind::Target => {}
         }
     }
 
@@ -95,6 +100,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => debug_mouse_button_up_event(world, ctx, button, x, y),
+            SceneKind::Target => targeting_mouse_button_up_event(world, ctx, button, x, y),
         }
     }
 
@@ -102,6 +108,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => {}
+            SceneKind::Target => {}
         }
     }
 
@@ -109,6 +116,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => {}
+            SceneKind::Target => {}
         }
     }
 
@@ -116,6 +124,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => {}
+            SceneKind::Target => {}
         }
     }
 
@@ -123,6 +132,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => {}
             SceneKind::DebugOverlay => {}
+            SceneKind::Target => {}
         }
     }
 
@@ -130,6 +140,7 @@ impl Scenes {
         match state {
             SceneKind::Battle => battle_key_up_event(world, ctx, input),
             SceneKind::DebugOverlay => debug_key_up_event(world, ctx, input),
+            SceneKind::Target => targeting_key_up_event(world, ctx, input),
         }
     }
 }

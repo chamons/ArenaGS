@@ -69,14 +69,8 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             world.insert_resource(DebugOverlayRequest::new(DebugKind::MapOverlay));
         }
         Some(VirtualKeyCode::D) => {
-            let query = &world.query::<(Entity, &Appearance)>().iter(world).collect::<Vec<_>>();
-            let first = query
-                .iter()
-                .filter(|(_, a)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
-                .map(|(e, _)| e)
-                .next()
-                .unwrap();
-            world.send_event(SpriteAnimateActionEvent::new(*first, AnimationState::Cheer));
+            let player = get_player_entity(world);
+            world.send_event(SpriteAnimateActionEvent::new(player, AnimationState::Cheer));
             let frame = world.get_resource::<Frame>().unwrap().current;
             world.send_event(NewMessageEvent::new(&format!("Dance Party: {}", frame)));
         }
@@ -93,14 +87,8 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
             move_to(world, Direction::South);
         }
         Some(VirtualKeyCode::F) => {
-            let query = &mut world.query::<(&Appearance, &mut Position)>().iter_mut(world).collect::<Vec<_>>();
-            let position = query
-                .iter_mut()
-                .filter(|(a, _)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
-                .map(|(_, p)| p)
-                .next()
-                .unwrap()
-                .position;
+            let player = get_player_entity(world);
+            let position = world.get::<Position>(player).unwrap().position;
 
             let target = SizedPoint::new_sized(3, 3, 2, 2);
             let bolt = world
@@ -112,6 +100,9 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
                 .id();
             world.send_event(MovementAnimationEvent::new(bolt, position.visual_center(), target.visual_center()))
         }
+        Some(VirtualKeyCode::T) => {
+            world.get_resource_mut::<Scenes>().unwrap().push(SceneKind::Target);
+        }
         Some(VirtualKeyCode::PageUp) => world.send_event(ScrollMessageEvent::page_up()),
         Some(VirtualKeyCode::PageDown) => world.send_event(ScrollMessageEvent::page_down()),
         Some(VirtualKeyCode::End) => world.send_event(ScrollMessageEvent::scroll_to_end()),
@@ -122,18 +113,13 @@ pub fn battle_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: K
 
 fn move_to(world: &mut World, direction: Direction) {
     let event = {
-        let query = &mut world.query::<(Entity, &Appearance, &mut Position)>().iter_mut(world).collect::<Vec<_>>();
-        let (entity, position) = query
-            .iter_mut()
-            .filter(|(_, a, _)| a.kind == AppearanceKind::MaleBrownHairBlueBody)
-            .map(|(e, _, p)| (e, p))
-            .next()
-            .unwrap();
+        let player = get_player_entity(world);
+        let mut position = world.get_mut::<Position>(player).unwrap();
         let current_position = position.position;
         if let Some(new_position) = current_position.in_direction(direction) {
             position.position = new_position;
             Some(MovementAnimationEvent::new(
-                *entity,
+                player,
                 current_position.visual_center(),
                 new_position.visual_center(),
             ))

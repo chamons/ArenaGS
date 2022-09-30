@@ -61,6 +61,10 @@ pub fn create_game_world(fs: &mut ggez::filesystem::Filesystem) -> Result<World>
         .insert(Position::new(6, 6))
         .insert(Appearance::new(AppearanceKind::MaleBrownHairBlueBody))
         .insert(crate::ui::Animation::new())
+        .insert(Skills::new(&[
+            Skill::new("Shoot", SkillEffect::RangedAttack, TargetType::Enemy),
+            Skill::new("Dodge", SkillEffect::Move, TargetType::Tile),
+        ]))
         .insert(Player);
     world
         .spawn()

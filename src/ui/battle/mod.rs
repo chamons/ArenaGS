@@ -1,6 +1,7 @@
+use bevy_ecs::prelude::*;
 use ggez::{glam::Vec2, mint};
 
-use crate::core::{Map, Point};
+use crate::core::{Map, Player, Point};
 
 pub mod battle_scene;
 pub mod debug_overlay;
@@ -16,6 +17,9 @@ pub use skillbar::*;
 
 mod overlay;
 pub use overlay::*;
+
+mod target_overlay;
+pub use target_overlay::*;
 
 use super::ScreenCoordinates;
 
@@ -52,10 +56,8 @@ pub fn screen_to_map_position(x: f32, y: f32) -> Option<Point> {
     Some(Point::new(x, y))
 }
 
-fn logical_mouse_position(ctx: &mut ggez::Context, screen_coordinate: &ScreenCoordinates, x: f32, y: f32) -> (f32, f32) {
-    let screen_rect = screen_coordinate.rect;
-    let size = ctx.gfx.window().inner_size();
-    let pos_x = (x / (size.width as f32)) * screen_rect.w + screen_rect.x;
-    let pos_y = (y / (size.height as f32)) * screen_rect.h + screen_rect.y;
-    (pos_x, pos_y)
+pub fn get_player_entity(world: &mut World) -> Entity {
+    let query = &mut world.query_filtered::<Entity, With<Player>>();
+    let player = query.single(world);
+    player
 }
