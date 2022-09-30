@@ -11,7 +11,7 @@ use super::TILE_SIZE;
 pub fn render_sprite(canvas: &mut Canvas, screen_position: Vec2, position: &Position, draw_bracket: bool, images: &ImageCache) {
     let size = overlay_size(position);
     let screen_position = Vec2 {
-        x: screen_position.x - (TILE_SIZE * size as f32) / 2.0,
+        x: screen_position.x + 3.0 - (TILE_SIZE * size as f32) / 2.0,
         y: screen_position.y - 2.0 + (TILE_SIZE * size as f32) / 2.0,
     };
 

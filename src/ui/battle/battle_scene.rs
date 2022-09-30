@@ -1,4 +1,5 @@
 use bevy_ecs::prelude::*;
+use ggez::graphics::{self, Color, Rect};
 use ggez::{graphics::Canvas, input::keyboard::KeyInput};
 use winit::event::VirtualKeyCode;
 
@@ -22,6 +23,22 @@ pub fn battle_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canv
     skillbar_draw(world, canvas);
 
     draw_sprites(world, canvas);
+    draw_fields(world, ctx, canvas);
+}
+
+const FIELD_SIZE: Rect = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_BORDER, TILE_SIZE - TILE_BORDER);
+
+fn draw_fields(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
+    for field in &world.query::<&Fields>().iter(world).collect::<Vec<_>>() {
+        let color = match field.color {
+            FieldColor::Gray => Color::new(122.0 / 255.0, 72.0 / 255.0, 60.0 / 255.0, 140.0 / 255.0),
+        };
+        let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), FIELD_SIZE, color).unwrap();
+        for position in &field.positions {
+            let grid_rect = screen_point_for_map_grid(position.x as f32, position.y as f32);
+            canvas.draw(&square, grid_rect);
+        }
+    }
 }
 
 fn draw_sprites(world: &mut World, canvas: &mut Canvas) {
