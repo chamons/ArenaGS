@@ -29,17 +29,14 @@ impl Point {
     }
 
     pub fn distance_to(&self, point: Point) -> Option<u32> {
-        if let Some(path) = self.line_to(point) {
-            Some(path.len() as u32 - 1) // Path includes both end points
-        } else {
-            None
-        }
+        // Path includes both end points
+        self.line_to(point).map(|path| path.len() as u32 - 1)
     }
 
     pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
         let path = WalkGrid::new((self.x as i32, self.y as i32), (point.x as i32, point.y as i32));
         let path: Vec<Point> = path.map(|(x, y)| Point::new(x as u32, y as u32)).collect();
-        if path.len() > 0 {
+        if !path.is_empty() {
             Some(path)
         } else {
             None
@@ -143,6 +140,7 @@ impl SizedPoint {
         self.line_to_extended(Point::new(point.x, point.y))
     }
 
+    #[allow(clippy::manual_map)]
     fn line_to_extended(&self, point: Point) -> Option<Vec<Point>> {
         // TODO - Can we be smarter than checking every point?
         let positions = self.covered_points();
@@ -164,11 +162,8 @@ impl SizedPoint {
     }
 
     pub fn distance_with_initial(&self, point: Point) -> Option<(Point, u32)> {
-        if let Some(path) = self.line_to(point) {
-            Some((*path.first().unwrap(), path.len() as u32 - 1)) // Path includes both end points
-        } else {
-            None
-        }
+        // Path includes both end points
+        self.line_to(point).map(|path| (*path.first().unwrap(), path.len() as u32 - 1))
     }
 
     pub fn distance_to(&self, point: Point) -> Option<u32> {
@@ -236,6 +231,7 @@ impl From<Point> for SizedPoint {
     }
 }
 
+#[allow(dead_code)]
 pub fn extend_line_along_path(points: &[Point], length: u32) -> Vec<Point> {
     let starting = points.first().unwrap();
     let ending = points.last().unwrap();
@@ -272,6 +268,7 @@ mod tests {
         assert_eq!(a.y, b.y);
     }
 
+    #[allow(dead_code)]
     pub fn assert_points_not_equal(a: Point, b: Point) {
         assert!(a.x != b.x || a.y != b.y);
     }

@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use ggez::mint::Vector2;
 
-use crate::core::{AnimationState, SizedPoint};
+use crate::core::AnimationState;
 
 pub struct SpriteAnimateActionEvent {
     pub entity: Entity,

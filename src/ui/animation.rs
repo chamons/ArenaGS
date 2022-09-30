@@ -2,10 +2,10 @@ use std::collections::HashSet;
 
 use bevy_ecs::prelude::*;
 use ggez::mint::Vector2;
-use keyframe::{functions::Linear, AnimationSequence, Keyframe};
+use keyframe::{functions::Linear, AnimationSequence};
 use keyframe_derive::CanTween;
 
-use crate::core::{AnimationState, Appearance, Point, SizedPoint};
+use crate::core::{AnimationState, Appearance};
 
 use super::{MovementAnimationComplete, MovementAnimationEvent, SpriteAnimateActionCompleteEvent, SpriteAnimateActionEvent};
 
