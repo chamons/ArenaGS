@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum AppearanceKind {
     MaleBrownHairBlueBody,
     Golem,
+    FireBolt,
 }
 
 #[allow(dead_code)]

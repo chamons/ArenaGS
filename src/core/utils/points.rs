@@ -1,6 +1,7 @@
 use std::fmt;
 
-use ggez::glam::Vec2;
+use ggez::{glam::Vec2, mint::Vector2};
+use line_drawing::WalkGrid;
 use serde::{Deserialize, Serialize};
 
 use crate::core::Map;
@@ -25,6 +26,21 @@ impl Point {
     #[allow(dead_code)]
     pub fn in_bounds(&self) -> bool {
         self.x < MAX_POINT_SIZE && self.y < MAX_POINT_SIZE
+    }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        // Path includes both end points
+        self.line_to(point).map(|path| path.len() as u32 - 1)
+    }
+
+    pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        let path = WalkGrid::new((self.x as i32, self.y as i32), (point.x as i32, point.y as i32));
+        let path: Vec<Point> = path.map(|(x, y)| Point::new(x as u32, y as u32)).collect();
+        if !path.is_empty() {
+            Some(path)
+        } else {
+            None
+        }
     }
 }
 
@@ -119,6 +135,88 @@ impl SizedPoint {
             None
         }
     }
+
+    pub fn line_to(&self, point: Point) -> Option<Vec<Point>> {
+        self.line_to_extended(Point::new(point.x, point.y))
+    }
+
+    #[allow(clippy::manual_map)]
+    fn line_to_extended(&self, point: Point) -> Option<Vec<Point>> {
+        // TODO - Can we be smarter than checking every point?
+        let positions = self.covered_points();
+        let shortest = positions.iter().min_by(|first, second| {
+            let first = WalkGrid::new((first.x as i32, first.y as i32), (point.x as i32, point.y as i32)).count();
+            let second = WalkGrid::new((second.x as i32, second.y as i32), (point.x as i32, point.y as i32)).count();
+            first.cmp(&second)
+        });
+        if let Some(shortest) = shortest {
+            Some(
+                WalkGrid::<i32>::new((shortest.x as i32, shortest.y as i32), (point.x as i32, point.y as i32))
+                    .filter(|(x, y)| *x >= 0 && *y >= 0 && *y < 13 && *x < 13)
+                    .map(|(x, y)| Point::new(x as u32, y as u32))
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_with_initial(&self, point: Point) -> Option<(Point, u32)> {
+        // Path includes both end points
+        self.line_to(point).map(|path| (*path.first().unwrap(), path.len() as u32 - 1))
+    }
+
+    pub fn distance_to(&self, point: Point) -> Option<u32> {
+        if let Some((_, first)) = self.distance_with_initial(point) {
+            Some(first)
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to_multi_with_endpoints(&self, point: SizedPoint) -> Option<(Point, Point, u32)> {
+        // TODO - Can we be smarter than checking every point?
+        let target_positions = point.covered_points();
+        let shortest_target = target_positions.iter().min_by(|first, second| {
+            let first = self.distance_to(**first);
+            let second = self.distance_to(**second);
+            first.cmp(&second)
+        });
+
+        if let Some(shortest_target) = shortest_target {
+            if let Some((source, distance)) = self.distance_with_initial(*shortest_target) {
+                Some((source, *shortest_target, distance))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn distance_to_multi(&self, point: SizedPoint) -> Option<u32> {
+        if let Some((_, _, first)) = self.distance_to_multi_with_endpoints(point) {
+            Some(first)
+        } else {
+            None
+        }
+    }
+
+    pub fn nearest_point_to(&self, point: SizedPoint) -> Point {
+        *self
+            .covered_points()
+            .iter()
+            .min_by(|&&x, &&y| point.distance_to(x).cmp(&point.distance_to(y)))
+            .take()
+            .unwrap()
+    }
+
+    pub fn visual_center(&self) -> Vector2<f32> {
+        Vector2 {
+            x: self.origin.x as f32 + (self.width as f32 / 2.0),
+            y: self.origin.y as f32 + (self.height as f32 / 2.0),
+        }
+    }
 }
 
 impl fmt::Display for SizedPoint {
@@ -127,9 +225,53 @@ impl fmt::Display for SizedPoint {
     }
 }
 
+impl From<Point> for SizedPoint {
+    fn from(p: Point) -> Self {
+        SizedPoint::new(p.x, p.y)
+    }
+}
+
+#[allow(dead_code)]
+pub fn extend_line_along_path(points: &[Point], length: u32) -> Vec<Point> {
+    let starting = points.first().unwrap();
+    let ending = points.last().unwrap();
+
+    let delta_x: i32 = ending.x as i32 - starting.x as i32;
+    let delta_y: i32 = ending.y as i32 - starting.y as i32;
+
+    let mut line = points.to_vec();
+    loop {
+        let ending = SizedPoint::from(*line.last().unwrap());
+        let extension = ending
+            .line_to_extended(Point::new((ending.origin.x as i32 + delta_x) as u32, (ending.origin.y as i32 + delta_y) as u32))
+            .unwrap();
+        for e in extension.iter().skip(1) {
+            line.push(*e);
+        }
+
+        // If we've reached our length or the extension adds no additional length due to map edge
+        if line.len() >= length as usize || extension.len() == 1 {
+            line.truncate(length as usize);
+            return line;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use assert_approx_eq::assert_approx_eq;
+
+    pub fn assert_points_equal(a: Point, b: Point) {
+        assert_eq!(a.x, b.x);
+        assert_eq!(a.y, b.y);
+    }
+
+    #[allow(dead_code)]
+    pub fn assert_points_not_equal(a: Point, b: Point) {
+        assert!(a.x != b.x || a.y != b.y);
+    }
 
     #[test]
     fn covered_points() {
@@ -201,5 +343,150 @@ mod tests {
         assert!(point.constrain_to_map(11, 11).is_some());
         assert!(point.constrain_to_map(12, 12).is_none());
         assert!(point.constrain_to_map(-1, 0).is_none());
+    }
+
+    #[test]
+    fn line_to_single() {
+        let point = SizedPoint::new(2, 2);
+        let line = point.line_to(Point::new(4, 5)).unwrap();
+        assert_eq!(6, line.len());
+        assert_eq!(line[0], Point::new(2, 2));
+        assert_eq!(line[1], Point::new(2, 3));
+        assert_eq!(line[2], Point::new(3, 3));
+        assert_eq!(line[3], Point::new(3, 4));
+        assert_eq!(line[4], Point::new(4, 4));
+        assert_eq!(line[5], Point::new(4, 5));
+    }
+
+    #[test]
+    fn line_to_multi() {
+        let point = SizedPoint::new_sized(1, 2, 2, 1);
+        let line = point.line_to(Point::new(4, 5)).unwrap();
+        assert_eq!(6, line.len());
+        assert_eq!(line[0], Point::new(2, 2));
+        assert_eq!(line[1], Point::new(2, 3));
+        assert_eq!(line[2], Point::new(3, 3));
+        assert_eq!(line[3], Point::new(3, 4));
+        assert_eq!(line[4], Point::new(4, 4));
+        assert_eq!(line[5], Point::new(4, 5));
+    }
+
+    #[test]
+    fn extend_line() {
+        let point = SizedPoint::new(2, 2);
+        let line = extend_line_along_path(&point.line_to(Point::new(4, 5)).unwrap(), 12);
+        assert_eq!(12, line.len());
+        assert_eq!(line[0], Point::new(2, 2));
+        assert_eq!(line[1], Point::new(2, 3));
+        assert_eq!(line[2], Point::new(3, 3));
+        assert_eq!(line[3], Point::new(3, 4));
+        assert_eq!(line[4], Point::new(4, 4));
+        assert_eq!(line[5], Point::new(4, 5));
+        assert_eq!(line[6], Point::new(4, 6));
+        assert_eq!(line[7], Point::new(5, 6));
+        assert_eq!(line[8], Point::new(5, 7));
+        assert_eq!(line[9], Point::new(6, 7));
+        assert_eq!(line[10], Point::new(6, 8));
+        assert_eq!(line[11], Point::new(6, 9));
+    }
+
+    #[test]
+    fn extend_line_past_map_edge_south() {
+        let point = SizedPoint::new(8, 8);
+        let line = extend_line_along_path(&point.line_to(Point::new(11, 12)).unwrap(), 12);
+        assert_eq!(8, line.len());
+        assert_eq!(line[0], Point::new(8, 8));
+        assert_eq!(line[1], Point::new(8, 9));
+        assert_eq!(line[2], Point::new(9, 9));
+        assert_eq!(line[3], Point::new(9, 10));
+        assert_eq!(line[4], Point::new(10, 10));
+        assert_eq!(line[5], Point::new(10, 11));
+        assert_eq!(line[6], Point::new(11, 11));
+        assert_eq!(line[7], Point::new(11, 12));
+    }
+
+    #[test]
+    fn extend_line_past_map_edge_north() {
+        let point = SizedPoint::new(3, 3);
+        let line = extend_line_along_path(&point.line_to(Point::new(1, 1)).unwrap(), 12);
+        assert_eq!(7, line.len());
+        assert_eq!(line[0], Point::new(3, 3));
+        assert_eq!(line[1], Point::new(3, 2));
+        assert_eq!(line[2], Point::new(2, 2));
+        assert_eq!(line[3], Point::new(2, 1));
+        assert_eq!(line[4], Point::new(1, 1));
+        assert_eq!(line[5], Point::new(1, 0));
+        assert_eq!(line[6], Point::new(0, 0));
+    }
+
+    #[test]
+    fn distance_to_single() {
+        let point = SizedPoint::new(2, 2);
+        let (initial, distance) = point.distance_with_initial(Point::new(4, 5)).unwrap();
+        assert_eq!(5, distance);
+        assert_points_equal(initial, Point::new(2, 2));
+        let distance = point.distance_to(Point::new(4, 5)).unwrap();
+        assert_eq!(5, distance);
+    }
+
+    #[test]
+    fn distance_to_multi() {
+        let point = SizedPoint::new_sized(1, 2, 2, 1);
+        let (initial, distance) = point.distance_with_initial(Point::new(4, 5)).unwrap();
+        assert_eq!(5, distance);
+        assert_points_equal(initial, Point::new(2, 2));
+        let distance = point.distance_to(Point::new(4, 5)).unwrap();
+        assert_eq!(5, distance);
+    }
+
+    #[test]
+    fn multi_distance_to_multi() {
+        let point = SizedPoint::new_sized(1, 2, 2, 2);
+        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::new_sized(4, 6, 2, 2)).unwrap();
+        // . . . . . .
+        // . P P . . .
+        // . P P . . .
+        // . . * * . .
+        // . . . * * .
+        // . . . . T T
+        // . . . . T T
+        assert_eq!(5, distance);
+        assert_points_equal(Point::new(2, 2), initial);
+        assert_points_equal(Point::new(4, 5), end);
+        let distance = point.distance_to_multi(SizedPoint::new_sized(4, 6, 2, 2)).unwrap();
+        assert_eq!(5, distance);
+    }
+
+    #[test]
+    fn distance_to_point() {
+        assert_eq!(9, Point::new(5, 4).distance_to(Point::new(0, 0)).unwrap());
+    }
+
+    #[test]
+    fn line_to_point() {
+        let path = Point::new(5, 4).line_to(Point::new(0, 0)).unwrap();
+        assert_points_equal(path[0], Point::new(5, 4));
+        assert_points_equal(path[4], Point::new(3, 2));
+        assert_points_equal(path[9], Point::new(0, 0));
+    }
+
+    #[test]
+    fn nearest_to_multi_point() {
+        let point = SizedPoint::new(2, 2);
+        let target = SizedPoint::new_sized(3, 3, 2, 2);
+        assert_points_equal(target.nearest_point_to(point), Point::new(3, 2));
+    }
+
+    #[test]
+    fn visual_center() {
+        let point = SizedPoint::new(2, 3);
+        let center = point.visual_center();
+        assert_approx_eq!(2.5, center.x);
+        assert_approx_eq!(3.5, center.y);
+
+        let point = SizedPoint::new_sized(2, 3, 2, 2);
+        let center = point.visual_center();
+        assert_approx_eq!(3.0, center.x);
+        assert_approx_eq!(4.0, center.y);
     }
 }

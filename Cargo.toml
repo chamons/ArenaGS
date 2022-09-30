@@ -9,15 +9,20 @@ name = "arenalib"
 
 [dependencies]
 anyhow = "1.0.64"
-ggez = { path = "../ggez", default-features = false }
-winit = { version = "0.27.3", features = ["serde"] }
-toml = "0.5"
-serde = { version = "1.0.97", features = ["derive"] }
 bevy_ecs = "0.8.1"
 bincode = "1.3.1"
+ggez = { path = "../ggez", default-features = false }
 keyframe = "1.1.1"
-hot-lib-reloader = { version = "^0.6", optional = true }
 keyframe_derive = "1.0.0"
+line_drawing = "0.8.0"
+serde = { version = "1.0.97", features = ["derive"] }
+toml = "0.5"
+winit = { version = "0.27.3", features = ["serde"] }
+
+hot-lib-reloader = { version = "^0.6", optional = true }
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"
 
 [build-dependencies]
 winres = "0.1.11"

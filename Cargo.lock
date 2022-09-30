@@ -64,12 +64,14 @@ name = "arena-gs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "assert_approx_eq",
  "bevy_ecs",
  "bincode",
  "ggez",
  "hot-lib-reloader",
  "keyframe",
  "keyframe_derive",
+ "line_drawing",
  "serde",
  "toml",
  "winit",
@@ -102,6 +104,12 @@ checksum = "006ca68e0f2b03f22d6fa9f2860f85aed430d257fec20f8879b2145e7c7ae1a6"
 dependencies = [
  "libloading",
 ]
+
+[[package]]
+name = "assert_approx_eq"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c07dab4369547dbe5114677b33fbbf724971019f3818172d59a97a61c774ffd"
 
 [[package]]
 name = "async-channel"
@@ -1347,6 +1355,15 @@ name = "libm"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "292a948cd991e376cf75541fe5b97a1081d713c618b4f1b9500f8844e49eb565"
+
+[[package]]
+name = "line_drawing"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15cb10f27ad3eac84fdb70f0ea6dfe3bc33f7d6f3aa575f32d1ced3a342049a1"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "linked-hash-map"
