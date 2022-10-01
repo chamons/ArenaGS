@@ -31,10 +31,12 @@ const TARGET_SIZE: Rect = Rect::new(TILE_BORDER, TILE_BORDER, TILE_SIZE - TILE_B
 #[no_mangle]
 pub fn targeting_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canvas) {
     let mouse = ctx.mouse.position();
+    let (x, y) = world.get_resource::<ScreenCoordinates>().unwrap().logical_mouse_position(ctx, mouse.x, mouse.y);
+
     world.resource_scope(|world, target: Mut<TargetRequest>| {
         let skill = &target.skill;
 
-        if let Some(cursor_point_on_map) = screen_to_map_position(mouse.x, mouse.y) {
+        if let Some(cursor_point_on_map) = screen_to_map_position(x, y) {
             let player = find_player(world);
             let color = if is_valid_target(world, player, skill, cursor_point_on_map) {
                 Color::new(1.0, 1.0, 0.0, 0.75)

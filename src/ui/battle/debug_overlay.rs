@@ -69,7 +69,9 @@ pub fn debug_draw(world: &mut World, ctx: &mut ggez::Context, canvas: &mut Canva
 }
 
 #[no_mangle]
-pub fn debug_mouse_button_up_event(world: &mut World, _ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+pub fn debug_mouse_button_up_event(world: &mut World, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {
+    let (x, y) = world.get_resource::<ScreenCoordinates>().unwrap().logical_mouse_position(ctx, x, y);
+
     if button == MouseButton::Left {
         if let Some(point) = screen_to_map_position(x, y) {
             let mut map = world.get_resource_mut::<Map>().unwrap();
