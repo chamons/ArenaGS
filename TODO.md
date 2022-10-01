@@ -1,5 +1,5 @@
 # Get UI Ready
-- Targeting
+- Rewards (pick 3)
 
 # Start of Gameplay 
 - Taking turns (Double hitting move before animation complete glitches)

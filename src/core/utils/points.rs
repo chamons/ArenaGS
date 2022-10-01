@@ -85,7 +85,7 @@ impl SizedPoint {
         let mut positions = Vec::with_capacity((self.width * self.height) as usize);
         for y in 0..self.height {
             for x in 0..self.width {
-                positions.push(Point::new(self.origin.x + x, self.origin.y - y))
+                positions.push(Point::new(self.origin.x + x, self.origin.y + y))
             }
         }
         positions
@@ -213,8 +213,8 @@ impl SizedPoint {
 
     pub fn visual_center(&self) -> Vector2<f32> {
         Vector2 {
-            x: self.origin.x as f32 + (self.width as f32 / 2.0),
-            y: self.origin.y as f32 + (self.height as f32 / 2.0),
+            x: self.origin.x as f32 + self.width as f32 / 2.0,
+            y: self.origin.y as f32 + self.height as f32 / 2.0,
         }
     }
 }
@@ -278,29 +278,38 @@ mod tests {
         //  (2,0) (3,0)
         //  (2,1) (3,1)
         //  (2,2) (3,2)
-        let point = SizedPoint::new_sized(2, 2, 2, 3);
+        let point = SizedPoint::new_sized(2, 0, 2, 3);
         let all = point.covered_points();
         assert_eq!(6, all.len());
-        assert_eq!(all[0], Point::new(2, 2));
-        assert_eq!(all[1], Point::new(3, 2));
+        assert_eq!(all[0], Point::new(2, 0));
+        assert_eq!(all[1], Point::new(3, 0));
         assert_eq!(all[2], Point::new(2, 1));
         assert_eq!(all[3], Point::new(3, 1));
-        assert_eq!(all[4], Point::new(2, 0));
-        assert_eq!(all[5], Point::new(3, 0));
+        assert_eq!(all[4], Point::new(2, 2));
+        assert_eq!(all[5], Point::new(3, 2));
     }
 
     #[test]
     fn contains_point() {
-        let point = SizedPoint::new_sized(2, 2, 2, 3);
-        assert!(point.contains_point(&Point::new(2, 2)));
-        assert!(point.contains_point(&Point::new(3, 2)));
-        assert!(point.contains_point(&Point::new(2, 1)));
-        assert!(point.contains_point(&Point::new(3, 1)));
+        let point = SizedPoint::new_sized(2, 0, 2, 3);
         assert!(point.contains_point(&Point::new(2, 0)));
         assert!(point.contains_point(&Point::new(3, 0)));
-        assert!(!point.contains_point(&Point::new(4, 4)));
-        assert!(!point.contains_point(&Point::new(0, 0)));
-        assert!(!point.contains_point(&Point::new(2, 5)));
+        assert!(point.contains_point(&Point::new(2, 1)));
+        assert!(point.contains_point(&Point::new(3, 1)));
+        assert!(point.contains_point(&Point::new(2, 2)));
+        assert!(point.contains_point(&Point::new(3, 2)));
+        assert!(!point.contains_point(&Point::new(4, 2)));
+        assert!(!point.contains_point(&Point::new(1, 0)));
+        assert!(!point.contains_point(&Point::new(4, 1)));
+    }
+
+    #[test]
+    fn contains_point_square() {
+        let point = SizedPoint::new_sized(3, 4, 2, 2);
+        assert!(point.contains_point(&Point::new(3, 4)));
+        assert!(point.contains_point(&Point::new(4, 4)));
+        assert!(point.contains_point(&Point::new(3, 5)));
+        assert!(point.contains_point(&Point::new(4, 5)));
     }
 
     #[test]
@@ -312,10 +321,10 @@ mod tests {
         assert_eq!(6, all.len());
         assert_eq!(all[0], Point::new(3, 3));
         assert_eq!(all[1], Point::new(4, 3));
-        assert_eq!(all[2], Point::new(3, 2));
-        assert_eq!(all[3], Point::new(4, 2));
-        assert_eq!(all[4], Point::new(3, 1));
-        assert_eq!(all[5], Point::new(4, 1));
+        assert_eq!(all[2], Point::new(3, 4));
+        assert_eq!(all[3], Point::new(4, 4));
+        assert_eq!(all[4], Point::new(3, 5));
+        assert_eq!(all[5], Point::new(4, 5));
     }
 
     #[test]
@@ -441,8 +450,8 @@ mod tests {
 
     #[test]
     fn multi_distance_to_multi() {
-        let point = SizedPoint::new_sized(1, 2, 2, 2);
-        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::new_sized(4, 6, 2, 2)).unwrap();
+        let point = SizedPoint::new_sized(1, 1, 2, 2);
+        let (initial, end, distance) = point.distance_to_multi_with_endpoints(SizedPoint::new_sized(4, 5, 2, 2)).unwrap();
         // . . . . . .
         // . P P . . .
         // . P P . . .
@@ -453,7 +462,7 @@ mod tests {
         assert_eq!(5, distance);
         assert_points_equal(Point::new(2, 2), initial);
         assert_points_equal(Point::new(4, 5), end);
-        let distance = point.distance_to_multi(SizedPoint::new_sized(4, 6, 2, 2)).unwrap();
+        let distance = point.distance_to_multi(SizedPoint::new_sized(4, 5, 2, 2)).unwrap();
         assert_eq!(5, distance);
     }
 
@@ -472,18 +481,30 @@ mod tests {
 
     #[test]
     fn nearest_to_multi_point() {
-        let point = SizedPoint::new(2, 2);
+        let point = SizedPoint::new(0, 1);
         let target = SizedPoint::new_sized(3, 3, 2, 2);
-        assert_points_equal(target.nearest_point_to(point), Point::new(3, 2));
+        assert_points_equal(target.nearest_point_to(point), Point::new(3, 3));
     }
 
     #[test]
     fn visual_center() {
+        // . . . .
+        // . . . .
+        // . . . .
+        // . . x .
+        // . . . .
+        // . . . .
         let point = SizedPoint::new(2, 3);
         let center = point.visual_center();
         assert_approx_eq!(2.5, center.x);
         assert_approx_eq!(3.5, center.y);
 
+        // . . . .
+        // . . . .
+        // . . . .
+        // . . x x
+        // . . x x
+        // . . . .
         let point = SizedPoint::new_sized(2, 3, 2, 2);
         let center = point.visual_center();
         assert_approx_eq!(3.0, center.x);

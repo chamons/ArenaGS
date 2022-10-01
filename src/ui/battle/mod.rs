@@ -17,7 +17,8 @@ pub use skillbar::*;
 mod overlay;
 pub use overlay::*;
 
-use super::ScreenCoordinates;
+mod target_overlay;
+pub use target_overlay::*;
 
 // The map is placed at 16x16 but the first maptile is a ways off the corner
 pub const MAP_IMAGE_POSITION: mint::Point2<f32> = mint::Point2 { x: 31.0, y: 31.0 };
@@ -50,12 +51,4 @@ pub fn screen_to_map_position(x: f32, y: f32) -> Option<Point> {
         return None;
     }
     Some(Point::new(x, y))
-}
-
-fn logical_mouse_position(ctx: &mut ggez::Context, screen_coordinate: &ScreenCoordinates, x: f32, y: f32) -> (f32, f32) {
-    let screen_rect = screen_coordinate.rect;
-    let size = ctx.gfx.window().inner_size();
-    let pos_x = (x / (size.width as f32)) * screen_rect.w + screen_rect.x;
-    let pos_y = (y / (size.height as f32)) * screen_rect.h + screen_rect.y;
-    (pos_x, pos_y)
 }
