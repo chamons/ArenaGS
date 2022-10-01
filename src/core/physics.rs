@@ -8,10 +8,10 @@ pub fn is_area_clear_of_others(world: &mut World, area: &[Point], invoker: Optio
 
         for (entity, position) in query.iter(world) {
             for p in area.iter() {
-                if !p.in_bounds() || !map.is_walkable(&p) {
+                if !p.in_bounds() || !map.is_walkable(p) {
                     return false;
                 }
-                if invoker != Some(entity) && position.position.contains_point(&p) {
+                if invoker != Some(entity) && position.position.contains_point(p) {
                     return false;
                 }
             }

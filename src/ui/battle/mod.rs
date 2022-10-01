@@ -1,7 +1,6 @@
-use bevy_ecs::prelude::*;
 use ggez::{glam::Vec2, mint};
 
-use crate::core::{Map, Player, Point};
+use crate::core::{Map, Point};
 
 pub mod battle_scene;
 pub mod debug_overlay;

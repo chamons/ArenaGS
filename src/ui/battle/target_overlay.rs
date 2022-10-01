@@ -67,7 +67,7 @@ fn draw_line(points: &[Point], color: Color, ctx: &mut ggez::Context, canvas: &m
 }
 
 #[no_mangle]
-pub fn targeting_mouse_button_up_event(world: &mut World, ctx: &mut ggez::Context, button: ggez::event::MouseButton, x: f32, y: f32) {}
+pub fn targeting_mouse_button_up_event(_world: &mut World, _ctx: &mut ggez::Context, _button: ggez::event::MouseButton, _x: f32, _y: f32) {}
 
 #[no_mangle]
 pub fn targeting_key_up_event(world: &mut World, _ctx: &mut ggez::Context, input: KeyInput) {

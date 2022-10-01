@@ -3,7 +3,7 @@ use std::slice::from_ref;
 use bevy_ecs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::{find_character_at_location, find_position, is_area_clear_of_others, is_player_or_ally, Point, Position};
+use super::{find_character_at_location, find_position, is_area_clear_of_others, is_player_or_ally, Point};
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum SkillEffect {
@@ -134,7 +134,7 @@ impl Skills {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{Character, Map, MapKind, Player};
+    use crate::core::{Character, Map, MapKind, Player, Position};
 
     use super::*;
 
